@@ -50,7 +50,7 @@ int main(const int argc, const char** argv)
     if ((strcmp(cmd, "-d") == 0) || (strcmp(cmd, "--decode") == 0)) {
 
         // Decode: [-d | --decode] <default-country-ISO3> <mapcode> [<mapcode> ...]
-        if (argc < 3) {
+        if (argc < 4) {
             usage(appName);
             return -1;
         }
@@ -84,8 +84,8 @@ int main(const int argc, const char** argv)
             context = text2tc(argv[4], 0);
         }
         const int nrResults = coord2mc(results, lat, lon, context);
-        if (nrResults == 0) {
-            printf("error: cannot encode lat=%s, lon=%s (default country='%s')\n", argv[2], argv[3], (argc == 5) ? argv[4] : "none");
+        if (nrResults <= 0) {
+            printf("error: cannot encode lat=%s, lon=%s (default country=%d)\n", argv[2], argv[3], context);
             return -1;
         }
         for (int i = 0; i < nrResults; ++i) {

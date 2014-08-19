@@ -59,7 +59,7 @@ int main(const int argc, const char** argv)
         double lat;
         double lon;
         int context = text2tc(defaultCountry, 0);
-        for (int i = 3; i <= argc; ++i) {
+        for (int i = 3; i < argc; ++i) {
             int err = mc2coord(&lat, &lon, argv[i], context);
             if (err != 0) {
                 printf("error: cannot decode '%s' (default country='%s')\n", argv[i], argv[1]);

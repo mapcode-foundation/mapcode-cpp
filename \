@@ -87,6 +87,7 @@ int main(const int argc, const char** argv)
             context = text2tc(argv[4], 0);
         }
         const char* results[32];
+        printf("e: %f %f %d\n", lat, lon, context);
         const int nrResults = coord2mc(results, lat, lon, context);
         if (nrResults <= 0) {
             printf("error: cannot encode lat=%s, lon=%s (default country=%d)\n", argv[2], argv[3], context);
@@ -136,12 +137,13 @@ int main(const int argc, const char** argv)
             const double lat = latRad * (180.0 / PI);
             const double lon = lonRad * (180.0 / PI);
 
+            printf("e: %f %f %d\n", lat, lon, context);
             const int nrResults = coord2mc(results, lat, lon, context);
             if (nrResults <= 0) {
                 printf("error: cannot encode lat=%f, lon=%f)\n", lat, lon);
                 return -1;
             }
-            printf("%d %lf %lf %lf %lf %lf\n", nrResults, lat, lon, x, y, z);
+            printf("%d %f %f %f %f %f\n", nrResults, lat, lon, x, y, z);
             for (int i = 0; i < nrResults; ++i) {
                 printf("%s %s\n", results[(i * 2) + 1], results[(i * 2)]);
             }

@@ -71,21 +71,21 @@ int main(const int argc, const char** argv)
     else if ((strcmp(cmd, "-e") == 0) || (strcmp(cmd, "--encode") == 0)) {
 
         // Encode: [-e | --encode] <lat:-90..90> <lon:-180..180> [country-ISO3]>
-        if ((argc != 3) && (argc != 4)) {
+        if ((argc != 4) && (argc != 5)) {
             usage(appName);
             return -1;
         }
-        const double lat = atof(argv[1]);
-        const double lon = atof(argv[2]);
+        const double lat = atof(argv[2]);
+        const double lon = atof(argv[3]);
 
         const char* results[32];
         int context = 0;
         if (argc == 4) {
-            context = text2tc(argv[3], 0);
+            context = text2tc(argv[4], 0);
         }
         const int nrResults = coord2mc(results, lat, lon, context);
         if (nrResults == 0) {
-            printf("error: cannot encode lat=%s, lon=%s (default country='%s')\n", argv[1], argv[2], (argc == 4) ? argv[3] : "none");
+            printf("error: cannot encode lat=%s, lon=%s (default country='%s')\n", argv[2], argv[3], (argc == 5) ? argv[4] : "none");
             return -1;
         }
         for (int i = 0; i < nrResults; ++i) {

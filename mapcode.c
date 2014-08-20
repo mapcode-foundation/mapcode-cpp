@@ -11,12 +11,12 @@ static const double PI = 3.14159265358979323846;
 
 static void usage(const char* appName) {
     printf("Usage: \n");
-    printf("    %s [-d | --decode] <default-territory-ISO3> <mapcode> [<mapcode> ...]\n", appName);
+    printf("    %s [-d | --decode] <default-territory> <mapcode> [<mapcode> ...]\n", appName);
     printf("\n");
     printf("       Decode a Mapcode to a lat/lon. The default territory code is used if\n");
     printf("       the Mapcode is a shorthand local code\n");
     printf("\n");
-    printf("    %s [-e | --encode] <lat:-90..90> <lon:-180..180> [territory-ISO3]>\n", appName);
+    printf("    %s [-e | --encode] <lat:-90..90> <lon:-180..180> [territory]>\n", appName);
     printf("\n");
     printf("       Encode a lat/lon to a Mapcode. If the territory code is specified, the\n");
     printf("       encoding will only succeeed if the lat/lon is located in the territory.\n");
@@ -50,7 +50,7 @@ int main(const int argc, const char** argv)
     if ((strcmp(cmd, "-d") == 0) || (strcmp(cmd, "--decode") == 0)) {
 
         // ------------------------------------------------------------------
-        // Decode: [-d | --decode] <default-territory-ISO3> <mapcode> [<mapcode> ...]
+        // Decode: [-d | --decode] <default-territory> <mapcode> [<mapcode> ...]
         // ------------------------------------------------------------------
         if (argc < 4) {
             usage(appName);
@@ -64,7 +64,7 @@ int main(const int argc, const char** argv)
         for (int i = 3; i < argc; ++i) {
             int err = mc2coord(&lat, &lon, argv[i], context);
             if (err != 0) {
-                printf("error: cannot decode '%s' (default territory='%s')\n", argv[i], argv[1]);
+                printf("error: cannot decode '%s' (default territory='%s')\n", argv[i], argv[2]);
                 return -1;
             }
             printf("%f %f\n", lat, lon);
@@ -73,7 +73,7 @@ int main(const int argc, const char** argv)
     else if ((strcmp(cmd, "-e") == 0) || (strcmp(cmd, "--encode") == 0)) {
 
         // ------------------------------------------------------------------
-        // Encode: [-e | --encode] <lat:-90..90> <lon:-180..180> [territory-ISO3]>
+        // Encode: [-e | --encode] <lat:-90..90> <lon:-180..180> [territory]>
         // ------------------------------------------------------------------
         if ((argc != 4) && (argc != 5)) {
             usage(appName);

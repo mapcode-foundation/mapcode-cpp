@@ -11,22 +11,22 @@ static const double PI = 3.14159265358979323846;
 
 static void usage(const char* appName) {
     printf("Usage: \n");
-    printf("    %s [-d | --decode] <default-country-ISO3> <mapcode> [<mapcode> ...]\n", appName);
+    printf("    %s [-d | --decode] <default-territory-ISO3> <mapcode> [<mapcode> ...]\n", appName);
     printf("\n");
-    printf("       Decode a Mapcode to a lat/lon. The default country code is used if\n");
+    printf("       Decode a Mapcode to a lat/lon. The default territory code is used if\n");
     printf("       the Mapcode is a shorthand local code\n");
     printf("\n");
-    printf("    %s [-e | --encode] <lat:-90..90> <lon:-180..180> [country-ISO3]>\n", appName);
+    printf("    %s [-e | --encode] <lat:-90..90> <lon:-180..180> [territory-ISO3]>\n", appName);
     printf("\n");
-    printf("       Encode a lat/lon to a Mapcode. If the country code is specified, the\n");
-    printf("       encoding will only succeeed if the lat/lon is located in the country.\n");
+    printf("       Encode a lat/lon to a Mapcode. If the territory code is specified, the\n");
+    printf("       encoding will only succeeed if the lat/lon is located in the territory.\n");
     printf("\n");
     printf("    %s [-g | --generate] <nrPoints> [<seed>]\n", appName);
     printf("\n");
     printf("       Create a test set of a number of uniformly distributed lat/lon pairs,\n");
     printf("       3D x/y/z points and their Mapcodes). The output format is:\n");
     printf("           <nr> <lat> <lon> <x> <y> <z>\n");
-    printf("           <country> <mapcode>            (repeated 'nr' rtimes)\n");
+    printf("           <territory> <mapcode>            (repeated 'nr' rtimes)\n");
     printf("           <1 empty line>\n");
     printf("\n");
     printf("       The points will be uniformly distributed over the 3D surface of the Earth\n");
@@ -50,21 +50,21 @@ int main(const int argc, const char** argv)
     if ((strcmp(cmd, "-d") == 0) || (strcmp(cmd, "--decode") == 0)) {
 
         // ------------------------------------------------------------------
-        // Decode: [-d | --decode] <default-country-ISO3> <mapcode> [<mapcode> ...]
+        // Decode: [-d | --decode] <default-territory-ISO3> <mapcode> [<mapcode> ...]
         // ------------------------------------------------------------------
         if (argc < 4) {
             usage(appName);
             return -1;
         }
 
-        const char* defaultCountry = argv[2];
+        const char* defaultTerritory = argv[2];
         double lat;
         double lon;
-        int context = text2tc(defaultCountry, 0);
+        int context = text2tc(defaultTerritory, 0);
         for (int i = 3; i < argc; ++i) {
             int err = mc2coord(&lat, &lon, argv[i], context);
             if (err != 0) {
-                printf("error: cannot decode '%s' (default country='%s')\n", argv[i], argv[1]);
+                printf("error: cannot decode '%s' (default territory='%s')\n", argv[i], argv[1]);
                 return -1;
             }
             printf("%f %f\n", lat, lon);
@@ -73,7 +73,7 @@ int main(const int argc, const char** argv)
     else if ((strcmp(cmd, "-e") == 0) || (strcmp(cmd, "--encode") == 0)) {
 
         // ------------------------------------------------------------------
-        // Encode: [-e | --encode] <lat:-90..90> <lon:-180..180> [country-ISO3]>
+        // Encode: [-e | --encode] <lat:-90..90> <lon:-180..180> [territory-ISO3]>
         // ------------------------------------------------------------------
         if ((argc != 4) && (argc != 5)) {
             usage(appName);
@@ -89,7 +89,7 @@ int main(const int argc, const char** argv)
         const char* results[32];
         const int nrResults = coord2mc(results, lat, lon, context);
         if (nrResults <= 0) {
-            printf("error: cannot encode lat=%s, lon=%s (default country=%d)\n", argv[2], argv[3], context);
+            printf("error: cannot encode lat=%s, lon=%s (default territory=%d)\n", argv[2], argv[3], context);
             return -1;
         }
         for (int i = 0; i < nrResults; ++i) {

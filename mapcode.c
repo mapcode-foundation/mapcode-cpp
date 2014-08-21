@@ -114,7 +114,7 @@ int main(const int argc, const char** argv)
         const double lon = atof(argv[3]);
 
         int context = 0;
-        if (argc == 4) {
+        if (argc == 5) {
             context = text2tc(argv[4], 0);
         }
         const char* results[32];

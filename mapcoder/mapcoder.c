@@ -1355,7 +1355,8 @@ int master_decode(  long *nx,long *ny, // <- store result in nx,ny
               long minx,miny,maxx,maxy; 
               if (isuseless((j))) continue;
               getboundaries((j),minx,miny,maxx,maxy);		
-					    if ( miny<=*ny && *ny<maxy && isInRange(*nx,minx,maxx) ) { fitssomewhere=1; break; }
+              int xdiv8 = x_divider(miny,maxy)/4;
+					    if ( miny-45<=*ny && *ny<maxy+45 && isInRange(*nx,minx-xdiv8,maxx+xdiv8) ) { fitssomewhere=1; break; }
 				    }
             if (!fitssomewhere) {
               err=-1234;

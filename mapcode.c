@@ -231,7 +231,7 @@ int main(const int argc, const char** argv)
     // Copyright (C) 2014, TomTom BV
     // Rijn Buve, 2014-08-24
 
-    final String DATA_FILE = "/Users/rijn/tmp/x";
+    final String DATA_FILE = "/Users/rijn/source/tomtom/mapcode-java/src/test/resources/random_1k.txt";
 
     final int N = 100000;
     final int C = 150;

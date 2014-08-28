@@ -1057,10 +1057,18 @@ int unpack_if_alldigits(char *input) // returns 1 if unpacked, 0 if left unchang
 }
 
 
+#define VERSION_1_32// 1.32 true recursive processing
+#ifdef VERSION_1_32 // 1.32 true recursive processing
+int result_override=-1; 
+#endif
+const char* makeiso(int cc,int longcode); // 0=short / 1=XX-YYY for states, XXX for country / 2=shortest unique
 
 void addresult(char *resultbuffer, char *result, long x,long y, int ccode)
 {  
   // add to global array (if any)
+#ifdef VERSION_1_32 // 1.32 true recursive processing
+  if (result_override>=0) ccode=result_override; // 1.32 true recursive processing
+#endif
   if (*result && global_results && nr_global_results>=0 && nr_global_results+1<(2*MAXGLOBALRESULTS)) {
     global_results[nr_global_results]=global_buffer[nr_global_results];
     strcpy(global_results[nr_global_results++],result);
@@ -1355,8 +1363,7 @@ int master_decode(  long *nx,long *ny, // <- store result in nx,ny
               long minx,miny,maxx,maxy; 
               if (isuseless((j))) continue;
               getboundaries((j),minx,miny,maxx,maxy);		
-              int xdiv8 = x_divider(miny,maxy)/4;
-					    if ( miny-45<=*ny && *ny<maxy+45 && isInRange(*nx,minx-xdiv8,maxx+xdiv8) ) { fitssomewhere=1; break; }
+					    if ( miny<=*ny && *ny<maxy && isInRange(*nx,minx,maxx) ) { fitssomewhere=1; break; }
 				    }
             if (!fitssomewhere) {
               err=-1234;
@@ -1601,6 +1608,11 @@ void master_encode( char *resultbuffer, int the_ctry, long x, long y, int forcec
           return;
         if (forcecoder>=0   ) // we would have found it the normal way!
           return;
+
+#ifdef VERSION_1_32 // 1.32 true recursive processing
+        result_override=the_ctry;  // 1.32 true recursive processing
+#endif
+
         the_ctry = 
           mIsUsaState(the_ctry) ? ccode_usa : 
           mIsCanadaState(the_ctry) ? ccode_can : 
@@ -1610,8 +1622,17 @@ void master_encode( char *resultbuffer, int the_ctry, long x, long y, int forcec
           mIsChinaState(the_ctry) ? ccode_chn : 
           mIsRussiaState(the_ctry) ? ccode_rus : 
           ccode_aus;
+
+			
+#ifdef VERSION_1_32 // 1.32 true recursive processing
+        if (!stop_with_one_result)
+          master_encode( resultbuffer, the_ctry, x,y, forcecoder, 0,0,1 ); 
+        result_override=-1;
+        return; /**/
+#else
         setup_country( the_ctry );
         i=iso_start-1; continue;
+#endif	
       }
 
       if ( i>iso_end )
@@ -2163,84 +2184,77 @@ const UWORD* encode_utf16(const char *mapcode,int language) // convert mapcode t
 #define TOKENDOT  1
 #define TOKENCHR  2
 #define TOKENZERO 3
+#define TOKENHYPH 4
 #define ERR -1
+#define Prt -9 // partial
 #define GO  99
+
+  static signed char fullmc_statemachine[23][5] = {
+                      // WHI DOT DET ZER HYP
+  /* 0 start        */ {  0 ,ERR, 1 ,ERR,ERR }, // looking for very first detter
+  /* 1 gotL         */ { ERR,ERR, 2 ,ERR,ERR }, // got one detter, MUST get another one
+  /* 2 gotLL        */ { 18 , 6 , 3 ,ERR,14  }, // GOT2: white: got territory + start prefix | dot: 2.X mapcode | det:3letter | hyphen: 2-state
+  /* 3 gotLLL       */ { 18 , 6 , 4 ,ERR,14  }, // white: got territory + start prefix | dot: 3.X mapcode | det:4letterprefix | hyphen: 3-state
+  /* 4 gotprefix4   */ { ERR, 6 , 5 ,ERR,ERR }, // dot: 4.X mapcode | det: got 5th prefix letter
+  /* 5 gotprefix5   */ { ERR, 6 ,ERR,ERR,ERR }, // got 5char so MUST get dot!
+  /* 6 prefix.      */ { ERR,ERR, 7 ,Prt,ERR }, // MUST get first letter after dot
+  /* 7 prefix.L     */ { ERR,ERR, 8 ,Prt,ERR }, // MUST get second letter after dot
+  /* 8 prefix.LL    */ { 22 ,ERR, 9 , GO,11  }, // get 3d letter after dot | X.2- | X.2 done!
+  /* 9 prefix.LLL   */ { 22 ,ERR,10 , GO,11  }, // get 4th letter after dot | X.3- | X.3 done!
+  /*10 prefix.LLLL  */ { 22 ,ERR,ERR, GO,11  }, // X.4- | x.4 done!
+
+  /*11 mc-          */ { ERR,ERR,12 ,Prt,ERR }, // MUST get first precision letter
+  /*12 mc-L         */ { 22 ,ERR,13 , GO,ERR }, // Get 2nd precision letter | done X.Y-1
+  /*13 mc-LL        */ { 22 ,ERR,ERR, GO,ERR }, // done X.Y-2 (*or skip whitespace*)
+
+  /*14 ctry-        */ { ERR,ERR,15 ,ERR,ERR }, // MUST get first state letter
+  /*15 ctry-L       */ { ERR,ERR,16 ,ERR,ERR }, // MUST get 2nd state letter
+  /*16 ctry-LL      */ { 18 ,ERR,17 ,ERR,ERR }, // white: got CCC-SS and get prefix | got 3d letter
+  /*17 ctry-LLL     */ { 18 ,ERR,ERR,ERR,ERR }, // got CCC-SSS so MUST get whitespace and then get prefix
+
+  /*18 startprefix  */ { 18 ,ERR,19 ,ERR,ERR }, // skip more whitespace, MUST get 1st prefix letter
+  /*19 gotprefix1   */ { ERR,ERR,20 ,ERR,ERR }, // MUST get second prefix letter
+  /*20 gotprefix2   */ { ERR, 6 ,21 ,ERR,ERR }, // dot: 2.X mapcode | det: 3d perfix letter
+  /*21 gotprefix3   */ { ERR, 6 , 4 ,ERR,ERR }, // dot: 3.x mapcode | det: got 4th prefix letter
+
+  /*22 whitespace   */ { 22 ,ERR,ERR, GO,ERR }  // whitespace until end of string
+
+  };
+
+  // pass fullcode=1 to recognise territory and mapcode, pass fullcode=0 to only recognise proper mapcode (without optional territory)
+  // returns 0 if ok, negative in case of error (where -999 represents "may BECOME a valid mapcode if more characters are added)
+  int lookslikemapcode(const char *s,int fullcode)
+  {
+	  int nondigits=0;
+	  int state=(fullcode ? 0 : 18); // initial state
+	  for(;;s++) {
+		  int newstate,token;
+		  // recognise token
+		  if (*s>='0' && *s<='9') token=TOKENCHR;
+		  else if ((*s>='a' && *s<='z') || (*s>='A' && *s<='Z')) 
+			  { token=TOKENCHR; if (state!=11 && state!=12) nondigits++; }
+		  else if (*s=='.' ) token=TOKENDOT;
+		  else if (*s=='-' ) token=TOKENHYPH;
+		  else if (*s== 0  ) token=TOKENZERO;
+		  else if (*s==' ' || *s=='\t') token=TOKENSEP;
+		  else return -4; // invalid character
+		  newstate = fullmc_statemachine[state][token];
+		  if (newstate==ERR) 
+			  return -(1000+10*state+token);
+		  if (newstate==GO ) 
+			  return (nondigits>0 ? 0 : -5);
+      if (newstate==Prt)
+        return -999;
+		  state=newstate;
+		  if (state==18) 
+			  nondigits=0;
+	  }
+  }
 
 int lookslike_mapcode(const char *s)  // return -999 if partial, 0 if ok, negative if not
 {
-  static signed char statemachine[12][4] = {
-    // SEP DOT CHR ZER
-    {  ERR,ERR, 1 ,ERR }, // 0 start
-    {  ERR, 7 , 2 ,ERR }, // 1 L
-    {   0 , 7 , 3 ,ERR }, // 2 LL
-    {   0 , 7 , 4 ,ERR }, // 3 LLL
-    {  ERR, 7 , 5 ,ERR }, // 4 LLLL
-    {  ERR, 7 , 6 ,ERR }, // 5 LLLLL 
-    {  ERR, 7 ,ERR,ERR }, // 6 LLLLLL
-    {  ERR,ERR, 8 ,ERR }, // 7 prefix.        // decision: do NOT allow immediate decoding when the dot is typed
-    {  ERR,ERR, 9 , GO }, // 8 prefix.L
-    {  ERR,ERR,10 , GO }, // 9 prefix.LL
-    {  ERR,ERR,11 , GO }, //10 prefix.LLL
-    {  ERR,ERR,ERR, GO }  //11 prefix.LLLL    
-  };
-
-  int state=0;
-  int gothyphen=0; // 1 hyphen at most
-  int gotsep=0; // 2 seps in toal at most (hyphen+space or space+space)
-	int prefix=0;
-	int postfix=0;
-
-  for(;;)
-  {
-    // recognise token
-    int token,newstate;
-    if ( (*s>='a' && *s<='z') || (*s>='A' && *s<='Z') || (*s>='0' && *s<='9')) // letter or digit
-		{
-      token=TOKENCHR;
-			if (state>=7) // got dot!
-				postfix++;
-			else
-      {
-        if (prefix==0) if (*s=='a' || *s=='A') prefix--; // dont count A as first letter
-				prefix++;
-      }
-		}
-    else if (*s==' ') 
-    { 
-			prefix=0; // start again with prefixing
-			token=TOKENSEP; if (gotsep++>=2) return -5; // err if already got 2 separators
-		}
-    else if (*s=='-') 
-    { 
-			prefix=0; // start again with prefixing
-			token=TOKENSEP; if (gothyphen++>0) return -3; if (gotsep++>0) return -5; // err if already got hyphen or space
-		} 
-    else if (*s=='.') 
-		{
-      token=TOKENDOT;
-		}
-    else if (*s==0)
-		{
-      token=TOKENZERO;
-		}
-    else
-		{
-      return -4; // invalid char
-		}
-
-    newstate = statemachine[state][token];
-    if (newstate==ERR) return -100-state;
-    if (newstate==GO)
-		{
-			if (prefix>5) return -7; // prefix too long
-			if (prefix<2) return -999;
-			if (postfix<2) return -999;
-			if (prefix==5 && postfix<4) return -999;
-			return 0;
-		}
-    state=newstate;
-    s++;
-  }
+  // old-style recognizer, does not suport territory context
+  return lookslikemapcode(s,0);
 }
 
 
@@ -2469,7 +2483,7 @@ int text2tc(const char *string,int optional_tc) // optional_tc: pass 0 or negati
 
 // pass point to an array of pointers (at least 64), will be made to point to result strings...
 // returns nr of results;
-int coord2mc( char **v, double lat, double lon, int tc )
+int coord2mc_full( char **v, double lat, double lon, int tc, int stop_with_one_result ) // 1.31 allow to stop after one result
 {
   int ccode=tc-1;
   if (tc==0) ccode=0;
@@ -2483,12 +2497,13 @@ int coord2mc( char **v, double lat, double lon, int tc )
   {
     int i;
     for(i=0;i<MAX_CCODE;i++) {
-      master_encode(NULL,i,(long)lon,(long)lat,-1,0,0,0); // 1.29 - also add parents recursively
+      master_encode(NULL,i,(long)lon,(long)lat,-1,stop_with_one_result,0,0); // 1.29 - also add parents recursively
+      if (stop_with_one_result && nr_global_results>0) break;
     }
   }
   else
   {
-    master_encode(NULL,ccode,(long)lon,(long)lat,-1,0,0,0); // 1.29 - also add parents recursively
+    master_encode(NULL,ccode,(long)lon,(long)lat,-1,stop_with_one_result,0,0); // 1.29 - also add parents recursively
   }
   global_results=NULL;
   return nr_global_results/2;
@@ -2525,6 +2540,27 @@ const UWORD* encode_to_alphabet(const char *mapcode,int alphabet) // 0=roman, 2=
 }
 
 #endif
+
+int coord2mc( char **v, double lat, double lon, int tc )
+{
+  return coord2mc_full(v,lat,lon,tc,0);
+}
+
+int coord2mc1( char *result, double lat, double lon, int tc )
+{
+  char *v[2];
+  int ret=coord2mc_full(v,lat,lon,tc,1);
+  *result=0;
+  if (ret>0) {
+    if (strcmp(v[1],"AAA")!=0) {
+      strcpy(result,v[1]);
+      strcat(result," ");
+    }
+    strcat(result,v[0]);
+  }
+  return ret;
+}
+
 
 #endif // RELEASENEAT
 

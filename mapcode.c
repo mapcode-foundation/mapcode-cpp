@@ -11,6 +11,9 @@ static const double PI = 3.14159265358979323846;
 static const int RESULTS_MAX = 64;
 
 static void usage(const char* appName) {
+    printf("MAPCODE (C library version %s)\n", mapcode_cversion);
+    printf("Copyright (C) 2014 Stichting Mapcode Foundation\n");
+    printf("\n");
     printf("Usage: \n");
     printf("    %s [-d | --decode] <default-territory> <mapcode> [<mapcode> ...]\n", appName);
     printf("\n");
@@ -46,7 +49,7 @@ static void usage(const char* appName) {
  * (x, y, z) point on a sphere with a radius of 1.
  */
 static void unitToLatLonDegXYZ(
-    const double unit1, const double unit2, 
+    const double unit1, const double unit2,
     double* latDeg, double* lonDeg, double* x, double* y, double* z) {
 
     // Calculate uniformly distributed 3D point on sphere (radius = 1.0):
@@ -122,7 +125,7 @@ int main(const int argc, const char** argv)
         const char* results[RESULTS_MAX];
         const int nrResults = coord2mc(results, lat, lon, context);
         if (nrResults <= 0) {
-            fprintf(stderr, "error: cannot encode lat=%s, lon=%s (default territory=%d)\n", 
+            fprintf(stderr, "error: cannot encode lat=%s, lon=%s (default territory=%d)\n",
                 argv[2], argv[3], context);
             return -1;
         }
@@ -218,10 +221,10 @@ int main(const int argc, const char** argv)
 }
 
 /**
- * This program can encode and decode Mapcodes. It can also generate reference Mapcodes, 
+ * This program can encode and decode Mapcodes. It can also generate reference Mapcodes,
  * lat/lon pairs and their corresponding (x, y, z) coordinates.
  *
- * If you'd like to visualize the generated points, you can use "Processing" from 
+ * If you'd like to visualize the generated points, you can use "Processing" from
  * processing.org with the following Processing (Java) source code:
  *
 
@@ -263,7 +266,7 @@ int main(const int argc, const char** argv)
       total = 0;
       BufferedReader reader = createReader(DATA_FILE);
       try {
-        while (true) {  
+        while (true) {
           String line = reader.readLine();
           if (line == null) {
             break;
@@ -277,7 +280,7 @@ int main(const int argc, const char** argv)
           px[total] = Float.parseFloat(items[3]);
           py[total] = Float.parseFloat(items[4]);
           pz[total] = Float.parseFloat(items[5]);
-          
+
           // Skip codes.
           for (int i = 0; i < nrItems; ++i) {
             reader.readLine();
@@ -305,13 +308,13 @@ int main(const int argc, const char** argv)
       rotateX(rotX);
       rotateY(rotY);
       rotateZ(rotZ);
-      
+
       // Draw sphere.
       stroke(255, 0, 0, 50);
       fill(255, 0, 0, 50);
       sphere(C * 0.95);
       stroke(255, 0, 0, 255);
-      
+
       // Draw poles.
       line(0, 0, -C - 200, 0, 0, C + 200);
 
@@ -336,7 +339,7 @@ int main(const int argc, const char** argv)
         line(C + 5, -C - 50, -C - 5, -C - 5, -C - 50, -C - 5);
         line(-C - 5, -C - 50, -C - 5, -C - 5, -C - 50, C + 5);
         line(-C - 5, -C - 50, C + 5, C + 5, -C - 50, C + 5);
-      
+
         // Draw lat/lon dots.
         stroke(255, 255, 0, 200);
         for (int i = 0; i < total; ++i) {

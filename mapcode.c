@@ -14,7 +14,7 @@ static void usage(const char* appName) {
     printf("MAPCODE (C library version %s)\n", mapcode_cversion);
     printf("Copyright (C) 2014 Stichting Mapcode Foundation\n");
     printf("\n");
-    printf("Usage: \n");
+    printf("Usage:\n");
     printf("    %s [-d | --decode] <default-territory> <mapcode> [<mapcode> ...]\n", appName);
     printf("\n");
     printf("       Decode a Mapcode to a lat/lon. The default territory code is used if\n");
@@ -39,6 +39,8 @@ static void usage(const char* appName) {
     printf("           number-of-aliases : >= 1\n");
     printf("           lat-deg, lon-deg  : [-90..90], [-180..180]\n");
     printf("           x, y, z           : [-1..1]\n");
+    printf("\n");
+    printf("\n     stdout: used for outputting 3D point data; stderr: used for statistics.");
     printf("\n");
     printf("       The lat/lon pairs will be distributed over the 3D surface of the Earth\n");
     printf("       and the (x, y, z) coordinates are placed on a sphere with radius 1.\n");
@@ -146,6 +148,11 @@ int main(const int argc, const char** argv)
             return -1;
         }
         const int nrPoints = atoi(argv[2]);
+        if (nrPoints < 1) {
+            fprintf(stderr, "error: total number of points to generate must be >= 1\n\n");
+            usage(appName);
+            return -1;
+        }
         int random = (strcmp(cmd, "-r") == 0) || (strcmp(cmd, "--random") == 0);
         if (random) {
             if (argc == 4) {
@@ -163,6 +170,12 @@ int main(const int argc, const char** argv)
                 return -1;
             }
         }
+
+        // Statistics.
+        int largestNrOfResults = 0;
+        double latLargestNrOfResults = 0.0;
+        double lonLargestNrOfResults = 0.0;
+        int totalNrOfResults = 0;
 
         const char* results[RESULTS_MAX];
         int context = 0;
@@ -202,12 +215,23 @@ int main(const int argc, const char** argv)
                 fprintf(stderr, "error: cannot encode lat=%f, lon=%f)\n", lat, lon);
                 return -1;
             }
+            if (nrResults > largestNrOfResults) {
+                largestNrOfResults = nrResults;
+                latLargestNrOfResults = lat;
+                lonLargestNrOfResults = lon;
+            }
+            totalNrOfResults += nrResults;
             printf("%d %lf %lf %lf %lf %lf\n", nrResults, lat, lon, x, y, z);
             for (int j = 0; j < nrResults; ++j) {
                 printf("%s %s\n", results[(j * 2) + 1], results[(j * 2)]);
             }
             printf("\n");
         }
+        fprintf(stderr, "Statistics:\n");
+        fprintf(stderr, "Total number of 3D points generated     = %d\n", nrPoints);
+        fprintf(stderr, "Total number of Mapcodes generated      = %d\n", totalNrOfResults);
+        fprintf(stderr, "Average number of Mapcodes per 3D point = %f\n", ((float) totalNrOfResults) / ((float) nrPoints));
+        fprintf(stderr, "Largest number of results for 1 Mapcode = %d at (%f, %f)\n", largestNrOfResults, latLargestNrOfResults, lonLargestNrOfResults);
     }
     else {
 
@@ -219,151 +243,3 @@ int main(const int argc, const char** argv)
     }
     return 0;
 }
-
-/**
- * This program can encode and decode Mapcodes. It can also generate reference Mapcodes,
- * lat/lon pairs and their corresponding (x, y, z) coordinates.
- *
- * If you'd like to visualize the generated points, you can use "Processing" from
- * processing.org with the following Processing (Java) source code:
- *
-
-    ---------------------------------------------------------------------------
-    // Visualize 3D points.
-    //
-    // Copyright (C) 2014, TomTom BV
-    // Rijn Buve, 2014-08-24
-
-    final String DATA_FILE = "/Users/rijn/source/tomtom/mapcode-java/src/test/resources/random_1k.txt";
-
-    final int N = 100000;
-    final int C = 150;
-    final int D = 1;
-    final boolean DRAW_LAT_LON = true;
-    final boolean STAR_SHAPE = true;
-
-    float posX;
-    float posY;
-    float posZ;
-    float rotX = 1.2;
-    float rotY = 0;
-    float rotZ = 0.9;
-
-    float[] lat = new float[N];
-    float[] lon = new float[N];
-
-    float[] px = new float[N];
-    float[] py = new float[N];
-    float[] pz = new float[N];
-
-    int total;
-
-    void setup() {
-      size(650, 550, P3D);
-      posX = width / 2.0;
-      posY = height / 2.0;
-      posZ = 0.0;
-      total = 0;
-      BufferedReader reader = createReader(DATA_FILE);
-      try {
-        while (true) {
-          String line = reader.readLine();
-          if (line == null) {
-            break;
-          }
-
-          // Parse line.
-          String[] items = split(line, " ");
-          int nrItems = Integer.parseInt(items[0]);
-          lat[total] = Float.parseFloat(items[1]) / 90.0;
-          lon[total] = Float.parseFloat(items[2]) / 180.0;
-          px[total] = Float.parseFloat(items[3]);
-          py[total] = Float.parseFloat(items[4]);
-          pz[total] = Float.parseFloat(items[5]);
-
-          // Skip codes.
-          for (int i = 0; i < nrItems; ++i) {
-            reader.readLine();
-          }
-          reader.readLine();
-          ++total;
-        }
-      }
-      catch (IOException e) {
-        e.printStackTrace();
-      }
-      finally {
-        try {
-          reader.close();
-        }
-        catch (IOException e) {
-          // Ignored.
-        }
-      }
-    }
-
-    void draw() {
-      clear();
-      translate(posX, posY, posZ);
-      rotateX(rotX);
-      rotateY(rotY);
-      rotateZ(rotZ);
-
-      // Draw sphere.
-      stroke(255, 0, 0, 50);
-      fill(255, 0, 0, 50);
-      sphere(C * 0.95);
-      stroke(255, 0, 0, 255);
-
-      // Draw poles.
-      line(0, 0, -C - 200, 0, 0, C + 200);
-
-      // Draw sphere dots.
-      stroke(255, 255, 255, 200);
-      for (int i = 0; i < total; ++i) {
-        float x = C * px[i];
-        float y = C * py[i];
-        float z = C * pz[i];
-        if (STAR_SHAPE) {
-          line(x - D, y , z, x + D, y, z);
-          line(x, y - D , z, x, y + D, z);
-        }
-        line(x, y , z - D, x, y, z + D);
-      }
-
-      if (DRAW_LAT_LON) {
-
-        // Draw lat/lon bounds.
-        stroke(0, 255, 255, 200);
-        line(C + 5, -C - 50, C + 5, C + 5, -C - 50, -C - 5);
-        line(C + 5, -C - 50, -C - 5, -C - 5, -C - 50, -C - 5);
-        line(-C - 5, -C - 50, -C - 5, -C - 5, -C - 50, C + 5);
-        line(-C - 5, -C - 50, C + 5, C + 5, -C - 50, C + 5);
-
-        // Draw lat/lon dots.
-        stroke(255, 255, 0, 200);
-        for (int i = 0; i < total; ++i) {
-          float x = C * lon[i];
-          float y = -C - 51;
-          float z = C * lat[i];
-          if (STAR_SHAPE) {
-            line(x - D , y, z, x + D, y, z);
-            line(x , y - D, z, x, y + D, z);
-          }
-          line(x , y, z - D, x, y, z + D);
-        }
-      }
-
-      if (mousePressed) {
-        rotX += 0.01;
-        rotY -= 0.0016;
-        rotZ += 0.0043;
-      }
-    }
-    ---------------------------------------------------------------------------
- *
- * Have fun!
- *
- * Rijn Buve, August 2014.
- */
-

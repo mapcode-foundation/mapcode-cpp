@@ -296,7 +296,7 @@ long x_divider( long miny, long maxy )
 int isInRange(long x,long minx,long maxx) // returns nonzero if x in the range minx...maxx
 {  
   if ( minx<=x && x<maxx ) return 1;
-  if (x<180000000) x+=360000000; else x-=360000000;
+  if (x<minx) x+=360000000; else x-=360000000; // 1.32 fix FIJI edge case
   if ( minx<=x && x<maxx ) return 1;
   return 0;
 }
@@ -579,6 +579,10 @@ void encode_grid( char* result, long x,long y, int m, int codex, long minx, long
       if ( relx<0 )
       {
         relx+=360000000; x+=360000000;
+      }
+      else if ( relx>=360000000 ) // 1.32 fix FIJI edge case
+      {
+        relx-=360000000; x-=360000000;
       }
 
       rely /= ygridsize;

@@ -22,7 +22,5 @@ version history
 1.28 bug fix for the needless generation of 7-letter alternatives to short mapcodes in large states in India
 1.29 also generate country-wide alternative mapcodes for states
 1.30 updated the documentation and extended it with examples and suggestions
-1.31 added lookslikemapcode() and coord2mc1()
-1.32 fixes 1.29 so no country-wide alternative is produced in the edge case where there simply is no country code
-
-
+1.31 added lookslikemapcode();
+1.32 added coord2mc1(); fixed 1.29 so no country-wide alternative is produced in edge cases; prevent FIJI failing to decode at exactly 180 degrees;

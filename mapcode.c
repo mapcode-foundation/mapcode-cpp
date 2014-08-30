@@ -9,7 +9,12 @@
 
 static const double PI = 3.14159265358979323846;
 static const int RESULTS_MAX = 64;
-static const int SHOW_PROGRESS = 250;
+static const int SHOW_PROGRESS = 125;
+
+static int largestNrOfResults = 0;
+static double latLargestNrOfResults = 0.0;
+static double lonLargestNrOfResults = 0.0;
+static int totalNrOfResults = 0;
 
 static void usage(const char* appName) {
     printf("MAPCODE (C library version %s)\n", mapcode_cversion);
@@ -109,6 +114,13 @@ static int printMapcodes(double lat, double lon, int iShowError) {
         printf("%s %s\n", results[(j * 2) + 1], results[(j * 2)]);
     }
     printf("\n");
+
+    if (nrResults > largestNrOfResults) {
+        largestNrOfResults = nrResults;
+        latLargestNrOfResults = lat;
+        lonLargestNrOfResults = lon;
+    }
+    totalNrOfResults += nrResults;
     return nrResults;
 }
 
@@ -185,7 +197,15 @@ int main(const int argc, const char** argv)
             usage(appName);
             return -1;
         }
-        for (int i = 0; i < NR_RECS; ++i) {
+
+        // Statistics.
+        largestNrOfResults = 0;
+        latLargestNrOfResults = 0.0;
+        lonLargestNrOfResults = 0.0;
+        totalNrOfResults = 0;
+
+        int nrPoints = NR_RECS;
+        for (int i = 0; i < nrPoints; ++i) {
             long minLonE6;
             long maxLonE6;
             long minLatE6;
@@ -241,9 +261,14 @@ int main(const int argc, const char** argv)
             printMapcodes(maxLat + 22, (maxLon - minLon) / 2, 0);
 
             if ((i % SHOW_PROGRESS) == 0) {
-                fprintf(stderr, "Processed %d of %d regions...\r", i, NR_RECS);
+                fprintf(stderr, "Processed %d of %d regions (generated %d Mapcodes)...\r", i, nrPoints, totalNrOfResults);
             }
         }
+        fprintf(stderr, "\nStatistics:\n");
+        fprintf(stderr, "Total number of 3D points generated     = %d\n", nrPoints);
+        fprintf(stderr, "Total number of Mapcodes generated      = %d\n", totalNrOfResults);
+        fprintf(stderr, "Average number of Mapcodes per 3D point = %f\n", ((float) totalNrOfResults) / ((float) nrPoints));
+        fprintf(stderr, "Largest number of results for 1 Mapcode = %d at (%f, %f)\n", largestNrOfResults, latLargestNrOfResults, lonLargestNrOfResults);
     }
     else if ((strcmp(cmd, "-g") == 0) || (strcmp(cmd, "--grid") == 0) ||
         (strcmp(cmd, "-r") == 0) || (strcmp(cmd, "--random") == 0)) {
@@ -282,10 +307,10 @@ int main(const int argc, const char** argv)
         }
 
         // Statistics.
-        int largestNrOfResults = 0;
-        double latLargestNrOfResults = 0.0;
-        double lonLargestNrOfResults = 0.0;
-        int totalNrOfResults = 0;
+        largestNrOfResults = 0;
+        latLargestNrOfResults = 0.0;
+        lonLargestNrOfResults = 0.0;
+        totalNrOfResults = 0;
 
         int gridX = 0;
         int gridY = 0;
@@ -322,7 +347,7 @@ int main(const int argc, const char** argv)
             }
             totalNrOfResults += nrResults;
             if ((i % SHOW_PROGRESS) == 0) {
-                fprintf(stderr, "Created %d of %d 3D %s data points...\r", i, nrPoints, random ? "random" : "grid");
+                fprintf(stderr, "Created %d of %d 3D %s data points (generated %d Mapcodes)...\r", i, nrPoints, random ? "random" : "grid", totalNrOfResults);
             }
         }
         fprintf(stderr, "\nStatistics:\n");

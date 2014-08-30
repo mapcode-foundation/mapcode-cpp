@@ -333,7 +333,7 @@ int main(const int argc, const char** argv)
 
             if ((i % SHOW_PROGRESS) == 0) {
                 fprintf(stderr, "[%d%%] Processed %d of %d regions (generated %d Mapcodes)...\r",
-                    (int) (((float) i / ((float) nrPoints)) + 0.5),
+                    (int) ((((float) i / ((float) nrPoints)) * 100.0) + 0.5),
                     i, nrPoints, totalNrOfResults);
             }
         }
@@ -422,7 +422,7 @@ int main(const int argc, const char** argv)
             totalNrOfResults += nrResults;
             if ((i % SHOW_PROGRESS) == 0) {
                 fprintf(stderr, "[%d%%] Created %d of %d 3D %s data points (generated %d Mapcodes)...\r",
-                    (int) (((float) i / ((float) nrPoints)) + 0.5),
+                    (int) ((((float) i / ((float) nrPoints)) * 100.0) + 0.5),
                     i, nrPoints, random ? "random" : "grid", totalNrOfResults);
             }
         }

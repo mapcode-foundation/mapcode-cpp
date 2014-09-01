@@ -27,7 +27,12 @@
 #include <math.h>
 #include "mapcoder/mapcoder.c"
 
+static const char*  VERSION             = "1.01";
+static const int    SELF_CHECK          = 1;
+static const int    SELF_CHECK_EXIT     = 0;
 
+static const int    NORMAL_ERROR    = 1;
+static const int    INTERNAL_ERROR  = 2;
 
 /**
  * Some global constants to be used.
@@ -35,6 +40,7 @@
 static const double PI              = 3.14159265358979323846;
 static const int    RESULTS_MAX     = 64;
 static const int    SHOW_PROGRESS   = 125;
+static const double DELTA           = 0.001;
 
 
 
@@ -42,10 +48,11 @@ static const int    SHOW_PROGRESS   = 125;
  * These statistics are stored globally so they can be updated easily by the
  * generateAndOutputMapcodes() method.
  */
+static int      totalNrOfPoints         = 0;
+static int      totalNrOfResults        = 0;
 static int      largestNrOfResults      = 0;
 static double   latLargestNrOfResults   = 0.0;
 static double   lonLargestNrOfResults   = 0.0;
-static int      totalNrOfResults        = 0;
 
 
 
@@ -54,7 +61,7 @@ static int      totalNrOfResults        = 0;
  * whenever a incorrect amount or combination of parameters is entered.
  */
 static void usage(const char* appName) {
-    printf("MAPCODE (C library version %s)\n", mapcode_cversion);
+    printf("MAPCODE %s (C library version %s)%s\n", VERSION, mapcode_cversion, SELF_CHECK ? " (self-checking)" : "");
     printf("Copyright (C) 2014 Stichting Mapcode Foundation\n");
     printf("\n");
     printf("Usage:\n");
@@ -69,8 +76,8 @@ static void usage(const char* appName) {
     printf("       encoding will only succeeed if the lat/lon is located in the territory.\n");
     printf("\n");
     printf("    %s [-b | --boundaries]\n", appName);
-    printf("    %s [-g | --grid] <nrPoints>\n", appName);
-    printf("    %s [-r | --random] <nrPoints> [<seed>]\n", appName);
+    printf("    %s [-g | --grid] <nrOfPoints>\n", appName);
+    printf("    %s [-r | --random] <nrOfPoints> [<seed>]\n", appName);
     printf("\n");
     printf("       Create a test set of lat/lon pairs based on the Mapcode boundaries database\n");
     printf("       as a fixed 3D grid or random uniformly distributed set of lat/lons with their\n");
@@ -92,6 +99,9 @@ static void usage(const char* appName) {
     printf("\n     Notes on the use of stdout and stderr:\n");
     printf("\n     stdout: used for outputting 3D point data; stderr: used for statistics.");
     printf("\n     You can redirect stdout to a destination file, while stderr will show progress.\n");
+    printf("\n");
+    printf("       The result code is 0 when no error occurred, 1 if an input error occurred and 2\n");
+    printf("       if an internal error occurred.\n");
 }
 
 
@@ -156,28 +166,116 @@ static void convertLatLonToXYZ(double latDeg, double lonDeg, double* x, double* 
 
 
 /**
+ * This methods provides a self check for encoding lat/lon to Mapcode.
+ */
+static void selfCheckLatLonToMapcode(const double lat, double lon, const char* territory, const char* mapcode) {
+    int context = text2tc(territory, 0);
+    char* results[RESULTS_MAX];
+    const double limitLat = (lat < -90.0) ? -90.0 : ((lat > 90.0) ? 90.0 : lat);
+    const double limitLon = (lon < -180.0) ? -180.0 : ((lon > 180.0) ? 180.0 : lon);
+    const int nrResults = coord2mc(results, limitLat, limitLon, context);
+    if (nrResults <= 0) {
+        fprintf(stderr, "internal error: encoding lat/lon to Mapcode failure; "
+            "cannot encode lat=%f, lon=%f (default territory=%s)\n",
+            lat, lon, territory);
+        if (SELF_CHECK_EXIT) {
+            exit(INTERNAL_ERROR);
+        }
+        return;
+    }
+    int found = 0;
+    for (int i = 0; !found && (i < nrResults); ++i) {
+        const char* foundMapcode = results[(i * 2)];
+        const char* foundTerritory = results[(i * 2) + 1];
+        found = ((strcmp(territory, foundTerritory) == 0) && (strcmp(mapcode, foundMapcode) == 0));
+    }
+    if (!found) {
+        fprintf(stderr, "internal error: encoding lat/lon to Mapcode failure; "
+            "Mapcode '%s %s' decodes to lat=%f(%f), lon=%f(%f), "
+            "which does not encode back to '%s %s'\n",
+            territory, mapcode, lat, limitLat, lon, limitLon, territory, mapcode);
+        if (SELF_CHECK_EXIT) {
+            exit(INTERNAL_ERROR);
+        }
+        return;
+    }
+}
+
+
+
+/**
+ * This method provides a self-check for decoding a Mapcode to lat/lon.
+ */
+static void selfCheckMapcodeToLatLon(const char* territory, const char* mapcode,
+    const double lat, const double lon) {
+    double foundLat;
+    double foundLon;
+    int foundContext = text2tc(territory, 0);
+    int err = mc2coord(&foundLat, &foundLon, mapcode, foundContext);
+    if (err != 0) {
+        fprintf(stderr, "internal error: decoding Mapcode to lat/lon failure; "
+            "cannot decode '%s %s')\n", territory, mapcode);
+        if (SELF_CHECK_EXIT) {
+            exit(INTERNAL_ERROR);
+        }
+        return;
+    }
+    double deltaLat = ((foundLat - lat) >= 0.0 ? (foundLat - lat) : -(foundLat - lat));
+    double deltaLon = ((foundLon - lon) >- 0.0 ? (foundLon - lon) : -(foundLon - lon));
+    if (deltaLon > 180.0) {
+        deltaLon = 360.0 - deltaLon;
+    }
+    if ((deltaLat > DELTA) || (deltaLon > DELTA)) {
+        fprintf(stderr, "internal error: decoding Mapcode to lat/lon failure; "
+            "lat=%f, lon=%f produces Mapcode %s %s, "
+            "which decodes to lat=%f (delta=%f), lon=%f (delta=%f)\n",
+            lat, lon, territory, mapcode, foundLat, deltaLat, foundLon, deltaLon);
+        if (SELF_CHECK_EXIT) {
+            exit(INTERNAL_ERROR);
+        }
+        return;
+    }
+}
+
+
+
+/**
  * The method printMapcode() generates and outputs Mapcodes for a lat/lon pair.
  * If iShowError != 0, then encoding errors are output to stderr, otherwise they
  * are ignored.
  */
-static int generateAndOutputMapcodes(double lat, double lon, int iShowError) {
-    const char* results[RESULTS_MAX];
+static void generateAndOutputMapcodes(double lat, double lon, int iShowError) {
+
+    char* results[RESULTS_MAX];
     int context = 0;
     const int nrResults = coord2mc(results, lat, lon, context);
     if (nrResults <= 0) {
         if (iShowError) {
             fprintf(stderr, "error: cannot encode lat=%f, lon=%f)\n", lat, lon);
+            exit(NORMAL_ERROR);
         }
-        return -1;
     }
+
     double x;
     double y;
     double z;
     convertLatLonToXYZ(lat, lon, &x, &y, &z);
     printf("%d %lf %lf %lf %lf %lf\n", nrResults, lat, lon, x, y, z);
     for (int j = 0; j < nrResults; ++j) {
-        printf("%s %s\n", results[(j * 2) + 1], results[(j * 2)]);
+        const char* foundMapcode = results[(j * 2)];
+        const char* foundTerritory = results[(j * 2) + 1];
+
+        // Output result line.
+        printf("%s %s\n", foundTerritory, foundMapcode);
+
+        // Self-checking code to see if encoder produces this Mapcode for the lat/lon.
+        if (SELF_CHECK) {
+            selfCheckLatLonToMapcode(lat, lon, foundTerritory, foundMapcode);
+            selfCheckMapcodeToLatLon(foundTerritory, foundMapcode, lat, lon);
+        }
     }
+
+    // Add empty line.
     printf("\n");
 
     if (nrResults > largestNrOfResults) {
@@ -186,7 +284,44 @@ static int generateAndOutputMapcodes(double lat, double lon, int iShowError) {
         lonLargestNrOfResults = lon;
     }
     totalNrOfResults += nrResults;
-    return nrResults;
+}
+
+
+
+/**
+ * This method resets the statistics counters.
+ */
+static void resetStatistics(int nrOfPoints) {
+    totalNrOfPoints = nrOfPoints;
+    largestNrOfResults = 0;
+    latLargestNrOfResults = 0.0;
+    lonLargestNrOfResults = 0.0;
+}
+
+
+
+/**
+ * This method outputs the statistics.
+ */
+static void outputStatistics() {
+    fprintf(stderr, "\nStatistics:\n");
+    fprintf(stderr, "Total number of 3D points generated     = %d\n", totalNrOfPoints);
+    fprintf(stderr, "Total number of Mapcodes generated      = %d\n", totalNrOfResults);
+    fprintf(stderr, "Average number of Mapcodes per 3D point = %f\n",
+        ((float) totalNrOfResults) / ((float) totalNrOfPoints));
+    fprintf(stderr, "Largest number of results for 1 Mapcode = %d at (%f, %f)\n",
+        largestNrOfResults, latLargestNrOfResults, lonLargestNrOfResults);
+}
+
+
+
+/**
+ * This method shows a progress indication.
+ */
+static void showProgress(int i) {
+    fprintf(stderr, "[%d%%] Processed %d of %d regions (generated %d Mapcodes)...\r",
+        (int) ((((float) i / ((float) totalNrOfPoints)) * 100.0) + 0.5),
+        i, totalNrOfPoints, totalNrOfResults);
 }
 
 
@@ -201,7 +336,7 @@ int main(const int argc, const char** argv)
     const char* appName = argv[0];
     if (argc < 2) {
         usage(appName);
-        return -1;
+        return NORMAL_ERROR;
     }
 
     // First argument: command.
@@ -214,20 +349,34 @@ int main(const int argc, const char** argv)
         if (argc < 4) {
             fprintf(stderr, "error: incorrect number of arguments\n\n");
             usage(appName);
-            return -1;
+            return NORMAL_ERROR;
         }
 
         const char* defaultTerritory = argv[2];
         double lat;
         double lon;
+
+        // Get the territory context.
         int context = text2tc(defaultTerritory, 0);
+
+        // Decode every Mapcode.
         for (int i = 3; i < argc; ++i) {
-            int err = mc2coord(&lat, &lon, argv[i], context);
+
+            // Decode the Mapcode to a lat/lon.
+            const char* mapcode = argv[i];
+            int err = mc2coord(&lat, &lon, mapcode, context);
             if (err != 0) {
-                fprintf(stderr, "error: cannot decode '%s' (default territory='%s')\n", argv[i], argv[2]);
-                return -1;
+                fprintf(stderr, "error: cannot decode '%s %s'\n", defaultTerritory, mapcode);
+                return NORMAL_ERROR;
             }
+
+            // Output the decoded lat/lon.
             printf("%f %f\n", lat, lon);
+
+            // Self-checking code to see if encoder produces this Mapcode for the lat/lon.
+            if (SELF_CHECK) {
+                selfCheckLatLonToMapcode(lat, lon, defaultTerritory, mapcode);
+            }
         }
     }
     else if ((strcmp(cmd, "-e") == 0) || (strcmp(cmd, "--encode") == 0)) {
@@ -238,24 +387,43 @@ int main(const int argc, const char** argv)
         if ((argc != 4) && (argc != 5)) {
             fprintf(stderr, "error: incorrect number of arguments\n\n");
             usage(appName);
-            return -1;
+            return NORMAL_ERROR;
+        }
+        if ((!isdigit(*argv[2]) && (*argv[2] != '-')) || (!isdigit(*argv[3]) && (*argv[3] != '-'))) {
+            fprintf(stderr, "error: latitude and longitude must be numeric\n");
+            usage(appName);
+            return NORMAL_ERROR;
         }
         const double lat = atof(argv[2]);
         const double lon = atof(argv[3]);
 
+        // Get territory context.
         int context = 0;
+        char* defaultTerritory = "AAA";
         if (argc == 5) {
             context = text2tc(argv[4], 0);
+            defaultTerritory = argv[4];
         }
-        const char* results[RESULTS_MAX];
+
+        // Encode the lat/lon to a set of Mapcodes.
+        char* results[RESULTS_MAX];
         const int nrResults = coord2mc(results, lat, lon, context);
         if (nrResults <= 0) {
-            fprintf(stderr, "error: cannot encode lat=%s, lon=%s (default territory=%d)\n",
-                argv[2], argv[3], context);
-            return -1;
+            fprintf(stderr, "error: cannot encode lat=%f, lon=%f (default territory=%s)\n",
+                lat, lon, defaultTerritory);
+            return NORMAL_ERROR;
         }
+
+        // Output the Mapcode.
         for (int i = 0; i < nrResults; ++i) {
-            printf("%s %s\n", results[(i * 2) + 1], results[(i * 2)]);
+            const char* foundMapcode = results[(i * 2)];
+            const char* foundTerritory = results[(i * 2) + 1];
+            printf("%s %s\n", foundTerritory, foundMapcode);
+
+            // Self-checking code to see if decoder produces the lat/lon for all of these Mapcodes.
+            if (SELF_CHECK) {
+                selfCheckMapcodeToLatLon(foundTerritory, foundMapcode, lat, lon);
+            }
         }
     }
     else if ((strcmp(cmd, "-b") == 0) || (strcmp(cmd, "--boundaries") == 0)) {
@@ -266,17 +434,11 @@ int main(const int argc, const char** argv)
         if (argc != 2) {
             fprintf(stderr, "error: incorrect number of arguments\n\n");
             usage(appName);
-            return -1;
+            return NORMAL_ERROR;
         }
 
-        // Statistics.
-        largestNrOfResults = 0;
-        latLargestNrOfResults = 0.0;
-        lonLargestNrOfResults = 0.0;
-        totalNrOfResults = 0;
-
-        int nrPoints = NR_RECS;
-        for (int i = 0; i < nrPoints; ++i) {
+        resetStatistics(NR_RECS);
+        for (int i = 0; i < totalNrOfPoints; ++i) {
             long minLonE6;
             long maxLonE6;
             long minLatE6;
@@ -332,35 +494,28 @@ int main(const int argc, const char** argv)
             generateAndOutputMapcodes(maxLat + 22, (maxLon - minLon) / 2, 0);
 
             if ((i % SHOW_PROGRESS) == 0) {
-                fprintf(stderr, "[%d%%] Processed %d of %d regions (generated %d Mapcodes)...\r",
-                    (int) ((((float) i / ((float) nrPoints)) * 100.0) + 0.5),
-                    i, nrPoints, totalNrOfResults);
+                showProgress(i);
             }
         }
-        fprintf(stderr, "\nStatistics:\n");
-        fprintf(stderr, "Total number of 3D points generated     = %d\n", nrPoints);
-        fprintf(stderr, "Total number of Mapcodes generated      = %d\n", totalNrOfResults);
-        fprintf(stderr, "Average number of Mapcodes per 3D point = %f\n", ((float) totalNrOfResults) / ((float) nrPoints));
-        fprintf(stderr, "Largest number of results for 1 Mapcode = %d at (%f, %f)\n",
-            largestNrOfResults, latLargestNrOfResults, lonLargestNrOfResults);
+        outputStatistics();
     }
     else if ((strcmp(cmd, "-g") == 0) || (strcmp(cmd, "--grid") == 0) ||
         (strcmp(cmd, "-r") == 0) || (strcmp(cmd, "--random") == 0)) {
 
         // ------------------------------------------------------------------
-        // Generate grid test set:    [-g | --grid]   <nrPoints>
-        // Generate uniform test set: [-r | --random] <nrPoints> [<seed>]
+        // Generate grid test set:    [-g | --grid]   <nrOfPoints>
+        // Generate uniform test set: [-r | --random] <nrOfPoints> [<seed>]
         // ------------------------------------------------------------------
         if ((argc < 3) || (argc > 4)) {
             fprintf(stderr, "error: incorrect number of arguments\n\n");
             usage(appName);
-            return -1;
+            return NORMAL_ERROR;
         }
-        const int nrPoints = atoi(argv[2]);
-        if (nrPoints < 1) {
+        int nrOfPoints = atoi(argv[2]);
+        if (nrOfPoints < 1) {
             fprintf(stderr, "error: total number of points to generate must be >= 1\n\n");
             usage(appName);
-            return -1;
+            return NORMAL_ERROR;
         }
         int random = (strcmp(cmd, "-r") == 0) || (strcmp(cmd, "--random") == 0);
         if (random) {
@@ -376,20 +531,18 @@ int main(const int argc, const char** argv)
             if (argc > 3) {
                 fprintf(stderr, "error: cannot specify seed for -g/--grid\n\n");
                 usage(appName);
-                return -1;
+                return NORMAL_ERROR;
             }
         }
 
         // Statistics.
-        largestNrOfResults = 0;
-        latLargestNrOfResults = 0.0;
-        lonLargestNrOfResults = 0.0;
-        totalNrOfResults = 0;
+        resetStatistics(nrOfPoints);
+        int totalNrOfResults = 0;
 
         int gridX = 0;
         int gridY = 0;
-        int line = round(sqrt(nrPoints));
-        for (int i = 0; i < nrPoints; ++i) {
+        int line = round(sqrt(totalNrOfPoints));
+        for (int i = 0; i < totalNrOfPoints; ++i) {
             double lat;
             double lon;
             double unit1;
@@ -413,25 +566,13 @@ int main(const int argc, const char** argv)
             }
 
             unitToLatLonDeg(unit1, unit2, &lat, &lon);
-            const int nrResults = generateAndOutputMapcodes(lat, lon, 1);
-            if (nrResults > largestNrOfResults) {
-                largestNrOfResults = nrResults;
-                latLargestNrOfResults = lat;
-                lonLargestNrOfResults = lon;
-            }
-            totalNrOfResults += nrResults;
+            generateAndOutputMapcodes(lat, lon, 1);
+
             if ((i % SHOW_PROGRESS) == 0) {
-                fprintf(stderr, "[%d%%] Created %d of %d 3D %s data points (generated %d Mapcodes)...\r",
-                    (int) ((((float) i / ((float) nrPoints)) * 100.0) + 0.5),
-                    i, nrPoints, random ? "random" : "grid", totalNrOfResults);
+                showProgress(i);
             }
         }
-        fprintf(stderr, "\nStatistics:\n");
-        fprintf(stderr, "Total number of 3D points generated     = %d\n", nrPoints);
-        fprintf(stderr, "Total number of Mapcodes generated      = %d\n", totalNrOfResults);
-        fprintf(stderr, "Average number of Mapcodes per 3D point = %f\n", ((float) totalNrOfResults) / ((float) nrPoints));
-        fprintf(stderr, "Largest number of results for 1 Mapcode = %d at (%f, %f)\n",
-            largestNrOfResults, latLargestNrOfResults, lonLargestNrOfResults);
+        outputStatistics();
     }
     else {
 
@@ -439,7 +580,8 @@ int main(const int argc, const char** argv)
         // Usage.
         // ------------------------------------------------------------------
         usage(appName);
-        return -1;
+        return NORMAL_ERROR;
     }
+    fprintf(stderr, "done\n");
     return 0;
 }

@@ -27,7 +27,7 @@
 #include <math.h>
 #include "mapcoder/mapcoder.c"
 
-static const char*  VERSION             = "1.01";
+static const char*  VERSION             = "1";
 static const int    SELF_CHECK          = 1;
 static const int    SELF_CHECK_EXIT     = 0;
 
@@ -61,7 +61,7 @@ static double   lonLargestNrOfResults   = 0.0;
  * whenever a incorrect amount or combination of parameters is entered.
  */
 static void usage(const char* appName) {
-    printf("MAPCODE %s (C library version %s)%s\n", VERSION, mapcode_cversion, SELF_CHECK ? " (self-checking)" : "");
+    printf("MAPCODE (version %s.%s%s)\n", mapcode_cversion, VERSION, SELF_CHECK ? ", self-checking" : "");
     printf("Copyright (C) 2014 Stichting Mapcode Foundation\n");
     printf("\n");
     printf("Usage:\n");

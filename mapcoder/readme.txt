@@ -24,3 +24,4 @@ version history
 1.30 updated the documentation and extended it with examples and suggestions
 1.31 added lookslikemapcode();
 1.32 added coord2mc1(); fixed 1.29 so no country-wide alternative is produced in edge cases; prevent FIJI failing to decode at exactly 180 degrees;
+1.33 fix to not remove valid results just across the edge of a territory

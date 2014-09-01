@@ -1364,11 +1364,13 @@ int master_decode(  long *nx,long *ny, // <- store result in nx,ny
 			    if (isuseless(m)) {
 				    int j,fitssomewhere=0; 
             for (j=iso_start; (j)<m; j++) { // look in previous rects
-              long minx,miny,maxx,maxy; 
+              long minx,miny,maxx,maxy,xdiv8;
               if (isuseless((j))) continue;
               getboundaries((j),minx,miny,maxx,maxy);		
-					    if ( miny<=*ny && *ny<maxy && isInRange(*nx,minx,maxx) ) { fitssomewhere=1; break; }
-				    }
+              // 1.33 fix to not remove valid results just across the edge of a territory
+              xdiv8 = x_divider(miny,maxy)/4; // should be /8 but there's some extra margin
+              if ( miny-60<=*ny && *ny<maxy+60 && isInRange(*nx,minx-xdiv8,maxx+xdiv8) ) { fitssomewhere=1; break; }
+            }
             if (!fitssomewhere) {
               err=-1234;
             }
@@ -1629,8 +1631,7 @@ void master_encode( char *resultbuffer, int the_ctry, long x, long y, int forcec
 
 			
 #ifdef VERSION_1_32 // 1.32 true recursive processing
-        if (!stop_with_one_result)
-          master_encode( resultbuffer, the_ctry, x,y, forcecoder, 0,0,1 ); 
+        master_encode( resultbuffer, the_ctry, x,y, forcecoder, stop_with_one_result,/*allow-world*/0,1 ); 
         result_override=-1;
         return; /**/
 #else

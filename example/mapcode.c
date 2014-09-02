@@ -25,7 +25,7 @@
 
 #include <stdio.h>
 #include <math.h>
-#include "mapcoder/mapcoder.c"
+#include "../mapcodelib/mapcoder.c"
 
 static const char*  VERSION             = "1";
 static const int    SELF_CHECK          = 1;
@@ -38,7 +38,6 @@ static const int    INTERNAL_ERROR  = 2;
  * Some global constants to be used.
  */
 static const double PI              = 3.14159265358979323846;
-static const int    RESULTS_MAX     = 64;
 static const int    SHOW_PROGRESS   = 125;
 static const double DELTA           = 0.001;
 
@@ -169,11 +168,11 @@ static void convertLatLonToXYZ(double latDeg, double lonDeg, double* x, double* 
  * This methods provides a self check for encoding lat/lon to Mapcode.
  */
 static void selfCheckLatLonToMapcode(const double lat, double lon, const char* territory, const char* mapcode) {
-    int context = text2tc(territory, 0);
-    char* results[RESULTS_MAX];
+    int context = convertTerritoryIsoNameToCode(territory, 0);
+    char* results[MAX_NR_OF_MAPCODE_RESULTS];
     const double limitLat = (lat < -90.0) ? -90.0 : ((lat > 90.0) ? 90.0 : lat);
     const double limitLon = (lon < -180.0) ? -180.0 : ((lon > 180.0) ? 180.0 : lon);
-    const int nrResults = coord2mc(results, limitLat, limitLon, context);
+    const int nrResults = encodeLatLonToMapcodes(results, limitLat, limitLon, context);
     if (nrResults <= 0) {
         fprintf(stderr, "internal error: encoding lat/lon to Mapcode failure; "
             "cannot encode lat=%f, lon=%f (default territory=%s)\n",
@@ -210,8 +209,8 @@ static void selfCheckMapcodeToLatLon(const char* territory, const char* mapcode,
     const double lat, const double lon) {
     double foundLat;
     double foundLon;
-    int foundContext = text2tc(territory, 0);
-    int err = mc2coord(&foundLat, &foundLon, mapcode, foundContext);
+    int foundContext = convertTerritoryIsoNameToCode(territory, 0);
+    int err = decodeMapcodeToLatLon(&foundLat, &foundLon, mapcode, foundContext);
     if (err != 0) {
         fprintf(stderr, "internal error: decoding Mapcode to lat/lon failure; "
             "cannot decode '%s %s')\n", territory, mapcode);
@@ -246,9 +245,9 @@ static void selfCheckMapcodeToLatLon(const char* territory, const char* mapcode,
  */
 static void generateAndOutputMapcodes(double lat, double lon, int iShowError) {
 
-    char* results[RESULTS_MAX];
+    char* results[MAX_NR_OF_MAPCODE_RESULTS];
     int context = 0;
-    const int nrResults = coord2mc(results, lat, lon, context);
+    const int nrResults = encodeLatLonToMapcodes(results, lat, lon, context);
     if (nrResults <= 0) {
         if (iShowError) {
             fprintf(stderr, "error: cannot encode lat=%f, lon=%f)\n", lat, lon);
@@ -357,14 +356,14 @@ int main(const int argc, const char** argv)
         double lon;
 
         // Get the territory context.
-        int context = text2tc(defaultTerritory, 0);
+        int context = convertTerritoryIsoNameToCode(defaultTerritory, 0);
 
         // Decode every Mapcode.
         for (int i = 3; i < argc; ++i) {
 
             // Decode the Mapcode to a lat/lon.
             const char* mapcode = argv[i];
-            int err = mc2coord(&lat, &lon, mapcode, context);
+            int err = decodeMapcodeToLatLon(&lat, &lon, mapcode, context);
             if (err != 0) {
                 fprintf(stderr, "error: cannot decode '%s %s'\n", defaultTerritory, mapcode);
                 return NORMAL_ERROR;
@@ -401,13 +400,13 @@ int main(const int argc, const char** argv)
         int context = 0;
         char* defaultTerritory = "AAA";
         if (argc == 5) {
-            context = text2tc(argv[4], 0);
+            context = convertTerritoryIsoNameToCode(argv[4], 0);
             defaultTerritory = argv[4];
         }
 
         // Encode the lat/lon to a set of Mapcodes.
-        char* results[RESULTS_MAX];
-        const int nrResults = coord2mc(results, lat, lon, context);
+        char* results[MAX_NR_OF_MAPCODE_RESULTS];
+        const int nrResults = encodeLatLonToMapcodes(results, lat, lon, context);
         if (nrResults <= 0) {
             fprintf(stderr, "error: cannot encode lat=%f, lon=%f (default territory=%s)\n",
                 lat, lon, defaultTerritory);
@@ -437,7 +436,7 @@ int main(const int argc, const char** argv)
             return NORMAL_ERROR;
         }
 
-        resetStatistics(NR_RECS);
+        resetStatistics(NR_BOUNDARY_RECS);
         for (int i = 0; i < totalNrOfPoints; ++i) {
             long minLonE6;
             long maxLonE6;

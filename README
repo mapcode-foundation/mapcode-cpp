@@ -1,0 +1,54 @@
+-------------------------------------------------------------------------------
+Copyright (C) 2014 Stichting Mapcode Foundation (http://www.mapcode.com)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+MAPCODE LIBRARY: mapcodelib/
+-------------------------------------------------------------------------------
+
+The directory 'mapcodelib' contains the files:
+
+	mapcoder.h      <-- Header file with method prototypes and defines for caller.
+	mapcoder.c
+	basics.h
+
+Together these provide routine to encode/decode Mapcodes.
+
+Documentation, including example snippets of C source code, can be found in
+
+	mapcode_library.doc     (Microsoft Word format).
+
+Also see www.mapcode.com for background and reference materials.
+
+Note: this version may be restricted to a particular area of the Earth!
+In that case, basics.h will state a version number of the for:
+	#define mapcode_cversion "1.2xxx"
+where "xxx" states the geographical limitation.
+
+-------------------------------------------------------------------------------
+EXAMPLE: example/
+-------------------------------------------------------------------------------
+
+The directory 'example' contains a Mapcode encoding/decoding utility, as an example
+of how to use the library.
+
+To build the original Mapcode tool, execute:
+
+  cd example
+  gcc mapcode.c -o mapcode
+
+For help, simply execute the binary file 'mapcode' without no arguments.
+This tool provides a rather extensive command-line interface to encode and
+decode Mapcodes.

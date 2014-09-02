@@ -24,6 +24,7 @@
  */
 
 #include <stdio.h>
+#include <time.h>
 #include <math.h>
 #include "../mapcodelib/mapcoder.c"
 
@@ -144,8 +145,8 @@ static void unitToLatLonDeg(
     const double lonRad = atan2(y, x);
 
     // Convert radians to degrees.
-    *latDeg = isnan(latRad) ? 90.0 : radToDeg(latRad);
-    *lonDeg = isnan(lonRad) ? 180.0 : radToDeg(lonRad);
+    *latDeg = (latRad == NAN) ? 90.0 : radToDeg(latRad);
+    *lonDeg = (lonRad == NAN) ? 180.0 : radToDeg(lonRad);
 }
 
 
@@ -398,7 +399,7 @@ int main(const int argc, const char** argv)
 
         // Get territory context.
         int context = 0;
-        char* defaultTerritory = "AAA";
+        const char* defaultTerritory = "AAA";
         if (argc == 5) {
             context = convertTerritoryIsoNameToCode(argv[4], 0);
             defaultTerritory = argv[4];
@@ -540,7 +541,7 @@ int main(const int argc, const char** argv)
 
         int gridX = 0;
         int gridY = 0;
-        int line = round(sqrt(totalNrOfPoints));
+        int line = (int) (sqrt(totalNrOfPoints) + 0.5);
         for (int i = 0; i < totalNrOfPoints; ++i) {
             double lat;
             double lon;

@@ -2317,8 +2317,8 @@ void asdms1(unsigned char *r,double v,long max,unsigned char degsym) // worst ca
 unsigned char *asdms(unsigned char *r,double lat,double lon,unsigned char degsym) // worst case EXcluding zts is 22 bytes: -##d##'##",-###d##'##"
 {
   asdms1(r,lat,90*3600,degsym);
-  strcat(r,",");
-  asdms1(r+strlen(r),lon,180*3600,degsym);
+  strcat((char*)r,",");
+  asdms1(r+strlen((char*)r),lon,180*3600,degsym);
   return r;
 }
 
@@ -2348,7 +2348,7 @@ int interpret_coord( const unsigned char *i, int islat, double *result )
   while ( expnow<4 && isdig(*i) )
   {
     // get value
-    double v=atof(i); skipfp(i); skipwhite(i);
+    double v=atof((char*)i); skipfp(i); skipwhite(i);
     if ( *i && strchr("oOdD\x0F8\x0BA\x0B0\x0A7",*i) ) // degree symbol? $F8=248degree $BA=186 $B0=176 $A7=167
     {
       i++; skipwhite(i);

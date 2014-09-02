@@ -19,7 +19,7 @@
 #define UWORD           unsigned short int  // 2-byte unsigned integer.
 #define SUPPORT_FOREIGN_ALPHABETS
 
-#define MAX_NR_OF_MAPCODE_RESULTS           64          // Max. number of results returned by encoder.
+#define MAX_NR_OF_MAPCODE_RESULTS           48          // Max. number of results returned by encoder.
 #define MAX_MAPCODE_RESULT_LEN              24          // Max. number of characters in a single result.
 #define COMPARE_MAPCODE_MISSING_CHARACTERS  -999        // Used for compareWithMapcodeFormat.
 
@@ -203,3 +203,21 @@ const char* decodeToRoman(const UWORD* string);
  *      de-allocated by the caller. It will be overwritten by a subsequent call to this method!
  */
 const UWORD* encodeToAlphabet(const char* mapcode, int alphabet);
+
+
+/**
+ * List of #defines to support legacy systems. These names are deprecated but supported for
+ * existing systems. Please use the names above.
+ */
+#define coord2mc                    encodeLatLonToMapcodes
+#define coord2mc1                   encodeLatLonToSingleMapcode
+#define mc2coord                    decodeMapcodeToLatLon
+#define lookslikemapcode            compareWithMapcodeFormat
+#define text2tc                     convertTerritoryIsoNameToCode
+#define tc2text                     convertTerritoryCodeToIsoName
+#define tccontext                   getCountryOrParentCountry
+#define tcparent                    getParentCountryOfState
+#define decode_to_roman             decodeToRoman
+#define encode_to_alphabet          encodeToAlphabet
+#define MAX_MAPCODE_TERRITORY_CODE  MAX_CCODE
+#define NR_BOUNDARY_RECS            NR_RECS

@@ -1,31 +1,15 @@
-/*
- * Copyright (C) 2014 Stichting Mapcode Foundation (http://www.mapcode.com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 #define UWORD unsigned short int // 2-byte unsigned integer
 
 #define mapcode_cversion "1.33"
 #define MAXWIDE 10
 #define BASEX 31
 #define MAXFITLONG 6
-#define XSIDE3 168
+#define XSIDE3 168 
 #define YSIDE3 176
 
 #define ALIASES "2UK=2UT,2CG=2CT,1GU=GUM,1UM=UMI,1VI=VIR,1PR=PRI,1AS=ASM,1MP=MNP,4JB=JBT,4QL=QLD,4TS=TAS,4CX=CXR,4CC=CCK,4NF=NFK,4HM=HMD,4NI=NFK,COL=5CL,5ME=5MX,MEX=5MX,5TM=TAM,5AG=AGU,5BC=BCN,5BS=BCS,5CM=CAM,5CS=CHP,5CH=CHH,5CO=COA,5DF=DIF,5DG=DUR,5GT=GUA,5GR=GRO,5HG=HID,5JA=JAL,5MI=MIC,5MO=MOR,5NA=NAY,5NL=NLE,5OA=OAX,5PB=PUE,5QE=QUE,5QR=ROO,5SL=SLP,5SI=SIN,5SO=SON,5TB=TAB,5TL=TLA,5VE=VER,5YU=YUC,5ZA=ZAC,811=8BJ,812=8TJ,813=8HE,814=8SX,815=8NM,821=8LN,822=8JL,823=8HL,831=8SH,832=8JS,833=8ZJ,834=8AH,835=8FJ,836=8JX,837=8SD,841=8HA,842=8HB,843=8HN,844=8GD,845=8GX,846=8HI,850=8CQ,851=8SC,852=8GZ,853=8YN,854=8XZ,861=8SN,862=8GS,863=8QH,864=8NX,865=8XJ,871=TWN,891=HKG,892=MAC,8TW=TWN,8HK=HKG,8MC=MAC,BEL=7BE,KIR=7KI,PRI=7PO,CHE=7CH,KHM=7KM,PER=7PM,TAM=7TT,0US=USA,0AU=AUS,0RU=RUS,0CN=CHN,EAZ=TZA,SKM=2SK,TAA=SHN,ASC=SHN,DGA=IOT,WAK=MHL,JTN=UMI,MID=1HI,2OD=2OR,"
 
-#define MAX_MAPCODE_TERRITORY_CODE 541 // total number of areas (i.e. recognised iso codes) in this database
+#define MAX_CCODE 541 // total number of areas (i.e. recognised iso codes) in this database
 static char *entity_iso = ""
 		"VAT,MCO,GIB,TKL,CCK,BLM,NRU,TUV,MAC,SXM,"
 		"MAF,NFK,PCN,BVT,BMU,IOT,SMR,GGY,AIA,MSR,"
@@ -168,7 +152,7 @@ static char encode_chars[31] = {
 };
 
 
-static UWORD data_start[MAX_MAPCODE_TERRITORY_CODE+1] = {
+static UWORD data_start[MAX_CCODE+1] = {
 	    0,    3,    6,    9,   13,   16,   18,   19,   30,   31,
 	   33,   35,   37,   42,   44,   47,   51,   54,   56,   58,
 	   60,   62,   64,   68,   71,   79,   81,  116,  121,  131,
@@ -226,13 +210,13 @@ static UWORD data_start[MAX_MAPCODE_TERRITORY_CODE+1] = {
 	16130,16162
 };
 
-#define NR_BOUNDARY_RECS 16162
+#define NR_RECS 16162
 #define WORST_RECS_PER_CCODE 195 // 8 Argentina @43
 
 typedef struct { long minx; long miny; long maxx; long maxy; unsigned long flags; } mminforec;
 
 #ifndef MAKE_SOURCE_DIGITAL
-static mminforec mminfo[NR_BOUNDARY_RECS+1] = {
+static mminforec mminfo[NR_RECS+1] = {
 	{  12433114,  41851944,  12548434,  41938434,0x001002b},
 	{   5850000,  35450000,  18560000,  55080000,0x50a0636},
 	{  12444000,  41899000,  12460000,  41908000,0x003063c},

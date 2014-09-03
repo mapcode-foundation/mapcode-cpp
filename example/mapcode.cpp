@@ -24,9 +24,13 @@
  */
 
 #include <stdio.h>
-#include <time.h>
 #include <math.h>
+#include <time.h>
 #include "../mapcodelib/mapcoder.c"
+
+#define my_isnan(x) (false)
+#define my_round(x) ((long) (floor((x) + 0.5)))
+
 
 static const char*  VERSION             = "1";
 static const int    SELF_CHECK          = 1;
@@ -145,8 +149,8 @@ static void unitToLatLonDeg(
     const double lonRad = atan2(y, x);
 
     // Convert radians to degrees.
-    *latDeg = (latRad == NAN) ? 90.0 : radToDeg(latRad);
-    *lonDeg = (lonRad == NAN) ? 180.0 : radToDeg(lonRad);
+    *latDeg = my_isnan(latRad) ? 90.0 : radToDeg(latRad);
+    *lonDeg = my_isnan(lonRad) ? 180.0 : radToDeg(lonRad);
 }
 
 
@@ -159,7 +163,6 @@ static void convertLatLonToXYZ(double latDeg, double lonDeg, double* x, double* 
     double latRad = degToRad(latDeg);
     double lonRad = degToRad(lonDeg);
     *x = cos(latRad) * cos(lonRad);
-    *y = cos(latRad) * sin(lonRad);
     *z = sin(latRad);
 }
 
@@ -240,6 +243,32 @@ static void selfCheckMapcodeToLatLon(const char* territory, const char* mapcode,
 
 
 /**
+ * The method asCoordinate() generates and returns a printable coordinate
+ * precisely as it would be interpreted internally by Mapcode encoding
+ * (i.e. correctly rounded to the nearest one-millionth of a degree).
+ * As target, pass a buffer for at least 12 characters (including zero termination).
+ * If target = 0, an internal scratch buffer is used (the THIRD call will
+ * overwrite the first call).
+ */
+static char asCoordinateBuffer[24];
+static int ascoptr;
+static const char* asCoordinate(double coord, char* target)
+{
+    long c = (long) ((coord * 1000000) + ((coord < 0) ? -0.5 : 0.5));
+    int negative = (c < 0);
+    if (negative) {
+        c = -c;
+    }
+    if (target == 0) {
+        target = &asCoordinateBuffer[ascoptr];
+        ascoptr= ((ascoptr != 0) ? 0 : 12);
+    }
+    sprintf(target,"%s%d.%06d", (negative ? "-" : ""), c / 1000000, c % 1000000);
+    return target;
+}
+
+
+/**
  * The method printMapcode() generates and outputs Mapcodes for a lat/lon pair.
  * If iShowError != 0, then encoding errors are output to stderr, otherwise they
  * are ignored.
@@ -251,7 +280,7 @@ static void generateAndOutputMapcodes(double lat, double lon, int iShowError) {
     const int nrResults = encodeLatLonToMapcodes(results, lat, lon, context);
     if (nrResults <= 0) {
         if (iShowError) {
-            fprintf(stderr, "error: cannot encode lat=%f, lon=%f)\n", lat, lon);
+            fprintf(stderr, "error: cannot encode lat=%s, lon=%s)\n", asCoordinate(lat, 0), asCoordinate(lon, 0));
             exit(NORMAL_ERROR);
         }
     }
@@ -260,7 +289,7 @@ static void generateAndOutputMapcodes(double lat, double lon, int iShowError) {
     double y;
     double z;
     convertLatLonToXYZ(lat, lon, &x, &y, &z);
-    printf("%d %lf %lf %lf %lf %lf\n", nrResults, lat, lon, x, y, z);
+    printf("%d %s %s %lf %lf %lf\n", nrResults, asCoordinate(lat, 0), asCoordinate(lon, 0), x, y, z);
     for (int j = 0; j < nrResults; ++j) {
         const char* foundMapcode = results[(j * 2)];
         const char* foundTerritory = results[(j * 2) + 1];
@@ -541,7 +570,7 @@ int main(const int argc, const char** argv)
 
         int gridX = 0;
         int gridY = 0;
-        int line = (int) (sqrt(totalNrOfPoints) + 0.5);
+        int line = my_round(sqrt(totalNrOfPoints));
         for (int i = 0; i < totalNrOfPoints; ++i) {
             double lat;
             double lon;

@@ -42,7 +42,17 @@ int current_ccode=-1; // cache for setup_country
 
 #define MAXGLOBALRESULTS 32 // The worst actually seems to be 14, which is at 52.050500, 113.468600
 #define WORSTCASE_MAPCODE_BYTES 16 // worst case is high-precision earth xxxxx.yyyy-zz, rounded upwords to multiple of 4 bytes (assuming latin-only results)
-char global_buffer[MAXGLOBALRESULTS*2][WORSTCASE_MAPCODE_BYTES]; // cache for worst-case result
+char global_storage[2048]; // cyclic cache for results
+int storage_ptr;
+char *addstorage(const char *str)
+{
+  int len=strlen(str)+1; // bytes needed;
+  storage_ptr &= (2048-1);
+  if (storage_ptr<0 || storage_ptr+len>2048-2) storage_ptr=0;
+  strcpy(global_storage+storage_ptr,str);
+  storage_ptr+=len;
+  return global_storage+storage_ptr-len;
+}
 char **global_results;
 int nr_global_results;
 
@@ -1090,10 +1100,8 @@ void addresult(char *resultbuffer, char *result, long x,long y, int ccode)
   if (result_override>=0) ccode=result_override; // 1.32 true recursive processing
 #endif
   if (*result && global_results && nr_global_results>=0 && nr_global_results+1<(2*MAXGLOBALRESULTS)) {
-    global_results[nr_global_results]=global_buffer[nr_global_results];
-    strcpy(global_results[nr_global_results++],result);
-    global_results[nr_global_results]=global_buffer[nr_global_results];
-    strcpy(global_results[nr_global_results++],makeiso(ccode,1));
+    global_results[nr_global_results++] = addstorage(result);
+    global_results[nr_global_results++] = addstorage(makeiso(ccode,1));
   }
   // add to buffer (if any)
   if (resultbuffer)

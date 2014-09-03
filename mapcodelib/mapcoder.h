@@ -206,18 +206,17 @@ const UWORD* encodeToAlphabet(const char* mapcode, int alphabet);
 
 
 /**
- * List of #defines to support legacy systems. These names are deprecated but supported for
- * existing systems. Please use the names above.
+ * list of #defines to support legacy systems
  */
-#define coord2mc                    encodeLatLonToMapcodes
-#define coord2mc1                   encodeLatLonToSingleMapcode
-#define mc2coord                    decodeMapcodeToLatLon
-#define lookslikemapcode            compareWithMapcodeFormat
-#define text2tc                     convertTerritoryIsoNameToCode
-#define tc2text                     convertTerritoryCodeToIsoName
-#define tccontext                   getCountryOrParentCountry
-#define tcparent                    getParentCountryOfState
-#define decode_to_roman             decodeToRoman
-#define encode_to_alphabet          encodeToAlphabet
-#define MAX_MAPCODE_TERRITORY_CODE  MAX_CCODE
-#define NR_BOUNDARY_RECS            NR_RECS
+#define coord2mc encodeLatLonToMapcodes
+#define coord2mc1 encodeLatLonToSingleMapcode
+#define mc2coord decodeMapcodeToLatLon
+#define lookslikemapcode compareWithMapcodeFormat
+#define text2tc convertTerritoryIsoNameToCode
+#define tc2text convertTerritoryCodeToIsoName
+#define tccontext getCountryOrParentCountry
+#define tcparent getParentCountryOfState
+#define decode_to_roman decodeToRoman
+#define encode_to_alphabet encodeToAlphabet
+#define MAX_MAPCODE_TERRITORY_CODE MAX_CCODE
+#define NR_BOUNDARY_RECS NR_RECS

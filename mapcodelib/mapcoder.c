@@ -2341,7 +2341,7 @@ int interpret_coord( const unsigned char *i, int islat, double *result )
   #define skipnum(i) {while (isdig(*i)) i++;}
   #define skipfp(i) {skipnum(i); if (*i=='.') {i++;skipnum(i);}}
 
-  const char *winds = islat ? "nsNS+- " : "ewEW+- ";
+  char *winds = islat ? "nsNS+- " : "ewEW+- ";
 
   // skip white spaces, signs and appropriate wind direction letters
   char *p;

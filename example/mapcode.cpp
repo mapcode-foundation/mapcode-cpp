@@ -570,7 +570,7 @@ int main(const int argc, const char** argv)
 
         int gridX = 0;
         int gridY = 0;
-        int line = my_round(sqrt(totalNrOfPoints));
+        int line = my_round(sqrt((float) totalNrOfPoints));
         for (int i = 0; i < totalNrOfPoints; ++i) {
             double lat;
             double lon;

@@ -163,6 +163,7 @@ static void convertLatLonToXYZ(double latDeg, double lonDeg, double* x, double* 
     double latRad = degToRad(latDeg);
     double lonRad = degToRad(lonDeg);
     *x = cos(latRad) * cos(lonRad);
+    *y = cos(latRad) * sin(lonRad);
     *z = sin(latRad);
 }
 

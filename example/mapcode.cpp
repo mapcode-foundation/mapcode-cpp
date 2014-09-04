@@ -277,6 +277,20 @@ static void generateAndOutputMapcodes(double lat, double lon, int iShowError) {
 
     char* results[MAX_NR_OF_MAPCODE_RESULTS];
     int context = 0;
+
+	while (lon > 180) {
+		lon -= 360;
+	}
+	while (lon < -180) {
+		lon += 360;
+	}
+	while (lat > 90) {
+		lat -= 180;
+	}
+	while (lat < -90) {
+		lat += 180;
+	}
+
     const int nrResults = encodeLatLonToMapcodes(results, lat, lon, context);
     if (nrResults <= 0) {
         if (iShowError) {

@@ -832,16 +832,16 @@ void setup_country( int newccode )
 
         if ( codex==13 ) { iso_count13++; if ( iso_first13<0 ) iso_first13=i; }
 				if ( codex==21 ) { iso_count21++; if ( iso_first21<0 ) iso_first21=i; }
-				if ( codex==22 ) { if (pipe) {if (iso_firstpipe22<0) iso_firstpipe22=i; if (pipe<2)       iso_pipeletter22[iso_pipecount22++]=pipeletter(i); else if (iso_firststar22<0) iso_firststar22=i;} else { iso_count22++; if ( iso_first22<0 ) iso_first22=i; } }
-				if ( codex==14 ) { if (pipe) {if (iso_firstpipe14<0) iso_firstpipe14=i; if (pipe<2)       iso_pipeletter14[iso_pipecount14++]=pipeletter(i); else if (iso_firststar14<0) iso_firststar14=i;} else { iso_count14++; if ( iso_first14<0 ) iso_first14=i; } }
-				if ( codex==23 ) { if (pipe) {if (iso_firstpipe23<0) iso_firstpipe23=i; if (pipe<2)       iso_pipeletter23[iso_pipecount23++]=pipeletter(i); else if (iso_firststar23<0) iso_firststar23=i;} else { iso_count23++; if ( iso_first23<0 ) iso_first23=i; } }
-				if ( codex==32 ) { if (pipe) {if (iso_firstpipe32<0) iso_firstpipe32=i; if (pipe<2)       iso_pipeletter32[iso_pipecount32++]=pipeletter(i); else if (iso_firststar32<0) iso_firststar32=i;} else { iso_count32++; if ( iso_first32<0 ) iso_first32=i; } }
-				if ( codex==24 ) { if (pipe) {if (iso_firstpipe24<0) iso_firstpipe24=i; if (pipe<2)       iso_pipeletter24[iso_pipecount24++]=pipeletter(i); else if (iso_firststar24<0) iso_firststar24=i;} else { iso_count24++; if ( iso_first24<0 ) iso_first24=i; } }
-				if ( codex==33 ) { if (pipe) {if (iso_firstpipe33<0) iso_firstpipe33=i; if (pipe<2)       iso_pipeletter33[iso_pipecount33++]=pipeletter(i); else if (iso_firststar33<0) iso_firststar33=i;} else { iso_count33++; if ( iso_first33<0 ) iso_first33=i; } }
-				if ( codex==34 ) { if (pipe) {if (iso_firstpipe34<0) iso_firstpipe34=i; if (pipe<2)       iso_pipeletter34[iso_pipecount34++]=pipeletter(i); else if (iso_firststar34<0) iso_firststar34=i;} else { iso_count34++; if ( iso_first34<0 ) iso_first34=i; } }
+				if ( codex==22 ) { if (pipe) { if (iso_firstpipe22<0) iso_firstpipe22=i; if (pipe<2)       iso_pipeletter22[iso_pipecount22++]=pipeletter(i); else if (iso_firststar22<0) iso_firststar22=i;} else { iso_count22++; if ( iso_first22<0 ) iso_first22=i; } }
+				if ( codex==14 ) { if (pipe) { if (iso_firstpipe14<0) iso_firstpipe14=i; if (pipe<2)       iso_pipeletter14[iso_pipecount14++]=pipeletter(i); else if (iso_firststar14<0) iso_firststar14=i;} else { iso_count14++; if ( iso_first14<0 ) iso_first14=i; } }
+				if ( codex==23 ) { if (pipe) { if (iso_firstpipe23<0) iso_firstpipe23=i; if (pipe<2)       iso_pipeletter23[iso_pipecount23++]=pipeletter(i); else if (iso_firststar23<0) iso_firststar23=i;} else { iso_count23++; if ( iso_first23<0 ) iso_first23=i; } }
+				if ( codex==32 ) { if (pipe) { if (iso_firstpipe32<0) iso_firstpipe32=i; if (pipe<2)       iso_pipeletter32[iso_pipecount32++]=pipeletter(i); else if (iso_firststar32<0) iso_firststar32=i;} else { iso_count32++; if ( iso_first32<0 ) iso_first32=i; } }
+				if ( codex==24 ) { if (pipe) { if (iso_firstpipe24<0) iso_firstpipe24=i; if (pipe<2)       iso_pipeletter24[iso_pipecount24++]=pipeletter(i); else if (iso_firststar24<0) iso_firststar24=i;} else { iso_count24++; if ( iso_first24<0 ) iso_first24=i; } }
+				if ( codex==33 ) { if (pipe) { if (iso_firstpipe33<0) iso_firstpipe33=i; if (pipe<2)       iso_pipeletter33[iso_pipecount33++]=pipeletter(i); else if (iso_firststar33<0) iso_firststar33=i;} else { iso_count33++; if ( iso_first33<0 ) iso_first33=i; } }
+				if ( codex==34 ) { if (pipe) { if (iso_firstpipe34<0) iso_firstpipe34=i; if (pipe<2)       iso_pipeletter34[iso_pipecount34++]=pipeletter(i); else if (iso_firststar34<0) iso_firststar34=i;} else { iso_count34++; if ( iso_first34<0 ) iso_first34=i; } }
 				if ( codex==42 ) { iso_count42++; if ( iso_first42<0 ) iso_first42=i; }
 				if ( codex==43 ) { iso_count43++; if ( iso_first43<0 ) iso_first43=i; }
-				if ( codex==44 ) { if (pipe) {if (iso_firstpipe44<0) iso_firstpipe44=i; if (pipe<2)       iso_pipeletter44[iso_pipecount44++]=pipeletter(i); else if (iso_firststar44<0) iso_firststar44=i;} else { iso_count44++; if ( iso_first44<0 ) iso_first44=i; } }
+				if ( codex==44 ) { if (pipe) { if (iso_firstpipe44<0) iso_firstpipe44=i; if (pipe<2)       iso_pipeletter44[iso_pipecount44++]=pipeletter(i); else if (iso_firststar44<0) iso_firststar44=i;} else { iso_count44++; if ( iso_first44<0 ) iso_first44=i; } }
 		  }
     }
 
@@ -1612,7 +1612,7 @@ void master_encode( char *resultbuffer, int the_ctry, long x, long y, int forcec
     if ( ! (miny<=y && y<maxy && isInRange(x,minx,maxx) ) )
     {
       i=iso_end+1; // skip to "Earth" (if supported)
-      if (!allow_world && skip_parentstate) return;
+      if (!allow_world /*&& skip_parentstate*/) return;
     }
   }
 
@@ -2348,7 +2348,7 @@ int interpret_coord( const unsigned char *i, int islat, double *result )
   char *p;
   int sign=1;
 
-  while (*i && (p=(char*)strchr(winds,*i))!=NULL) { { if ( (p-(char*)winds) & 1 ) sign*=-1; } i++; }
+  while (*i && (p=strchr(winds,*i))!=NULL) { { if ( (p-winds) & 1 ) sign*=-1; } i++; }
 
   // we are now at a lead digit, or there is an error
   if (!isdig(*i))
@@ -2381,7 +2381,7 @@ int interpret_coord( const unsigned char *i, int islat, double *result )
   }
 
   // allow all posisble final endsigns
-  { while (*i && (p=(char*)strchr(winds,*i))!=NULL) { if ( (p-(char*)winds) & 1 ) sign*=-1; i++; } }
+  { while (*i && (p=strchr(winds,*i))!=NULL) { if ( (p-winds) & 1 ) sign*=-1; i++; } }
 
   // we now MUST be at the end of the string!
   if (*i)
@@ -2513,12 +2513,13 @@ int convertTerritoryIsoNameToCode(const char *string,int optional_tc) // optiona
 
 // pass point to an array of pointers (at least 64), will be made to point to result strings...
 // returns nr of results;
-int encodeLatLonToMapcodes_full( char **v, double lat, double lon, int tc, int stop_with_one_result ) // 1.31 allow to stop after one result
+int encodeLatLonToMapcodes_full( char **v, double lat, double lon, int tc, int stop_with_one_result, int extraDigits ) // 1.31 allow to stop after one result
 {
   int ccode=tc-1;
   if (tc==0) ccode=0;
   if (ccode<0 || ccode>=MAX_MAPCODE_TERRITORY_CODE) return 0;
   if (lat<-90 || lat>90 || lon<-180 || lon>180) return 0;
+  if (extraDigits<0) extraDigits=0; else if (extraDigits>2) extraDigits=2; use_high_precision=extraDigits;
   lat*=1000000; if (lat<0) lat-=0.5; else lat+=0.5;
   lon*=1000000; if (lon<0) lon-=0.5; else lon+=0.5;
   nr_global_results=0;
@@ -2575,15 +2576,15 @@ const UWORD* encodeToAlphabet(const char *mapcode,int alphabet) // 0=roman, 2=cy
 
 #endif
 
-int encodeLatLonToMapcodes( char **v, double lat, double lon, int tc )
+int encodeLatLonToMapcodes( char **v, double lat, double lon, int tc, int extraDigits )
 {
-  return encodeLatLonToMapcodes_full(v,lat,lon,tc,0);
+  return encodeLatLonToMapcodes_full(v,lat,lon,tc,0,extraDigits);
 }
 
-int encodeLatLonToSingleMapcode( char *result, double lat, double lon, int tc )
+int encodeLatLonToSingleMapcode( char *result, double lat, double lon, int tc, int extraDigits )
 {
   char *v[2];
-  int ret=encodeLatLonToMapcodes_full(v,lat,lon,tc,1);
+  int ret=encodeLatLonToMapcodes_full(v,lat,lon,tc,1,extraDigits);
   *result=0;
   if (ret>0) {
     if (strcmp(v[1],"AAA")!=0) {

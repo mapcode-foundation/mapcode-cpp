@@ -1,17 +1,6 @@
-/*
- * Copyright (C) 2014 Stichting Mapcode Foundation (http://www.mapcode.com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/**
+ * Copyright (C) 2014 Stichting Mapcode Foundation
+ * For terms of use refer to http://www.mapcode.com/downloads.html
  */
 
 /**
@@ -41,7 +30,6 @@
 
 #define my_isnan(x) (false)
 #define my_round(x) ((long) (floor((x) + 0.5)))
-
 
 static const char*  VERSION             = "1";
 static const int    SELF_CHECK          = 1;
@@ -91,7 +79,7 @@ static void usage(const char* appName) {
     printf("       encoding will only succeeed if the lat/lon is located in the territory.\n");
     printf("\n");
     printf("    %s [-b | --boundaries]\n", appName);
-    printf("    %s [-g | --grid] <nrOfPoints>\n", appName);
+    printf("    %s [-g | --grid] <nrOfPoints> [<extraDigits>]\n", appName);
     printf("    %s [-r | --random] <nrOfPoints> [<seed>]\n", appName);
     printf("\n");
     printf("       Create a test set of lat/lon pairs based on the Mapcode boundaries database\n");
@@ -183,12 +171,12 @@ static void convertLatLonToXYZ(double latDeg, double lonDeg, double* x, double* 
 /**
  * This methods provides a self check for encoding lat/lon to Mapcode.
  */
-static void selfCheckLatLonToMapcode(const double lat, double lon, const char* territory, const char* mapcode) {
+static void selfCheckLatLonToMapcode(const double lat, double lon, const char* territory, const char* mapcode, int extraDigits) {
     int context = convertTerritoryIsoNameToCode(territory, 0);
     char* results[MAX_NR_OF_MAPCODE_RESULTS];
     const double limitLat = (lat < -90.0) ? -90.0 : ((lat > 90.0) ? 90.0 : lat);
     const double limitLon = (lon < -180.0) ? -180.0 : ((lon > 180.0) ? 180.0 : lon);
-    const int nrResults = encodeLatLonToMapcodes(results, limitLat, limitLon, context);
+    const int nrResults = encodeLatLonToMapcodes(results, limitLat, limitLon, context, extraDigits);
     if (nrResults <= 0) {
         fprintf(stderr, "internal error: encoding lat/lon to Mapcode failure; "
             "cannot encode lat=%f, lon=%f (default territory=%s)\n",
@@ -256,7 +244,7 @@ static void selfCheckMapcodeToLatLon(const char* territory, const char* mapcode,
 
 /**
  * The method asCoordinate() generates and returns a printable coordinate
- * precisely as it would be interpreted internally by Mapcode encoding
+ * precisely as it would be interpreted internally by mapcode encoding
  * (i.e. correctly rounded to the nearest one-millionth of a degree).
  * As target, pass a buffer for at least 12 characters (including zero termination).
  * If target = 0, an internal scratch buffer is used (the THIRD call will
@@ -272,8 +260,8 @@ static const char* asCoordinate(double coord, char* target)
         c = -c;
     }
     if (target == 0) {
-        target = &asCoordinateBuffer[ascoptr];
         ascoptr= ((ascoptr != 0) ? 0 : 12);
+        target = &asCoordinateBuffer[ascoptr];
     }
     sprintf(target,"%s%d.%06d", (negative ? "-" : ""), (int) (c / 1000000), (int) (c % 1000000));
     return target;
@@ -285,25 +273,25 @@ static const char* asCoordinate(double coord, char* target)
  * If iShowError != 0, then encoding errors are output to stderr, otherwise they
  * are ignored.
  */
-static void generateAndOutputMapcodes(double lat, double lon, int iShowError) {
+static void generateAndOutputMapcodes(double lat, double lon, int iShowError, int extraDigits) {
 
     char* results[MAX_NR_OF_MAPCODE_RESULTS];
     int context = 0;
 
-	while (lon > 180) {
-		lon -= 360;
-	}
-	while (lon < -180) {
-		lon += 360;
-	}
-	while (lat > 90) {
-		lat -= 180;
-	}
-	while (lat < -90) {
-		lat += 180;
-	}
+    while (lon > 180) {
+        lon -= 360;
+    }
+    while (lon < -180) {
+        lon += 360;
+    }
+    while (lat > 90) {
+        lat -= 180;
+    }
+    while (lat < -90) {
+        lat += 180;
+    }
 
-    const int nrResults = encodeLatLonToMapcodes(results, lat, lon, context);
+    const int nrResults = encodeLatLonToMapcodes(results, lat, lon, context, extraDigits);
     if (nrResults <= 0) {
         if (iShowError) {
             fprintf(stderr, "error: cannot encode lat=%s, lon=%s)\n", asCoordinate(lat, 0), asCoordinate(lon, 0));
@@ -325,7 +313,7 @@ static void generateAndOutputMapcodes(double lat, double lon, int iShowError) {
 
         // Self-checking code to see if encoder produces this Mapcode for the lat/lon.
         if (SELF_CHECK) {
-            selfCheckLatLonToMapcode(lat, lon, foundTerritory, foundMapcode);
+            selfCheckLatLonToMapcode(lat, lon, foundTerritory, foundMapcode, extraDigits);
             selfCheckMapcodeToLatLon(foundTerritory, foundMapcode, lat, lon);
         }
     }
@@ -387,6 +375,9 @@ static void showProgress(int i) {
  */
 int main(const int argc, const char** argv)
 {
+    // Assume no extra digits (unless overridden later
+    int extraDigits=0;
+
     // Provide usage message if no arguments specified.
     const char* appName = argv[0];
     if (argc < 2) {
@@ -430,7 +421,7 @@ int main(const int argc, const char** argv)
 
             // Self-checking code to see if encoder produces this Mapcode for the lat/lon.
             if (SELF_CHECK) {
-                selfCheckLatLonToMapcode(lat, lon, defaultTerritory, mapcode);
+                selfCheckLatLonToMapcode(lat, lon, defaultTerritory, mapcode, extraDigits);
             }
         }
     }
@@ -462,7 +453,7 @@ int main(const int argc, const char** argv)
 
         // Encode the lat/lon to a set of Mapcodes.
         char* results[MAX_NR_OF_MAPCODE_RESULTS];
-        const int nrResults = encodeLatLonToMapcodes(results, lat, lon, context);
+        const int nrResults = encodeLatLonToMapcodes(results, lat, lon, context, extraDigits);
         if (nrResults <= 0) {
             fprintf(stderr, "error: cannot encode lat=%f, lon=%f (default territory=%s)\n",
                 lat, lon, defaultTerritory);
@@ -516,37 +507,37 @@ int main(const int argc, const char** argv)
             lon = (maxLon - minLon ) / 2.0;
 
             // Try center.
-            generateAndOutputMapcodes(lat, lon, 0);
+            generateAndOutputMapcodes(lat, lon, 0, extraDigits);
 
             // Try corners.
-            generateAndOutputMapcodes(minLat, minLon, 0);
-            generateAndOutputMapcodes(minLat, maxLon, 0);
-            generateAndOutputMapcodes(maxLat, minLon, 0);
-            generateAndOutputMapcodes(maxLat, maxLon, 0);
+            generateAndOutputMapcodes(minLat, minLon, 0, extraDigits);
+            generateAndOutputMapcodes(minLat, maxLon, 0, extraDigits);
+            generateAndOutputMapcodes(maxLat, minLon, 0, extraDigits);
+            generateAndOutputMapcodes(maxLat, maxLon, 0, extraDigits);
 
             // Try JUST inside.
             double factor = 1.0;
             for (int j = 1; j < 6; ++j) {
 
                 double d = 1.0 / factor;
-                generateAndOutputMapcodes(minLat + d, minLon + d, 0);
-                generateAndOutputMapcodes(minLat + d, maxLon - d, 0);
-                generateAndOutputMapcodes(maxLat - d, minLon + d, 0);
-                generateAndOutputMapcodes(maxLat - d, maxLon - d, 0);
+                generateAndOutputMapcodes(minLat + d, minLon + d, 0, extraDigits);
+                generateAndOutputMapcodes(minLat + d, maxLon - d, 0, extraDigits);
+                generateAndOutputMapcodes(maxLat - d, minLon + d, 0, extraDigits);
+                generateAndOutputMapcodes(maxLat - d, maxLon - d, 0, extraDigits);
 
                 // Try JUST outside.
-                generateAndOutputMapcodes(minLat - d, minLon - d, 0);
-                generateAndOutputMapcodes(minLat - d, maxLon + d, 0);
-                generateAndOutputMapcodes(maxLat + d, minLon - d, 0);
-                generateAndOutputMapcodes(maxLat + d, maxLon + d, 0);
+                generateAndOutputMapcodes(minLat - d, minLon - d, 0, extraDigits);
+                generateAndOutputMapcodes(minLat - d, maxLon + d, 0, extraDigits);
+                generateAndOutputMapcodes(maxLat + d, minLon - d, 0, extraDigits);
+                generateAndOutputMapcodes(maxLat + d, maxLon + d, 0, extraDigits);
                 factor = factor * 10.0;
             }
 
             // Try 22m outside.
-            generateAndOutputMapcodes(minLat - 22, (maxLon - minLon) / 2, 0);
-            generateAndOutputMapcodes(minLat - 22, (maxLon - minLon) / 2, 0);
-            generateAndOutputMapcodes(maxLat + 22, (maxLon - minLon) / 2, 0);
-            generateAndOutputMapcodes(maxLat + 22, (maxLon - minLon) / 2, 0);
+            generateAndOutputMapcodes(minLat - 22, (maxLon - minLon) / 2, 0, extraDigits);
+            generateAndOutputMapcodes(minLat - 22, (maxLon - minLon) / 2, 0, extraDigits);
+            generateAndOutputMapcodes(maxLat + 22, (maxLon - minLon) / 2, 0, extraDigits);
+            generateAndOutputMapcodes(maxLat + 22, (maxLon - minLon) / 2, 0, extraDigits);
 
             if ((i % SHOW_PROGRESS) == 0) {
                 showProgress(i);
@@ -558,7 +549,7 @@ int main(const int argc, const char** argv)
         (strcmp(cmd, "-r") == 0) || (strcmp(cmd, "--random") == 0)) {
 
         // ------------------------------------------------------------------
-        // Generate grid test set:    [-g | --grid]   <nrOfPoints>
+        // Generate grid test set:    [-g | --grid]   <nrOfPoints> [<extradigits>]
         // Generate uniform test set: [-r | --random] <nrOfPoints> [<seed>]
         // ------------------------------------------------------------------
         if ((argc < 3) || (argc > 4)) {
@@ -583,10 +574,8 @@ int main(const int argc, const char** argv)
             }
         }
         else {
-            if (argc > 3) {
-                fprintf(stderr, "error: cannot specify seed for -g/--grid\n\n");
-                usage(appName);
-                return NORMAL_ERROR;
+            if (argc == 4) {
+                extraDigits = atoi(argv[3]);
             }
         }
 
@@ -596,7 +585,7 @@ int main(const int argc, const char** argv)
 
         int gridX = 0;
         int gridY = 0;
-        int line = my_round(sqrt((float) totalNrOfPoints));
+        int line = my_round(sqrt(totalNrOfPoints));
         for (int i = 0; i < totalNrOfPoints; ++i) {
             double lat;
             double lon;
@@ -621,7 +610,7 @@ int main(const int argc, const char** argv)
             }
 
             unitToLatLonDeg(unit1, unit2, &lat, &lon);
-            generateAndOutputMapcodes(lat, lon, 1);
+            generateAndOutputMapcodes(lat, lon, 1, extraDigits);
 
             if ((i % SHOW_PROGRESS) == 0) {
                 showProgress(i);

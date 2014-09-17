@@ -34,7 +34,7 @@ Documentation, including example snippets of C source code, can be found in
 
 Also see www.mapcode.com for background and reference materials.
 
-Note: this version may be restricted to a particular area of the Earthas!
+Note: this version may be restricted to a particular area of the Earth!
 In that case, basics.h will state a version number of the for:
 	#define mapcode_cversion "1.2xxx"
 where "xxx" states the geographical limitation.
@@ -49,7 +49,7 @@ of how to use the library.
 To build the original Mapcode tool, execute:
 
   cd example
-  gcc mapcode.cpp -o mapcode
+  gcc mapcode.c -o mapcode
 
 For help, simply execute the binary file 'mapcode' without no arguments.
 This tool provides a rather extensive command-line interface to encode and
@@ -60,43 +60,35 @@ decode Mapcodes.
 MAPCODE LIBRARY - RELEASE NOTES
 -------------------------------------------------------------------------------
 
-1.33
+1.40
+    Added extraDigits parameter to allow high-precision mapcodes to be generated.
 
-    Fix to not remove valid results just across the edge of a territory. Improved
-    interface readability and renamed methods to more readable forms. Removed
-    several warnings produced by GCC.
+1.33
+    Fix to not remove valid results just across the edge of a territory. Improved interface readability
+    and renamed methods to more readable forms.
 
 1.32
-
-    Added encodeLatLonToSingleMapcode(); fixed 1.29 so no country-wide alternative is
-    produced in edge cases; prevent FIJI failing to decode at exactly 180 degrees.
+    Added encodeLatLonToSingleMapcode(); fixed 1.29 so no country-wide alternative is produced in edge cases; prevent FIJI failing to
+    decode at exactly 180 degrees.
 
 1.31
-
     Added compareWithMapcodeFormat().
 
 1.30
-
     IUpdated the documentation and extended it with examples and suggestions.
 
 1.29
-
     Also generate country-wide alternative mapcodes for states.
 
 1.28
-
-    Bug fix for the needless generation of 7-letter alternatives to short mapcodes
-    in large states in India.
+    Bug fix for the needless generation of 7-letter alternatives to short mapcodes in large states in India.
 
 1.27
-
     Improved (faster) implementation of the function isInArea.
 
 1.26
-
     Added alias OD ("Odisha") for indian state OR ("Orissa").
 
 1.25
-
     Initial release to the public domain.
 

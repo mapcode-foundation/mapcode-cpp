@@ -35,6 +35,9 @@
  *      lon             - Longitude, in degrees. Range: -180..180.
  *      territoryCode   - Territory code (obtained from convertTerritoryIsoNameToCode), used as encoding context.
  *                        Pass 0 to get Mapcodes for all territories.
+ *      extraDigits     - Number of extra "digits" to add to the generated mapcode. The preferred default is 0.
+ *                        Other valid values are 1 and 2, which will add extra letters to the mapcodes to
+ *                        make them represent the coordinate more accurately.
  *
  * Returns:
  *      Number of results stored in parameter results. Always >= 0 (0 if no encoding was possible or an error occurred).
@@ -45,7 +48,8 @@ int encodeLatLonToMapcodes(
     char**  results,
     double  lat,
     double  lon,
-    int     territoryCode);
+    int     territoryCode,
+    int     extraDigits);
 
 /**
  * Encode a latitude, longitude pair (in degrees) to a single Mapcode: the shortest possible for the given territory
@@ -60,6 +64,9 @@ int encodeLatLonToMapcodes(
  *      lon             - Longitude, in degrees. Range: -180..180.
  *      territoryCode   - Territory code (obtained from convertTerritoryIsoNameToCode), used as encoding context.
  *                        Pass 0 to get the shortest Mapcode for all territories.
+ *      extraDigits     - Number of extra "digits" to add to the generated mapcode. The preferred default is 0.
+ *                        Other valid values are 1 and 2, which will add extra letters to the mapcodes to
+ *                        make them represent the coordinate more accurately.
  *
  * Returns:
  *      0 if encoding failed, or >0 if it succeeded.
@@ -68,7 +75,8 @@ int encodeLatLonToSingleMapcode(
     char* result,
     double lat,
     double lon,
-    int territoryCode);
+    int territoryCode,
+    int extraDigits);
 
 /**
  * Decode a Mapcode to  a latitude, longitude pair (in degrees).
@@ -79,8 +87,9 @@ int encodeLatLonToSingleMapcode(
  *      mapcode         - Mapcode to decode.
  *      territoryCode   - Territory code (obtained from convertTerritoryIsoNameToCode), used as decoding context.
  *                        Pass 0 if not available.
+ *
  * Returns:
- *      0 if encoding failed, or >0 if it succeeded.
+ *      0 if encoding succeeded, nonzero in case of error
  */
 int decodeMapcodeToLatLon(
     double*     lat,
@@ -208,8 +217,8 @@ const UWORD* encodeToAlphabet(const char* mapcode, int alphabet);
 /**
  * list of #defines to support legacy systems
  */
-#define coord2mc encodeLatLonToMapcodes
-#define coord2mc1 encodeLatLonToSingleMapcode
+#define coord2mc(results,lat,lon,territoryCode)  encodeLatLonToMapcodes(results,lat,lon,territoryCode,0)
+#define coord2mc1(results,lat,lon,territoryCode) encodeLatLonToSingleMapcode(results,lat,lon,territoryCode,0)
 #define mc2coord decodeMapcodeToLatLon
 #define lookslikemapcode compareWithMapcodeFormat
 #define text2tc convertTerritoryIsoNameToCode

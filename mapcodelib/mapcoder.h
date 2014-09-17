@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 #define RELEASENEAT                         // Use clean code (mapcoder.c).
 #define UWORD           unsigned short int  // 2-byte unsigned integer.
 #define SUPPORT_FOREIGN_ALPHABETS

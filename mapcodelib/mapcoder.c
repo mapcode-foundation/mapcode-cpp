@@ -2348,7 +2348,7 @@ int interpret_coord( const unsigned char *i, int islat, double *result )
   char *p;
   int sign=1;
 
-  while (*i && (p=strchr(winds,*i))!=NULL) { { if ( (p-winds) & 1 ) sign*=-1; } i++; }
+  while (*i && (p=(char*)strchr(winds,*i))!=NULL) { { if ( (p-(char*)winds) & 1 ) sign*=-1; } i++; }
 
   // we are now at a lead digit, or there is an error
   if (!isdig(*i))
@@ -2381,7 +2381,7 @@ int interpret_coord( const unsigned char *i, int islat, double *result )
   }
 
   // allow all posisble final endsigns
-  { while (*i && (p=strchr(winds,*i))!=NULL) { if ( (p-winds) & 1 ) sign*=-1; i++; } }
+  { while (*i && (p=(char*)strchr(winds,*i))!=NULL) { if ( (p-(char*)winds) & 1 ) sign*=-1; i++; } }
 
   // we now MUST be at the end of the string!
   if (*i)

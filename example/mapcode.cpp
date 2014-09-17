@@ -1,6 +1,17 @@
-/**
- * Copyright (C) 2014 Stichting Mapcode Foundation
- * For terms of use refer to http://www.mapcode.com/downloads.html
+/*
+ * Copyright (C) 2014 Stichting Mapcode Foundation (http://www.mapcode.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /**
@@ -31,7 +42,6 @@
 #define my_isnan(x) (false)
 #define my_round(x) ((long) (floor((x) + 0.5)))
 
-static const char*  VERSION             = "1";
 static const int    SELF_CHECK          = 1;
 static const int    SELF_CHECK_EXIT     = 0;
 
@@ -64,7 +74,7 @@ static double   lonLargestNrOfResults   = 0.0;
  * whenever a incorrect amount or combination of parameters is entered.
  */
 static void usage(const char* appName) {
-    printf("MAPCODE (version %s.%s%s)\n", mapcode_cversion, VERSION, SELF_CHECK ? ", self-checking" : "");
+    printf("MAPCODE (version %s%s)\n", mapcode_cversion, SELF_CHECK ? ", self-checking" : "");
     printf("Copyright (C) 2014 Stichting Mapcode Foundation\n");
     printf("\n");
     printf("Usage:\n");
@@ -80,11 +90,15 @@ static void usage(const char* appName) {
     printf("\n");
     printf("    %s [-b | --boundaries]\n", appName);
     printf("    %s [-g | --grid] <nrOfPoints> [<extraDigits>]\n", appName);
-    printf("    %s [-r | --random] <nrOfPoints> [<seed>]\n", appName);
+    printf("    %s [-r | --random] <nrOfPoints> [<extraDigits>] [<seed>]\n", appName);
     printf("\n");
     printf("       Create a test set of lat/lon pairs based on the Mapcode boundaries database\n");
     printf("       as a fixed 3D grid or random uniformly distributed set of lat/lons with their\n");
     printf("       (x, y, z) coordinates and all Mapcode aliases.\n");
+    printf("\n");
+    printf("       <extraDigits> specifies additional accuracy, use 0 for standard.\n");
+    printf("       <seed> is an optional random seed, use 0 for arbitrary>.\n");
+    printf("       (You may wish to specify a specific seed to regenerate test cases).\n");
     printf("\n");
     printf("       The output format is:\n");
     printf("           <number-of-aliases> <lat-deg> <lon-deg> <x> <y> <z>\n");
@@ -100,7 +114,7 @@ static void usage(const char* appName) {
     printf("       The (x, y, z) coordinates are primarily meant for visualization of the data set.\n");
     printf("\n");
     printf("       Notes on the use of stdout and stderr:\n");
-    printf("       stdout: used for outputting 3D point data; stderr: used for statistics.");
+    printf("       stdout: used for outputting 3D point data; stderr: used for statistics.\n");
     printf("       You can redirect stdout to a destination file, while stderr will show progress.\n");
     printf("\n");
     printf("       The result code is 0 when no error occurred, 1 if an input error occurred and 2\n");
@@ -552,7 +566,7 @@ int main(const int argc, const char** argv)
         // Generate grid test set:    [-g | --grid]   <nrOfPoints> [<extradigits>]
         // Generate uniform test set: [-r | --random] <nrOfPoints> [<seed>]
         // ------------------------------------------------------------------
-        if ((argc < 3) || (argc > 4)) {
+        if ((argc < 3) || (argc > 5)) {
             fprintf(stderr, "error: incorrect number of arguments\n\n");
             usage(appName);
             return NORMAL_ERROR;
@@ -565,8 +579,11 @@ int main(const int argc, const char** argv)
         }
         int random = (strcmp(cmd, "-r") == 0) || (strcmp(cmd, "--random") == 0);
         if (random) {
-            if (argc == 4) {
-                const int seed = atoi(argv[3]);
+            if (argc >= 4) {
+                extraDigits = atoi(argv[3]);
+            }
+            if (argc == 5) {
+                const int seed = atoi(argv[4]);
                 srand(seed);
             }
             else {

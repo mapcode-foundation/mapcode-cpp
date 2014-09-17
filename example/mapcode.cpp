@@ -99,9 +99,9 @@ static void usage(const char* appName) {
     printf("       and the (x, y, z) coordinates are placed on a sphere with radius 1.\n");
     printf("       The (x, y, z) coordinates are primarily meant for visualization of the data set.\n");
     printf("\n");
-    printf("\n     Notes on the use of stdout and stderr:\n");
-    printf("\n     stdout: used for outputting 3D point data; stderr: used for statistics.");
-    printf("\n     You can redirect stdout to a destination file, while stderr will show progress.\n");
+    printf("       Notes on the use of stdout and stderr:\n");
+    printf("       stdout: used for outputting 3D point data; stderr: used for statistics.");
+    printf("       You can redirect stdout to a destination file, while stderr will show progress.\n");
     printf("\n");
     printf("       The result code is 0 when no error occurred, 1 if an input error occurred and 2\n");
     printf("       if an internal error occurred.\n");
@@ -585,7 +585,7 @@ int main(const int argc, const char** argv)
 
         int gridX = 0;
         int gridY = 0;
-        int line = my_round(sqrt(totalNrOfPoints));
+        int line = my_round(sqrt((double)totalNrOfPoints));
         for (int i = 0; i < totalNrOfPoints; ++i) {
             double lat;
             double lon;

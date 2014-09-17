@@ -389,8 +389,8 @@ static void showProgress(int i) {
  */
 int main(const int argc, const char** argv)
 {
-    // Assume no extra digits (unless overridden later
-    int extraDigits=0;
+    // Assume no extra digits (unless overridden later.
+    int extraDigits = 0;
 
     // Provide usage message if no arguments specified.
     const char* appName = argv[0];

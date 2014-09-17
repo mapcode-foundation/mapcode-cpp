@@ -533,8 +533,8 @@ int main(const int argc, const char** argv)
             generateAndOutputMapcodes(maxLat, maxLon, 0, extraDigits);
 
             // Try JUST inside.
-            double factor = 1.0;
-            for (int j = 1; j < 6; ++j) {
+            double factor = 10.0;
+            for (int j = 1; j < 2; ++j) {
 
                 double d = 1.0 / factor;
                 generateAndOutputMapcodes(minLat + d, minLon + d, 0, extraDigits);
@@ -549,12 +549,6 @@ int main(const int argc, const char** argv)
                 generateAndOutputMapcodes(maxLat + d, maxLon + d, 0, extraDigits);
                 factor = factor * 10.0;
             }
-
-            // Try 22m outside.
-            generateAndOutputMapcodes(minLat - 22, (maxLon - minLon) / 2, 0, extraDigits);
-            generateAndOutputMapcodes(minLat - 22, (maxLon - minLon) / 2, 0, extraDigits);
-            generateAndOutputMapcodes(maxLat + 22, (maxLon - minLon) / 2, 0, extraDigits);
-            generateAndOutputMapcodes(maxLat + 22, (maxLon - minLon) / 2, 0, extraDigits);
 
             if ((i % SHOW_PROGRESS) == 0) {
                 showProgress(i);

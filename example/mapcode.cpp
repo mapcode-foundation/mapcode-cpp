@@ -1,6 +1,17 @@
-/**
- * Copyright (C) 2014 Stichting Mapcode Foundation
- * For terms of use refer to http://www.mapcode.com/downloads.html
+/*
+ * Copyright (C) 2014 Stichting Mapcode Foundation (http://www.mapcode.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /**
@@ -264,7 +275,7 @@ static const char* asCoordinate(double coord, char* target)
         target = &asCoordinateBuffer[ascoptr];
         ascoptr= ((ascoptr != 0) ? 0 : 12);
     }
-    sprintf(target,"%s%d.%06d", (negative ? "-" : ""), c / 1000000, c % 1000000);
+    sprintf(target,"%s%d.%06d", (negative ? "-" : ""), (int) (c / 1000000), (int) (c % 1000000));
     return target;
 }
 

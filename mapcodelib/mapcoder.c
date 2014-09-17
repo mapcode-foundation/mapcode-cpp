@@ -832,16 +832,16 @@ void setup_country( int newccode )
 
         if ( codex==13 ) { iso_count13++; if ( iso_first13<0 ) iso_first13=i; }
 				if ( codex==21 ) { iso_count21++; if ( iso_first21<0 ) iso_first21=i; }
-				if ( codex==22 ) if (pipe) {if (iso_firstpipe22<0) iso_firstpipe22=i; if (pipe<2)       iso_pipeletter22[iso_pipecount22++]=pipeletter(i); else if (iso_firststar22<0) iso_firststar22=i;} else { iso_count22++; if ( iso_first22<0 ) iso_first22=i; }
-				if ( codex==14 ) if (pipe) {if (iso_firstpipe14<0) iso_firstpipe14=i; if (pipe<2)       iso_pipeletter14[iso_pipecount14++]=pipeletter(i); else if (iso_firststar14<0) iso_firststar14=i;} else { iso_count14++; if ( iso_first14<0 ) iso_first14=i; }
-				if ( codex==23 ) if (pipe) {if (iso_firstpipe23<0) iso_firstpipe23=i; if (pipe<2)       iso_pipeletter23[iso_pipecount23++]=pipeletter(i); else if (iso_firststar23<0) iso_firststar23=i;} else { iso_count23++; if ( iso_first23<0 ) iso_first23=i; }
-				if ( codex==32 ) if (pipe) {if (iso_firstpipe32<0) iso_firstpipe32=i; if (pipe<2)       iso_pipeletter32[iso_pipecount32++]=pipeletter(i); else if (iso_firststar32<0) iso_firststar32=i;} else { iso_count32++; if ( iso_first32<0 ) iso_first32=i; }
-				if ( codex==24 ) if (pipe) {if (iso_firstpipe24<0) iso_firstpipe24=i; if (pipe<2)       iso_pipeletter24[iso_pipecount24++]=pipeletter(i); else if (iso_firststar24<0) iso_firststar24=i;} else { iso_count24++; if ( iso_first24<0 ) iso_first24=i; }
-				if ( codex==33 ) if (pipe) {if (iso_firstpipe33<0) iso_firstpipe33=i; if (pipe<2)       iso_pipeletter33[iso_pipecount33++]=pipeletter(i); else if (iso_firststar33<0) iso_firststar33=i;} else { iso_count33++; if ( iso_first33<0 ) iso_first33=i; }
-				if ( codex==34 ) if (pipe) {if (iso_firstpipe34<0) iso_firstpipe34=i; if (pipe<2)       iso_pipeletter34[iso_pipecount34++]=pipeletter(i); else if (iso_firststar34<0) iso_firststar34=i;} else { iso_count34++; if ( iso_first34<0 ) iso_first34=i; }
+				if ( codex==22 ) { if (pipe) {if (iso_firstpipe22<0) iso_firstpipe22=i; if (pipe<2)       iso_pipeletter22[iso_pipecount22++]=pipeletter(i); else if (iso_firststar22<0) iso_firststar22=i;} else { iso_count22++; if ( iso_first22<0 ) iso_first22=i; } }
+				if ( codex==14 ) { if (pipe) {if (iso_firstpipe14<0) iso_firstpipe14=i; if (pipe<2)       iso_pipeletter14[iso_pipecount14++]=pipeletter(i); else if (iso_firststar14<0) iso_firststar14=i;} else { iso_count14++; if ( iso_first14<0 ) iso_first14=i; } }
+				if ( codex==23 ) { if (pipe) {if (iso_firstpipe23<0) iso_firstpipe23=i; if (pipe<2)       iso_pipeletter23[iso_pipecount23++]=pipeletter(i); else if (iso_firststar23<0) iso_firststar23=i;} else { iso_count23++; if ( iso_first23<0 ) iso_first23=i; } }
+				if ( codex==32 ) { if (pipe) {if (iso_firstpipe32<0) iso_firstpipe32=i; if (pipe<2)       iso_pipeletter32[iso_pipecount32++]=pipeletter(i); else if (iso_firststar32<0) iso_firststar32=i;} else { iso_count32++; if ( iso_first32<0 ) iso_first32=i; } }
+				if ( codex==24 ) { if (pipe) {if (iso_firstpipe24<0) iso_firstpipe24=i; if (pipe<2)       iso_pipeletter24[iso_pipecount24++]=pipeletter(i); else if (iso_firststar24<0) iso_firststar24=i;} else { iso_count24++; if ( iso_first24<0 ) iso_first24=i; } }
+				if ( codex==33 ) { if (pipe) {if (iso_firstpipe33<0) iso_firstpipe33=i; if (pipe<2)       iso_pipeletter33[iso_pipecount33++]=pipeletter(i); else if (iso_firststar33<0) iso_firststar33=i;} else { iso_count33++; if ( iso_first33<0 ) iso_first33=i; } }
+				if ( codex==34 ) { if (pipe) {if (iso_firstpipe34<0) iso_firstpipe34=i; if (pipe<2)       iso_pipeletter34[iso_pipecount34++]=pipeletter(i); else if (iso_firststar34<0) iso_firststar34=i;} else { iso_count34++; if ( iso_first34<0 ) iso_first34=i; } }
 				if ( codex==42 ) { iso_count42++; if ( iso_first42<0 ) iso_first42=i; }
 				if ( codex==43 ) { iso_count43++; if ( iso_first43<0 ) iso_first43=i; }
-				if ( codex==44 ) if (pipe) {if (iso_firstpipe44<0) iso_firstpipe44=i; if (pipe<2)       iso_pipeletter44[iso_pipecount44++]=pipeletter(i); else if (iso_firststar44<0) iso_firststar44=i;} else { iso_count44++; if ( iso_first44<0 ) iso_first44=i; }
+				if ( codex==44 ) { if (pipe) {if (iso_firstpipe44<0) iso_firstpipe44=i; if (pipe<2)       iso_pipeletter44[iso_pipecount44++]=pipeletter(i); else if (iso_firststar44<0) iso_firststar44=i;} else { iso_count44++; if ( iso_first44<0 ) iso_first44=i; } }
 		  }
     }
 
@@ -1042,7 +1042,7 @@ void repack_if_alldigits(char *input)
   char *e;
   char *dotpos=NULL;
 
-  for (e=s;*e!=0 && *e!='-';e++) if (*e<'0' || *e>'9') if (*e=='.' && !dotpos) dotpos=e; else { alldigits=0; break; }
+  for (e=s;*e!=0 && *e!='-';e++) if (*e<'0' || *e>'9') { if (*e=='.' && !dotpos) dotpos=e; else { alldigits=0; break; } }
   e--; s=e-1;
   if (alldigits && dotpos && s>dotpos) // e is last char, s is one before, both are beyond dot, all characters are digits
   {
@@ -1761,7 +1761,7 @@ void master_encode( char *resultbuffer, int the_ctry, long x, long y, int forcec
       else // must be grid, possibly a multi-area
       {
           int multi_area = (pipetype(m)==1 ? 1 : 0); // has pipe letter?
-          if (codex==21) if (iso_count21==1) codex=22; else continue;
+          if (codex==21) { if (iso_count21==1) codex=22; else continue; }
 
           if ( miny<=y && y<maxy && isInRange(x,minx,maxx) )
           if ( codex!=55 ) // exclude Earth 55
@@ -1941,11 +1941,12 @@ int mapcode_encode(char *result,long y, long x, const char *iso3, char *isofound
   if (isofound)
   {
     *isofound=0;
-    if (*result)
+    if (*result) {
       if (resultlen(result)==10)
         strcpy(isofound,makeiso(ccode_earth,1));
       else
         strcpy(isofound,makeiso(cc,1));
+    }
   }
 	return *result;
 }
@@ -2341,13 +2342,13 @@ int interpret_coord( const unsigned char *i, int islat, double *result )
   #define skipnum(i) {while (isdig(*i)) i++;}
   #define skipfp(i) {skipnum(i); if (*i=='.') {i++;skipnum(i);}}
 
-  char *winds = islat ? "nsNS+- " : "ewEW+- ";
+  const char *winds = islat ? "nsNS+- " : "ewEW+- ";
 
   // skip white spaces, signs and appropriate wind direction letters
   char *p;
   int sign=1;
 
-  while (*i && (p=strchr(winds,*i))!=NULL) { { if ( (p-winds) & 1 ) sign*=-1; } i++; }
+  while (*i && (p=(char*)strchr(winds,*i))!=NULL) { { if ( (p-(char*)winds) & 1 ) sign*=-1; } i++; }
 
   // we are now at a lead digit, or there is an error
   if (!isdig(*i))
@@ -2380,7 +2381,7 @@ int interpret_coord( const unsigned char *i, int islat, double *result )
   }
 
   // allow all posisble final endsigns
-  { while (*i && (p=strchr(winds,*i))!=NULL) { if ( (p-winds) & 1 ) sign*=-1; i++; } }
+  { while (*i && (p=(char*)strchr(winds,*i))!=NULL) { if ( (p-(char*)winds) & 1 ) sign*=-1; i++; } }
 
   // we now MUST be at the end of the string!
   if (*i)

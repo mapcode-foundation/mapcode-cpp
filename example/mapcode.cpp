@@ -88,7 +88,7 @@ static void usage(const char* appName) {
     printf("       Encode a lat/lon to a Mapcode. If the territory code is specified, the\n");
     printf("       encoding will only succeeed if the lat/lon is located in the territory.\n");
     printf("\n");
-    printf("    %s [-b | --boundaries]\n", appName);
+    printf("    %s [-b | --boundaries] [<extraDigits>]\n", appName);
     printf("    %s [-g | --grid] <nrOfPoints> [<extraDigits>]\n", appName);
     printf("    %s [-r | --random] <nrOfPoints> [<extraDigits>] [<seed>]\n", appName);
     printf("\n");
@@ -491,10 +491,13 @@ int main(const int argc, const char** argv)
         // ------------------------------------------------------------------
         // Generate a test set based on the Mapcode boundaries.
         // ------------------------------------------------------------------
-        if (argc != 2) {
+        if ((argc < 2) || (argc > 3)) {
             fprintf(stderr, "error: incorrect number of arguments\n\n");
             usage(appName);
             return NORMAL_ERROR;
+        }
+        if (argc == 3) {
+            extraDigits = atoi(argv[2]);
         }
 
         resetStatistics(NR_BOUNDARY_RECS);

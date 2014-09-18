@@ -445,6 +445,11 @@ int main(const int argc, const char** argv)
 
             // Self-checking code to see if encoder produces this Mapcode for the lat/lon.
             if (SELF_CHECK) {
+                const char* suffix = strstr(mapcode, "-");
+                extraDigits = 0;
+                if (suffix != 0) {
+                    extraDigits = strlen(suffix) - 1;
+                }
                 selfCheckLatLonToMapcode(lat, lon, defaultTerritory, mapcode, extraDigits);
             }
         }
@@ -671,6 +676,5 @@ int main(const int argc, const char** argv)
         usage(appName);
         return NORMAL_ERROR;
     }
-    fprintf(stderr, "done\n");
     return 0;
 }

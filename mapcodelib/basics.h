@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2014 Stichting Mapcode Foundation (http://www.mapcode.com)
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -115,7 +115,7 @@ static const char *entity_iso = ""
 
 
 
-static UWORD xdivider19[172] = {
+static const UWORD xdivider19[172] = {
 	  360,  360,  360,  360,  360,  360,  361,  361,  361,  361,
 	  362,  362,  362,  363,  363,  363,  364,  364,  365,  366,
 	  366,  367,  367,  368,  369,  370,  370,  371,  372,  373,
@@ -136,13 +136,13 @@ static UWORD xdivider19[172] = {
 	23681,59485
 };
 
-static long nc[MAXFITLONG+1] = { 1, 31, 961, 29791, 923521, 28629151, 887503681 };
+static const long nc[MAXFITLONG+1] = { 1, 31, 961, 29791, 923521, 28629151, 887503681 };
 
-static long xside[MAXWIDE] = { 0, 5,  31,  168,    961,    168*31,     29791,       165869,         923521,        5141947};
+static const long xside[MAXWIDE] = { 0, 5,  31,  168,    961,    168*31,     29791,       165869,         923521,        5141947};
 
-static long yside[MAXWIDE] = { 0, 6,  31,  176,    961,    176*31,     29791,       165869,         923521,        5141947};
+static const long yside[MAXWIDE] = { 0, 6,  31,  176,    961,    176*31,     29791,       165869,         923521,        5141947};
 
-static signed char decode_chars[256] = {
+static const signed char decode_chars[256] = {
 	 -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	 -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 	 -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -161,14 +161,14 @@ static signed char decode_chars[256] = {
 	 -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
 };
 
-static char encode_chars[31] = {
+static const char encode_chars[31] = {
 	'0','1','2','3','4','5','6','7','8','9',
 	'B','C','D','F','G','H','J','K','L','M',
 	'N','P','Q','R','S','T','V','W','X','Y','Z'
 };
 
 
-static UWORD data_start[MAX_CCODE+1] = {
+static const UWORD data_start[MAX_CCODE+1] = {
 	    0,    3,    6,    9,   13,   16,   18,   19,   30,   31,
 	   33,   35,   37,   42,   44,   47,   51,   54,   56,   58,
 	   60,   62,   64,   68,   71,   79,   81,  116,  121,  131,
@@ -232,7 +232,7 @@ static UWORD data_start[MAX_CCODE+1] = {
 typedef struct { long minx; long miny; long maxx; long maxy; unsigned long flags; } mminforec;
 
 #ifndef MAKE_SOURCE_DIGITAL
-static mminforec mminfo[NR_RECS+1] = {
+static const mminforec mminfo[NR_RECS+1] = {
 	{  12433114,  41851944,  12548434,  41938434,0x001002b},
 	{   5850000,  35450000,  18560000,  55080000,0x50a0636},
 	{  12444000,  41899000,  12460000,  41908000,0x003063c},

@@ -88,9 +88,9 @@ static void usage(const char* appName) {
     printf("       Encode a lat/lon to a Mapcode. If the territory code is specified, the\n");
     printf("       encoding will only succeeed if the lat/lon is located in the territory.\n");
     printf("\n");
-    printf("    %s [-b | --boundaries] [<extraDigits>]\n", appName);
-    printf("    %s [-g | --grid] <nrOfPoints> [<extraDigits>]\n", appName);
-    printf("    %s [-r | --random] <nrOfPoints> [<extraDigits>] [<seed>]\n", appName);
+    printf("    %s [-b[XYZ] | --boundaries[XYZ]] [<extraDigits>]\n", appName);
+    printf("    %s [-g[XYZ] | --grid[XYZ]]   <nrOfPoints> [<extraDigits>]\n", appName);
+    printf("    %s [-r[XYZ] | --random[XYZ]] <nrOfPoints> [<extraDigits>] [<seed>]\n", appName);
     printf("\n");
     printf("       Create a test set of lat/lon pairs based on the Mapcode boundaries database\n");
     printf("       as a fixed 3D grid or random uniformly distributed set of lat/lons with their\n");
@@ -101,7 +101,7 @@ static void usage(const char* appName) {
     printf("       (You may wish to specify a specific seed to regenerate test cases).\n");
     printf("\n");
     printf("       The output format is:\n");
-    printf("           <number-of-aliases> <lat-deg> <lon-deg> <x> <y> <z>\n");
+    printf("           <number-of-aliases> <lat-deg> <lon-deg> [<x> <y> <z>]\n");
     printf("           <territory> <mapcode>      (repeated 'number-of-aliases' times)\n");
     printf("                                      (empty lines and next record)\n");
     printf("       Ranges:\n");
@@ -287,7 +287,7 @@ static const char* asCoordinate(double coord, char* target)
  * If iShowError != 0, then encoding errors are output to stderr, otherwise they
  * are ignored.
  */
-static void generateAndOutputMapcodes(double lat, double lon, int iShowError, int extraDigits) {
+static void generateAndOutputMapcodes(double lat, double lon, int iShowError, int extraDigits, int useXYZ) {
 
     char* results[MAX_NR_OF_MAPCODE_RESULTS];
     int context = 0;
@@ -313,11 +313,16 @@ static void generateAndOutputMapcodes(double lat, double lon, int iShowError, in
         }
     }
 
-    double x;
-    double y;
-    double z;
-    convertLatLonToXYZ(lat, lon, &x, &y, &z);
-    printf("%d %s %s %lf %lf %lf\n", nrResults, asCoordinate(lat, 0), asCoordinate(lon, 0), x, y, z);
+    if (useXYZ) {
+        double x;
+        double y;
+        double z;
+        convertLatLonToXYZ(lat, lon, &x, &y, &z);
+        printf("%d %s %s %lf %lf %lf\n", nrResults, asCoordinate(lat, 0), asCoordinate(lon, 0), x, y, z);
+    }
+    else {
+        printf("%d %s %s\n", nrResults, asCoordinate(lat, 0), asCoordinate(lon, 0));
+    }
     for (int j = 0; j < nrResults; ++j) {
         const char* foundMapcode = results[(j * 2)];
         const char* foundTerritory = results[(j * 2) + 1];
@@ -391,6 +396,9 @@ int main(const int argc, const char** argv)
 {
     // Assume no extra digits (unless overridden later.
     int extraDigits = 0;
+
+    // If XYZ is added to -b, -r or -g, print x, y, z coordinates
+    int useXYZ = 0;
 
     // Provide usage message if no arguments specified.
     const char* appName = argv[0];
@@ -486,7 +494,8 @@ int main(const int argc, const char** argv)
             }
         }
     }
-    else if ((strcmp(cmd, "-b") == 0) || (strcmp(cmd, "--boundaries") == 0)) {
+    else if ((strcmp(cmd, "-b") == 0) || (strcmp(cmd, "-bXYZ") == 0) ||
+        (strcmp(cmd, "--boundaries") == 0) || (strcmp(cmd, "--boundariesXYZ") == 0)) {
 
         // ------------------------------------------------------------------
         // Generate a test set based on the Mapcode boundaries.
@@ -499,6 +508,7 @@ int main(const int argc, const char** argv)
         if (argc == 3) {
             extraDigits = atoi(argv[2]);
         }
+        useXYZ = (strstr(cmd, "XYZ") != 0);
 
         resetStatistics(NR_BOUNDARY_RECS);
         for (int i = 0; i < totalNrOfPoints; ++i) {
@@ -522,33 +532,26 @@ int main(const int argc, const char** argv)
             // Try center.
             lat = (maxLat - minLat ) / 2.0;
             lon = (maxLon - minLon ) / 2.0;
-
-            // Try center.
-            generateAndOutputMapcodes(lat, lon, 0, extraDigits);
+            generateAndOutputMapcodes(lat, lon, 0, extraDigits, useXYZ);
 
             // Try corners.
-            generateAndOutputMapcodes(minLat, minLon, 0, extraDigits);
-            generateAndOutputMapcodes(minLat, maxLon, 0, extraDigits);
-            generateAndOutputMapcodes(maxLat, minLon, 0, extraDigits);
-            generateAndOutputMapcodes(maxLat, maxLon, 0, extraDigits);
+            generateAndOutputMapcodes(minLat, minLon, 0, extraDigits, useXYZ);
+            generateAndOutputMapcodes(minLat, maxLon, 0, extraDigits, useXYZ);
+            generateAndOutputMapcodes(maxLat, minLon, 0, extraDigits, useXYZ);
+            generateAndOutputMapcodes(maxLat, maxLon, 0, extraDigits, useXYZ);
 
             // Try JUST inside.
-            double factor = 10.0;
-            for (int j = 1; j < 2; ++j) {
+            const double d = 0.000001;
+            generateAndOutputMapcodes(minLat + d, minLon + d, 0, extraDigits, useXYZ);
+            generateAndOutputMapcodes(minLat + d, maxLon - d, 0, extraDigits, useXYZ);
+            generateAndOutputMapcodes(maxLat - d, minLon + d, 0, extraDigits, useXYZ);
+            generateAndOutputMapcodes(maxLat - d, maxLon - d, 0, extraDigits, useXYZ);
 
-                double d = 1.0 / factor;
-                generateAndOutputMapcodes(minLat + d, minLon + d, 0, extraDigits);
-                generateAndOutputMapcodes(minLat + d, maxLon - d, 0, extraDigits);
-                generateAndOutputMapcodes(maxLat - d, minLon + d, 0, extraDigits);
-                generateAndOutputMapcodes(maxLat - d, maxLon - d, 0, extraDigits);
-
-                // Try JUST outside.
-                generateAndOutputMapcodes(minLat - d, minLon - d, 0, extraDigits);
-                generateAndOutputMapcodes(minLat - d, maxLon + d, 0, extraDigits);
-                generateAndOutputMapcodes(maxLat + d, minLon - d, 0, extraDigits);
-                generateAndOutputMapcodes(maxLat + d, maxLon + d, 0, extraDigits);
-                factor = factor * 10.0;
-            }
+            // Try JUST outside.
+            generateAndOutputMapcodes(minLat - d, minLon - d, 0, extraDigits, useXYZ);
+            generateAndOutputMapcodes(minLat - d, maxLon + d, 0, extraDigits, useXYZ);
+            generateAndOutputMapcodes(maxLat + d, minLon - d, 0, extraDigits, useXYZ);
+            generateAndOutputMapcodes(maxLat + d, maxLon + d, 0, extraDigits, useXYZ);
 
             if ((i % SHOW_PROGRESS) == 0) {
                 showProgress(i);
@@ -556,8 +559,10 @@ int main(const int argc, const char** argv)
         }
         outputStatistics();
     }
-    else if ((strcmp(cmd, "-g") == 0) || (strcmp(cmd, "--grid") == 0) ||
-        (strcmp(cmd, "-r") == 0) || (strcmp(cmd, "--random") == 0)) {
+    else if ((strcmp(cmd, "-g") == 0) || (strcmp(cmd, "-gXYZ") == 0) ||
+        (strcmp(cmd, "--grid") == 0) || (strcmp(cmd, "--gridXYZ") == 0) ||
+        (strcmp(cmd, "-r") == 0) || (strcmp(cmd, "-rXYZ") == 0) ||
+        (strcmp(cmd, "--random") == 0) || (strcmp(cmd, "--randomXYZ") == 0)) {
 
         // ------------------------------------------------------------------
         // Generate grid test set:    [-g | --grid]   <nrOfPoints> [<extradigits>]
@@ -592,6 +597,7 @@ int main(const int argc, const char** argv)
                 extraDigits = atoi(argv[3]);
             }
         }
+        useXYZ = (strstr(cmd, "XYZ") != 0);
 
         // Statistics.
         resetStatistics(nrOfPoints);
@@ -624,7 +630,7 @@ int main(const int argc, const char** argv)
             }
 
             unitToLatLonDeg(unit1, unit2, &lat, &lon);
-            generateAndOutputMapcodes(lat, lon, 1, extraDigits);
+            generateAndOutputMapcodes(lat, lon, 1, extraDigits, useXYZ);
 
             if ((i % SHOW_PROGRESS) == 0) {
                 showProgress(i);

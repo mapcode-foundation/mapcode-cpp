@@ -78,25 +78,27 @@ static void usage(const char* appName) {
     printf("Copyright (C) 2014 Stichting Mapcode Foundation\n");
     printf("\n");
     printf("Usage:\n");
-    printf("    %s [-d | --decode] <default-territory> <mapcode> [<mapcode> ...]\n", appName);
+    printf("    %s [-d| --decode] <default-territory> <mapcode> [<mapcode> ...]\n", appName);
     printf("\n");
-    printf("       Decode a Mapcode to a lat/lon. The default territory code is used if\n");
-    printf("       the Mapcode is a shorthand local code\n");
+    printf("       Decode a mapcode to a lat/lon. The default territory code is used if\n");
+    printf("       the mapcode is a shorthand local code\n");
     printf("\n");
-    printf("    %s [-e | --encode] <lat:-90..90> <lon:-180..180> [territory]>\n", appName);
+    printf("    %s [-e[0-2] | --encode[0-2]] <lat:-90..90> <lon:-180..180> [territory]>\n", appName);
     printf("\n");
-    printf("       Encode a lat/lon to a Mapcode. If the territory code is specified, the\n");
+    printf("       Encode a lat/lon to a mapcode. If the territory code is specified, the\n");
     printf("       encoding will only succeeed if the lat/lon is located in the territory.\n");
+    printf("       You can specify the number of additional digits, 0, 1 or 2 (default 0)\n");
+    printf("       for high-precision mapcodes.\n");
     printf("\n");
     printf("    %s [-b[XYZ] | --boundaries[XYZ]] [<extraDigits>]\n", appName);
     printf("    %s [-g[XYZ] | --grid[XYZ]]   <nrOfPoints> [<extraDigits>]\n", appName);
     printf("    %s [-r[XYZ] | --random[XYZ]] <nrOfPoints> [<extraDigits>] [<seed>]\n", appName);
     printf("\n");
-    printf("       Create a test set of lat/lon pairs based on the Mapcode boundaries database\n");
+    printf("       Create a test set of lat/lon pairs based on the mapcode boundaries database\n");
     printf("       as a fixed 3D grid or random uniformly distributed set of lat/lons with their\n");
-    printf("       (x, y, z) coordinates and all Mapcode aliases.\n");
+    printf("       (x, y, z) coordinates and all mapcode aliases.\n");
     printf("\n");
-    printf("       <extraDigits> specifies additional accuracy, use 0 for standard.\n");
+    printf("       <extraDigits>: 0, 1, 2; specifies additional accuracy, use 0 for standard.\n");
     printf("       <seed> is an optional random seed, use 0 for arbitrary>.\n");
     printf("       (You may wish to specify a specific seed to regenerate test cases).\n");
     printf("\n");
@@ -192,7 +194,7 @@ static void selfCheckLatLonToMapcode(const double lat, double lon, const char* t
     const double limitLon = (lon < -180.0) ? -180.0 : ((lon > 180.0) ? 180.0 : lon);
     const int nrResults = encodeLatLonToMapcodes(results, limitLat, limitLon, context, extraDigits);
     if (nrResults <= 0) {
-        fprintf(stderr, "internal error: encoding lat/lon to Mapcode failure; "
+        fprintf(stderr, "error: encoding lat/lon to mapcode failure; "
             "cannot encode lat=%f, lon=%f (default territory=%s)\n",
             lat, lon, territory);
         if (SELF_CHECK_EXIT) {
@@ -207,8 +209,8 @@ static void selfCheckLatLonToMapcode(const double lat, double lon, const char* t
         found = ((strcmp(territory, foundTerritory) == 0) && (strcmp(mapcode, foundMapcode) == 0));
     }
     if (!found) {
-        fprintf(stderr, "internal error: encoding lat/lon to Mapcode failure; "
-            "Mapcode '%s %s' decodes to lat=%f(%f), lon=%f(%f), "
+        fprintf(stderr, "error: encoding lat/lon to mapcode failure; "
+            "mapcode '%s %s' decodes to lat=%f(%f), lon=%f(%f), "
             "which does not encode back to '%s %s'\n",
             territory, mapcode, lat, limitLat, lon, limitLon, territory, mapcode);
         if (SELF_CHECK_EXIT) {
@@ -230,7 +232,7 @@ static void selfCheckMapcodeToLatLon(const char* territory, const char* mapcode,
     int foundContext = convertTerritoryIsoNameToCode(territory, 0);
     int err = decodeMapcodeToLatLon(&foundLat, &foundLon, mapcode, foundContext);
     if (err != 0) {
-        fprintf(stderr, "internal error: decoding Mapcode to lat/lon failure; "
+        fprintf(stderr, "error: decoding mapcode to lat/lon failure; "
             "cannot decode '%s %s')\n", territory, mapcode);
         if (SELF_CHECK_EXIT) {
             exit(INTERNAL_ERROR);
@@ -243,8 +245,8 @@ static void selfCheckMapcodeToLatLon(const char* territory, const char* mapcode,
         deltaLon = 360.0 - deltaLon;
     }
     if ((deltaLat > DELTA) || (deltaLon > DELTA)) {
-        fprintf(stderr, "internal error: decoding Mapcode to lat/lon failure; "
-            "lat=%f, lon=%f produces Mapcode %s %s, "
+        fprintf(stderr, "error: decoding mapcode to lat/lon failure; "
+            "lat=%f, lon=%f produces mapcode %s %s, "
             "which decodes to lat=%f (delta=%f), lon=%f (delta=%f)\n",
             lat, lon, territory, mapcode, foundLat, deltaLat, foundLon, deltaLon);
         if (SELF_CHECK_EXIT) {
@@ -368,10 +370,10 @@ static void resetStatistics(int nrOfPoints) {
 static void outputStatistics() {
     fprintf(stderr, "\nStatistics:\n");
     fprintf(stderr, "Total number of 3D points generated     = %d\n", totalNrOfPoints);
-    fprintf(stderr, "Total number of Mapcodes generated      = %d\n", totalNrOfResults);
-    fprintf(stderr, "Average number of Mapcodes per 3D point = %f\n",
+    fprintf(stderr, "Total number of mapcodes generated      = %d\n", totalNrOfResults);
+    fprintf(stderr, "Average number of mapcodes per 3D point = %f\n",
         ((float) totalNrOfResults) / ((float) totalNrOfPoints));
-    fprintf(stderr, "Largest number of results for 1 Mapcode = %d at (%f, %f)\n",
+    fprintf(stderr, "Largest number of results for 1 mapcode = %d at (%f, %f)\n",
         largestNrOfResults, latLargestNrOfResults, lonLargestNrOfResults);
 }
 
@@ -381,7 +383,7 @@ static void outputStatistics() {
  * This method shows a progress indication.
  */
 static void showProgress(int i) {
-    fprintf(stderr, "[%d%%] Processed %d of %d regions (generated %d Mapcodes)...\r",
+    fprintf(stderr, "[%d%%] Processed %d of %d regions (generated %d mapcodes)...\r",
         (int) ((((float) i / ((float) totalNrOfPoints)) * 100.0) + 0.5),
         i, totalNrOfPoints, totalNrOfResults);
 }
@@ -447,10 +449,13 @@ int main(const int argc, const char** argv)
             }
         }
     }
-    else if ((strcmp(cmd, "-e") == 0) || (strcmp(cmd, "--encode") == 0)) {
+    else if ((strcmp(cmd, "-e") == 0) || (strcmp(cmd, "-e0") == 0) ||
+        (strcmp(cmd, "-e1") == 0) || (strcmp(cmd, "-e2") == 0) ||
+        (strcmp(cmd, "--encode") == 0) || (strcmp(cmd, "--encode0") == 0) ||
+        (strcmp(cmd, "--encode1") == 0) || (strcmp(cmd, "--encode2") == 0)) {
 
         // ------------------------------------------------------------------
-        // Encode: [-e | --encode] <lat:-90..90> <lon:-180..180> [territory]>
+        // Encode: [-e[0-2] | --encode[0-2]] <lat:-90..90> <lon:-180..180> [territory]>
         // ------------------------------------------------------------------
         if ((argc != 4) && (argc != 5)) {
             fprintf(stderr, "error: incorrect number of arguments\n\n");
@@ -464,6 +469,16 @@ int main(const int argc, const char** argv)
         }
         const double lat = atof(argv[2]);
         const double lon = atof(argv[3]);
+
+        if (strstr(cmd, "-e1") || strstr(cmd, "--encode1")) {
+            extraDigits = 1;
+        }
+        else if (strstr(cmd, "-e2") || strstr(cmd, "--encode2")) {
+            extraDigits = 2;
+        }
+        else {
+            extraDigits = 0;
+        }
 
         // Get territory context.
         int context = 0;
@@ -507,6 +522,11 @@ int main(const int argc, const char** argv)
         }
         if (argc == 3) {
             extraDigits = atoi(argv[2]);
+            if ((extraDigits < 0) || (extraDigits> 2)) {
+                fprintf(stderr, "error: parameter extraDigits must be in [0..2]\n\n");
+                usage(appName);
+                return NORMAL_ERROR;
+            }
         }
         useXYZ = (strstr(cmd, "XYZ") != 0);
 
@@ -595,6 +615,11 @@ int main(const int argc, const char** argv)
         else {
             if (argc == 4) {
                 extraDigits = atoi(argv[3]);
+                if ((extraDigits < 0) || (extraDigits> 2)) {
+                    fprintf(stderr, "error: parameter extraDigits must be in [0..2]\n\n");
+                    usage(appName);
+                    return NORMAL_ERROR;
+                }
             }
         }
         useXYZ = (strstr(cmd, "XYZ") != 0);

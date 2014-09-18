@@ -1570,7 +1570,7 @@ int master_decode(  long *nx,long *ny, // <- store result in nx,ny
       long minx,miny,maxx,maxy,xdiv8;
       getboundaries((iso_end),minx,miny,maxx,maxy);
       xdiv8 = x_divider(miny,maxy)/4; // should be /8 but there's some extra margin
-      if ( ! ( miny-45<=*ny && *ny<maxy+45 && isInRange(*nx,minx-xdiv8,maxx+xdiv8) ) ) // no fit?
+      if ( ! ( miny-60<=*ny && *ny<maxy+60 && isInRange(*nx,minx-xdiv8,maxx+xdiv8) ) ) // no fit?
       {
 			  err=-2222;
       }

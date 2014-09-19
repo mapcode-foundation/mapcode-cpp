@@ -1,70 +1,784 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset='utf-8'>
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
-    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
-    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-    <title>mapcode-cpp by rijnb</title>
-  </head>
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns:m="http://schemas.microsoft.com/office/2004/12/omml"
+xmlns:mv="http://macVmlSchemaUri" xmlns="http://www.w3.org/TR/REC-html40">
 
-  <body>
-    <div id="container">
-      <div class="inner">
+<head>
+<meta name=Titel
+content="C library to convert between mapcodes and latitude/longitude ">
+<meta name=Trefwoorden content="">
+<meta http-equiv=Content-Type content="text/html; charset=macintosh">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 14">
+<meta name=Originator content="Microsoft Word 14">
+<link rel=File-List href="mapcode_library_c_bestanden/filelist.xml">
+<title>C library to convert between mapcodes and latitude/longitude </title>
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>Pieter</o:Author>
+  <o:LastAuthor>Rijn Buve</o:LastAuthor>
+  <o:Revision>2</o:Revision>
+  <o:TotalTime>469</o:TotalTime>
+  <o:Created>2014-09-19T10:18:00Z</o:Created>
+  <o:LastSaved>2014-09-19T10:18:00Z</o:LastSaved>
+  <o:Pages>3</o:Pages>
+  <o:Words>2822</o:Words>
+  <o:Characters>15780</o:Characters>
+  <o:Lines>509</o:Lines>
+  <o:Paragraphs>344</o:Paragraphs>
+  <o:CharactersWithSpaces>18258</o:CharactersWithSpaces>
+  <o:Version>14.0</o:Version>
+ </o:DocumentProperties>
+ <o:OfficeDocumentSettings>
+  <o:PixelsPerInch>96</o:PixelsPerInch>
+  <o:TargetScreenSize>800x600</o:TargetScreenSize>
+ </o:OfficeDocumentSettings>
+</xml><![endif]-->
+<link rel=themeData href="mapcode_library_c_bestanden/themedata.xml">
+<!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:Zoom>140</w:Zoom>
+  <w:SpellingState>Clean</w:SpellingState>
+  <w:GrammarState>Clean</w:GrammarState>
+  <w:TrackMoves>false</w:TrackMoves>
+  <w:TrackFormatting/>
+  <w:PunctuationKerning/>
+  <w:ValidateAgainstSchemas/>
+  <w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid>
+  <w:IgnoreMixedContent>false</w:IgnoreMixedContent>
+  <w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText>
+  <w:DoNotPromoteQF/>
+  <w:LidThemeOther>NL</w:LidThemeOther>
+  <w:LidThemeAsian>JA</w:LidThemeAsian>
+  <w:LidThemeComplexScript>X-NONE</w:LidThemeComplexScript>
+  <w:Compatibility>
+   <w:BreakWrappedTables/>
+   <w:SnapToGridInCell/>
+   <w:WrapTextWithPunct/>
+   <w:UseAsianBreakRules/>
+   <w:DontGrowAutofit/>
+   <w:DontUseIndentAsNumberingTabStop/>
+   <w:FELineBreak11/>
+   <w:WW11IndentRules/>
+   <w:DontAutofitConstrainedTables/>
+   <w:AutofitLikeWW11/>
+   <w:HangulWidthLikeWW11/>
+   <w:UseNormalStyleForList/>
+   <w:DontVertAlignCellWithSp/>
+   <w:DontBreakConstrainedForcedTables/>
+   <w:DontVertAlignInTxbx/>
+   <w:Word11KerningPairs/>
+   <w:CachedColBalance/>
+  </w:Compatibility>
+  <m:mathPr>
+   <m:mathFont m:val="Cambria Math"/>
+   <m:brkBin m:val="before"/>
+   <m:brkBinSub m:val="&#45;-"/>
+   <m:smallFrac m:val="off"/>
+   <m:dispDef/>
+   <m:lMargin m:val="0"/>
+   <m:rMargin m:val="0"/>
+   <m:defJc m:val="centerGroup"/>
+   <m:wrapIndent m:val="1440"/>
+   <m:intLim m:val="subSup"/>
+   <m:naryLim m:val="undOvr"/>
+  </m:mathPr></w:WordDocument>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:LatentStyles DefLockedState="false" DefUnhideWhenUsed="false"
+  DefSemiHidden="false" DefQFormat="false" LatentStyleCount="276">
+  <w:LsdException Locked="false" QFormat="true" Name="Normal"/>
+  <w:LsdException Locked="false" QFormat="true" Name="heading 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   QFormat="true" Name="heading 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   QFormat="true" Name="heading 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   QFormat="true" Name="heading 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   QFormat="true" Name="heading 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   QFormat="true" Name="heading 6"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   QFormat="true" Name="heading 7"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   QFormat="true" Name="heading 8"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   QFormat="true" Name="heading 9"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   QFormat="true" Name="caption"/>
+  <w:LsdException Locked="false" QFormat="true" Name="Title"/>
+  <w:LsdException Locked="false" QFormat="true" Name="Subtitle"/>
+  <w:LsdException Locked="false" QFormat="true" Name="Strong"/>
+  <w:LsdException Locked="false" QFormat="true" Name="Emphasis"/>
+  <w:LsdException Locked="false" Priority="99" SemiHidden="true"
+   UnhideWhenUsed="true" Name="Note Level 1"/>
+  <w:LsdException Locked="false" Priority="99" SemiHidden="true"
+   UnhideWhenUsed="true" Name="Note Level 2"/>
+  <w:LsdException Locked="false" Priority="99" SemiHidden="true"
+   UnhideWhenUsed="true" Name="Note Level 3"/>
+  <w:LsdException Locked="false" Priority="99" SemiHidden="true"
+   UnhideWhenUsed="true" Name="Note Level 4"/>
+  <w:LsdException Locked="false" Priority="99" SemiHidden="true"
+   UnhideWhenUsed="true" Name="Note Level 5"/>
+  <w:LsdException Locked="false" Priority="99" SemiHidden="true"
+   UnhideWhenUsed="true" Name="Note Level 6"/>
+  <w:LsdException Locked="false" Priority="99" SemiHidden="true"
+   UnhideWhenUsed="true" Name="Note Level 7"/>
+  <w:LsdException Locked="false" Priority="99" SemiHidden="true"
+   UnhideWhenUsed="true" Name="Note Level 8"/>
+  <w:LsdException Locked="false" Priority="99" SemiHidden="true"
+   UnhideWhenUsed="true" Name="Note Level 9"/>
+  <w:LsdException Locked="false" Priority="99" SemiHidden="true"
+   Name="Placeholder Text"/>
+  <w:LsdException Locked="false" Priority="1" QFormat="true" Name="No Spacing"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 1"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 1"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 1"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 1"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 1"/>
+  <w:LsdException Locked="false" Priority="99" SemiHidden="true" Name="Revision"/>
+  <w:LsdException Locked="false" Priority="34" QFormat="true"
+   Name="List Paragraph"/>
+  <w:LsdException Locked="false" Priority="29" QFormat="true" Name="Quote"/>
+  <w:LsdException Locked="false" Priority="30" QFormat="true"
+   Name="Intense Quote"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 1"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 1"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 1"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 1"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 1"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 1"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 1"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 2"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 2"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 2"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 2"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 2"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 2"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 2"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 2"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 2"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 2"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 2"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 2"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 3"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 3"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 3"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 3"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 3"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 3"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 3"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 3"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 3"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 3"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 3"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 3"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 4"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 4"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 4"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 4"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 4"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 4"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 4"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 4"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 4"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 4"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 4"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 4"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 5"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 5"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 5"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 5"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 5"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 5"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 5"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 5"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 5"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 5"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 5"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 5"/>
+  <w:LsdException Locked="false" Priority="60" Name="Light Shading Accent 6"/>
+  <w:LsdException Locked="false" Priority="61" Name="Light List Accent 6"/>
+  <w:LsdException Locked="false" Priority="62" Name="Light Grid Accent 6"/>
+  <w:LsdException Locked="false" Priority="63" Name="Medium Shading 1 Accent 6"/>
+  <w:LsdException Locked="false" Priority="64" Name="Medium Shading 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="65" Name="Medium List 1 Accent 6"/>
+  <w:LsdException Locked="false" Priority="66" Name="Medium List 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="67" Name="Medium Grid 1 Accent 6"/>
+  <w:LsdException Locked="false" Priority="68" Name="Medium Grid 2 Accent 6"/>
+  <w:LsdException Locked="false" Priority="69" Name="Medium Grid 3 Accent 6"/>
+  <w:LsdException Locked="false" Priority="70" Name="Dark List Accent 6"/>
+  <w:LsdException Locked="false" Priority="71" Name="Colorful Shading Accent 6"/>
+  <w:LsdException Locked="false" Priority="72" Name="Colorful List Accent 6"/>
+  <w:LsdException Locked="false" Priority="73" Name="Colorful Grid Accent 6"/>
+  <w:LsdException Locked="false" Priority="19" QFormat="true"
+   Name="Subtle Emphasis"/>
+  <w:LsdException Locked="false" Priority="21" QFormat="true"
+   Name="Intense Emphasis"/>
+  <w:LsdException Locked="false" Priority="31" QFormat="true"
+   Name="Subtle Reference"/>
+  <w:LsdException Locked="false" Priority="32" QFormat="true"
+   Name="Intense Reference"/>
+  <w:LsdException Locked="false" Priority="33" QFormat="true" Name="Book Title"/>
+  <w:LsdException Locked="false" Priority="37" SemiHidden="true"
+   UnhideWhenUsed="true" Name="Bibliography"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="TOC Heading"/>
+ </w:LatentStyles>
+</xml><![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+@font-face
+	{font-family:Arial;
+	panose-1:2 11 6 4 2 2 2 2 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:auto;
+	mso-font-pitch:variable;
+	mso-font-signature:-536859905 -1073711037 9 0 511 0;}
+@font-face
+	{font-family:"Courier New";
+	panose-1:2 7 3 9 2 2 5 2 4 4;
+	mso-font-charset:0;
+	mso-generic-font-family:auto;
+	mso-font-pitch:variable;
+	mso-font-signature:-536859905 -1073711037 9 0 511 0;}
+@font-face
+	{font-family:Wingdings;
+	panose-1:5 0 0 0 0 0 0 0 0 0;
+	mso-font-charset:2;
+	mso-generic-font-family:auto;
+	mso-font-pitch:variable;
+	mso-font-signature:0 268435456 0 0 -2147483648 0;}
+@font-face
+	{font-family:Mangal;
+	panose-1:0 0 0 0 0 0 0 0 0 0;
+	mso-font-alt:"Times New Roman";
+	mso-font-charset:1;
+	mso-generic-font-family:roman;
+	mso-font-format:other;
+	mso-font-pitch:variable;
+	mso-font-signature:8192 0 0 0 0 0;}
+@font-face
+	{font-family:Mangal;
+	panose-1:0 0 0 0 0 0 0 0 0 0;
+	mso-font-alt:"Times New Roman";
+	mso-font-charset:1;
+	mso-generic-font-family:roman;
+	mso-font-format:other;
+	mso-font-pitch:variable;
+	mso-font-signature:8192 0 0 0 0 0;}
+ /* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-parent:"";
+	margin:0cm;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";
+	mso-ansi-language:EN-US;
+	mso-fareast-language:EN-US;}
+h1
+	{mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-next:Normaal;
+	margin-top:12.0pt;
+	margin-right:0cm;
+	margin-bottom:3.0pt;
+	margin-left:0cm;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:1;
+	font-size:16.0pt;
+	font-family:Arial;
+	mso-font-kerning:16.0pt;
+	mso-ansi-language:EN-US;
+	mso-fareast-language:EN-US;}
+span.SpellE
+	{mso-style-name:"";
+	mso-spl-e:yes;}
+@page WordSection1
+	{size:612.0pt 792.0pt;
+	margin:72.0pt 90.0pt 72.0pt 90.0pt;
+	mso-header-margin:36.0pt;
+	mso-footer-margin:36.0pt;
+	mso-paper-source:0;}
+div.WordSection1
+	{page:WordSection1;}
+ /* List Definitions */
+@list l0
+	{mso-list-id:-227;
+	mso-list-template-ids:-1184964062;}
+@list l0:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:"";
+	mso-level-tab-stop:0cm;
+	mso-level-number-position:left;
+	margin-left:0cm;
+	text-indent:0cm;
+	font-family:Symbol;}
+@list l0:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:36.0pt;
+	mso-level-number-position:left;
+	margin-left:54.0pt;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l0:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:72.0pt;
+	mso-level-number-position:left;
+	margin-left:90.0pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";
+	mso-bidi-font-family:"Times New Roman";}
+@list l0:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:108.0pt;
+	mso-level-number-position:left;
+	margin-left:126.0pt;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l0:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0FA;
+	mso-level-tab-stop:144.0pt;
+	mso-level-number-position:left;
+	margin-left:162.0pt;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l0:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:180.0pt;
+	mso-level-number-position:left;
+	margin-left:198.0pt;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l0:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:216.0pt;
+	mso-level-number-position:left;
+	margin-left:234.0pt;
+	text-indent:-18.0pt;
+	font-family:"Courier New";
+	mso-bidi-font-family:"Times New Roman";}
+@list l0:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:252.0pt;
+	mso-level-number-position:left;
+	margin-left:270.0pt;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l0:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0FA;
+	mso-level-tab-stop:288.0pt;
+	mso-level-number-position:left;
+	margin-left:306.0pt;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l1
+	{mso-list-id:208033187;
+	mso-list-type:hybrid;
+	mso-list-template-ids:337828710 67698689 67698691 67698693 67698689 67698691 67698693 67698689 67698691 67698693;}
+@list l1:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:36.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l1:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:72.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l1:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:108.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l1:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:144.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l1:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:180.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l1:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:216.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l1:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:252.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l1:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:288.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l1:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:324.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l2
+	{mso-list-id:433061915;
+	mso-list-type:hybrid;
+	mso-list-template-ids:1443027846 67698689 67698691 67698693 67698689 67698691 67698693 67698689 67698691 67698693;}
+@list l2:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:36.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l2:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:72.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l2:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:108.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l2:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:144.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l2:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:180.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l2:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:216.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l2:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:252.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l2:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:288.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l2:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:324.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l3
+	{mso-list-id:707068435;
+	mso-list-type:hybrid;
+	mso-list-template-ids:1640929740 67698689 67698691 67698693 67698689 67698691 67698693 67698689 67698691 67698693;}
+@list l3:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:36.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l3:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:72.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l3:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:108.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l3:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:144.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l3:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:180.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l3:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:216.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l3:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:252.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l3:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:288.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l3:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:324.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l4
+	{mso-list-id:1036197968;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-2018362600 67698689 67698691 67698693 67698689 67698691 67698693 67698689 67698691 67698693;}
+@list l4:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:36.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l4:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:72.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l4:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:108.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l4:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:144.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l4:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:180.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l4:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:216.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l4:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:252.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l4:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:288.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l4:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:324.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l5
+	{mso-list-id:1743868008;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-269216830 67698689 67698691 67698693 67698689 67698691 67698693 67698689 67698691 67698693;}
+@list l5:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:36.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l5:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:72.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l5:level3
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:108.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l5:level4
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:144.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l5:level5
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:180.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l5:level6
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:216.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+@list l5:level7
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:252.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Symbol;}
+@list l5:level8
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:288.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:"Courier New";}
+@list l5:level9
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0A7;
+	mso-level-tab-stop:324.0pt;
+	mso-level-number-position:left;
+	text-indent:-18.0pt;
+	font-family:Wingdings;}
+ol
+	{margin-bottom:0cm;}
+ul
+	{margin-bottom:0cm;}
+-->
+</style>
+<!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+table.MsoNormalTable
+	{mso-style-name:Standaardtabel;
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-unhide:no;
+	mso-style-parent:"";
+	mso-padding-alt:0cm 5.4pt 0cm 5.4pt;
+	mso-para-margin:0cm;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";}
+</style>
+<![endif]--><!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext="edit" spidmax="2050"/>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext="edit">
+  <o:idmap v:ext="edit" data="1"/>
+ </o:shapelayout></xml><![endif]-->
+</head>
 
-        <header>
-          <h1>mapcode-cpp</h1>
-          <h2>Mapcode Library for C/C++</h2>
-        </header>
+<body lang=NL style='tab-interval:36.0pt'>
 
-        <section id="downloads" class="clearfix">
-          <a href="https://github.com/rijnb/mapcode-cpp/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
-          <a href="https://github.com/rijnb/mapcode-cpp/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
-          <a href="https://github.com/rijnb/mapcode-cpp" id="view-on-github" class="button"><span>View on GitHub</span></a>
-        </section>
-
-        <hr>
-
-        <section id="main_content">
-          <h3>
-<a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>Welcome to GitHub Pages.</h3>
-
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
-
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
-</code></pre>
-
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
-
-<h3>
-<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Designer Templates</h3>
-
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
-
-<h3>
-<a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>Rather Drive Stick?</h3>
-
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
-
-<h3>
-<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
-
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
-
-<h3>
-<a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
-
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and weâ€™ll help you sort it out.</p>
-        </section>
-
-        <section>
 <div class=WordSection1>
 
 <p class=MsoNormal align=center style='text-align:center'><b style='mso-bidi-font-weight:
@@ -78,7 +792,7 @@ normal'><span lang=EN-US style='font-size:18.0pt'><o:p>&nbsp;</o:p></span></b></
 normal'><span lang=EN-US style='font-size:18.0pt'>Version 1.40<o:p></o:p></span></b></p>
 
 <p class=MsoNormal align=center style='text-align:center'><i style='mso-bidi-font-style:
-normal'><span lang=EN-US>Copyright Â©2003-2014 by The Mapcode Foundation<o:p></o:p></span></i></p>
+normal'><span lang=EN-US>Copyright ©2003-2014 by The Mapcode Foundation<o:p></o:p></span></i></p>
 
 <p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
 
@@ -161,7 +875,7 @@ style='color:navy'>output:</span></b><span lang=EN-US style='color:navy'><o:p></
   <li class=MsoNormal style='mso-list:l4 level2 lfo4;tab-stops:list 72.0pt'><span
       lang=EN-US>Of each pair of strings, the <i style='mso-bidi-font-style:
       normal'>first string</i> specifies the official printable territory
-      abbreviation (e.g. Ã’NLDÃ“ for The Netherlands, Ã’US-CAÃ“ for the state of
+      abbreviation (e.g. ÒNLDÓ for The Netherlands, ÒUS-CAÓ for the state of
       California in the United States of America)</span></li>
   <li class=MsoNormal style='mso-list:l4 level2 lfo4;tab-stops:list 72.0pt'><span
       lang=EN-US>The <i style='mso-bidi-font-style:normal'>second string</i> is
@@ -316,7 +1030,7 @@ has mapcode NLD 49.4V<o:p></o:p></span></p>
 <p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Thus, <span
 class=SpellE>convertTerritoryNameToCode</span> is used to determine the
 territory code <span class=SpellE><b style='mso-bidi-font-weight:normal'>tc</b></span>
-for Ã’NLDÃ“. Then <span class=SpellE>encodeLatLonToMapcodes</span> is used to
+for ÒNLDÓ. Then <span class=SpellE>encodeLatLonToMapcodes</span> is used to
 determine the mapcode for the coordinate 52.376514,4.908542. The first one of
 those (if any) is printed.<o:p></o:p></span></p>
 
@@ -539,7 +1253,7 @@ style='color:navy'>input:</span></b><span lang=EN-US style='color:navy'><o:p></o
 <ul style='margin-top:0cm' type=disc>
  <li class=MsoNormal style='mso-list:l5 level1 lfo3;tab-stops:list 36.0pt'><b
      style='mso-bidi-font-weight:normal'><span lang=EN-US>mapcode: </span></b><span
-     lang=EN-US>a Ã’free-formÃ“ user input, which may be recognized if it is of
+     lang=EN-US>a Òfree-formÓ user input, which may be recognized if it is of
      the form</span></li>
  <ul style='margin-top:0cm' type=circle>
   <ul style='margin-top:0cm' type=square>
@@ -573,14 +1287,14 @@ style='color:navy'>input:</span></b><span lang=EN-US style='color:navy'><o:p></o
       lang=EN-US> </span></li>
   <ul style='margin-top:0cm' type=square>
    <li class=MsoNormal style='mso-list:l5 level3 lfo3;tab-stops:list 108.0pt'><span
-       lang=EN-US>user input Ã’US-CA XX.XXÃ“ needs no disambiguation and returns
+       lang=EN-US>user input ÒUS-CA XX.XXÓ needs no disambiguation and returns
        a location in California</span></li>
    <li class=MsoNormal style='mso-list:l5 level3 lfo3;tab-stops:list 108.0pt'><span
-       lang=EN-US>user input Ã’IN XX.XXÃ“ can be decoded without a <span
+       lang=EN-US>user input ÒIN XX.XXÓ can be decoded without a <span
        class=SpellE>tc</span>, but it is unpredictable whether it decodes to a
        location in Indiana, USA or in the Ingushetia, Russia.</span></li>
    <li class=MsoNormal style='mso-list:l5 level3 lfo3;tab-stops:list 108.0pt'><span
-       lang=EN-US>user input Ã’XX.XXÃ“ is impossible to decode unless a valid <span
+       lang=EN-US>user input ÒXX.XXÓ is impossible to decode unless a valid <span
        class=SpellE>tc</span> is provided</span></li>
   </ul>
  </ul>
@@ -647,26 +1361,26 @@ represents 52.376514,4.908542<o:p></o:p></span></p>
 color:navy'><o:p>&nbsp;</o:p></span></p>
 
 <p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Note that the above
-piece of code will only Ã’accidentallyÃ“ handle <i style='mso-bidi-font-style:
+piece of code will only ÒaccidentallyÓ handle <i style='mso-bidi-font-style:
 normal'>ambiguous</i> partial mapcodes correctly. For example, <o:p></o:p></span></p>
 
 <p class=MsoNormal style='text-indent:36.0pt'><span class=SpellE><b
 style='mso-bidi-font-weight:normal'><span lang=EN-US style='color:#0033CC'>userinput</span></b></span><b
-style='mso-bidi-font-weight:normal'><span lang=EN-US style='color:#0033CC'>=Ã“IN
-VY.HVÃ“<o:p></o:p></span></b></p>
+style='mso-bidi-font-weight:normal'><span lang=EN-US style='color:#0033CC'>=ÓIN
+VY.HVÓ<o:p></o:p></span></b></p>
 
 <p class=MsoNormal><span lang=EN-US style='color:#0033CC'>will <i
 style='mso-bidi-font-style:normal'>either</i> be interpreted as an abbreviation
-of Ã’US-IN VY.HVÃ“ <i style='mso-bidi-font-style:normal'>or</i> of Ã’RU-IN VY.HVÃ“,
+of ÒUS-IN VY.HVÓ <i style='mso-bidi-font-style:normal'>or</i> of ÒRU-IN VY.HVÓ,
 and thus <i style='mso-bidi-font-style:normal'>either</i> produce a coordinate
 in Indiana, USA, <i style='mso-bidi-font-style:normal'>or</i> in Ingushetia,
 Russia.<o:p></o:p></span></p>
 
-<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Passing a Ã’default
-contextÃ“ improves the chances of ambiguous user input to be interpreted Ã’as the
-user intendedÃ“. Thus, if one builds a system that is mostly going to be used in
-the USA, the following hard-codes that preference (i.e. Ã’when in doubt, assume
-the Ã’USAÃ“):<o:p></o:p></span></p>
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Passing a Òdefault
+contextÓ improves the chances of ambiguous user input to be interpreted Òas the
+user intendedÓ. Thus, if one builds a system that is mostly going to be used in
+the USA, the following hard-codes that preference (i.e. Òwhen in doubt, assume
+the ÒUSAÓ):<o:p></o:p></span></p>
 
 <p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
 
@@ -747,7 +1461,7 @@ char* previous_successful_input = &quot;RU-IN DK.CN0&quot;;<o:p></o:p></span></p
 color:navy;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
 
 <p class=MsoNormal><span lang=EN-US style='color:#0033CC'>then the following code
-snippet will correctly interpret the completely abbreviated mapcode Ã’49.4VÃ“ as
+snippet will correctly interpret the completely abbreviated mapcode Ò49.4VÓ as
 being in the same state (i.e. RU-IN):<o:p></o:p></span></p>
 
 <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
@@ -797,8 +1511,8 @@ written<o:p></o:p></span></p>
 <p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
 
 <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
-color:navy'><span style="mso-spacerun:yes">&nbsp; </span><span class=SpellE>userinput</span>=Ã’AL
-D6.58Ã“<o:p></o:p></span></p>
+color:navy'><span style="mso-spacerun:yes">&nbsp; </span><span class=SpellE>userinput</span>=ÒAL
+D6.58Ó<o:p></o:p></span></p>
 
 <p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
 color:navy'><o:p>&nbsp;</o:p></span></p>
@@ -1027,7 +1741,7 @@ color:#0033CC'>&quot;49.4V&quot; is not a valid mapcode<o:p></o:p></span></p>
 <p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Since there is no
 previous context, this ambiguous mapcode can simply not be interpreted. For
 this reason, it may be a good idea to choose a better default context than <span
-class=SpellE>previouscontext</span>=-1 (e.g. based on the userÃ•s GPS position).
+class=SpellE>previouscontext</span>=-1 (e.g. based on the userÕs GPS position).
 <o:p></o:p></span></p>
 
 <p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
@@ -1052,7 +1766,7 @@ input was in Indiana, this incomplete mapcode is encoded in the same context.<o:
 color:#0033CC'>AL 49.4V represents 33.532750,-86.836184<o:p></o:p></span></p>
 
 <p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Since the previous
-input was in the Indiana, USA, the context Ã’ALÃ“ is interpreted as another state
+input was in the Indiana, USA, the context ÒALÓ is interpreted as another state
 in the USA, and thus results in a coordinate in Alabama (rather than, say, the
 state of <span class=SpellE>Alagoas</span> in Brazil).<o:p></o:p></span></p>
 
@@ -1099,7 +1813,7 @@ color:#0033CC'>CCCCC.CCCC represents -16.326209,-48.016851 <o:p></o:p></span></p
 unambiguous <i style='mso-bidi-font-style:normal'>international</i> mapcode.
 Although it decodes to a coordinate somewhere in Brazil, the mapcode does not <b
 style='mso-bidi-font-weight:normal'>explicitly</b> specify Brazil as a context.
-Therefore, the context for future inputs will remain Ã’The NetherlandsÃ“.<o:p></o:p></span></p>
+Therefore, the context for future inputs will remain ÒThe NetherlandsÓ.<o:p></o:p></span></p>
 
 <p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
 
@@ -1121,7 +1835,7 @@ style='page-break-before:always'>
 <p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
 
 <p class=MsoNormal><span lang=EN-US>Sometimes you may wish to allow a user to
-input something in a Ã’generalÃ“ search box &#8211; an address, a coordinate, a
+input something in a ÒgeneralÓ search box &#8211; an address, a coordinate, a
 mapcode, or something else.</span></p>
 
 <p class=MsoNormal><span lang=EN-US>The following routine is <i
@@ -1130,14 +1844,14 @@ style="mso-spacerun:yes">&nbsp;</span>efficient and lightweight, and recognizes
 a user input that is <i style='mso-bidi-font-style:normal'>intended</i> as a
 mapcode. For example:</span></p>
 
-<p class=MsoNormal><span lang=EN-US><span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Ã’NLD
-503.XE2Ã“</span></p>
+<p class=MsoNormal><span lang=EN-US><span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>ÒNLD
+503.XE2Ó</span></p>
 
 <p class=MsoNormal><span lang=EN-US>is intended as a mapcode (although it
 happens to be invalid), while</span></p>
 
-<p class=MsoNormal><span lang=EN-US><span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Ã’St.
-Jacobs Street 45, LondonÃ“</span></p>
+<p class=MsoNormal><span lang=EN-US><span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>ÒSt.
+Jacobs Street 45, LondonÓ</span></p>
 
 <p class=MsoNormal><span lang=EN-US>Is not. Since anything that looks like a
 mapcode is <i style='mso-bidi-font-style:normal'>very unlikely</i> to represent
@@ -1172,7 +1886,7 @@ style='color:navy'>input:</span></b><span lang=EN-US style='color:navy'><o:p></o
 <ul style='margin-top:0cm' type=disc>
  <li class=MsoNormal style='mso-list:l5 level1 lfo3;tab-stops:list 36.0pt'><b
      style='mso-bidi-font-weight:normal'><span lang=EN-US>check: </span></b><span
-     lang=EN-US>a Ã’free-formÃ“ user input</span></li>
+     lang=EN-US>a Òfree-formÓ user input</span></li>
  <li class=MsoNormal style='mso-list:l5 level1 lfo3;tab-stops:list 36.0pt'><span
      class=SpellE><b style='mso-bidi-font-weight:normal'><span lang=EN-US>includesTerritory</span></b></span><b
      style='mso-bidi-font-weight:normal'><span lang=EN-US>:</span></b><span
@@ -1181,7 +1895,7 @@ style='color:navy'>input:</span></b><span lang=EN-US style='color:navy'><o:p></o
      <span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>[whitespace]
      [xxx[-<span class=SpellE>yyy</span>]] [whitespace] PPP.QQQ [-RR]
      [whitespace]<br>
-     If you pass 0, only Ã’properÃ“ mapcodes will be recognized:<br>
+     If you pass 0, only ÒproperÓ mapcodes will be recognized:<br>
      <span
      style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
      </span>[whitespace] PPP.QQQ [-RR] [whitespace]</span></li>
@@ -1213,7 +1927,7 @@ EN-US;mso-bidi-language:AR-SA'><br clear=all style='page-break-before:always'>
 
 <p class=MsoNormal><span lang=EN-US>Mapcodes are intended for easy, daily use.
 They were therefore made short, and no more precise than is necessary to be
-useful at the Ã’humanÃ“ scale: accurate to within 5 meters &#8211; or put another
+useful at the ÒhumanÓ scale: accurate to within 5 meters &#8211; or put another
 way: <i style='mso-bidi-font-style:normal'>in</i>accurate by <i
 style='mso-bidi-font-style:normal'>up to</i> 5 meters. <i style='mso-bidi-font-style:
 normal'>On average, </i>inaccurate by 2.5 meters. An inaccuracy, by the way,
@@ -1302,7 +2016,7 @@ style='page-break-before:always'>
 code table, which in turn is based on the ISO 3166 standards.</span></p>
 
 <p class=MsoNormal><span lang=EN-US>For efficiency, these codes need to be
-converted into internal Ã’territory codesÃ“. For these, the following three
+converted into internal Òterritory codesÓ. For these, the following three
 support routines are relevant:</span></p>
 
 <p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
@@ -1328,16 +2042,16 @@ class=SpellE>parentTerritoryCode</span>)<o:p></o:p></span></b></p>
      class=SpellE><b style='mso-bidi-font-weight:normal'><span lang=EN-US>isoName</span></b></span><b
      style='mso-bidi-font-weight:normal'><span lang=EN-US>:</span></b><span
      lang=EN-US><span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>a
-     2- or 3-letter Ã’ISO standardÃ“ code of a country or a state, or a
+     2- or 3-letter ÒISO standardÓ code of a country or a state, or a
      combination of country and state separated by a hyphen or space. <br>
-     Examples: Ã’USAÃ“, Ã’CAÃ“, Ã’US-CAÃ“, Ã’USA-CAÃ“, Ã’US CAÃ“</span></li>
+     Examples: ÒUSAÓ, ÒCAÓ, ÒUS-CAÓ, ÒUSA-CAÓ, ÒUS CAÓ</span></li>
  <li class=MsoNormal style='mso-list:l1 level1 lfo1;tab-stops:list 36.0pt'><span
      class=SpellE><b style='mso-bidi-font-weight:normal'><span lang=EN-US>parentTerritoryCode</span></b></span><b
      style='mso-bidi-font-weight:normal'><span lang=EN-US>:</span></b><span
      lang=EN-US> optional territory code to help the routine choose when the
      abbreviation is ambiguous, which can happen if the abbreviation is of a
-     state and the stateÃ•s country is omitted. For example, Ã’ALÃ“ might mean
-     either Ã’US-ALÃ“ or Ã’BR-ALÃ“.</span></li>
+     state and the stateÕs country is omitted. For example, ÒALÓ might mean
+     either ÒUS-ALÓ or ÒBR-ALÓ.</span></li>
  <li class=MsoNormal style='mso-list:l1 level1 lfo1;tab-stops:list 36.0pt'><b
      style='mso-bidi-font-weight:normal'><span lang=EN-US>Returns</span></b><span
      lang=EN-US>: the territory code (1-999), or negative if not no match was found.</span></li>
@@ -1369,10 +2083,10 @@ class=SpellE>int</span><span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nb
      lang=EN-US>&#8211; specifies the format of the return value:</span></li>
  <ul style='margin-top:0cm' type=circle>
   <li class=MsoNormal style='mso-list:l3 level2 lfo2;tab-stops:list 72.0pt'><span
-      lang=EN-US>0 &#8211; return in unambiguous full format: Ã’XXXÃ“ for a country,
-      Ã’XX-YYÃ“ for a state</span></li>
+      lang=EN-US>0 &#8211; return in unambiguous full format: ÒXXXÓ for a country,
+      ÒXX-YYÓ for a state</span></li>
   <li class=MsoNormal style='mso-list:l3 level2 lfo2;tab-stops:list 72.0pt'><span
-      lang=EN-US>1 &#8211; short format: Ã’XXXÃ“ or Ã’XXÃ“; especially when a 2
+      lang=EN-US>1 &#8211; short format: ÒXXXÓ or ÒXXÓ; especially when a 2
       letter (state) code is returned, although always unique within its country,
       it may not be unique in the world</span></li>
  </ul>
@@ -1542,17 +2256,7 @@ class=SpellE>extraDigits</span> parameter so that high-precision mapcodes can
 be generated<o:p></o:p></span></p>
 
 </div>
-</section>
 
+</body>
 
-
-        <footer>
-          mapcode-cpp is maintained by <a href="https://github.com/rijnb">rijnb</a><br>
-          This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
-        </footer>
-
-        
-      </div>
-    </div>
-  </body>
 </html>

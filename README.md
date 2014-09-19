@@ -1,5 +1,9 @@
-MAPCODE LIBRARY FOR C/C++
+Mapcode Library for C/C++
 ====
+
+Online documentation can be found at: http://rijnb.github.io/mapcode-cpp/
+
+----
 
 Copyright (C) 2014 Stichting Mapcode Foundation (http://www.mapcode.com)
 
@@ -15,9 +19,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
--------------------------------------------------------------------------------
-
-Online documentation can be found at: http://rijnb.github.io/mapcode-cpp/
 
 The C/C++ Library: mapcodelib/
 ====

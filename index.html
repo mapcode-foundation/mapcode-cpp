@@ -64,6 +64,1488 @@ $ git checkout gh-pages
 <p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
         </section>
 
+        <section>
+<div class=WordSection1>
+
+<p class=MsoNormal align=center style='text-align:center'><b style='mso-bidi-font-weight:
+normal'><span lang=EN-US style='font-size:18.0pt'>C library to convert between
+mapcodes and latitude/longitude<o:p></o:p></span></b></p>
+
+<p class=MsoNormal align=center style='text-align:center'><b style='mso-bidi-font-weight:
+normal'><span lang=EN-US style='font-size:18.0pt'><o:p>&nbsp;</o:p></span></b></p>
+
+<p class=MsoNormal align=center style='text-align:center'><b style='mso-bidi-font-weight:
+normal'><span lang=EN-US style='font-size:18.0pt'>Version 1.40<o:p></o:p></span></b></p>
+
+<p class=MsoNormal align=center style='text-align:center'><i style='mso-bidi-font-style:
+normal'><span lang=EN-US>Copyright ©2003-2014 by The Mapcode Foundation<o:p></o:p></span></i></p>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<h1><span lang=EN-US>1. Converting a coordinate into a mapcode</span></h1>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span class=SpellE><b style='mso-bidi-font-weight:normal'><span
+lang=EN-US>int</span></b></span><b style='mso-bidi-font-weight:normal'><span
+lang=EN-US> <span class=SpellE>encodeLatLonToMapcodes</span>(<o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><b style='mso-bidi-font-weight:
+normal'><span lang=EN-US>char**<span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>results,
+<o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><b style='mso-bidi-font-weight:
+normal'><span lang=EN-US>double<span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>lat,
+<o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><b style='mso-bidi-font-weight:
+normal'><span lang=EN-US>double<span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+class=SpellE>lon</span>, <o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><span class=SpellE><b
+style='mso-bidi-font-weight:normal'><span lang=EN-US>int</span></b></span><b
+style='mso-bidi-font-weight:normal'><span lang=EN-US> <span style='mso-tab-count:
+1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=SpellE>territoryCode</span>,<o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><span class=SpellE><b
+style='mso-bidi-font-weight:normal'><span lang=EN-US>int</span></b></span><b
+style='mso-bidi-font-weight:normal'><span lang=EN-US><span style='mso-tab-count:
+1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=SpellE>extraDigits</span>)<o:p></o:p></span></b></p>
+
+<p class=MsoNormal><i style='mso-bidi-font-style:normal'><span lang=EN-US><o:p>&nbsp;</o:p></span></i></p>
+
+<p class=MsoNormal><i style='mso-bidi-font-style:normal'><span lang=EN-US>find
+all possible mapcodes in a given territory (or in ALL territories)<o:p></o:p></span></i></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US
+style='color:navy'>input:</span></b><span lang=EN-US style='color:navy'><o:p></o:p></span></p>
+
+<ul style='margin-top:0cm' type=disc>
+ <li class=MsoNormal style='mso-list:l4 level1 lfo4;tab-stops:list 36.0pt'><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>lat:</span></b><span
+     lang=EN-US> latitude in degrees -90.0 to 90.0</span></li>
+ <li class=MsoNormal style='mso-list:l4 level1 lfo4;tab-stops:list 36.0pt'><span
+     class=SpellE><b style='mso-bidi-font-weight:normal'><span lang=EN-US>lon</span></b></span><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>:</span></b><span
+     lang=EN-US> longitude in degrees -180.0 to 180.0</span></li>
+ <li class=MsoNormal style='mso-list:l4 level1 lfo4;tab-stops:list 36.0pt'><span
+     class=SpellE><b style='mso-bidi-font-weight:normal'><span lang=EN-US>territoryCode</span></b></span><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>: </span></b><span
+     lang=EN-US>territory code (an integer, pass 0 to encode in ALL possible territories,
+     or a positive value to encode only in a particular territory)</span></li>
+ <li class=MsoNormal style='mso-list:l4 level1 lfo4;tab-stops:list 36.0pt'><span
+     class=SpellE><b style='mso-bidi-font-weight:normal'><span lang=EN-US>extraDigits</span></b></span><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>: </span></b><span
+     lang=EN-US>number of extra &quot;digits&quot; to add to the generated
+     mapcode. The preferred default is 0. Other valid values are 1 and 2. see
+     section 2.2 below.</span></li>
+</ul>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US
+style='color:navy'>output:</span></b><span lang=EN-US style='color:navy'><o:p></o:p></span></p>
+
+<ul style='margin-top:0cm' type=disc>
+ <li class=MsoNormal style='mso-list:l4 level1 lfo4;tab-stops:list 36.0pt'><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>return value</span></b><span
+     lang=EN-US>: the number of results </span></li>
+ <li class=MsoNormal style='mso-list:l4 level1 lfo4;tab-stops:list 36.0pt'><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>results:</span></b><span
+     lang=EN-US> elements<b style='mso-bidi-font-weight:normal'> </b>are made
+     to point to strings (2 strings per result!) representing the mapcodes of
+     the given latitude/longitude in the specified territory. Note that these
+     pointers are overwritten by the next call to <span class=SpellE><b
+     style='mso-bidi-font-weight:normal'>encodeLatLonToMapcodes</b></span>. </span></li>
+ <ul style='margin-top:0cm' type=circle>
+  <li class=MsoNormal style='mso-list:l4 level2 lfo4;tab-stops:list 72.0pt'><span
+      lang=EN-US>Of each pair of strings, the <i style='mso-bidi-font-style:
+      normal'>first string</i> specifies the official printable territory
+      abbreviation (e.g. ÒNLDÓ for The Netherlands, ÒUS-CAÓ for the state of
+      California in the United States of America)</span></li>
+  <li class=MsoNormal style='mso-list:l4 level2 lfo4;tab-stops:list 72.0pt'><span
+      lang=EN-US>The <i style='mso-bidi-font-style:normal'>second string</i> is
+      a mapcode (a string between 5 and 10 chars with a dot in it)</span></li>
+ </ul>
+</ul>
+
+<span lang=EN-US style='font-size:12.0pt;font-family:"Times New Roman";
+mso-fareast-font-family:"Times New Roman";mso-ansi-language:EN-US;mso-fareast-language:
+EN-US;mso-bidi-language:AR-SA'><br clear=all style='mso-special-character:line-break;
+page-break-before:always'>
+</span>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span class=SpellE><b style='mso-bidi-font-weight:normal'><span
+lang=EN-US>int</span></b></span><b style='mso-bidi-font-weight:normal'><span
+lang=EN-US> <span class=SpellE>encodeLatLonToSingleMapcode</span>(<o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><b style='mso-bidi-font-weight:
+normal'><span lang=EN-US>char*<span style='mso-tab-count:1'>&nbsp; </span>result,
+<o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><b style='mso-bidi-font-weight:
+normal'><span lang=EN-US>double<span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>lat,
+<o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><b style='mso-bidi-font-weight:
+normal'><span lang=EN-US>double<span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+class=SpellE>lon</span>, <o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><span class=SpellE><b
+style='mso-bidi-font-weight:normal'><span lang=EN-US>int</span></b></span><b
+style='mso-bidi-font-weight:normal'><span lang=EN-US> <span style='mso-tab-count:
+1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=SpellE>territoryCode</span>,<o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><span class=SpellE><b
+style='mso-bidi-font-weight:normal'><span lang=EN-US>int</span></b></span><b
+style='mso-bidi-font-weight:normal'><span lang=EN-US><span style='mso-tab-count:
+1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span class=SpellE>extraDigits</span>)<o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><b style='mso-bidi-font-weight:
+normal'><span lang=EN-US><o:p>&nbsp;</o:p></span></b></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US><o:p>&nbsp;</o:p></span></b></p>
+
+<p class=MsoNormal><i style='mso-bidi-font-style:normal'><span lang=EN-US>find
+ONE possible mapcode in a given territory (or in ALL territories)<o:p></o:p></span></i></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US
+style='color:navy'>input:</span></b><span lang=EN-US style='color:navy'><o:p></o:p></span></p>
+
+<ul style='margin-top:0cm' type=disc>
+ <li class=MsoNormal style='mso-list:l4 level1 lfo4;tab-stops:list 36.0pt'><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>lat:</span></b><span
+     lang=EN-US> latitude in degrees -90.0 to 90.0</span></li>
+ <li class=MsoNormal style='mso-list:l4 level1 lfo4;tab-stops:list 36.0pt'><span
+     class=SpellE><b style='mso-bidi-font-weight:normal'><span lang=EN-US>lon</span></b></span><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>:</span></b><span
+     lang=EN-US> longitude in degrees -180.0 to 180.0</span></li>
+ <li class=MsoNormal style='mso-list:l4 level1 lfo4;tab-stops:list 36.0pt'><span
+     class=SpellE><b style='mso-bidi-font-weight:normal'><span lang=EN-US>territoryCode</span></b></span><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>: </span></b><span
+     lang=EN-US>territory code (an integer, pass 0 to encode in ALL possible
+     territories, or a positive value to encode only in a particular territory)</span></li>
+ <li class=MsoNormal style='mso-list:l4 level1 lfo4;tab-stops:list 36.0pt'><span
+     class=SpellE><b style='mso-bidi-font-weight:normal'><span lang=EN-US>extraDigits</span></b></span><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>: </span></b><span
+     lang=EN-US>number of extra &quot;digits&quot; to add to the generated
+     mapcode. The preferred default is 0. Other valid values are 1 and 2. see
+     section 2.2 below.</span></li>
+</ul>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US
+style='color:navy'>output:</span></b><span lang=EN-US style='color:navy'><o:p></o:p></span></p>
+
+<ul style='margin-top:0cm' type=disc>
+ <li class=MsoNormal style='mso-list:l4 level1 lfo4;tab-stops:list 36.0pt'><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>return value</span></b><span
+     lang=EN-US>: positive if a mapcode was found</span></li>
+ <li class=MsoNormal style='mso-list:l4 level1 lfo4;tab-stops:list 36.0pt'><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>result:</span></b><span
+     lang=EN-US> a string representing the full mapcode found, including
+     territory code; the caller must allocate the memory for the result string
+     (contrary to <span class=SpellE>encodeLatLonToMapcodes</span>!); make sure
+     there is room for the worst-case result (which is a string of char[24]).</span></li>
+</ul>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><u><span lang=EN-US style='color:#0033CC'>Example code:<o:p></o:p></span></u></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;
+</span>double lat = 52.376514;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;
+</span>double lon =<span style="mso-spacerun:yes">&nbsp; </span>4.908542;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>const
+char* countryabbr = &quot;NLD&quot;;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>char*
+r[MAX_NR_OF_MAPCODE RESULTS]; </span><i style='mso-bidi-font-style:normal'><span
+lang=EN-US style='font-size:10.0pt;font-family:"Courier New";color:#999999;
+mso-no-proof:yes'>// Strings allocated by library!</span></i><span lang=EN-US
+style='font-size:10.0pt;font-family:"Courier New";color:navy;mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>int
+tc = convertTerritoryNameToCode(countryabbr, 0);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>int
+nrresults = encodeLatLonToMapcodes(r, lat, lon, tc, 0);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>if
+(nrresults &gt; 0)<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;
+</span>printf(&quot;%0.6f,%0.6f has mapcode %s %s\n&quot;, lat, lon, r[1], r[0]);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>else<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;
+</span>printf(&quot;No results\n&quot;);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Output:<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><span lang=EN-US
+style='font-size:10.0pt;font-family:"Courier New";color:navy'>52.376514,4.908542
+has mapcode NLD 49.4V<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Thus, <span
+class=SpellE>convertTerritoryNameToCode</span> is used to determine the
+territory code <span class=SpellE><b style='mso-bidi-font-weight:normal'>tc</b></span>
+for ÒNLDÓ. Then <span class=SpellE>encodeLatLonToMapcodes</span> is used to
+determine the mapcode for the coordinate 52.376514,4.908542. The first one of
+those (if any) is printed.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Note that there may
+be more than one result, even for a single territory. <o:p></o:p></span></p>
+
+<span lang=EN-US style='font-size:12.0pt;font-family:"Times New Roman";
+mso-fareast-font-family:"Times New Roman";color:#0033CC;mso-ansi-language:EN-US;
+mso-fareast-language:EN-US;mso-bidi-language:AR-SA'><br clear=all
+style='page-break-before:always'>
+</span>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>When you only want
+ONE result, you could also write:<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;
+</span>double lat = 52.376514;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;
+</span>double lon =<span style="mso-spacerun:yes">&nbsp; </span>4.908542;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>const
+char* countryabbr = &quot;NLD&quot;;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>char
+result[MAX_MAPCODE_RESULT_LEN]; </span><i style='mso-bidi-font-style:normal'><span
+lang=EN-US style='font-size:10.0pt;font-family:"Courier New";color:#999999;
+mso-no-proof:yes'>// String allocated by caller!</span></i><span lang=EN-US
+style='font-size:10.0pt;font-family:"Courier New";color:navy;mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>int
+tc = convertTerritoryNameToCode(countryabbr, 0);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>int
+nrresults = encodeLatLonToSingleMapcode(result, lat, lon, tc, 0);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>if
+(nrresults &gt; 0)<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;
+</span>printf(&quot;%0.6f,%0.6f has mapcode %s\n&quot;, lat, lon, result);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>else<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;
+</span>printf(&quot;No results\n&quot;);</span><span lang=EN-US
+style='color:#0033CC'><o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>You can also generate
+<i style='mso-bidi-font-style:normal'>all</i> possible mapcodes, <i
+style='mso-bidi-font-style:normal'>irrespective</i> of territory, by passing <span
+class=SpellE>territoryCode</span>=0:<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>int
+i;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;
+</span>double lat = 52.376514;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;
+</span>double lon =<span style="mso-spacerun:yes">&nbsp; </span>4.908542;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>char
+*r[MAX_NR_OF_MAPCODE_RESULTS];<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>int
+nrresults = encodeLatLonToMapcodes(r, lat, lon, 0, 0);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>printf(&quot;%d
+mapcodes for %0.6f,%0.6f:\n&quot;, nrresults, lat, lon); <o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>for (i
+= 0; i &lt; nrresults; i++) {<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;
+</span></span><i style='mso-bidi-font-style:normal'><span lang=EN-US
+style='font-size:10.0pt;font-family:"Courier New";color:#999999;mso-no-proof:
+yes'>// show context (unless it is international)<o:p></o:p></span></i></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;
+</span>if (strcmp(r[(i * 2)<span style="mso-spacerun:yes">&nbsp; </span>+1], &quot;AAA&quot;)
+!=0 ) <o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>printf(&quot;%s
+&quot;,r[(i * 2) + 1]);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><i style='mso-bidi-font-style:normal'><span lang=EN-US
+style='font-size:10.0pt;font-family:"Courier New";color:#999999;mso-no-proof:
+yes'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp; </span>// show mapcode<o:p></o:p></span></i></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;
+</span>printf(&quot;%s\n&quot;, r[i * 2] );<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>}<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Output:<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><span lang=EN-US
+style='font-size:10.0pt;font-family:"Courier New";color:navy'>5 possible
+mapcodes for 52.376514,4.908542:<o:p></o:p></span></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><span lang=EN-US
+style='font-size:10.0pt;font-family:"Courier New";color:navy'>NLD 49.4V<o:p></o:p></span></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><span lang=EN-US
+style='font-size:10.0pt;font-family:"Courier New";color:navy'>NLD G9.VWG<o:p></o:p></span></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><span lang=EN-US
+style='font-size:10.0pt;font-family:"Courier New";color:navy'>NLD DL6.H9L<o:p></o:p></span></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><span lang=EN-US
+style='font-size:10.0pt;font-family:"Courier New";color:navy'>NLD P25Z.N3Z<o:p></o:p></span></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><span lang=EN-US
+style='font-size:10.0pt;font-family:"Courier New";color:navy'>VHXGB.1J9J<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Note that <span
+class=SpellE><b style='mso-bidi-font-weight:normal'>encodeLatLonToMapcodes</b></span><b
+style='mso-bidi-font-weight:normal'>(r, lat, <span class=SpellE>lon</span>, 0,
+e)</b> is guaranteed to return at least one result if <b style='mso-bidi-font-weight:
+normal'>lat, <span class=SpellE>lon</span></b> is in range (i.e. on Earth).
+Again, the elements of <b style='mso-bidi-font-weight:normal'>r</b> are made to
+point to territory <span class=SpellE>abbrevations</span> and mapcodes in those
+territories. Within territories the shortest mapcode code is listed first. The
+territories are listed in no particular order, except that the international
+code is always the last code in the list.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<b><span lang=EN-US style='font-size:16.0pt;font-family:Arial;mso-fareast-font-family:
+"Times New Roman";mso-font-kerning:16.0pt;mso-ansi-language:EN-US;mso-fareast-language:
+EN-US;mso-bidi-language:AR-SA'><br clear=all style='page-break-before:always'>
+</span></b>
+
+<h1><span lang=EN-US>2. Converting a mapcode into a coordinate</span></h1>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span class=SpellE><b style='mso-bidi-font-weight:normal'><span
+lang=EN-US>int</span></b></span><b style='mso-bidi-font-weight:normal'><span
+lang=EN-US> <span class=SpellE>decodeMapcodeToLatLon</span>(<o:p></o:p></span></b></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US><span
+style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>double*<span
+style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>lat,
+<o:p></o:p></span></b></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US><span
+style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>double*<span
+style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+class=SpellE>lon</span>, <o:p></o:p></span></b></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US><span
+style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>const
+char*<span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp; </span>mapcode, <o:p></o:p></span></b></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US><span
+style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+class=SpellE>int</span> <span style='mso-tab-count:2'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+class=SpellE>territoryCode</span>)<o:p></o:p></span></b></p>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US
+style='color:navy'>input:</span></b><span lang=EN-US style='color:navy'><o:p></o:p></span></p>
+
+<ul style='margin-top:0cm' type=disc>
+ <li class=MsoNormal style='mso-list:l5 level1 lfo3;tab-stops:list 36.0pt'><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>mapcode: </span></b><span
+     lang=EN-US>a Òfree-formÓ user input, which may be recognized if it is of
+     the form</span></li>
+ <ul style='margin-top:0cm' type=circle>
+  <ul style='margin-top:0cm' type=square>
+   <li class=MsoNormal style='mso-list:l5 level3 lfo3;tab-stops:list 108.0pt'><b
+       style='mso-bidi-font-weight:normal'><span lang=EN-US>[xxx[-<span
+       class=SpellE>yyy</span>]] PPP.QQQ [-RR]<o:p></o:p></span></b></li>
+   <ul style='margin-top:0cm' type=disc>
+    <li class=MsoNormal style='mso-list:l5 level4 lfo3;tab-stops:list 144.0pt'><span
+        lang=EN-US>xxx is a country code (2 or 3 characters)</span></li>
+    <li class=MsoNormal style='mso-list:l5 level4 lfo3;tab-stops:list 144.0pt'><span
+        class=SpellE><span lang=EN-US>yyy</span></span><span lang=EN-US> is an
+        state code (2 or 3 characters)</span></li>
+    <li class=MsoNormal style='mso-list:l5 level4 lfo3;tab-stops:list 144.0pt'><span
+        lang=EN-US>PPP : mapcode prefix (between 2 and 5 characters)</span></li>
+    <li class=MsoNormal style='mso-list:l5 level4 lfo3;tab-stops:list 144.0pt'><span
+        lang=EN-US>QQQ: mapcode postfix (between 2 and 4 characters)</span></li>
+    <li class=MsoNormal style='mso-list:l5 level4 lfo3;tab-stops:list 144.0pt'><span
+        lang=EN-US>RR: high-precision addendum (one or two characters)</span></li>
+   </ul>
+  </ul>
+ </ul>
+ <li class=MsoNormal style='mso-list:l5 level1 lfo3;tab-stops:list 36.0pt'><span
+     class=SpellE><b style='mso-bidi-font-weight:normal'><span lang=EN-US>territoryCode</span></b></span><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>: </span></b><span
+     lang=EN-US>territory (or 0), to help disambiguate the user input if that
+     proves necessary; If you pass 0, the mapcode may fail to decode, or (if it
+     is ambiguous) will be disambiguated randomly.</span></li>
+ <ul style='margin-top:0cm' type=circle>
+  <li class=MsoNormal style='mso-list:l5 level2 lfo3;tab-stops:list 72.0pt'><b
+      style='mso-bidi-font-weight:normal'><span lang=EN-US>Examples:</span></b><span
+      lang=EN-US> </span></li>
+  <ul style='margin-top:0cm' type=square>
+   <li class=MsoNormal style='mso-list:l5 level3 lfo3;tab-stops:list 108.0pt'><span
+       lang=EN-US>user input ÒUS-CA XX.XXÓ needs no disambiguation and returns
+       a location in California</span></li>
+   <li class=MsoNormal style='mso-list:l5 level3 lfo3;tab-stops:list 108.0pt'><span
+       lang=EN-US>user input ÒIN XX.XXÓ can be decoded without a <span
+       class=SpellE>tc</span>, but it is unpredictable whether it decodes to a
+       location in Indiana, USA or in the Ingushetia, Russia.</span></li>
+   <li class=MsoNormal style='mso-list:l5 level3 lfo3;tab-stops:list 108.0pt'><span
+       lang=EN-US>user input ÒXX.XXÓ is impossible to decode unless a valid <span
+       class=SpellE>tc</span> is provided</span></li>
+  </ul>
+ </ul>
+</ul>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US
+style='color:navy'>output:</span></b><span lang=EN-US style='color:navy'><o:p></o:p></span></p>
+
+<ul style='margin-top:0cm' type=disc>
+ <li class=MsoNormal style='mso-list:l5 level1 lfo3;tab-stops:list 36.0pt'><span
+     lang=EN-US>returns nonzero in case of error. Otherwise, <b
+     style='mso-bidi-font-weight:normal'>lat</b> and <span class=SpellE><b
+     style='mso-bidi-font-weight:normal'>lon</b></span> are filled with the decoded
+     coordinates.</span></li>
+</ul>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><u><span lang=EN-US style='color:#0033CC'>Example code:<o:p></o:p></span></u></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>const
+char* userinput = &quot;NLD 49.4V&quot;;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;
+</span>double lat, lon;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>int
+err = decodeMapcodeToLatLon(&amp;lat, &amp;lon, userinput, 0);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>if
+(err)<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;
+</span>printf(&quot;\&quot;%s\&quot; is not a valid mapcode\n&quot;,
+userinput);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>else<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;
+</span>printf(&quot;\&quot;%s\&quot; represents %0.6f,%0.6f\n&quot;, userinput,
+lat, lon);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Output:<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'><span style="mso-spacerun:yes">&nbsp; </span>&quot;NLD 49.4V&quot;
+represents 52.376514,4.908542<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Note that the above
+piece of code will only ÒaccidentallyÓ handle <i style='mso-bidi-font-style:
+normal'>ambiguous</i> partial mapcodes correctly. For example, <o:p></o:p></span></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><span class=SpellE><b
+style='mso-bidi-font-weight:normal'><span lang=EN-US style='color:#0033CC'>userinput</span></b></span><b
+style='mso-bidi-font-weight:normal'><span lang=EN-US style='color:#0033CC'>=ÓIN
+VY.HVÓ<o:p></o:p></span></b></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>will <i
+style='mso-bidi-font-style:normal'>either</i> be interpreted as an abbreviation
+of ÒUS-IN VY.HVÓ <i style='mso-bidi-font-style:normal'>or</i> of ÒRU-IN VY.HVÓ,
+and thus <i style='mso-bidi-font-style:normal'>either</i> produce a coordinate
+in Indiana, USA, <i style='mso-bidi-font-style:normal'>or</i> in Ingushetia,
+Russia.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Passing a Òdefault
+contextÓ improves the chances of ambiguous user input to be interpreted Òas the
+user intendedÓ. Thus, if one builds a system that is mostly going to be used in
+the USA, the following hard-codes that preference (i.e. Òwhen in doubt, assume
+the ÒUSAÓ):<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>int
+defaultcontext = convertTerritoryNameTCode(&quot;USA&quot;,0);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>const
+char* userinput = &quot;IN VY.HV&quot;;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;
+</span>double lat, lon;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>int
+err = convertMapcodeToLatLon(&amp;lat, &amp;lon, userinput,<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>defaultcontext);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>if
+(err)<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;
+</span>printf(&quot;\&quot;%s\&quot; is not a valid mapcode\n&quot;,
+userinput);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>else <o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;
+</span>printf(&quot;\&quot;%s\&quot; represents %0.6f,%0.6f\n&quot;, userinput,
+lat, lon);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Output:<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'><span style="mso-spacerun:yes">&nbsp; </span>&quot;IN VY.HV&quot;
+represents 39.727950,-86.118444<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>A more sophisticated
+system could of course make much better assumptions, for example based on the
+GPS coordinate of the user, or the current cursor position on a world map that
+is being displayed to the user.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>In an interactive
+system, the <i style='mso-bidi-font-style:normal'>best</i> way to handle
+ambiguity is probably to always use the most recent <i style='mso-bidi-font-style:
+normal'>successful, explicitly stated </i>context as default.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>For example, suppose
+you remembered the previous <i style='mso-bidi-font-style:normal'>correctly </i>interpreted
+user input:<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>const
+char* previous_successful_input = &quot;RU-IN DK.CN0&quot;;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>then the following code
+snippet will correctly interpret the completely abbreviated mapcode Ò49.4VÓ as
+being in the same state (i.e. RU-IN):<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>int
+previouscontext = convertTerritoryNameToCode(<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>previous_successful_input,0);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>const
+char* userinput = &quot;D6.58&quot;;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>int
+err = decodeMapcodeToLatLon(&amp;lat, &amp;lon, userinput,<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>previouscontext);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Output:<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'><span style="mso-spacerun:yes">&nbsp; </span>&quot;D6.58&quot;
+represents 43.259275,44.771980<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>which is in <span
+style="mso-spacerun:yes">&nbsp;</span>Ingushetia Republic. And in fact, had we
+written<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'><span style="mso-spacerun:yes">&nbsp; </span><span class=SpellE>userinput</span>=ÒAL
+D6.58Ó<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>this would generate
+the output<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'><span style="mso-spacerun:yes">&nbsp; </span>&quot;AL D6.58&quot;
+represents 51.958335,85.975322<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>which is in the
+Russian republic of Altai: because of the context RU-IN, the territory has been
+interpreted as RU-AL, instead of the equally likely US-AL (Alabama, USA) or BR-AL
+(<span class=SpellE>Alagoas</span>, Brazil).<o:p></o:p></span></p>
+
+<span lang=EN-US style='font-size:12.0pt;font-family:"Times New Roman";
+mso-fareast-font-family:"Times New Roman";color:#0033CC;mso-ansi-language:EN-US;
+mso-fareast-language:EN-US;mso-bidi-language:AR-SA'><br clear=all
+style='page-break-before:always'>
+</span>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Here is an example
+that decodes consecutive user inputs, some of them wildly ambiguous. With the
+exception of the very first input, all are probably interpreted as the user
+intended:<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>int
+previouscontext = -1; </span><span lang=EN-US style='font-size:10.0pt;
+font-family:"Courier New";color:silver;mso-no-proof:yes'>// no initial context</span><span
+lang=EN-US style='font-size:10.0pt;font-family:"Courier New";color:navy;
+mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>const
+char* userinput[] = {<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;
+</span></span><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-ansi-language:NL;mso-no-proof:yes'>&quot;49.4V&quot;,<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-ansi-language:NL;mso-no-proof:yes'><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp; </span>&quot;US-IN 49.4V&quot;,<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-ansi-language:NL;mso-no-proof:yes'><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp; </span>&quot;49.4V&quot;,<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-ansi-language:NL;mso-no-proof:yes'><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp; </span>&quot;AL 49.4V&quot;,<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-ansi-language:NL;mso-no-proof:yes'><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp; </span>&quot;RU-IN 49.4V&quot;,<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-ansi-language:NL;mso-no-proof:yes'><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp; </span>&quot;AL 49.4V&quot;,<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-ansi-language:NL;mso-no-proof:yes'><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp; </span>&quot;NLD XXX.YYY&quot;,<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-ansi-language:NL;mso-no-proof:yes'><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp; </span>&quot;49.4V&quot;,<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-ansi-language:NL;mso-no-proof:yes'><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp; </span>&quot;CCCCC.CCCC&quot;,<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-ansi-language:NL;mso-no-proof:yes'><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp; </span></span><span lang=EN-US
+style='font-size:10.0pt;font-family:"Courier New";color:navy;mso-no-proof:yes'>&quot;49.4V&quot;,<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;
+</span>NULL<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>};<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>int
+i;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp; </span>for
+(i = 0; userinput[i] != 0; i++) {<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;
+</span>double lat, lon;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;
+</span>int err = decodeMapcodeToLatLon(&amp;lat, &amp;lon, userinput[i], <o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>previouscontext);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;
+</span>if (err)<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>printf(&quot;\&quot;%s\&quot; is not a valid mapcode\n&quot;,
+userinput[i]);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;
+</span>else {<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>int newcontext =
+convertTerritoryNameToCode(userinput[i], 0);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>if
+(newcontext&gt;1 &amp;&amp; (newcontext &lt; MAX_MAPCODE_TERRITORY_CODES)) <o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>previouscontext = newcontext;<span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>printf(&quot;%12s represents %0.6f,%0.6f\n&quot;, userinput[i], lat, lon);<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;
+</span>}<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><span style="mso-spacerun:yes">&nbsp;</span><span
+style="mso-spacerun:yes">&nbsp;</span>}<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy;mso-no-proof:yes'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Output:<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'>&quot;49.4V&quot; is not a valid mapcode<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'><span style="mso-spacerun:yes">&nbsp;</span>US-IN 49.4V represents
+39.783750,-86.198832<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>49.4V represents 39.783750,-86.198832<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp; </span>AL 49.4V
+represents 33.532750,-86.836184<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'><span style="mso-spacerun:yes">&nbsp;</span>RU-IN 49.4V represents
+43.249285,44.741353<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp; </span>AL 49.4V
+represents 51.927091,85.910319<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'><span style="mso-spacerun:yes">&nbsp;</span>NLD XXX.YYY represents
+51.204536,5.541607<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>49.4V represents 52.376514,4.908542<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'><span style="mso-spacerun:yes">&nbsp; </span>CCCCC.CCCC represents
+-16.326209,-48.016851<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-size:10.0pt;font-family:"Courier New";
+color:navy'><span style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>49.4V represents 52.376514,4.908542<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<span lang=EN-US style='font-size:12.0pt;font-family:"Times New Roman";
+mso-fareast-font-family:"Times New Roman";color:#0033CC;mso-ansi-language:EN-US;
+mso-fareast-language:EN-US;mso-bidi-language:AR-SA'><br clear=all
+style='page-break-before:always'>
+</span>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Explanation:<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New";
+color:#0033CC'>&quot;49.4V&quot; is not a valid mapcode<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Since there is no
+previous context, this ambiguous mapcode can simply not be interpreted. For
+this reason, it may be a good idea to choose a better default context than <span
+class=SpellE>previouscontext</span>=-1 (e.g. based on the userÕs GPS position).
+<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New";
+color:#0033CC'>US-IN 49.4V represents 39.783750,-86.198832<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>A complete and
+unambiguous mapcode, it results in a coordinate in Indiana, USA.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New";
+color:#0033CC'>49.4V represents 39.783750,-86.198832<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Since the previous
+input was in Indiana, this incomplete mapcode is encoded in the same context.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New";
+color:#0033CC'>AL 49.4V represents 33.532750,-86.836184<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Since the previous
+input was in the Indiana, USA, the context ÒALÓ is interpreted as another state
+in the USA, and thus results in a coordinate in Alabama (rather than, say, the
+state of <span class=SpellE>Alagoas</span> in Brazil).<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New";
+color:#0033CC'>RU-IN 49.4V represents 43.249285,44.741353<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>A complete and
+unambiguous mapcode, it results in a coordinate in Ingushetia, Russia.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New";
+color:#0033CC'>AL 49.4V represents 51.927091,85.910319<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Unlike two inputs
+back, AL 49.4V is now interpreted in Russia (the Altai Republic) rather than in
+the USA (Alabama), since the most recent context was Russian.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New";
+color:#0033CC'>NLD XXX.YYY represents 51.204536,5.541607<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>A complete and
+unambiguous mapcode, it results in a coordinate in The Netherlands.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New";
+color:#0033CC'>49.4V represents 52.376514,4.908542<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Since the previous
+input was in The Netherlands, this time 49.4V is interpreted in The Netherlands
+as well.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New";
+color:#0033CC'>CCCCC.CCCC represents -16.326209,-48.016851 <o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>A complete and
+unambiguous <i style='mso-bidi-font-style:normal'>international</i> mapcode.
+Although it decodes to a coordinate somewhere in Brazil, the mapcode does not <b
+style='mso-bidi-font-weight:normal'>explicitly</b> specify Brazil as a context.
+Therefore, the context for future inputs will remain ÒThe NetherlandsÓ.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='font-family:"Courier New";
+color:#0033CC'>49.4V represents 52.376514,4.908542<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'>Since the most recent
+<b style='mso-bidi-font-weight:normal'>explicit </b>context was in The
+Netherlands, this ambiguous mapcode is now also interpreted in The Netherlands.<o:p></o:p></span></p>
+
+<span lang=EN-US style='font-size:12.0pt;font-family:"Times New Roman";
+mso-fareast-font-family:"Times New Roman";color:#0033CC;mso-ansi-language:EN-US;
+mso-fareast-language:EN-US;mso-bidi-language:AR-SA'><br clear=all
+style='page-break-before:always'>
+</span>
+
+<h1><span lang=EN-US>2.1 Recognizing an input as a mapcode</span></h1>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US>Sometimes you may wish to allow a user to
+input something in a ÒgeneralÓ search box &#8211; an address, a coordinate, a
+mapcode, or something else.</span></p>
+
+<p class=MsoNormal><span lang=EN-US>The following routine is <i
+style='mso-bidi-font-style:normal'>very </i><span
+style="mso-spacerun:yes">&nbsp;</span>efficient and lightweight, and recognizes
+a user input that is <i style='mso-bidi-font-style:normal'>intended</i> as a
+mapcode. For example:</span></p>
+
+<p class=MsoNormal><span lang=EN-US><span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>ÒNLD
+503.XE2Ó</span></p>
+
+<p class=MsoNormal><span lang=EN-US>is intended as a mapcode (although it
+happens to be invalid), while</span></p>
+
+<p class=MsoNormal><span lang=EN-US><span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>ÒSt.
+Jacobs Street 45, LondonÓ</span></p>
+
+<p class=MsoNormal><span lang=EN-US>Is not. Since anything that looks like a
+mapcode is <i style='mso-bidi-font-style:normal'>very unlikely</i> to represent
+anything else, we would recommend to handle (i.e. decode) anything that <i
+style='mso-bidi-font-style:normal'>looks</i> like a mapcode as a mapcode. If it
+fails to decode, you could still try to interpret as something else, but as has
+been said: it is very unlikely it <i style='mso-bidi-font-style:normal'>does</i>
+represent something else.</span></p>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span class=SpellE><b style='mso-bidi-font-weight:normal'><span
+lang=EN-US>int</span></b></span><b style='mso-bidi-font-weight:normal'><span
+lang=EN-US> <span class=SpellE>compareWithMapcodeFormat</span>(<o:p></o:p></span></b></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US><span
+style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>const
+char*<span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp; </span>string , <o:p></o:p></span></b></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US><span
+style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+class=SpellE>int</span> <span style='mso-tab-count:2'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+class=SpellE>includesTerritory</span>)<o:p></o:p></span></b></p>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US
+style='color:navy'>input:</span></b><span lang=EN-US style='color:navy'><o:p></o:p></span></p>
+
+<ul style='margin-top:0cm' type=disc>
+ <li class=MsoNormal style='mso-list:l5 level1 lfo3;tab-stops:list 36.0pt'><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>check: </span></b><span
+     lang=EN-US>a Òfree-formÓ user input</span></li>
+ <li class=MsoNormal style='mso-list:l5 level1 lfo3;tab-stops:list 36.0pt'><span
+     class=SpellE><b style='mso-bidi-font-weight:normal'><span lang=EN-US>includesTerritory</span></b></span><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>:</span></b><span
+     lang=EN-US> an integer: if you pass 1, full mapcodes (including optional
+     territory context) will be recognized, i.e. inputs of the form<br>
+     <span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>[whitespace]
+     [xxx[-<span class=SpellE>yyy</span>]] [whitespace] PPP.QQQ [-RR]
+     [whitespace]<br>
+     If you pass 0, only ÒproperÓ mapcodes will be recognized:<br>
+     <span
+     style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+     </span>[whitespace] PPP.QQQ [-RR] [whitespace]</span></li>
+</ul>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US
+style='color:navy'>output:</span></b><span lang=EN-US style='color:navy'><o:p></o:p></span></p>
+
+<ul style='margin-top:0cm' type=disc>
+ <li class=MsoNormal style='mso-list:l5 level1 lfo3;tab-stops:list 36.0pt'><span
+     lang=EN-US>returns 0 if the string looks like a full/proper mapcode</span></li>
+ <li class=MsoNormal style='mso-list:l5 level1 lfo3;tab-stops:list 36.0pt'><span
+     lang=EN-US>return negative in case of error (the special value -999 is
+     returned if the string looks like a <i style='mso-bidi-font-style:normal'>partial
+     </i>mapcode, i.e. might become a valid mapcode if some more characters
+     were added).</span></li>
+</ul>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<b><span lang=EN-US style='font-size:16.0pt;font-family:Arial;mso-fareast-font-family:
+"Times New Roman";mso-font-kerning:16.0pt;mso-ansi-language:EN-US;mso-fareast-language:
+EN-US;mso-bidi-language:AR-SA'><br clear=all style='page-break-before:always'>
+</span></b>
+
+<h1><span lang=EN-US>2.2 Extra precision</span></h1>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US>Mapcodes are intended for easy, daily use.
+They were therefore made short, and no more precise than is necessary to be
+useful at the ÒhumanÓ scale: accurate to within 5 meters &#8211; or put another
+way: <i style='mso-bidi-font-style:normal'>in</i>accurate by <i
+style='mso-bidi-font-style:normal'>up to</i> 5 meters. <i style='mso-bidi-font-style:
+normal'>On average, </i>inaccurate by 2.5 meters. An inaccuracy, by the way,
+both in latitude and longitude.</span></p>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US>For special applications &#8211; e.g. for
+internal storage of original latitude/longitude pairs &#8211; mapcode was
+extended to allow one or two extra letters. One letter extra decreases the
+worst-case inaccuracy to about 1 meter, two letters decreases it to about 20
+centimeters.</span></p>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US>As an example, consider coordinate 52.376496,
+4.908583. When encoded, it yields mapcode <b style='mso-bidi-font-weight:normal'>NLD
+49.4V</b>. This mapcode <i style='mso-bidi-font-style:normal'>decodes</i> back into
+52.376514, 4.908542, a coordinate which is 2.83 meters off to the west, and 1.94
+meters too far north (in combination, the mapcode is 3.44 meters away from the
+original coordinate). </span></p>
+
+<p class=MsoNormal><span lang=EN-US>When we encode the same coordinate with an
+extra digit, we get <b style='mso-bidi-font-weight:normal'>NLD 49.4V-R</b>, a
+mapcode that <i style='mso-bidi-font-style:normal'>decodes</i> into 52.376491,
+4.908574, only 96 centimeters off. With two extra digits, we get a mapcode that
+is about 13 centimeters off.</span></p>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal style='margin-left:27.0pt;tab-stops:108.0pt 252.0pt'><span
+lang=EN-US>Mapcode:<span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>decodes
+into:<span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>error
+<span class=SpellE>vs</span> original coordinate:</span></p>
+
+<p class=MsoNormal style='margin-left:27.0pt;tab-stops:108.0pt 252.0pt'><span
+style='mso-ansi-language:NL'>49.4V<span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>52.376514,
+4.908542<span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>3.44
+meter<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:27.0pt;tab-stops:108.0pt 252.0pt'><span
+style='mso-ansi-language:NL'>49.4V-R<span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>52.376491,
+4.908574<span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>0.96
+meter<o:p></o:p></span></p>
+
+<p class=MsoNormal style='margin-left:27.0pt;tab-stops:108.0pt 252.0pt'><span
+style='mso-ansi-language:NL'>49.4V-R5<span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>52.376497,
+4.908584<span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>0.13
+meter<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='mso-ansi-language:NL'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US>Note that this is just an example. Had we
+encoded 52.376514, 4.908542, the mapcode <b style='mso-bidi-font-weight:normal'>49.4V</b>
+would be 100% precise. It is not the actual error, but the <i style='mso-bidi-font-style:
+normal'>maximum</i> error that is reduced by adding extra letters to a mapcode.</span></p>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US>PLEASE
+NOTE:</span></b><span lang=EN-US> the above may make it seem that it is a good
+idea to always add extra letters. This would defeat the core purpose of the
+mapcode system, which is to be accurate <i style='mso-bidi-font-style:normal'>enough</i>
+for daily, human-scale use. The high-precision extension was made for very
+special applications only. What it may also be useful for is for <i
+style='mso-bidi-font-style:normal'>internal</i> storage, e.g. when your
+original coordinates are that precise, you could consider storing the precise
+mapcodes in your database in high-precision format. We still recommend that you
+display <i style='mso-bidi-font-style:normal'>normal</i> mapcodes (i.e. without
+the extension) to the <i style='mso-bidi-font-style:normal'>end-users</i> of
+your system!</span></p>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<span lang=EN-US style='font-size:12.0pt;font-family:"Times New Roman";
+mso-fareast-font-family:"Times New Roman";color:#0033CC;mso-ansi-language:EN-US;
+mso-fareast-language:EN-US;mso-bidi-language:AR-SA'><br clear=all
+style='page-break-before:always'>
+</span>
+
+<h1><span lang=EN-US>3. Routines related to territories</span></h1>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US>The mapcode system is based on an official
+code table, which in turn is based on the ISO 3166 standards.</span></p>
+
+<p class=MsoNormal><span lang=EN-US>For efficiency, these codes need to be
+converted into internal Òterritory codesÓ. For these, the following three
+support routines are relevant:</span></p>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span class=SpellE><b style='mso-bidi-font-weight:normal'><span
+lang=EN-US>int</span></b></span><b style='mso-bidi-font-weight:normal'><span
+lang=EN-US> <span class=SpellE>convertTerritoryNameToCode</span>(<o:p></o:p></span></b></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US><span
+style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>const
+char*<span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp; </span> <span
+class=SpellE>isoName</span>,<o:p></o:p></span></b></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US><span
+style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+class=SpellE>int</span> <span style='mso-tab-count:2'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+class=SpellE>parentTerritoryCode</span>)<o:p></o:p></span></b></p>
+
+<p class=MsoNormal style='margin-left:18.0pt'><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<ul style='margin-top:0cm' type=disc>
+ <li class=MsoNormal style='mso-list:l1 level1 lfo1;tab-stops:list 36.0pt'><span
+     class=SpellE><b style='mso-bidi-font-weight:normal'><span lang=EN-US>isoName</span></b></span><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>:</span></b><span
+     lang=EN-US><span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>a
+     2- or 3-letter ÒISO standardÓ code of a country or a state, or a
+     combination of country and state separated by a hyphen or space. <br>
+     Examples: ÒUSAÓ, ÒCAÓ, ÒUS-CAÓ, ÒUSA-CAÓ, ÒUS CAÓ</span></li>
+ <li class=MsoNormal style='mso-list:l1 level1 lfo1;tab-stops:list 36.0pt'><span
+     class=SpellE><b style='mso-bidi-font-weight:normal'><span lang=EN-US>parentTerritoryCode</span></b></span><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>:</span></b><span
+     lang=EN-US> optional territory code to help the routine choose when the
+     abbreviation is ambiguous, which can happen if the abbreviation is of a
+     state and the stateÕs country is omitted. For example, ÒALÓ might mean
+     either ÒUS-ALÓ or ÒBR-ALÓ.</span></li>
+ <li class=MsoNormal style='mso-list:l1 level1 lfo1;tab-stops:list 36.0pt'><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>Returns</span></b><span
+     lang=EN-US>: the territory code (1-999), or negative if not no match was found.</span></li>
+</ul>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US>const
+char* <span class=SpellE>convertTerritoryCodeToIsoName</span>(<o:p></o:p></span></b></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US><span
+style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+class=SpellE>int</span><span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+class=SpellE>territoryCode</span>,<o:p></o:p></span></b></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US><span
+style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+class=SpellE>int</span><span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>format)
+<o:p></o:p></span></b></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US><o:p>&nbsp;</o:p></span></b></p>
+
+<ul style='margin-top:0cm' type=disc>
+ <li class=MsoNormal style='mso-list:l3 level1 lfo2;tab-stops:list 36.0pt'><span
+     class=SpellE><b style='mso-bidi-font-weight:normal'><span lang=EN-US>territoryCode</span></b></span><span
+     lang=EN-US> &#8211; a territory code (1-999)</span></li>
+ <li class=MsoNormal style='mso-list:l3 level1 lfo2;tab-stops:list 36.0pt'><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>format </span></b><span
+     lang=EN-US>&#8211; specifies the format of the return value:</span></li>
+ <ul style='margin-top:0cm' type=circle>
+  <li class=MsoNormal style='mso-list:l3 level2 lfo2;tab-stops:list 72.0pt'><span
+      lang=EN-US>0 &#8211; return in unambiguous full format: ÒXXXÓ for a country,
+      ÒXX-YYÓ for a state</span></li>
+  <li class=MsoNormal style='mso-list:l3 level2 lfo2;tab-stops:list 72.0pt'><span
+      lang=EN-US>1 &#8211; short format: ÒXXXÓ or ÒXXÓ; especially when a 2
+      letter (state) code is returned, although always unique within its country,
+      it may not be unique in the world</span></li>
+ </ul>
+ <li class=MsoNormal style='mso-list:l3 level1 lfo2;tab-stops:list 36.0pt'><b
+     style='mso-bidi-font-weight:normal'><span lang=EN-US>Returns:</span></b><span
+     lang=EN-US> a pointer to a string (which will be overwritten by the next
+     call to <span class=SpellE><b style='mso-bidi-font-weight:normal'>convertTerritoryCodeToIsoName</b></span>).
+     Returns an empty string if <span class=SpellE><b style='mso-bidi-font-weight:
+     normal'>territoryCode</b></span> or <b style='mso-bidi-font-weight:normal'>format</b>
+     is illegal).</span></li>
+</ul>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span class=SpellE><b style='mso-bidi-font-weight:normal'><span
+lang=EN-US>int</span></b></span><b style='mso-bidi-font-weight:normal'><span
+lang=EN-US> <span class=SpellE>getCountryOrParentCountry</span></span></b><span
+lang=EN-US>(<span class=SpellE>int</span> <span class=SpellE><b
+style='mso-bidi-font-weight:normal'>territoryCode</b></span>)</span></p>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<ul style='margin-top:0cm' type=disc>
+ <li class=MsoNormal style='mso-list:l2 level1 lfo5;tab-stops:list 36.0pt'><span
+     class=SpellE><b style='mso-bidi-font-weight:normal'><span lang=EN-US>territoryCode</span></b></span><span
+     lang=EN-US> &#8211; territory code (1-999)</span></li>
+ <li class=MsoNormal style='mso-list:l2 level1 lfo5;tab-stops:list 36.0pt'><span
+     lang=EN-US>returns:</span></li>
+ <ul style='margin-top:0cm' type=circle>
+  <li class=MsoNormal style='mso-list:l2 level2 lfo5;tab-stops:list 72.0pt'><span
+      lang=EN-US>-1: if <span class=SpellE>tc</span> is invalid, </span></li>
+  <li class=MsoNormal style='mso-list:l2 level2 lfo5;tab-stops:list 72.0pt'><span
+      lang=EN-US>the parent country of <span class=SpellE>tc</span> if <span
+      class=SpellE>tc</span> is a valid state code </span></li>
+  <li class=MsoNormal style='mso-list:l2 level2 lfo5;tab-stops:list 72.0pt'><span
+      class=SpellE><span lang=EN-US>tc</span></span><span lang=EN-US>: if <span
+      class=SpellE>tc</span> is a valid country code</span></li>
+ </ul>
+</ul>
+
+<b><span lang=EN-US style='font-size:16.0pt;font-family:Arial;mso-fareast-font-family:
+"Times New Roman";mso-font-kerning:16.0pt;mso-ansi-language:EN-US;mso-fareast-language:
+EN-US;mso-bidi-language:AR-SA'><br clear=all style='page-break-before:always'>
+</span></b>
+
+<h1><span lang=EN-US>4. Routines related to Unicode and/or foreign alphabets</span></h1>
+
+<p class=MsoNormal><span lang=EN-US style='color:#0033CC'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US>const
+char* <span class=SpellE>decodeToRoman</span>(const UWORD* string);<o:p></o:p></span></b></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US><o:p>&nbsp;</o:p></span></b></p>
+
+<p class=MsoNormal><span lang=EN-US>Mapcodes may be specified in other
+alphabets. This routine converts a 16-bit user input (i.e. a string of 16-bit
+Unicode characters) into a roman equivalent &#8211; which can then be offered
+to <b style='mso-bidi-font-weight:normal'>mc2coord</b>;</span></p>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US>Note that the return pointer will be
+overwritten by the next call to <span class=SpellE><b style='mso-bidi-font-weight:
+normal'>decode_to_roman</b></span>.</span></p>
+
+<p class=MsoNormal style='margin-left:36.0pt'><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US>const
+UWORD* <span class=SpellE>encodeToAlphabet</span>(<o:p></o:p></span></b></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US><span
+style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>const
+char*<span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp; </span>mapcode, <o:p></o:p></span></b></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US><span
+style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+class=SpellE>int</span> <span style='mso-tab-count:2'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>alphabet);
+<o:p></o:p></span></b></p>
+
+<p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span lang=EN-US><o:p>&nbsp;</o:p></span></b></p>
+
+<p class=MsoNormal><span lang=EN-US>This routine converts a normal
+(roman-alphabet) mapcode into a Unicode string in the specified alphabet. For
+example, it can <span class=SpellE>converty</span> </span></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><span lang=EN-US
+style='font-size:16.0pt'>PQ.RS to </span><span class=SpellE><span lang=EN-US
+style='font-size:16.0pt;font-family:"Mangal","serif";mso-bidi-font-family:Mangal'>&#2344;&#2346;</span><span
+lang=EN-US style='font-size:16.0pt'>.</span><span lang=EN-US style='font-size:
+16.0pt;font-family:"Mangal","serif";mso-bidi-font-family:Mangal'>&#2349;&#2350;</span></span><span
+lang=EN-US style='font-size:16.0pt;font-family:"Mangal","serif";mso-bidi-font-family:
+Mangal'> (<span class=SpellE>hindi</span> alphabet)</span><span lang=EN-US
+style='font-size:16.0pt'><o:p></o:p></span></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><span lang=EN-US
+style='font-size:16.0pt'>PQ.RS to &#1056;&#1060;.&#1071;&#1062; (Russian
+alphabet)<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US>Note that the return pointer will be
+overwritten by the next call to <span class=SpellE><b style='mso-bidi-font-weight:
+normal'>encode_to_alphabet</b></span>.</span></p>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US>At the date of writing, the following 4
+alphabets have been approved for official use, the others have not yet
+officially been approved.</span></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><span lang=EN-US>0 = roman, </span></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><span lang=EN-US>2 = <span
+class=SpellE>cyrillic</span>, </span></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><span lang=EN-US>4 = <span
+class=SpellE>hindi</span>, </span></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><span lang=EN-US>12 = <span
+class=SpellE>gurmukhi</span></span></p>
+
+<p class=MsoNormal><span lang=EN-US><o:p>&nbsp;</o:p></span></p>
+
+<h1><span lang=EN-US style='color:gray'>Version history<o:p></o:p></span></h1>
+
+<p class=MsoNormal><span lang=EN-US style='color:gray'>1.25 initial release to
+the public domain<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:gray'>1.26 added alias OD
+(&quot;<span class=SpellE>Odisha</span>&quot;) for <span class=SpellE>indian</span>
+state OR (&quot;Orissa&quot;)<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:gray'>1.27 improved (faster)
+implementation of the function <span class=SpellE>isInArea</span><o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:gray'>1.28 bug fix for the
+needless generation of 7-letter alternatives <o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:gray'><span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>to short mapcodes in large states in India<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:gray'>1.29 also generate
+country-wide alternative mapcodes for states<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:gray'>1.30 updated the
+documentation and extended it with examples and suggestions<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:gray'>1.31 added <span
+class=SpellE>lookslikemapcode</span>();<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:gray'>1.32 added coord2mc1();fixed
+1.29 so no country-wide alternative is produced<br>
+<span
+style="mso-spacerun:yes">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>in edge cases; prevent FIJI failing to decode at exactly 180 degrees;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:gray'>1.33 fix to not remove
+valid results just across the edge of a territory; <o:p></o:p></span></p>
+
+<p class=MsoNormal style='text-indent:36.0pt'><span lang=EN-US
+style='color:gray'>improved interface readability and renamed methods to more
+readable forms.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span lang=EN-US style='color:gray'>1.40 added <span
+class=SpellE>extraDigits</span> parameter so that high-precision mapcodes can
+be generated<o:p></o:p></span></p>
+
+</div>
+</section>
+
+
+
         <footer>
           mapcode-cpp is maintained by <a href="https://github.com/rijnb">rijnb</a><br>
           This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.

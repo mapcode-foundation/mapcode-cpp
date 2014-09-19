@@ -1,5 +1,4 @@
-Mapcode Library for C/C++
-====
+# Mapcode Library for C/C++
 
 Copyright (C) 2014 Stichting Mapcode Foundation (http://www.mapcode.com)
 
@@ -8,8 +7,7 @@ Copyright (C) 2014 Stichting Mapcode Foundation (http://www.mapcode.com)
 **Online documentation can be found at: http://rijnb.github.io/mapcode-cpp/**
 
 
-The C/C++ Library: `mapcodelib/`
-====
+## The C/C++ Library: `mapcodelib/`
 
 The directory 'mapcodelib' contains the files:
 
@@ -30,8 +28,7 @@ In that case, basics.h will state a version number of the for:
 	#define mapcode_cversion "1.2xxx"
 where "xxx" states the geographical limitation.
 
-A Real-Life Example, The 'mapcode' Codec Tool: `example/`
-====
+## A Real-Life Example, The 'mapcode' Codec Tool: `example/`
 
 The directory 'example' contains a Mapcode encoding/decoding utility, as an example
 of how to use the library.
@@ -46,8 +43,7 @@ This tool provides a rather extensive command-line interface to encode and
 decode Mapcodes.
 
 
-Release Notes
-====
+## Release Notes
 
 * 1.40
 
@@ -92,8 +88,7 @@ Release Notes
 
     Initial release to the public domain.
 
-License
-====
+## License
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

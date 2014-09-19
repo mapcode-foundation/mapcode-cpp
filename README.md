@@ -1,6 +1,6 @@
--------------------------------------------------------------------------------
 MAPCODE LIBRARY FOR C/C++
--------------------------------------------------------------------------------
+====
+
 Copyright (C) 2014 Stichting Mapcode Foundation (http://www.mapcode.com)
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,13 +14,13 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
 -------------------------------------------------------------------------------
 
 Online documentation can be found at: http://rijnb.github.io/mapcode-cpp/
 
--------------------------------------------------------------------------------
-MAPCODE LIBRARY: mapcodelib/
--------------------------------------------------------------------------------
+The C/C++ Library: mapcodelib/
+====
 
 The directory 'mapcodelib' contains the files:
 
@@ -41,9 +41,8 @@ In that case, basics.h will state a version number of the for:
 	#define mapcode_cversion "1.2xxx"
 where "xxx" states the geographical limitation.
 
--------------------------------------------------------------------------------
-EXAMPLE: example/
--------------------------------------------------------------------------------
+A real-life example, the 'mapcode' codec tool: example/
+====
 
 The directory 'example' contains a Mapcode encoding/decoding utility, as an example
 of how to use the library.
@@ -58,50 +57,49 @@ This tool provides a rather extensive command-line interface to encode and
 decode Mapcodes.
 
 
--------------------------------------------------------------------------------
-MAPCODE LIBRARY - RELEASE NOTES
--------------------------------------------------------------------------------
+Release notes
+====
 
-1.40
+* 1.40
 
     Added extraDigits parameter to allow high-precision mapcodes to be generated.
 
-1.33
+* 1.33
 
     Fix to not remove valid results just across the edge of a territory.
     Improved interface readability and renamed methods to more readable forms.
 
-1.32
+* 1.32
 
     Added encodeLatLonToSingleMapcode(); fixed 1.29 so no country-wide alternative
     is produced in edge cases; prevent FIJI failing to decode at exactly 180 degrees.
 
-1.31
+* 1.31
 
     Added compareWithMapcodeFormat().
 
-1.30
+* 1.30
 
     IUpdated the documentation and extended it with examples and suggestions.
 
-1.29
+* 1.29
 
     Also generate country-wide alternative mapcodes for states.
 
-1.28
+* 1.28
 
     Bug fix for the needless generation of 7-letter alternatives to short mapcodes
     in large states in India.
 
-1.27
+* 1.27
 
     Improved (faster) implementation of the function isInArea.
 
-1.26
+* 1.26
 
     Added alias OD ("Odisha") for indian state OR ("Orissa").
 
-1.25
+* 1.25
 
     Initial release to the public domain.
 

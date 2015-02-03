@@ -1,6 +1,6 @@
 # Mapcode Library for C/C++
 
-Copyright (C) 2014-2015 Stichting Mapcode Foundation (http://www.mapcode.com)
+Copyright (C) 2014 Stichting Mapcode Foundation (http://www.mapcode.com)
 
 ----
 
@@ -44,10 +44,6 @@ decode Mapcodes.
 
 
 ## Release Notes
-
-* 1.41
-
-    Added the India state Telangana (IN-TG), until 2014 a region in Adhra Pradesh.
 
 * 1.40
 

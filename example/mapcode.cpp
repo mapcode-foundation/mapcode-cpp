@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Stichting Mapcode Foundation (http://www.mapcode.com)
+ * Copyright (C) 2014-2015 Stichting Mapcode Foundation (http://www.mapcode.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,7 +75,7 @@ static double   lonLargestNrOfResults   = 0.0;
  */
 static void usage(const char* appName) {
     printf("MAPCODE (version %s%s)\n", mapcode_cversion, SELF_CHECK ? ", self-checking" : "");
-    printf("Copyright (C) 2014 Stichting Mapcode Foundation\n");
+    printf("Copyright (C) 2014-2015 Stichting Mapcode Foundation\n");
     printf("\n");
     printf("Usage:\n");
     printf("    %s [-d| --decode] <default-territory> <mapcode> [<mapcode> ...]\n", appName);
@@ -604,27 +604,22 @@ int main(const int argc, const char** argv)
             usage(appName);
             return NORMAL_ERROR;
         }
+        if (argc >= 4) {
+            extraDigits = atoi(argv[3]);
+            if ((extraDigits < 0) || (extraDigits > 2)) {
+                fprintf(stderr, "error: parameter extraDigits must be in [0..2]\n\n");
+                usage(appName);
+                return NORMAL_ERROR;
+            }
+        }
         int random = (strcmp(cmd, "-r") == 0) || (strcmp(cmd, "--random") == 0);
         if (random) {
-            if (argc >= 4) {
-                extraDigits = atoi(argv[3]);
-            }
             if (argc == 5) {
                 const int seed = atoi(argv[4]);
                 srand(seed);
             }
             else {
                 srand(time(0));
-            }
-        }
-        else {
-            if (argc == 4) {
-                extraDigits = atoi(argv[3]);
-                if ((extraDigits < 0) || (extraDigits> 2)) {
-                    fprintf(stderr, "error: parameter extraDigits must be in [0..2]\n\n");
-                    usage(appName);
-                    return NORMAL_ERROR;
-                }
             }
         }
         useXYZ = (strstr(cmd, "XYZ") != 0);

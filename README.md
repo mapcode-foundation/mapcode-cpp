@@ -46,6 +46,10 @@ decode Mapcodes.
 
 ## Release Notes
 
+* 1.41.1
+
+    Bugfix for “example/mapcode” utility (-d option was case sensitive).
+
 * 1.41
 
     Added the India state Telangana (IN-TG), until 2014 a region in Adhra Pradesh.

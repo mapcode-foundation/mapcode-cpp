@@ -206,7 +206,7 @@ static void selfCheckLatLonToMapcode(const double lat, double lon, const char* t
     for (int i = 0; !found && (i < nrResults); ++i) {
         const char* foundMapcode = results[(i * 2)];
         const char* foundTerritory = results[(i * 2) + 1];
-        found = ((strcmp(territory, foundTerritory) == 0) && (strcmp(mapcode, foundMapcode) == 0));
+        found = ((strcasecmp(territory, foundTerritory) == 0) && (strcasecmp(mapcode, foundMapcode) == 0));
     }
     if (!found) {
         fprintf(stderr, "error: encoding lat/lon to mapcode failure; "

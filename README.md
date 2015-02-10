@@ -49,7 +49,7 @@ decode Mapcodes.
 
     Added the India state Telangana (IN-TG), until 2014 a region in Adhra Pradesh.
 
-    Fixed a problem with the "extraDigits" parameter of the “example/mapcode" utility.
+    Fixed a problem with the "extraDigits" parameter of the “example/mapcode" utility (maximum digits is 2, not 3).
 
 * 1.40
 

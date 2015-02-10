@@ -28,6 +28,7 @@ In that case, basics.h will state a version number of the for:
 	#define mapcode_cversion "1.2xxx"
 where "xxx" states the geographical limitation.
 
+
 ## A Real-Life Example, The 'mapcode' Codec Tool: `example/`
 
 The directory 'example' contains a Mapcode encoding/decoding utility, as an example

@@ -11,21 +11,21 @@ Copyright (C) 2014-2015 Stichting Mapcode Foundation (http://www.mapcode.com)
 
 The directory 'mapcodelib' contains the files:
 
-	mapcoder.h      <-- Header file with method prototypes and defines for caller.
-	mapcoder.c
-	basics.h
+    mapcoder.h      <-- Header file with method prototypes and defines for caller.
+    mapcoder.c
+    basics.h
 
 Together these provide routine to encode/decode Mapcodes.
 
 Documentation, including example snippets of C source code, can be found in
 
-	mapcode_library.doc     (Microsoft Word format).
+    mapcode_library.doc     (Microsoft Word format).
 
 Also see www.mapcode.com for background and reference materials.
 
 Note: this version may be restricted to a particular area of the Earth!
 In that case, basics.h will state a version number of the for:
-	#define mapcode_cversion "1.2xxx"
+    #define mapcode_cversion "1.2xxx"
 where "xxx" states the geographical limitation.
 
 
@@ -48,9 +48,11 @@ decode Mapcodes.
 
 * 1.50
 
+
+    Major release. This version is not compatible with mapcode 1.4x!
     Added 22-chararcter post-processing of all-digit mapcodes for the Greek alphabet.
-	Retired legacy aliases EAZ and SKM, AU-QL, AU-TS, AU-NI and AU-JB.
-	Retired legacy Antarctica claims AT0 through AT8.
+    Retired legacy aliases EAZ and SKM, AU-QL, AU-TS, AU-NI and AU-JB.
+    Retired legacy Antarctica claims AT0 through AT8.
 
 * 1.41.1
 

@@ -204,9 +204,20 @@ static void selfCheckLatLonToMapcode(const double lat, double lon, const char* t
     }
     int found = 0;
     for (int i = 0; !found && (i < nrResults); ++i) {
+
+        /* Check if the territory and code were found in results. Note that the territory
+         * may be a minimal code, like IN (which may indicate US-IN or RU-IN).
+         */
         const char* foundMapcode = results[(i * 2)];
         const char* foundTerritory = results[(i * 2) + 1];
-        found = ((strcasecmp(territory, foundTerritory) == 0) && (strcasecmp(mapcode, foundMapcode) == 0));
+        char* foundTerritoryMin = strstr(foundTerritory, "-");
+        if (foundTerritoryMin && (strlen(foundTerritoryMin) > 0)) {
+            ++foundTerritoryMin;
+        }
+
+        found = (((strcasecmp(territory, foundTerritory) == 0) ||
+                    (strcasecmp(territory, foundTerritoryMin) == 0)) && 
+                (strcasecmp(mapcode, foundMapcode) == 0));
     }
     if (!found) {
         fprintf(stderr, "error: encoding lat/lon to mapcode failure; "

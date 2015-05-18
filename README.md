@@ -46,6 +46,12 @@ decode Mapcodes.
 
 ## Release Notes
 
+* 1.50
+
+    Added 22-chararcter post-processing of all-digit mapcodes for the Greek alphabet.
+	Retired legacy aliases EAZ and SKM, AU-QL, AU-TS, AU-NI and AU-JB.
+	Retired legacy Antarctica claims AT0 through AT8.
+
 * 1.41.1
 
     Bugfix for “example/mapcode” utility (-d option was case sensitive).

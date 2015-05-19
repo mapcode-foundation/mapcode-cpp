@@ -1081,7 +1081,7 @@ int unpack_if_alldigits(char *input) // returns 1 if unpacked, 0 if left unchang
   {
       if (aonly) // v1.50 encoded only with A's
       {
-        int v = (s[0]=='A' || s[0]=='a' ? 31 : decode_chars[s[0]]) * 32 + (s[1]=='A' || s[0]=='a' ? 31 : decode_chars[s[1]]);
+        int v = (s[0]=='A' || s[0]=='a' ? 31 : decode_chars[s[0]]) * 32 + (s[1]=='A' || s[1]=='a' ? 31 : decode_chars[s[1]]);
         *input  = '0'+(v/100);
         s[0]= '0'+((v/10)%10);
         s[1]= '0'+(v%10);

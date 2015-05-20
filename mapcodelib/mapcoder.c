@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Stichting Mapcode Foundation (http://www.mapcode.com)
+ * Copyright (C) 2014-2015 Stichting Mapcode Foundation (http://www.mapcode.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -132,7 +132,7 @@ int disambiguate_str( const char *s, int len ) // returns disambiguation >=1, or
   const char *p=(len==2 ? parents2 : parents3);
   const char *f;
   char country[4];
-    if (s[0]==0 || s[1]==0) return -27; // solve bad args
+  if (s[0]==0 || s[1]==0) return -27; // solve bad args
   if (len!=2 && len!=3) return -923; // solve bad args
   memcpy(country,s,len); country[len]=0; makeup(country);
   f=strstr(p,country);
@@ -261,46 +261,46 @@ void addpostfix(char *result,long extrax4,long extray,long dividerx4,long divide
 {
   if (use_high_precision)
   {
-        long gx=((30*extrax4)/dividerx4);
-        long gy=((30*extray )/dividery );
-        long x1=(gx/6);
+    long gx=((30*extrax4)/dividerx4);
+    long gy=((30*extray )/dividery );
+    long x1=(gx/6);
     long x2=(gx%6);
-        long y1=(gy/5);
+    long y1=(gy/5);
     long y2=(gy%5);
     // add postfix:
     char *s = result+strlen(result);
     *s++ = '-';
-        *s++ = encode_chars[ y1*5+x1 ];
+    *s++ = encode_chars[ y1*5+x1 ];
     if (use_high_precision==2)
       *s++ = encode_chars[ y2*6+x2 ];
-      *s++ = 0;
+    *s++ = 0;
   }
 }
 
 const char *extrapostfix="";
 void add2res(long *nx,long *ny, long dividerx4,long dividery,int ydirection) // add extra precision to a coordinate based on extra chars
 {
-    long extrax,extray;
-    if (*extrapostfix) {
+  long extrax,extray;
+  if (*extrapostfix) {
     int x1,y1,x2,y2,c1,c2;
-        c1 = extrapostfix[0];
-        c1 = decode_chars[c1];
+    c1 = extrapostfix[0];
+    c1 = decode_chars[c1];
     if (c1<0) c1=0; else if (c1>29) c1=29; // solves bugs in input
-        y1 =(c1/5); x1 = (c1%5);
-        c2 = (extrapostfix[1]) ? extrapostfix[1] : 72; // 72='H'=code 15=(3+2*6)
-        c2 = decode_chars[c2];
+    y1 =(c1/5); x1 = (c1%5);
+    c2 = (extrapostfix[1]) ? extrapostfix[1] : 72; // 72='H'=code 15=(3+2*6)
+    c2 = decode_chars[c2];
     if (c2<0) c2=0; else if (c2>29) c2=29; // solves bugs in input
-        y2 =(c2/6); x2 = (c2%6);
+    y2 =(c2/6); x2 = (c2%6);
 
-        extrax = ((x1*12 + 2*x2 + 1)*dividerx4+120)/240;
-        extray = ((y1*10 + 2*y2 + 1)*dividery  +30)/ 60;
-    }
-    else {
-        extrax = (dividerx4/8);
-        extray = (dividery/2);
-    }
-    *nx += extrax;
-    *ny += extray*ydirection;
+    extrax = ((x1*12 + 2*x2 + 1)*dividerx4+120)/240;
+    extray = ((y1*10 + 2*y2 + 1)*dividery  +30)/ 60;
+  }
+  else {
+    extrax = (dividerx4/8);
+    extray = (dividery/2);
+  }
+  *nx += extrax;
+  *ny += extray*ydirection;
 }
 
 
@@ -331,9 +331,9 @@ int isInArea(long x,long y,int ccode) // returns nonzero if x,y in area (i.e. ce
 {
   if (ccode<0) return 0; // solve bad args
   {
-        extern int iso_end;
-        long minx,miny,maxx,maxy;
-        getboundaries(lastrec(ccode),minx,miny,maxx,maxy);
+    extern int iso_end;
+    long minx,miny,maxx,maxy;
+    getboundaries(lastrec(ccode),minx,miny,maxx,maxy);
     if ( y <  miny ) return 0; // < miny!
     if ( y >= maxy ) return 0; // >= miny!
     return isInRange(x,minx,maxx);
@@ -389,7 +389,7 @@ void encode_triple( char *result, long difx,long dify )
     if ( dify < 4*34 ) // first 4(x34) rows of 6(x28) wide
     {
       fast_encode( result,   ((difx/28) + 6*(dify/34)), 1 );
-            fast_encode( result+1, ((difx%28)*34 +(dify%34)), 2 );
+      fast_encode( result+1, ((difx%28)*34 +(dify%34)), 2 );
     }
     else // bottom row
     {
@@ -432,9 +432,9 @@ void decoderelative( char* r,long *nx,long *ny, long relx,long rely, long divide
   {
     long v;
     if ( nrchars==4 ) { char t = r[1]; r[1]=r[2]; r[2]=t; } // swap
-        v = fast_decode(r);
-        difx = ( v/yside[nrchars] );
-        dify = ( v%yside[nrchars] );
+    v = fast_decode(r);
+    difx = ( v/yside[nrchars] );
+    dify = ( v%yside[nrchars] );
     if ( nrchars==4 ) { char t = r[1]; r[1]=r[2]; r[2]=t; } // swap back
   }
 
@@ -458,33 +458,33 @@ void decoderelative( char* r,long *nx,long *ny, long relx,long rely, long divide
 long encode6( long x, long y, long width, long height )
 {
   long v;
-    long D=6;
-    long col = x/6;
-    long maxcol = (width-4)/6;
-    if ( col>=maxcol )
-    {
-        col=maxcol;
-        D = width-maxcol*6;
-    }
-    v = (height * 6 * col) + (height-1-y)*D + (x-col*6);
+  long D=6;
+  long col = x/6;
+  long maxcol = (width-4)/6;
+  if ( col>=maxcol )
+  {
+    col=maxcol;
+    D = width-maxcol*6;
+  }
+  v = (height * 6 * col) + (height-1-y)*D + (x-col*6);
   return v;
 }
 
 void decode6( long v, long width, long height, long *x, long *y )
 {
-    long w;
+  long w;
   long D=6;
   long col = v / (height*6);
-    long maxcol = (width-4)/6;
-    if ( col>=maxcol )
-    {
-        col=maxcol;
-        D = width-maxcol*6;
-    }
-    w = v - (col * height * 6 );
+  long maxcol = (width-4)/6;
+  if ( col>=maxcol )
+  {
+    col=maxcol;
+    D = width-maxcol*6;
+  }
+  w = v - (col * height * 6 );
 
   *x = col*6 + (w%D);
-    *y = height-1 - (w/D);
+  *y = height-1 - (w/D);
 }
 
 
@@ -492,17 +492,17 @@ void decode_grid( const char* input,long *nx,long *ny, int m, long minx, long mi
 {
   int codexlen = strlen(input)-1;
   long dc = (long)(strchr(input,'.')-input);
-    char result[16];
+  char result[16];
 
   if (codexlen>14) return; // solve bad args
   strcpy(result,input);
-    if (dc==1 && codexlen==5)
-    {
-        result[1]=result[2]; result[2]='.'; dc++;
-    }
+  if (dc==1 && codexlen==5)
+  {
+    result[1]=result[2]; result[2]='.'; dc++;
+  }
 
   {
-        long codexlow = codexlen-dc;
+    long codexlow = codexlen-dc;
     long codex = 10*dc + codexlow;
     long divx,divy;
 
@@ -519,10 +519,10 @@ void decode_grid( const char* input,long *nx,long *ny, int m, long minx, long mi
       divx = (long)( pw / divy );
     }
 
-        if ( dc==4 && divx==xside[4] && divy==yside[4] )
-        {
-            char t = result[1]; result[1]=result[2]; result[2]=t;
-        }
+    if ( dc==4 && divx==xside[4] && divy==yside[4] )
+    {
+      char t = result[1]; result[1]=result[2]; result[2]=t;
+    }
 
     {
       long relx,rely,v=0;
@@ -531,16 +531,16 @@ void decode_grid( const char* input,long *nx,long *ny, int m, long minx, long mi
       {
         v = fast_decode(result);
 
-              if ( divx!=divy && codex>24 ) // D==6 special grid, useful when prefix is 3 or more, and not a nice 961x961
+        if ( divx!=divy && codex>24 ) // D==6 special grid, useful when prefix is 3 or more, and not a nice 961x961
         { // DECODE
           decode6( v,divx,divy, &relx,&rely );
         }
-              else
-              {
+        else
+        {
           relx = (v/divy);
           rely = (v%divy);
-                  rely = divy-1-rely;
-              }
+          rely = divy-1-rely;
+        }
 
       }
 
@@ -548,8 +548,8 @@ void decode_grid( const char* input,long *nx,long *ny, int m, long minx, long mi
         long ygridsize = (maxy-miny+divy-1)/divy; // lonlat per cell
         long xgridsize = (maxx-minx+divx-1)/divx; // lonlat per cell
 
-          if (relx<0 || rely<0 || relx>=divx || rely>=divy)
-              return;
+        if (relx<0 || rely<0 || relx>=divx || rely>=divy)
+          return;
 
         // and then encodde relative to THE CORNER of this cell
         rely = miny + (rely*ygridsize);
@@ -571,17 +571,17 @@ void decode_grid( const char* input,long *nx,long *ny, int m, long minx, long mi
 void encode_grid( char* result, long x,long y, int m, int codex, long minx, long miny, long maxx, long maxy )
 {
   int orgcodex=codex;
-    *result=0;
+  *result=0;
   if ( maxx<=minx || maxy<=miny )
-        return;
+    return;
   if (codex==14) codex=23;
 
   { // encode
     long divx,divy;
     long dc = codex/10;
     long codexlow = codex%10;
-      long codexlen = dc + codexlow;
-      long pw = nc[dc];
+    long codexlen = dc + codexlow;
+    long pw = nc[dc];
 
     divy = smartdiv(m);
     if (divy==1)
@@ -618,17 +618,17 @@ void encode_grid( char* result, long x,long y, int m, int codex, long minx, long
 
       { // prefix
         long v;
-            if ( divx!=divy && codex>24 )
+        if ( divx!=divy && codex>24 )
           v = encode6( relx,rely, divx,divy );
-            else
-                v = relx*divy + (divy-1-rely);
+        else
+          v = relx*divy + (divy-1-rely);
         fast_encode( result, v, dc);
       } // prefix
 
-        if ( dc==4 && divx==xside[4] && divy==yside[4] )
-        {
-            char t = result[1]; result[1]=result[2]; result[2]=t;
-        }
+      if ( dc==4 && divx==xside[4] && divy==yside[4] )
+      {
+        char t = result[1]; result[1]=result[2]; result[2]=t;
+      }
 
       rely = miny + (rely*ygridsize);
       relx = minx + (relx*xgridsize);
@@ -661,25 +661,25 @@ void encode_grid( char* result, long x,long y, int m, int codex, long minx, long
             encode_triple( resultptr, difx,dify );
           }
           else
-            {
+          {
             fast_encode(resultptr,       (difx)*yside[nrchars]+dify, nrchars   );
             // swap 4-long codes for readability
-                if ( nrchars==4 )
-                {
-                    char t = resultptr[1]; resultptr[1]=resultptr[2]; resultptr[2]=t;
-                }
+            if ( nrchars==4 )
+            {
+              char t = resultptr[1]; resultptr[1]=resultptr[2]; resultptr[2]=t;
             }
+          }
         }
 
-          if (orgcodex==14)
+        if (orgcodex==14)
         {
-              result[2]=result[1]; result[1]='.';
-          }
+          result[2]=result[1]; result[1]='.';
+        }
 
         addpostfix(result,extrax<<2,extray,dividerx<<2,dividery);
       } // postfix
     } // grid
-  } // encode
+  }  // encode
 } // encode_grid
 
 
@@ -761,63 +761,63 @@ void setup_country( int newccode )
   int iso_pipecount44;
 
 
-    if ( current_ccode!=newccode ) // cache check
-    {
+  if ( current_ccode!=newccode ) // cache check
+  {
     if (newccode<0 || newccode>=MAX_MAPCODE_TERRITORY_CODE) newccode=ccode_earth; // solve bad args
     current_ccode=newccode;
 
     // init
-        iso_start=-1;
-        iso_end=-1;
+    iso_start=-1;
+    iso_end=-1;
 
-        iso_count13=0;
-        iso_count14=0;
-        iso_count21=0;
-        iso_count22=0;
-        iso_count23=0;
-        iso_count32=0;
-        iso_count24=0;
-        iso_count33=0;
-        iso_count34=0;
-        iso_count42=0;
-        iso_count43=0;
-        iso_count44=0;
-        iso_pipecount14=0;
-        iso_pipecount22=0;
-        iso_pipecount23=0;
-        iso_pipecount32=0;
-        iso_pipecount24=0;
-        iso_pipecount33=0;
-        iso_pipecount34=0;
-        iso_pipecount44=0;
-        iso_firstpipe14=-1;
-        iso_firstpipe22=-1;
-        iso_firstpipe23=-1;
-        iso_firstpipe32=-1;
-        iso_firstpipe24=-1;
-        iso_firstpipe33=-1;
-        iso_firstpipe34=-1;
-        iso_firstpipe44=-1;
-        iso_first13=-1;
-        iso_first14=-1;
-        iso_first21=-1;
-        iso_first22=-1;
-        iso_first23=-1;
-        iso_first32=-1;
-        iso_first24=-1;
-        iso_first33=-1;
-        iso_first34=-1;
-        iso_first42=-1;
-        iso_first43=-1;
-        iso_first44=-1;
-        iso_firststar14=-1;
-        iso_firststar22=-1;
-        iso_firststar23=-1;
-        iso_firststar32=-1;
-        iso_firststar24=-1;
-        iso_firststar33=-1;
-        iso_firststar34=-1;
-        iso_firststar44=-1;
+    iso_count13=0;
+    iso_count14=0;
+    iso_count21=0;
+    iso_count22=0;
+    iso_count23=0;
+    iso_count32=0;
+    iso_count24=0;
+    iso_count33=0;
+    iso_count34=0;
+    iso_count42=0;
+    iso_count43=0;
+    iso_count44=0;
+    iso_pipecount14=0;
+    iso_pipecount22=0;
+    iso_pipecount23=0;
+    iso_pipecount32=0;
+    iso_pipecount24=0;
+    iso_pipecount33=0;
+    iso_pipecount34=0;
+    iso_pipecount44=0;
+    iso_firstpipe14=-1;
+    iso_firstpipe22=-1;
+    iso_firstpipe23=-1;
+    iso_firstpipe32=-1;
+    iso_firstpipe24=-1;
+    iso_firstpipe33=-1;
+    iso_firstpipe34=-1;
+    iso_firstpipe44=-1;
+    iso_first13=-1;
+    iso_first14=-1;
+    iso_first21=-1;
+    iso_first22=-1;
+    iso_first23=-1;
+    iso_first32=-1;
+    iso_first24=-1;
+    iso_first33=-1;
+    iso_first34=-1;
+    iso_first42=-1;
+    iso_first43=-1;
+    iso_first44=-1;
+    iso_firststar14=-1;
+    iso_firststar22=-1;
+    iso_firststar23=-1;
+    iso_firststar32=-1;
+    iso_firststar24=-1;
+    iso_firststar33=-1;
+    iso_firststar34=-1;
+    iso_firststar44=-1;
 
     {
       int i;
@@ -825,28 +825,28 @@ void setup_country( int newccode )
       iso_start = firstrec(current_ccode);
       iso_end   = lastrec(current_ccode);
 
-          for ( i=iso_start; i<=iso_end; i++ )
-          {
+      for ( i=iso_start; i<=iso_end; i++ )
+      {
         int codex = rcodex(i);
         int pipe = pipetype(i);
 
         if ( codex==13 ) { iso_count13++; if ( iso_first13<0 ) iso_first13=i; }
-                if ( codex==21 ) { iso_count21++; if ( iso_first21<0 ) iso_first21=i; }
-                if ( codex==22 ) { if (pipe) { if (iso_firstpipe22<0) iso_firstpipe22=i; if (pipe<2)       iso_pipeletter22[iso_pipecount22++]=pipeletter(i); else if (iso_firststar22<0) iso_firststar22=i;} else { iso_count22++; if ( iso_first22<0 ) iso_first22=i; } }
-                if ( codex==14 ) { if (pipe) { if (iso_firstpipe14<0) iso_firstpipe14=i; if (pipe<2)       iso_pipeletter14[iso_pipecount14++]=pipeletter(i); else if (iso_firststar14<0) iso_firststar14=i;} else { iso_count14++; if ( iso_first14<0 ) iso_first14=i; } }
-                if ( codex==23 ) { if (pipe) { if (iso_firstpipe23<0) iso_firstpipe23=i; if (pipe<2)       iso_pipeletter23[iso_pipecount23++]=pipeletter(i); else if (iso_firststar23<0) iso_firststar23=i;} else { iso_count23++; if ( iso_first23<0 ) iso_first23=i; } }
-                if ( codex==32 ) { if (pipe) { if (iso_firstpipe32<0) iso_firstpipe32=i; if (pipe<2)       iso_pipeletter32[iso_pipecount32++]=pipeletter(i); else if (iso_firststar32<0) iso_firststar32=i;} else { iso_count32++; if ( iso_first32<0 ) iso_first32=i; } }
-                if ( codex==24 ) { if (pipe) { if (iso_firstpipe24<0) iso_firstpipe24=i; if (pipe<2)       iso_pipeletter24[iso_pipecount24++]=pipeletter(i); else if (iso_firststar24<0) iso_firststar24=i;} else { iso_count24++; if ( iso_first24<0 ) iso_first24=i; } }
-                if ( codex==33 ) { if (pipe) { if (iso_firstpipe33<0) iso_firstpipe33=i; if (pipe<2)       iso_pipeletter33[iso_pipecount33++]=pipeletter(i); else if (iso_firststar33<0) iso_firststar33=i;} else { iso_count33++; if ( iso_first33<0 ) iso_first33=i; } }
-                if ( codex==34 ) { if (pipe) { if (iso_firstpipe34<0) iso_firstpipe34=i; if (pipe<2)       iso_pipeletter34[iso_pipecount34++]=pipeletter(i); else if (iso_firststar34<0) iso_firststar34=i;} else { iso_count34++; if ( iso_first34<0 ) iso_first34=i; } }
-                if ( codex==42 ) { iso_count42++; if ( iso_first42<0 ) iso_first42=i; }
-                if ( codex==43 ) { iso_count43++; if ( iso_first43<0 ) iso_first43=i; }
-                if ( codex==44 ) { if (pipe) { if (iso_firstpipe44<0) iso_firstpipe44=i; if (pipe<2)       iso_pipeletter44[iso_pipecount44++]=pipeletter(i); else if (iso_firststar44<0) iso_firststar44=i;} else { iso_count44++; if ( iso_first44<0 ) iso_first44=i; } }
-          }
+        if ( codex==21 ) { iso_count21++; if ( iso_first21<0 ) iso_first21=i; }
+        if ( codex==22 ) { if (pipe) { if (iso_firstpipe22<0) iso_firstpipe22=i; if (pipe<2)       iso_pipeletter22[iso_pipecount22++]=pipeletter(i); else if (iso_firststar22<0) iso_firststar22=i;} else { iso_count22++; if ( iso_first22<0 ) iso_first22=i; } }
+        if ( codex==14 ) { if (pipe) { if (iso_firstpipe14<0) iso_firstpipe14=i; if (pipe<2)       iso_pipeletter14[iso_pipecount14++]=pipeletter(i); else if (iso_firststar14<0) iso_firststar14=i;} else { iso_count14++; if ( iso_first14<0 ) iso_first14=i; } }
+        if ( codex==23 ) { if (pipe) { if (iso_firstpipe23<0) iso_firstpipe23=i; if (pipe<2)       iso_pipeletter23[iso_pipecount23++]=pipeletter(i); else if (iso_firststar23<0) iso_firststar23=i;} else { iso_count23++; if ( iso_first23<0 ) iso_first23=i; } }
+        if ( codex==32 ) { if (pipe) { if (iso_firstpipe32<0) iso_firstpipe32=i; if (pipe<2)       iso_pipeletter32[iso_pipecount32++]=pipeletter(i); else if (iso_firststar32<0) iso_firststar32=i;} else { iso_count32++; if ( iso_first32<0 ) iso_first32=i; } }
+        if ( codex==24 ) { if (pipe) { if (iso_firstpipe24<0) iso_firstpipe24=i; if (pipe<2)       iso_pipeletter24[iso_pipecount24++]=pipeletter(i); else if (iso_firststar24<0) iso_firststar24=i;} else { iso_count24++; if ( iso_first24<0 ) iso_first24=i; } }
+        if ( codex==33 ) { if (pipe) { if (iso_firstpipe33<0) iso_firstpipe33=i; if (pipe<2)       iso_pipeletter33[iso_pipecount33++]=pipeletter(i); else if (iso_firststar33<0) iso_firststar33=i;} else { iso_count33++; if ( iso_first33<0 ) iso_first33=i; } }
+        if ( codex==34 ) { if (pipe) { if (iso_firstpipe34<0) iso_firstpipe34=i; if (pipe<2)       iso_pipeletter34[iso_pipecount34++]=pipeletter(i); else if (iso_firststar34<0) iso_firststar34=i;} else { iso_count34++; if ( iso_first34<0 ) iso_first34=i; } }
+        if ( codex==42 ) { iso_count42++; if ( iso_first42<0 ) iso_first42=i; }
+        if ( codex==43 ) { iso_count43++; if ( iso_first43<0 ) iso_first43=i; }
+        if ( codex==44 ) { if (pipe) { if (iso_firstpipe44<0) iso_firstpipe44=i; if (pipe<2)       iso_pipeletter44[iso_pipecount44++]=pipeletter(i); else if (iso_firststar44<0) iso_firststar44=i;} else { iso_count44++; if ( iso_first44<0 ) iso_first44=i; } }
+      }
     }
 
-      iso_pipeletter14[iso_pipecount14]=0;
-      iso_pipeletter22[iso_pipecount22]=0;
+    iso_pipeletter14[iso_pipecount14]=0;
+    iso_pipeletter22[iso_pipecount22]=0;
     iso_pipeletter23[iso_pipecount23]=0;
     iso_pipeletter32[iso_pipecount32]=0;
     iso_pipeletter24[iso_pipecount24]=0;
@@ -859,17 +859,17 @@ void setup_country( int newccode )
 
 int count_city_coordinates_for_country( int codex ) // returns count
 {
-    if (codex==21) return iso_count21;
-    if (codex==22) return iso_count22;
+  if (codex==21) return iso_count21;
+  if (codex==22) return iso_count22;
   if (codex==13) return iso_count13;
-    return 0;
+  return 0;
 }
 
 
 int city_for_country( int X, int codex ) // returns m
 {
-    if ( codex==21 ) return iso_first21+X;
-    if ( codex==13 ) return iso_first13+X;
+  if ( codex==21 ) return iso_first21+X;
+  if ( codex==13 ) return iso_first13+X;
   return iso_first22+X;
 }
 
@@ -898,17 +898,17 @@ int decode_nameless( const char *orginput, long *x, long *y,         int input_c
   {
     int p = 31/A;
     int r = 31%A;
-        long v;
+    long v;
     int m;
     long SIDE;
     int swapletters=0;
     long xSIDE;
     long X=-1;
-        long miny,maxy,minx,maxx;
+    long miny,maxy,minx,maxx;
 
     // make copy of input, so we can swap letters @@@@@@@@@@@@@@@
-      char result[32];
-      strcpy(result,input);
+    char result[32];
+    strcpy(result,input);
 
     // now determine X = index of first area, and SIDE
     if ( codex!=21 && A<=31 )
@@ -929,14 +929,14 @@ int decode_nameless( const char *orginput, long *x, long *y,         int input_c
     {
 
       X = decode_chars[*result];
-            if ( X < (62-A) )
-            {
+      if ( X < (62-A) )
+      {
         swapletters=(codex==22);
-            }
-            else
-            {
-                X = X+(X-(62-A));
-            }
+      }
+      else
+      {
+        X = X+(X-(62-A));
+      }
     }
     else // code==21 || A>=62
     {
@@ -950,14 +950,14 @@ int decode_nameless( const char *orginput, long *x, long *y,         int input_c
       v %= BASEPOWERA;
     }
 
-        if (swapletters)
-        {
-            m = city_for_country(           X,codex);
+    if (swapletters)
+    {
+      m = city_for_country(           X,codex);
       if ( ! isSpecialShape22(m) )
-            {
-                char t = result[codexlen-3]; result[codexlen-3]=result[codexlen-2]; result[codexlen-2]=t;
-            }
-        }
+      {
+        char t = result[codexlen-3]; result[codexlen-3]=result[codexlen-2]; result[codexlen-2]=t;
+      }
+    }
 
     // adjust v and X
     if ( codex!=21 && A<=31 )
@@ -970,22 +970,22 @@ int decode_nameless( const char *orginput, long *x, long *y,         int input_c
       }
 
     }
-        else if ( codex!=21 && A<62 )
+    else if ( codex!=21 && A<62 )
+    {
+
+      v = fast_decode(result+1);
+      if ( X >= (62-A) )
+        if ( v >= (16*961*31) )
         {
-
-            v = fast_decode(result+1);
-            if ( X >= (62-A) )
-                if ( v >= (16*961*31) )
-                {
-                    v -= (16*961*31);
-                    X++;
-                }
+          v -= (16*961*31);
+          X++;
         }
+    }
 
-        m = city_for_country(           X,codex);
+    m = city_for_country(           X,codex);
     SIDE = smartdiv(m);
 
-        getboundaries(m,minx,miny,maxx,maxy);
+    getboundaries(m,minx,miny,maxx,maxy);
     if ( isSpecialShape22(m) )
     {
       xSIDE = SIDE*SIDE;
@@ -999,35 +999,35 @@ int decode_nameless( const char *orginput, long *x, long *y,         int input_c
 
     // decode
     {
-            long dx,dy;
+      long dx,dy;
 
-            if ( isSpecialShape22(m) )
-            {
-                decode6(v,xSIDE,SIDE,&dx,&dy);
-                dy=SIDE-1-dy;
-            }
-            else
-            {
-                dy = v%SIDE;
-                dx = v/SIDE;
-            }
-
-            if ( dx>=xSIDE )
+      if ( isSpecialShape22(m) )
       {
-                return -123;
+        decode6(v,xSIDE,SIDE,&dx,&dy);
+        dy=SIDE-1-dy;
+      }
+      else
+      {
+        dy = v%SIDE;
+        dx = v/SIDE;
+      }
+
+      if ( dx>=xSIDE )
+      {
+        return -123;
       }
 
       {
-            long dividerx4 = x_divider(miny,maxy); // *** note: dividerx4 is 4 times too large!
-            long dividery = 90;
+        long dividerx4 = x_divider(miny,maxy); // *** note: dividerx4 is 4 times too large!
+        long dividery = 90;
 
-                *x = minx + ((dx * dividerx4)/4); // *** note: FIRST multiply, then divide... more precise, larger rects
-                *y = maxy - (dy*dividery);
+        *x = minx + ((dx * dividerx4)/4); // *** note: FIRST multiply, then divide... more precise, larger rects
+        *y = maxy - (dy*dividery);
 
         add2res(x,y, dividerx4,dividery,-1);
 
         return m;
-            }
+      }
     }
   }
   return -19;
@@ -1047,17 +1047,17 @@ void repack_if_alldigits(char *input,int aonly)
   if (alldigits && dotpos && s>dotpos) // e is last char, s is one before, both are beyond dot, all characters are digits
   {
     if (aonly) // v1.50 - encode only using the letter A
-    {
+    { 
       int v = ((*input)-'0')*100 + ((*s)-'0')*10 + ((*e)-'0');
       *input='A';
       *s = encode_chars[v/32];
       *e = encode_chars[v%32];
-    }
+    } 
     else // encode using A,E,U
-    {
+    {    
       int v = ((*s)-'0') *10 + ((*e)-'0');
       *s = encode_chars[(v/34)+31];
-      *e = encode_chars[v%34];
+      *e = encode_chars[v%34];        
     }
   }
 }
@@ -1066,14 +1066,14 @@ int unpack_if_alldigits(char *input) // returns 1 if unpacked, 0 if left unchang
 { // rewrite all-digit codes
   char *s=input;
   char *dotpos=NULL;
-  int aonly=(*s=='A' || *s=='a'); if (aonly) s++; //*** v1.50
-  for (;*s!=0 && s[2]!=0 && s[2]!='-';s++)
+  int aonly=(*s=='A' || *s=='a'); if (aonly) s++; //*** v1.50 
+  for (;*s!=0 && s[2]!=0 && s[2]!='-';s++) 
   {
-    if (*s=='-')
-      break;
-    else if (*s=='.' && !dotpos)
-      dotpos=s;
-    else if ( decode_chars[*s]<0 || decode_chars[*s]>9 )
+    if (*s=='-') 
+      break; 
+    else if (*s=='.' && !dotpos) 
+      dotpos=s; 
+    else if ( decode_chars[*s]<0 || decode_chars[*s]>9 ) 
       return 0;  // nondigit, so stop
   }
 
@@ -1146,7 +1146,7 @@ int encode_nameless( char *resultbuffer, char *result, long x, long y, int input
 
   *result=0;
 
-    setup_country(input_ctry);
+  setup_country(input_ctry);
   A = count_city_coordinates_for_country( CODEX );
 
   // determine A = nr of 2.2
@@ -1159,7 +1159,7 @@ int encode_nameless( char *resultbuffer, char *result, long x, long y, int input
     long SIDE;
     // now determine X = index of first area
     long X=0;
-        // loop through country records
+    // loop through country records
     int j   = (CODEX==21 ? iso_first21 : (CODEX==22 ? iso_first22 : iso_first13));
     int e = j+(CODEX==21 ? iso_count21 : (CODEX==22 ? iso_count22 : iso_count13));
     for ( X=0; j<e; j++,X++ )
@@ -1169,7 +1169,7 @@ int encode_nameless( char *resultbuffer, char *result, long x, long y, int input
       if (forcecoder<0     || forcecoder==m)
       {
         long storage_offset;
-                long miny,maxy;
+        long miny,maxy;
         long minx,maxx;
 
         long xSIDE,orgSIDE;
@@ -1182,18 +1182,18 @@ int encode_nameless( char *resultbuffer, char *result, long x, long y, int input
         }
         else if ( CODEX!=21 && A<62 )
         {
-                    if ( X < (62-A) )
-                    {
+          if ( X < (62-A) )
+          {
             storage_offset = X*(961*961);
-                    }
-                    else
-                    {
-                        storage_offset = (62-A +           ((X-62+A)/2) )*(961*961);
-                        if ( (X+A) & 1 )
+          }
+          else
+          {
+            storage_offset = (62-A +           ((X-62+A)/2) )*(961*961);
+            if ( (X+A) & 1 )
             {
-                            storage_offset += (16*961*31);
+              storage_offset += (16*961*31);
             }
-                    }
+          }
         }
         else
         {
@@ -1210,34 +1210,34 @@ int encode_nameless( char *resultbuffer, char *result, long x, long y, int input
 
         getboundaries(m,minx,miny,maxx,maxy);
         orgSIDE=xSIDE=SIDE;
-                if ( isSpecialShape22(m) ) //  - keep the existing rectangle!
-                {
+        if ( isSpecialShape22(m) ) //  - keep the existing rectangle!
+        {
             SIDE = 1+((maxy-miny)/90); // new side, based purely on y-distance
             xSIDE = (orgSIDE*orgSIDE) / SIDE;
-                }
+        }
 
 
 
         if ( miny<=y && y<maxy && isInRange(x,minx,maxx) )
-                {
-                long v = storage_offset;
+        {
+          long v = storage_offset;
 
           long dividerx4 = x_divider(miny,maxy); // *** note: dividerx4 is 4 times too large!
-                    long dx = (4*(x-minx))/dividerx4; // like div, but with floating point value
+          long dx = (4*(x-minx))/dividerx4; // like div, but with floating point value
           long extrax4 = (x-minx)*4 - dx*dividerx4; // like modulus, but with floating point value
 
           long dividery = 90;
-                    long dy     = (maxy-y)/dividery;  // between 0 and SIDE-1
+          long dy     = (maxy-y)/dividery;  // between 0 and SIDE-1
           long extray = (maxy-y)%dividery;
 
-                    if ( isSpecialShape22(m) )
-                    {
-                        v += encode6(dx,SIDE-1-dy,xSIDE,SIDE);
-                    }
-                    else
-                    {
-                        v +=  (dx*SIDE + dy);
-                    }
+          if ( isSpecialShape22(m) )
+          {
+            v += encode6(dx,SIDE-1-dy,xSIDE,SIDE);
+          }
+          else
+          {
+            v +=  (dx*SIDE + dy);
+          }
 
           fast_encode( result, v, codexlen+1 );
           {
@@ -1248,16 +1248,16 @@ int encode_nameless( char *resultbuffer, char *result, long x, long y, int input
           }
 
           if ( ! isSpecialShape22(m) )
-                    if ( CODEX==22 && A<62 && orgSIDE==961 )
-                    {
-                        char t = result[codexlen-2]; result[codexlen-2]=result[codexlen]; result[codexlen]=t;
-                    }
+          if ( CODEX==22 && A<62 && orgSIDE==961 )
+          {
+            char t = result[codexlen-2]; result[codexlen-2]=result[codexlen]; result[codexlen]=t;
+          }
 
           addpostfix(result,extrax4,extray,dividerx4,dividery);
 
           return m;
 
-                } // in range
+        } // in range
 
       } // forcecoder?
     }
@@ -1290,7 +1290,6 @@ int master_decode(  long *nx,long *ny, // <- store result in nx,ny
      *min++=0;
      extrapostfix=&org_input[min-input];
      ilen=strlen(input);
-     if (ilen>11) return -8;
    } else extrapostfix="";
  }
 
@@ -1300,55 +1299,47 @@ int master_decode(  long *nx,long *ny, // <- store result in nx,ny
  {
   char *city = (char*)default_cityname;
 
+  int voweled = unpack_if_alldigits(input);
+  if (voweled<0)
+    return -7;
 
+  // debug support: U-lead pre-processing
+  if (*input=='u' || *input=='U')  {
+    strcpy(input,input+1); 
+    ilen--; 
+    voweled=1;
+  }
 
+  if (ilen>10) return -8;
 
-
+  // find dot and check that all characters are valid
   {
-    int voweled=0;
-
-    voweled = unpack_if_alldigits(input);
-    if (voweled<0)
-            return -7;
-
-
+    int nrd=0; // nr of true digits
+    const char *s=input;
+    for ( ; *s!=0; s++ )
     {
-        char *a=NULL; // position of letter A (if any) in the input
-        int nrd=0; // nr of true digits
-        { char *s; for(s=input;*s!=0;s++) if (*s>='0' && *s<='9') nrd++; else if (*s=='.') if (dot) return -5; else dot=s; else if (*s=='a' || *s=='A') a=s; }
-        if (dot==NULL)
-            return -2;
-        else if (a && a==input && nrd+2==ilen) // there is a dot, and an A as first letter, and everything else is a digit
-        {
-            strcpy(input,input+1); dot--; ilen--;
-        }
-    else if (!voweled && nrd+1==ilen) // there is a dot, and everything else is a digit!
-            return -998;
+      if (*s=='.') 
+        { if (dot) return -5; else dot=s; }
+      else if ( decode_chars[*s]<0 )
+        return -4; // invalid char
+      else if ( decode_chars[*s]<10 ) // digit?
+        nrd++;
     }
-
-
+    if (dot==NULL)
+      return -2;
+    else if (!voweled && nrd+1==ilen) // there is a dot, and everything else is a digit!
+      return -998;
+  }
 
 //////////// AT THIS POINT, dot=FIRST DOT, input=CLEAN INPUT (no vowels) ilen=INPUT LENGTH
 
-        // check if input has valid characters
-    {
-      const char *s=input;
-      for ( ; *s!=0; s++ )
-        if ( decode_chars[*s]<0 && *s!='.' )
-          return -4; // invalid char
-    }
-
-        // analyse input
-    {
-      {
-        int prelen = (dot-input);
-        int postlen = ilen-1-prelen;
-
-        if ( prelen<2 || postlen<2 || prelen+postlen>9 || postlen>4 )
-          return -3;
-
-      }
-    }
+  // analyse input
+  {
+    int prelen = (dot-input);
+    int postlen = ilen-1-prelen;
+    if ( prelen<2 || prelen>5 || postlen<2 || postlen>4 )
+      return -3;
+  }
 
 //////////////////////////////////
 
@@ -1356,10 +1347,7 @@ int master_decode(  long *nx,long *ny, // <- store result in nx,ny
       input_ctry = ccode_earth;
 
     if (input_ctry<0) return input_ctry;
-        setup_country(input_ctry);
-
-
-
+    setup_country(input_ctry);
 
     // special case: 43 or worse, for a state
     if ( (ilen==8 || ilen==9) && iso_count43==1 && isuseless((iso_first43)) && ( mIsIndiaState((input_ctry )) || mIsMexicoState((input_ctry )) ) )
@@ -1383,37 +1371,37 @@ int master_decode(  long *nx,long *ny, // <- store result in nx,ny
       setup_country(input_ctry);
     }
 
-        if (
-                       ( ilen==5 && input[2]=='.' && iso_count21==0 && iso_count22==1 )
-                    || ( ilen==5 && input[2]=='.' && iso_count21==1 )
-                    || ( ilen==6 && input[2]=='.' && iso_count23==1 )
-                    || ( ilen==6 && input[3]=='.' && iso_count32==1 )
-                    || ( ilen==7 && input[2]=='.' && iso_count24==1 )
-                    || ( ilen==7 && input[3]=='.' && iso_count33==1 )
-                    || ( ilen==7 && input[4]=='.' && iso_count42==1 )
-                    || ( ilen==8 && input[3]=='.' && iso_count34==1 )
-                    || ( ilen==8 && input[4]=='.' && iso_count43==1 )
-                    || ( ilen==9 && input[4]=='.' && iso_count44==1 )
-             )
-            {
+    if (
+             ( ilen==5 && input[2]=='.' && iso_count21==0 && iso_count22==1 )
+          || ( ilen==5 && input[2]=='.' && iso_count21==1 )
+          || ( ilen==6 && input[2]=='.' && iso_count23==1 )
+          || ( ilen==6 && input[3]=='.' && iso_count32==1 )
+          || ( ilen==7 && input[2]=='.' && iso_count24==1 )
+          || ( ilen==7 && input[3]=='.' && iso_count33==1 )
+          || ( ilen==7 && input[4]=='.' && iso_count42==1 )
+          || ( ilen==8 && input[3]=='.' && iso_count34==1 )
+          || ( ilen==8 && input[4]=='.' && iso_count43==1 )
+          || ( ilen==9 && input[4]=='.' && iso_count44==1 )
+       )
+      {
           long minx,miny,maxx,maxy;
-                    if ( ilen==5 && iso_count21==1) m = (iso_first21);
-                    if ( ilen==5 && iso_count21==0) m = (iso_first22);
-                    if ( ilen==6 && input[2]=='.' ) m = (iso_first23);
-                    if ( ilen==6 && input[3]=='.' ) m = (iso_first32);
-                    if ( ilen==7 && input[2]=='.' ) m = (iso_first24);
-                    if ( ilen==7 && input[3]=='.' ) m = (iso_first33);
-                    if ( ilen==7 && input[4]=='.' ) m = (iso_first42);
-                    if ( ilen==8 && input[3]=='.' ) m = (iso_first34);
-                    if ( ilen==8 && input[4]=='.' ) m = (iso_first43);
-                    if ( ilen==9 ) m = (iso_first44);
+          if ( ilen==5 && iso_count21==1) m = (iso_first21);
+          if ( ilen==5 && iso_count21==0) m = (iso_first22);
+          if ( ilen==6 && input[2]=='.' ) m = (iso_first23);
+          if ( ilen==6 && input[3]=='.' ) m = (iso_first32);
+          if ( ilen==7 && input[2]=='.' ) m = (iso_first24);
+          if ( ilen==7 && input[3]=='.' ) m = (iso_first33);
+          if ( ilen==7 && input[4]=='.' ) m = (iso_first42);
+          if ( ilen==8 && input[3]=='.' ) m = (iso_first34);
+          if ( ilen==8 && input[4]=='.' ) m = (iso_first43);
+          if ( ilen==9 ) m = (iso_first44);
 
           getboundaries(m,minx,miny,maxx,maxy);
           decode_grid( input,nx,ny, m, minx,miny,maxx,maxy);
 
           //
-                if (isuseless(m)) {
-                    int j,fitssomewhere=0;
+          if (isuseless(m)) {
+            int j,fitssomewhere=0;
             for (j=iso_start; (j)<m; j++) { // look in previous rects
               long minx,miny,maxx,maxy,xdiv8;
               if (isuseless((j))) continue;
@@ -1425,44 +1413,44 @@ int master_decode(  long *nx,long *ny, // <- store result in nx,ny
             if (!fitssomewhere) {
               err=-1234;
             }
-                }
+          }
 
 
-            }
-            else if ( ilen==6 && input[3]=='.' && iso_count22>1 ) // multiple 22 into 3.2
-            {
+      }
+      else if ( ilen==6 && input[3]=='.' && iso_count22>1 ) // multiple 22 into 3.2
+      {
         m   = decode_nameless( input, nx,ny, input_ctry, 22, debug_oldx,debug_oldy);
         if (m<0) err=m; else err=0;
-            }
-            else if ( ilen==6 && input[2]=='.' && iso_count13>1 ) // multiple 13 into 2.3
-            {
+      }
+      else if ( ilen==6 && input[2]=='.' && iso_count13>1 ) // multiple 13 into 2.3
+      {
         m   = decode_nameless( input, nx,ny, input_ctry, 13, debug_oldx,debug_oldy);
         if (m<0) err=m; else err=0;
-            }
-            else if ( ilen==5 ) // multiple 21 into 2.2
-            {
+      }
+      else if ( ilen==5 ) // multiple 21 into 2.2
+      {
         if (iso_count21<=0)
           err=-191;
         else if ( input[2]!='.' )
-                    err=-9;
+          err=-9;
         else {
           m   = decode_nameless( input, nx,ny, input_ctry, 21, debug_oldx,debug_oldy);
           if (m<0) err=m; else err=0;
         }
-            }
-            else if (
-                               ( ilen==7 && iso_firststar23>=0 && input[3]=='.')
-                            || ( ilen==6 && iso_firststar22>=0 && input[2]=='.')
-                )
-            {
+      }
+      else if (
+                 ( ilen==7 && iso_firststar23>=0 && input[3]=='.')
+              || ( ilen==6 && iso_firststar22>=0 && input[2]=='.')
+        )
+      {
         int start = (ilen==6 ? iso_firststar22 : iso_firststar23);
         int rctry = (start);
 
         long STORAGE_START=0;
         long value;
-                int j;
+        int j;
 
-                value = fast_decode(input); // decode top
+        value = fast_decode(input); // decode top
         value *= (961*31);
 
         err=-1;
@@ -1481,11 +1469,11 @@ int master_decode(  long *nx,long *ny, // <- store result in nx,ny
             long W = ( (maxx-minx)*4 + (xdiv-1) ) / xdiv;
             long product = W*H;
 
-                        // decode
+            // decode
             // round up to multiples of YSIDE3*XSIDE3...
-                        H = YSIDE3*( (H+YSIDE3-1)/YSIDE3 );
-                        W = XSIDE3*( (W+XSIDE3-1)/XSIDE3 );
-                        product = (W/XSIDE3)*(H/YSIDE3)*961*31;
+            H = YSIDE3*( (H+YSIDE3-1)/YSIDE3 );
+            W = XSIDE3*( (W+XSIDE3-1)/XSIDE3 );
+            product = (W/XSIDE3)*(H/YSIDE3)*961*31;
             {
             long GOODROUNDER = rcodex(m)>=23 ? (961*961*31) : (961*961);
             if ( pipetype(m)==2 ) // *+ pipe!
@@ -1506,13 +1494,13 @@ int master_decode(  long *nx,long *ny, // <- store result in nx,ny
 
               // PIPELETTER DECODE
               {
-                                long difx,dify;
-                                decode_triple(input+ilen-3,&difx,&dify); // decode bottom 3 chars
-                                {
-                                    long vx = (value / (H/YSIDE3))*XSIDE3 + difx; // is vx/168
-                                    long vy = (value % (H/YSIDE3))*YSIDE3 + dify; // is vy/176
-                                    *ny = maxy - vy*dividery;
-                                    *nx = minx + vx*dividerx;
+                long difx,dify;
+                decode_triple(input+ilen-3,&difx,&dify); // decode bottom 3 chars
+                {
+                  long vx = (value / (H/YSIDE3))*XSIDE3 + difx; // is vx/168
+                  long vy = (value % (H/YSIDE3))*YSIDE3 + dify; // is vy/176
+                  *ny = maxy - vy*dividery;
+                  *nx = minx + vx*dividerx;
 
                   if ( *nx<minx || *nx>=maxx || *ny<miny || *ny>maxy ) // *** CAREFUL! do this test BEFORE adding remainder...
                   {
@@ -1521,7 +1509,7 @@ int master_decode(  long *nx,long *ny, // <- store result in nx,ny
 
                   add2res(nx,ny, dividerx<<2,dividery,-1);
 
-                                }
+                }
               }
 
               break;
@@ -1529,61 +1517,60 @@ int master_decode(  long *nx,long *ny, // <- store result in nx,ny
             STORAGE_START += product;
           }
         } // for j
-            }
+      }
 // ************** PIPELETTER 32 33 42 34 43 54=world
-            else if (
-                                     ( ilen== 6 && iso_firstpipe22>=0 && iso_firststar22<0 && input[3]=='.' ) // lettered 22-pipes -> 32
-                                || ( ilen== 7 && iso_firstpipe23>=0 && iso_firststar23<0 && input[3]=='.' ) // lettered 23-pipes -> 33
-                                || ( ilen== 7 && iso_firstpipe32>=0 && iso_firststar32<0 && input[4]=='.' ) // lettered 32-pipes -> 42
-                                || ( ilen== 7 && iso_firstpipe14>=0 && iso_firststar14<0 && input[2]=='.' ) // lettered 14-pipes -> 24
-                                || ( ilen== 8 && iso_firstpipe24>=0 && iso_firststar24<0 && input[3]=='.' ) // lettered 24-pipes -> 34
-                                || ( ilen== 8 && iso_firstpipe33>=0 && iso_firststar33<0 && input[4]=='.' ) // lettered 33-pipes -> 43
-                                || ( ilen== 9 && iso_firstpipe34>=0 && iso_firststar34<0 && input[4]=='.' ) // lettered 34-pipes -> 44
-                                || ( ilen==10 && iso_firstpipe44>=0 && iso_firststar44<0 && input[5]=='.' ) // lettered 44-pipes -> 54
-                            )
-            {
-                const char *pipeptr;
+      else if (
+                   ( ilen== 6 && iso_firstpipe22>=0 && iso_firststar22<0 && input[3]=='.' ) // lettered 22-pipes -> 32
+                || ( ilen== 7 && iso_firstpipe23>=0 && iso_firststar23<0 && input[3]=='.' ) // lettered 23-pipes -> 33
+                || ( ilen== 7 && iso_firstpipe32>=0 && iso_firststar32<0 && input[4]=='.' ) // lettered 32-pipes -> 42
+                || ( ilen== 7 && iso_firstpipe14>=0 && iso_firststar14<0 && input[2]=='.' ) // lettered 14-pipes -> 24
+                || ( ilen== 8 && iso_firstpipe24>=0 && iso_firststar24<0 && input[3]=='.' ) // lettered 24-pipes -> 34
+                || ( ilen== 8 && iso_firstpipe33>=0 && iso_firststar33<0 && input[4]=='.' ) // lettered 33-pipes -> 43
+                || ( ilen== 9 && iso_firstpipe34>=0 && iso_firststar34<0 && input[4]=='.' ) // lettered 34-pipes -> 44
+                || ( ilen==10 && iso_firstpipe44>=0 && iso_firststar44<0 && input[5]=='.' ) // lettered 44-pipes -> 54
+              )
+      {
+        const char *pipeptr;
         char letter=toupper(*input);
         if (letter=='I') letter='1';
         if (letter=='O') letter='0';
-                switch (ilen)
-                {
-                    case  6: pipeptr = strchr(iso_pipeletter22,letter); if (pipeptr) m=(iso_firstpipe22+(pipeptr-iso_pipeletter22)); break;
-                    case  7: if (input[3]=='.') {
+        switch (ilen)
+        {
+          case  6: pipeptr = strchr(iso_pipeletter22,letter); if (pipeptr) m=(iso_firstpipe22+(pipeptr-iso_pipeletter22)); break;
+          case  7: if (input[3]=='.') {
                    pipeptr = strchr(iso_pipeletter23,letter); if (pipeptr) m=(iso_firstpipe23+(pipeptr-iso_pipeletter23)); break;
-                    }else if (input[2]=='.') {
+          }else if (input[2]=='.') {
                    pipeptr = strchr(iso_pipeletter14,letter); if (pipeptr) m=(iso_firstpipe14+(pipeptr-iso_pipeletter14)); break;
-                    }else{
+          }else{
                    pipeptr = strchr(iso_pipeletter32,letter); if (pipeptr) m=(iso_firstpipe32+(pipeptr-iso_pipeletter32)); break;
           }
-                    case  8: if (input[3]=='.') {
-                                     pipeptr = strchr(iso_pipeletter24,letter); if (pipeptr) m=(iso_firstpipe24+(pipeptr-iso_pipeletter24)); break;
-                    }else{
-                                     pipeptr = strchr(iso_pipeletter33,letter); if (pipeptr) m=(iso_firstpipe33+(pipeptr-iso_pipeletter33)); break;
-                    }
-                    case  9: pipeptr = strchr(iso_pipeletter34,letter); if (pipeptr) m=(iso_firstpipe34+(pipeptr-iso_pipeletter34)); break;
-                    case 10: pipeptr = strchr(iso_pipeletter44,letter); if (pipeptr) m=(iso_firstpipe44+(pipeptr-iso_pipeletter44)); break;
-                }
+          case  8: if (input[3]=='.') {
+                   pipeptr = strchr(iso_pipeletter24,letter); if (pipeptr) m=(iso_firstpipe24+(pipeptr-iso_pipeletter24)); break;
+          }else{
+                   pipeptr = strchr(iso_pipeletter33,letter); if (pipeptr) m=(iso_firstpipe33+(pipeptr-iso_pipeletter33)); break;
+          }
+          case  9: pipeptr = strchr(iso_pipeletter34,letter); if (pipeptr) m=(iso_firstpipe34+(pipeptr-iso_pipeletter34)); break;
+          case 10: pipeptr = strchr(iso_pipeletter44,letter); if (pipeptr) m=(iso_firstpipe44+(pipeptr-iso_pipeletter44)); break;
+        }
 
         if (!ISGOODAREA(m))
         {
-                  err = -98;
+          err = -98;
         }
         else
         {
           long minx,miny,maxx,maxy;
           ilen--;
-                    getboundaries(m,minx,miny,maxx,maxy);
-                    decode_grid( input+1,nx,ny, m, minx,miny,maxx,maxy);
-                    err=0;
-                }
-            }
+          getboundaries(m,minx,miny,maxx,maxy);
+          decode_grid( input+1,nx,ny, m, minx,miny,maxx,maxy);
+          err=0;
+        }
+      }
 // ************** fail!
-            else // THIS MEANS EVERYTHING HAS FAILED!!!
-            {
-                err=-99;
-            }
-  }
+      else // THIS MEANS EVERYTHING HAS FAILED!!!
+      {
+        err=-99;
+      }
  }
 
 // *********************** done, return results...
@@ -1591,17 +1578,17 @@ int master_decode(  long *nx,long *ny, // <- store result in nx,ny
 
   if (err==0)
   {
-      // * make sure it fits the country *
-      if (!ISEARTH(input_ctry))
-      {
+    // * make sure it fits the country *
+    if (!ISEARTH(input_ctry))
+    {
       long minx,miny,maxx,maxy,xdiv8;
       getboundaries((iso_end),minx,miny,maxx,maxy);
       xdiv8 = x_divider(miny,maxy)/4; // should be /8 but there's some extra margin
       if ( ! ( miny-60<=*ny && *ny<maxy+60 && isInRange(*nx,minx-xdiv8,maxx+xdiv8) ) ) // no fit?
       {
-              err=-2222;
+        err=-2222;
       }
-      }
+    }
   }
 
 
@@ -1622,8 +1609,8 @@ void master_encode( char *resultbuffer, int the_ctry, long x, long y, int forcec
   if (resultbuffer) *resultbuffer=0;
 
   if (the_ctry<0) return;
-    if (y> 90000000) y-=180000000; else if (y< -90000000) y+=180000000;
-    if (x>179999999) x-=360000000; else if (x<-180000000) x+=360000000;
+  if (y> 90000000) y-=180000000; else if (y< -90000000) y+=180000000;
+  if (x>179999999) x-=360000000; else if (x<-180000000) x+=360000000;
 
   ///////////////////////////////////////////////////////////
   // turn into 3-letter ISO code!
@@ -1757,11 +1744,11 @@ void master_encode( char *resultbuffer, int the_ctry, long x, long y, int forcec
             // encode
             long dividerx = (maxx-minx+W-1)/W;
             long vx =     (x-minx)/dividerx;
-                    long extrax = (x-minx)%dividerx;
+            long extrax = (x-minx)%dividerx;
 
             long dividery = (maxy-miny+H-1)/H;
             long vy =     (maxy-y)/dividery;
-                    long extray = (maxy-y)%dividery;
+            long extray = (maxy-y)%dividery;
 
             long codexlen = (codex/10)+(codex%10);
             long value = ((vx/XSIDE3)*(H/YSIDE3) + (vy/YSIDE3));
@@ -1975,7 +1962,7 @@ int mapcode_encode(char *result,long y, long x, const char *iso3, char *isofound
         strcpy(isofound,makeiso(cc,1));
     }
   }
-    return *result;
+  return *result;
 }
 
 
@@ -2050,7 +2037,7 @@ int full_mapcode_decode(long *y, long *x, const char *iso3, const char *orginput
   while (*s>0 && *s<=32) {s++;len--;} // skip further whitespace
 
   // returns nonzero if error
-    ccode = ccode_of_iso3(iso3);
+  ccode = ccode_of_iso3(iso3);
   if (ccode==ccode_mex && len<8) ccode=ccode_of_iso3("5MX"); // special case for mexico country vs state
 
   if (ccode_found) *ccode_found=ccode;
@@ -2071,10 +2058,8 @@ int full_mapcode_decode(long *y, long *x, const char *iso3, const char *orginput
     err = master_decode(  x,y,s,"",ccode,0,0);
   }
   else {
-      err = master_decode(  x,y,s,"",ccode,0,0);
+    err = master_decode(  x,y,s,"",ccode,0,0);
   }
-
-  if (len==11 && *s=='U') { s++; len--; }
 
   if (clean_input && len<=10)
   {
@@ -2088,29 +2073,29 @@ int full_mapcode_decode(long *y, long *x, const char *iso3, const char *orginput
   }
 
   if (err)
-    {
+  {
     #ifdef REMOVE_VALIDCODE
-          *x=*y=0;
+      *x=*y=0;
     #else
-          if (ccode<0 || valid_code(s)<0 ) // bad iso or bad input
-          {
-              *x=*y=0;
-          }
-          else if (err && ccode>=0)
-          {
-              long miny,maxy,minx,maxx;
-            setup_country(ccode);
-              getboundaries((data_start[ccode]),minx,miny,maxx,maxy);
-              *x = (minx+maxx)/2;
-              *y = (miny+maxy)/2;
-          }
+      if (ccode<0 || valid_code(s)<0 ) // bad iso or bad input
+      {
+        *x=*y=0;
+      }
+      else if (err && ccode>=0)
+      {
+        long miny,maxy,minx,maxx;
+        setup_country(ccode);
+        getboundaries((data_start[ccode]),minx,miny,maxx,maxy);
+        *x = (minx+maxx)/2;
+        *y = (miny+maxy)/2;
+      }
     #endif // REMOVE_VALIDCODE
-    }
+  }
 
-    // normalise between =180 and 180
-    if ( *x>180000000 ) *x-=360000000; else if ( *x<-180000000 ) *x+=360000000;
+  // normalise between =180 and 180
+  if ( *x>180000000 ) *x-=360000000; else if ( *x<-180000000 ) *x+=360000000;
 
-    return err;
+  return err;
 }
 
 int mapcode_decode(long *y, long *x, const char *iso3, const char *orginput,int *ccode_found)
@@ -2124,20 +2109,20 @@ int mapcode_decode(long *y, long *x, const char *iso3, const char *orginput,int 
 // WARNING - these alphabets have NOT yet been released as standard! use at your own risk! check www.mapcode.com for details.
 UWORD asc2lan[MAX_LANGUAGES][36] = // A-Z equivalents for ascii characters A to Z, 0-9
 {
-    {0x0041,0x0042,0x0043,0x0044,0x0045,0x0046,0x0047,0x0048,0x0049,0x004a,0x004b,0x004c,0x004d,0x004e,0x004f,0x0050,0x0051,0x0052,0x0053,0x0054,0x0055,0x0056,0x0057,0x0058,0x0059,0x005a, 0x0030,0x0031,0x0032,0x0033,0x0034,0x0035,0x0036,0x0037,0x0038,0x0039}, // roman
-    {0x0391,0x0392,0x039e,0x0394,0x003f,0x0395,0x0393,0x0397,0x0399,0x03a0,0x039a,0x039b,0x039c,0x039d,0x039f,0x03a1,0x0398,0x03a8,0x03a3,0x03a4,0x003f,0x03a6,0x03a9,0x03a7,0x03a5,0x0396, 0x0030,0x0031,0x0032,0x0033,0x0034,0x0035,0x0036,0x0037,0x0038,0x0039}, // greek
-    {0x0410,0x0412,0x0421,0x0414,0x0415,0x0416,0x0413,0x041d,0x0418,0x041f,0x041a,0x041b,0x041c,0x0417,0x041e,0x0420,0x0424,0x042f,0x0426,0x0422,0x042d,0x0427,0x0428,0x0425,0x0423,0x0411, 0x0030,0x0031,0x0032,0x0033,0x0034,0x0035,0x0036,0x0037,0x0038,0x0039}, // cyrillic
-    {0x05d0,0x05d1,0x05d2,0x05d3,0x05e3,0x05d4,0x05d6,0x05d7,0x05d5,0x05d8,0x05d9,0x05da,0x05db,0x05dc,0x05e1,0x05dd,0x05de,0x05e0,0x05e2,0x05e4,0x05e5,0x05e6,0x05e7,0x05e8,0x05e9,0x05ea, 0x0030,0x0031,0x0032,0x0033,0x0034,0x0035,0x0036,0x0037,0x0038,0x0039}, // hebrew
-    {0x0905,0x0915,0x0917,0x0918,0x090f,0x091a,0x091c,0x091f,0x003f,0x0920,0x0923,0x0924,0x0926,0x0927,0x003f,0x0928,0x092a,0x092d,0x092e,0x0930,0x092b,0x0932,0x0935,0x0938,0x0939,0x0921, 0x0966,0x0967,0x0968,0x0969,0x096a,0x096b,0x096c,0x096d,0x096e,0x096f}, // hindi
-    {0x0d12,0x0d15,0x0d16,0x0d17,0x0d0b,0x0d1a,0x0d1c,0x0d1f,0x0d07,0x0d21,0x0d24,0x0d25,0x0d26,0x0d27,0x0d20,0x0d28,0x0d2e,0x0d30,0x0d31,0x0d32,0x0d09,0x0d34,0x0d35,0x0d36,0x0d38,0x0d39, 0x0d66,0x0d67,0x0d68,0x0d69,0x0d6a,0x0d6b,0x0d6c,0x0d6d,0x0d6e,0x0d6f}, // malay
-    {0x10a0,0x10a1,0x10a3,0x10a6,0x10a4,0x10a9,0x10ab,0x10ac,0x10b3,0x10ae,0x10b0,0x10b1,0x10b2,0x10b4,0x10ad,0x10b5,0x10b6,0x10b7,0x10b8,0x10b9,0x10a8,0x10ba,0x10bb,0x10bd,0x10be,0x10bf, 0x0030,0x0031,0x0032,0x0033,0x0034,0x0035,0x0036,0x0037,0x0038,0x0039}, // Georgian
-    {0x30a2,0x30ab,0x30ad,0x30af,0x30aa,0x30b1,0x30b3,0x30b5,0x30a4,0x30b9,0x30c1,0x30c8,0x30ca,0x30cc,0x30a6,0x30d2,0x30d5,0x30d8,0x30db,0x30e1,0x30a8,0x30e2,0x30e8,0x30e9,0x30ed,0x30f2, 0x0030,0x0031,0x0032,0x0033,0x0034,0x0035,0x0036,0x0037,0x0038,0x0039}, // Katakana
-    {0x0e30,0x0e01,0x0e02,0x0e04,0x0e32,0x0e07,0x0e08,0x0e09,0x0e31,0x0e0a,0x0e11,0x0e14,0x0e16,0x0e17,0x0e0d,0x0e18,0x0e1a,0x0e1c,0x0e21,0x0e23,0x0e2c,0x0e25,0x0e27,0x0e2d,0x0e2e,0x0e2f, 0x0e50,0x0e51,0x0e52,0x0e53,0x0e54,0x0e55,0x0e56,0x0e57,0x0e58,0x0e59}, // Thai
-    {0x0eb0,0x0e81,0x0e82,0x0e84,0x0ec3,0x0e87,0x0e88,0x0e8a,0x0ec4,0x0e8d,0x0e94,0x0e97,0x0e99,0x0e9a,0x0ec6,0x0e9c,0x0e9e,0x0ea1,0x0ea2,0x0ea3,0x0ebd,0x0ea7,0x0eaa,0x0eab,0x0ead,0x0eaf, 0x0030,0x0031,0x0032,0x0033,0x0034,0x0035,0x0036,0x0037,0x0038,0x0039}, // Laos
-    {0x0556,0x0532,0x0533,0x0534,0x0535,0x0538,0x0539,0x053a,0x053b,0x053d,0x053f,0x0540,0x0541,0x0543,0x0555,0x0547,0x0548,0x054a,0x054d,0x054e,0x0545,0x054f,0x0550,0x0551,0x0552,0x0553, 0x0030,0x0031,0x0032,0x0033,0x0034,0x0035,0x0036,0x0037,0x0038,0x0039}, // armenian
-    {0x0985,0x098c,0x0995,0x0996,0x098f,0x0997,0x0999,0x099a,0x003f,0x099d,0x09a0,0x09a1,0x09a2,0x09a3,0x003f,0x09a4,0x09a5,0x09a6,0x09a8,0x09aa,0x0993,0x09ac,0x09ad,0x09af,0x09b2,0x09b9, 0x09e6,0x09e7,0x09e8,0x09e9,0x09ea,0x09eb,0x09ec,0x09ed,0x09ee,0x09ef}, // Bengali
-    {0x0a05,0x0a15,0x0a17,0x0a18,0x0a0f,0x0a1a,0x0a1c,0x0a1f,0x003f,0x0a20,0x0a23,0x0a24,0x0a26,0x0a27,0x003f,0x0a28,0x0a2a,0x0a2d,0x0a2e,0x0a30,0x0a2b,0x0a32,0x0a35,0x0a38,0x0a39,0x0a21, 0x0a66,0x0a67,0x0a68,0x0a69,0x0a6a,0x0a6b,0x0a6c,0x0a6d,0x0a6e,0x0a6f}, // Gurmukhi
-    {0x0f58,0x0f40,0x0f41,0x0f42,0x0f64,0x0f44,0x0f45,0x0f46,0x003f,0x0f47,0x0f4a,0x0f4c,0x0f4e,0x0f4f,0x003f,0x0f51,0x0f53,0x0f54,0x0f56,0x0f5e,0x0f65,0x0f5f,0x0f61,0x0f62,0x0f63,0x0f66, 0x0f20,0x0f21,0x0f22,0x0f23,0x0f24,0x0f25,0x0f26,0x0f27,0x0f28,0x0f29}, // Tibetan
+  {0x0041,0x0042,0x0043,0x0044,0x0045,0x0046,0x0047,0x0048,0x0049,0x004a,0x004b,0x004c,0x004d,0x004e,0x004f,0x0050,0x0051,0x0052,0x0053,0x0054,0x0055,0x0056,0x0057,0x0058,0x0059,0x005a, 0x0030,0x0031,0x0032,0x0033,0x0034,0x0035,0x0036,0x0037,0x0038,0x0039}, // roman
+  {0x0391,0x0392,0x039e,0x0394,0x003f,0x0395,0x0393,0x0397,0x0399,0x03a0,0x039a,0x039b,0x039c,0x039d,0x039f,0x03a1,0x0398,0x03a8,0x03a3,0x03a4,0x003f,0x03a6,0x03a9,0x03a7,0x03a5,0x0396, 0x0030,0x0031,0x0032,0x0033,0x0034,0x0035,0x0036,0x0037,0x0038,0x0039}, // greek
+  {0x0410,0x0412,0x0421,0x0414,0x0415,0x0416,0x0413,0x041d,0x0418,0x041f,0x041a,0x041b,0x041c,0x0417,0x041e,0x0420,0x0424,0x042f,0x0426,0x0422,0x042d,0x0427,0x0428,0x0425,0x0423,0x0411, 0x0030,0x0031,0x0032,0x0033,0x0034,0x0035,0x0036,0x0037,0x0038,0x0039}, // cyrillic
+  {0x05d0,0x05d1,0x05d2,0x05d3,0x05e3,0x05d4,0x05d6,0x05d7,0x05d5,0x05d8,0x05d9,0x05da,0x05db,0x05dc,0x05e1,0x05dd,0x05de,0x05e0,0x05e2,0x05e4,0x05e5,0x05e6,0x05e7,0x05e8,0x05e9,0x05ea, 0x0030,0x0031,0x0032,0x0033,0x0034,0x0035,0x0036,0x0037,0x0038,0x0039}, // hebrew
+  {0x0905,0x0915,0x0917,0x0918,0x090f,0x091a,0x091c,0x091f,0x003f,0x0920,0x0923,0x0924,0x0926,0x0927,0x003f,0x0928,0x092a,0x092d,0x092e,0x0930,0x092b,0x0932,0x0935,0x0938,0x0939,0x0921, 0x0966,0x0967,0x0968,0x0969,0x096a,0x096b,0x096c,0x096d,0x096e,0x096f}, // hindi
+  {0x0d12,0x0d15,0x0d16,0x0d17,0x0d0b,0x0d1a,0x0d1c,0x0d1f,0x0d07,0x0d21,0x0d24,0x0d25,0x0d26,0x0d27,0x0d20,0x0d28,0x0d2e,0x0d30,0x0d31,0x0d32,0x0d09,0x0d34,0x0d35,0x0d36,0x0d38,0x0d39, 0x0d66,0x0d67,0x0d68,0x0d69,0x0d6a,0x0d6b,0x0d6c,0x0d6d,0x0d6e,0x0d6f}, // malay
+  {0x10a0,0x10a1,0x10a3,0x10a6,0x10a4,0x10a9,0x10ab,0x10ac,0x10b3,0x10ae,0x10b0,0x10b1,0x10b2,0x10b4,0x10ad,0x10b5,0x10b6,0x10b7,0x10b8,0x10b9,0x10a8,0x10ba,0x10bb,0x10bd,0x10be,0x10bf, 0x0030,0x0031,0x0032,0x0033,0x0034,0x0035,0x0036,0x0037,0x0038,0x0039}, // Georgian
+  {0x30a2,0x30ab,0x30ad,0x30af,0x30aa,0x30b1,0x30b3,0x30b5,0x30a4,0x30b9,0x30c1,0x30c8,0x30ca,0x30cc,0x30a6,0x30d2,0x30d5,0x30d8,0x30db,0x30e1,0x30a8,0x30e2,0x30e8,0x30e9,0x30ed,0x30f2, 0x0030,0x0031,0x0032,0x0033,0x0034,0x0035,0x0036,0x0037,0x0038,0x0039}, // Katakana
+  {0x0e30,0x0e01,0x0e02,0x0e04,0x0e32,0x0e07,0x0e08,0x0e09,0x0e31,0x0e0a,0x0e11,0x0e14,0x0e16,0x0e17,0x0e0d,0x0e18,0x0e1a,0x0e1c,0x0e21,0x0e23,0x0e2c,0x0e25,0x0e27,0x0e2d,0x0e2e,0x0e2f, 0x0e50,0x0e51,0x0e52,0x0e53,0x0e54,0x0e55,0x0e56,0x0e57,0x0e58,0x0e59}, // Thai
+  {0x0eb0,0x0e81,0x0e82,0x0e84,0x0ec3,0x0e87,0x0e88,0x0e8a,0x0ec4,0x0e8d,0x0e94,0x0e97,0x0e99,0x0e9a,0x0ec6,0x0e9c,0x0e9e,0x0ea1,0x0ea2,0x0ea3,0x0ebd,0x0ea7,0x0eaa,0x0eab,0x0ead,0x0eaf, 0x0030,0x0031,0x0032,0x0033,0x0034,0x0035,0x0036,0x0037,0x0038,0x0039}, // Laos
+  {0x0556,0x0532,0x0533,0x0534,0x0535,0x0538,0x0539,0x053a,0x053b,0x053d,0x053f,0x0540,0x0541,0x0543,0x0555,0x0547,0x0548,0x054a,0x054d,0x054e,0x0545,0x054f,0x0550,0x0551,0x0552,0x0553, 0x0030,0x0031,0x0032,0x0033,0x0034,0x0035,0x0036,0x0037,0x0038,0x0039}, // armenian
+  {0x0985,0x098c,0x0995,0x0996,0x098f,0x0997,0x0999,0x099a,0x003f,0x099d,0x09a0,0x09a1,0x09a2,0x09a3,0x003f,0x09a4,0x09a5,0x09a6,0x09a8,0x09aa,0x0993,0x09ac,0x09ad,0x09af,0x09b2,0x09b9, 0x09e6,0x09e7,0x09e8,0x09e9,0x09ea,0x09eb,0x09ec,0x09ed,0x09ee,0x09ef}, // Bengali
+  {0x0a05,0x0a15,0x0a17,0x0a18,0x0a0f,0x0a1a,0x0a1c,0x0a1f,0x003f,0x0a20,0x0a23,0x0a24,0x0a26,0x0a27,0x003f,0x0a28,0x0a2a,0x0a2d,0x0a2e,0x0a30,0x0a2b,0x0a32,0x0a35,0x0a38,0x0a39,0x0a21, 0x0a66,0x0a67,0x0a68,0x0a69,0x0a6a,0x0a6b,0x0a6c,0x0a6d,0x0a6e,0x0a6f}, // Gurmukhi
+  {0x0f58,0x0f40,0x0f41,0x0f42,0x0f64,0x0f44,0x0f45,0x0f46,0x003f,0x0f47,0x0f4a,0x0f4c,0x0f4e,0x0f4f,0x003f,0x0f51,0x0f53,0x0f54,0x0f56,0x0f5e,0x0f65,0x0f5f,0x0f61,0x0f62,0x0f63,0x0f66, 0x0f20,0x0f21,0x0f22,0x0f23,0x0f24,0x0f25,0x0f26,0x0f27,0x0f28,0x0f29}, // Tibetan
 };
 
 static struct { UWORD min; UWORD max; const char *convert; } unicode2asc[] =
@@ -2164,10 +2149,10 @@ static struct { UWORD min; UWORD max; const char *convert; } unicode2asc[] =
   {0x0a66,0x0a6f,""}, // Gurmukhi
   {0x0f20,0x0f29,""}, // Tibetan
 
-    // lowercase variants: greek, georgisch
-    {0x03B1,0x03c9,"ABGDFZHQIKLMNCOJP?STYVXRW"}, // Greek lowercase
-    {0x10d0,0x10ef,"AB?CE?D?UF?GHOJ?KLMINPQRSTVW?XYZ"}, // Georgisch lowercase
-    {0x0562,0x0586,"BCDE??FGHI?J?KLM?N?U?PQ?R??STVWXYZ?OA"}, // Armenian lowercase
+  // lowercase variants: greek, georgisch
+  {0x03B1,0x03c9,"ABGDFZHQIKLMNCOJP?STYVXRW"}, // Greek lowercase
+  {0x10d0,0x10ef,"AB?CE?D?UF?GHOJ?KLMINPQRSTVW?XYZ"}, // Georgisch lowercase
+  {0x0562,0x0586,"BCDE??FGHI?J?KLM?N?U?PQ?R??STVWXYZ?OA"}, // Armenian lowercase
   {0,0,NULL}
 };
 
@@ -2185,20 +2170,20 @@ const char *decode_utf16(const UWORD* s)
     if ( *s>=1 && *s<='z' ) // normal ascii
       *w++ = (char)(*s);
     else
+    {
+      int i,found=0;
+      for (i=0; unicode2asc[i].min!=0 ;i++)
+      {
+        if ( *s>=unicode2asc[i].min && *s<=unicode2asc[i].max )
         {
-            int i,found=0;
-            for (i=0; unicode2asc[i].min!=0 ;i++)
-            {
-                if ( *s>=unicode2asc[i].min && *s<=unicode2asc[i].max )
-                {
           const char *cv = unicode2asc[i].convert;
           if (*cv==0) cv="0123456789";
-                    *w++ = cv[ *s - unicode2asc[i].min ];
-                    found=1; break;
-                }
-            }
-            if (!found) { *w++='?'; break; }
+          *w++ = cv[ *s - unicode2asc[i].min ];
+          found=1; break;
         }
+      }
+      if (!found) { *w++='?'; break; }
+    }
   }
   *w=0;
   if (*asciibuf=='A') // v1.50
@@ -2295,11 +2280,11 @@ const UWORD* encode_utf16(const char *mapcode,int language) // convert mapcode t
       if (*s>='0' && *s<='9') token=TOKENCHR;
       else if ((*s>='a' && *s<='z') || (*s>='A' && *s<='Z'))
         { token=TOKENCHR; if (state!=11 && state!=12) nondigits++; }
-        else if (*s=='.' ) token=TOKENDOT;
-        else if (*s=='-' ) token=TOKENHYPH;
-        else if (*s== 0  ) token=TOKENZERO;
-        else if (*s==' ' || *s=='\t') token=TOKENSEP;
-        else return -4; // invalid character
+      else if (*s=='.' ) token=TOKENDOT;
+      else if (*s=='-' ) token=TOKENHYPH;
+      else if (*s== 0  ) token=TOKENZERO;
+      else if (*s==' ' || *s=='\t') token=TOKENSEP;
+      else return -4; // invalid character
       newstate = fullmc_statemachine[state][token];
       if (newstate==ERR)
         return -(1000+10*state+token);
@@ -2606,7 +2591,7 @@ const UWORD* encodeToAlphabet(const char *mapcode,int alphabet) // 0=roman, 2=cy
   if ( asc2lan[alphabet][4]==0x003f ) // alphabet has no letter E
     if ( strchr(mapcode,'E') || strchr(mapcode,'U') || strchr(mapcode,'e') || strchr(mapcode,'u') ) // v1.50 get rid of E and U
     {
-      char u[16];
+      char u[16]; 
       strcpy(u,mapcode);
       unpack_if_alldigits(u);
       repack_if_alldigits(u,1);

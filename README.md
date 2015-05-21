@@ -56,7 +56,7 @@ decode Mapcodes.
     Retired legacy aliases EAZ and SKM, AU-QL, AU-TS, AU-NI and AU-JB.
 
     Retired legacy Antarctica claims AT0 through AT8.
-
+    
 * 1.41.1
 
     Bugfix for “utility/mapcode” utility (-d option was case sensitive).

@@ -115,6 +115,10 @@ static void usage(const char* appName) {
     printf("       and the (x, y, z) coordinates are placed on a sphere with radius 1.\n");
     printf("       The (x, y, z) coordinates are primarily meant for visualization of the data set.\n");
     printf("\n");
+    printf("       Example:\n");
+    printf("       %s -g    100 : produces a grid of 100 points as lat/lon pairs\n");
+    printf("       %s -gXYZ 100 : produces a grid of 100 points as (x, y, z) sphere coordinates)\n");
+    printf("\n");
     printf("       Notes on the use of stdout and stderr:\n");
     printf("       stdout: used for outputting 3D point data; stderr: used for statistics.\n");
     printf("       You can redirect stdout to a destination file, while stderr will show progress.\n");
@@ -216,7 +220,7 @@ static void selfCheckLatLonToMapcode(const double lat, double lon, const char* t
         }
 
         found = (((strcasecmp(territory, foundTerritory) == 0) ||
-                    (strcasecmp(territory, foundTerritoryMin) == 0)) && 
+                    (strcasecmp(territory, foundTerritoryMin) == 0)) &&
                 (strcasecmp(mapcode, foundMapcode) == 0));
     }
     if (!found) {

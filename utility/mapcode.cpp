@@ -42,7 +42,7 @@
 #define my_isnan(x) (false)
 #define my_round(x) ((long) (floor((x) + 0.5)))
 
-static const int    SELF_CHECK          = 1;
+static const int    SELF_CHECK          = 0;
 static const int    SELF_CHECK_EXIT     = 0;
 
 static const int    NORMAL_ERROR    = 1;
@@ -116,8 +116,8 @@ static void usage(const char* appName) {
     printf("       The (x, y, z) coordinates are primarily meant for visualization of the data set.\n");
     printf("\n");
     printf("       Example:\n");
-    printf("       %s -g    100 : produces a grid of 100 points as lat/lon pairs\n");
-    printf("       %s -gXYZ 100 : produces a grid of 100 points as (x, y, z) sphere coordinates)\n");
+    printf("       %s -g    100 : produces a grid of 100 points as lat/lon pairs\n", appName);
+    printf("       %s -gXYZ 100 : produces a grid of 100 points as (x, y, z) sphere coordinates)\n", appName);
     printf("\n");
     printf("       Notes on the use of stdout and stderr:\n");
     printf("       stdout: used for outputting 3D point data; stderr: used for statistics.\n");

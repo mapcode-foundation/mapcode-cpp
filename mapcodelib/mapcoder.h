@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Stichting Mapcode Foundation (http://www.mapcode.com)
+ * Copyright (C) 2014-2015 Stichting Mapcode Foundation (http://www.mapcode.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -167,23 +167,24 @@ int getCountryOrParentCountry(int territoryCode);
 int getParentCountryOfState(int territoryCode);
 
 /**
- * Languages:
+ * Alphabets:
  */
-#define MAX_LANGUAGES   14
-#define MAPCODE_LANGUAGE_ROMAN         0
-#define MAPCODE_LANGUAGE_GREEK         1
-#define MAPCODE_LANGUAGE_CYRILLIC      2
-#define MAPCODE_LANGUAGE_HEBREW        3
-#define MAPCODE_LANGUAGE_HINDI         4
-#define MAPCODE_LANGUAGE_MALAI         5
-#define MAPCODE_LANGUAGE_GEORGIAN      6
-#define MAPCODE_LANGUAGE_KATAKANA      7
-#define MAPCODE_LANGUAGE_THAI          8
-#define MAPCODE_LANGUAGE_LAO           9
-#define MAPCODE_LANGUAGE_ARMENIAN      10
-#define MAPCODE_LANGUAGE_BENGALI       11
-#define MAPCODE_LANGUAGE_GURMUKHI      12
-#define MAPCODE_LANGUAGE_TIBETAN       13
+#define MAPCODE_ALPHABETS_TOTAL        14
+
+#define MAPCODE_ALPHABET_ROMAN         0
+#define MAPCODE_ALPHABET_GREEK         1
+#define MAPCODE_ALPHABET_CYRILLIC      2
+#define MAPCODE_ALPHABET_HEBREW        3
+#define MAPCODE_ALPHABET_HINDI         4
+#define MAPCODE_ALPHABET_MALAY         5
+#define MAPCODE_ALPHABET_GEORGIAN      6
+#define MAPCODE_ALPHABET_KATAKANA      7
+#define MAPCODE_ALPHABET_THAI          8
+#define MAPCODE_ALPHABET_LAO           9
+#define MAPCODE_ALPHABET_ARMENIAN      10
+#define MAPCODE_ALPHABET_BENGALI       11
+#define MAPCODE_ALPHABET_GURMUKHI      12
+#define MAPCODE_ALPHABET_TIBETAN       13
 
 
 /**
@@ -228,3 +229,19 @@ const UWORD* encodeToAlphabet(const char* mapcode, int alphabet);
 #define encode_to_alphabet encodeToAlphabet
 #define MAX_MAPCODE_TERRITORY_CODE MAX_CCODE
 #define NR_BOUNDARY_RECS NR_RECS
+
+#define MAX_LANGUAGES                  MAPCODE_ALPHABETS_TOTAL
+#define MAPCODE_LANGUAGE_ROMAN         MAPCODE_ALPHABET_ROMAN
+#define MAPCODE_LANGUAGE_GREEK         MAPCODE_ALPHABET_GREEK
+#define MAPCODE_LANGUAGE_CYRILLIC      MAPCODE_ALPHABET_CYRILLIC
+#define MAPCODE_LANGUAGE_HEBREW        MAPCODE_ALPHABET_HEBREW
+#define MAPCODE_LANGUAGE_HINDI         MAPCODE_ALPHABET_HINDI
+#define MAPCODE_LANGUAGE_MALAY         MAPCODE_ALPHABET_MALAY
+#define MAPCODE_LANGUAGE_GEORGIAN      MAPCODE_ALPHABET_GEORGIAN
+#define MAPCODE_LANGUAGE_KATAKANA      MAPCODE_ALPHABET_KATAKANA
+#define MAPCODE_LANGUAGE_THAI          MAPCODE_ALPHABET_THAI
+#define MAPCODE_LANGUAGE_LAO           MAPCODE_ALPHABET_LAO
+#define MAPCODE_LANGUAGE_ARMENIAN      MAPCODE_ALPHABET_ARMENIAN
+#define MAPCODE_LANGUAGE_BENGALI       MAPCODE_ALPHABET_BENGALI
+#define MAPCODE_LANGUAGE_GURMUKHI      MAPCODE_ALPHABET_GURMUKHI
+#define MAPCODE_LANGUAGE_TIBETAN       MAPCODE_ALPHABET_TIBETAN

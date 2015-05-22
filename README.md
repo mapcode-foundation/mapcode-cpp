@@ -46,6 +46,10 @@ decode Mapcodes.
 
 ## Release Notes
 
+* 1.50.1
+
+    Bug fix for state IN-DD (in India).
+    
 * 1.50
 
     Major release. This version is not backwards compatible with mapcode 1.4x: is has dropped support for

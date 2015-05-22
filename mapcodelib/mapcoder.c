@@ -1047,17 +1047,17 @@ void repack_if_alldigits(char *input,int aonly)
   if (alldigits && dotpos && s>dotpos) // e is last char, s is one before, both are beyond dot, all characters are digits
   {
     if (aonly) // v1.50 - encode only using the letter A
-    { 
+    {
       int v = ((*input)-'0')*100 + ((*s)-'0')*10 + ((*e)-'0');
       *input='A';
       *s = encode_chars[v/32];
       *e = encode_chars[v%32];
-    } 
+    }
     else // encode using A,E,U
-    {    
+    {
       int v = ((*s)-'0') *10 + ((*e)-'0');
       *s = encode_chars[(v/34)+31];
-      *e = encode_chars[v%34];        
+      *e = encode_chars[v%34];
     }
   }
 }
@@ -1066,14 +1066,14 @@ int unpack_if_alldigits(char *input) // returns 1 if unpacked, 0 if left unchang
 { // rewrite all-digit codes
   char *s=input;
   char *dotpos=NULL;
-  int aonly=(*s=='A' || *s=='a'); if (aonly) s++; //*** v1.50 
-  for (;*s!=0 && s[2]!=0 && s[2]!='-';s++) 
+  int aonly=(*s=='A' || *s=='a'); if (aonly) s++; //*** v1.50
+  for (;*s!=0 && s[2]!=0 && s[2]!='-';s++)
   {
-    if (*s=='-') 
-      break; 
-    else if (*s=='.' && !dotpos) 
-      dotpos=s; 
-    else if ( decode_chars[*s]<0 || decode_chars[*s]>9 ) 
+    if (*s=='-')
+      break;
+    else if (*s=='.' && !dotpos)
+      dotpos=s;
+    else if ( decode_chars[*s]<0 || decode_chars[*s]>9 )
       return 0;  // nondigit, so stop
   }
 
@@ -1305,8 +1305,8 @@ int master_decode(  long *nx,long *ny, // <- store result in nx,ny
 
   // debug support: U-lead pre-processing
   if (*input=='u' || *input=='U')  {
-    strcpy(input,input+1); 
-    ilen--; 
+    strcpy(input,input+1);
+    ilen--;
     voweled=1;
   }
 
@@ -1318,7 +1318,7 @@ int master_decode(  long *nx,long *ny, // <- store result in nx,ny
     const char *s=input;
     for ( ; *s!=0; s++ )
     {
-      if (*s=='.') 
+      if (*s=='.')
         { if (dot) return -5; else dot=s; }
       else if ( decode_chars[*s]<0 )
         return -4; // invalid char
@@ -2132,7 +2132,7 @@ static struct { UWORD min; UWORD max; const char *convert; } unicode2asc[] =
   {0x0410,0x042f,"AZBGDEFNI?KLMHOJPCTYQXSVW????U?R"}, // Cyrillic
   {0x05d0,0x05ea,"ABCDFIGHJKLMNPQ?ROSETUVWXYZ"}, // Hebrew
   {0x0905,0x0939,"A?????????E?????B?CD?F?G??HJZ?KL?MNP?QU?RS?T?V??W??XY"}, // Hindi
-  {0x0d07,0x0d39,"I?U?E??????A??BCD??F?G??HOJ??KLMNP?????Q?RST?VWX?YZ"}, // Malai
+  {0x0d07,0x0d39,"I?U?E??????A??BCD??F?G??HOJ??KLMNP?????Q?RST?VWX?YZ"}, // Malay
   {0x10a0,0x10bf,"AB?CE?D?UF?GHOJ?KLMINPQRSTVW?XYZ"}, // Georgisch
   {0x30a2,0x30f2,"A?I?O?U?EB?C?D?F?G?H???J???????K??????L?M?N?????P??Q??R??S?????TV?????WX???Y????Z"}, // Katakana
   {0x0e01,0x0e32,"BC?D??FGHJ??O???K??L?MNP?Q?R????S?T?V?W????UXYZAIE"}, // Thai
@@ -2591,7 +2591,7 @@ const UWORD* encodeToAlphabet(const char *mapcode,int alphabet) // 0=roman, 2=cy
   if ( asc2lan[alphabet][4]==0x003f ) // alphabet has no letter E
     if ( strchr(mapcode,'E') || strchr(mapcode,'U') || strchr(mapcode,'e') || strchr(mapcode,'u') ) // v1.50 get rid of E and U
     {
-      char u[16]; 
+      char u[16];
       strcpy(u,mapcode);
       unpack_if_alldigits(u);
       repack_if_alldigits(u,1);

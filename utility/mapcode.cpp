@@ -27,11 +27,15 @@
  *   and their Mapcodes, wrapped as a grid around the Earth;
  *
  * - a number of "random uniformly distributed" coordinates, which forms a set of
- *   random coordiantes on the surface of Earth; or
+ *   random coordinates on the surface of Earth; or
  *
  * - a set which consists of typical Mapcode "boundaries" and "edge cases", based
  *   on the internal implementation of the boundaries database of the Mapcode
  *   implementation.
+ *
+ * If the executable is named mapcode_debug, the self-checking mechanism is
+ * activated. Note, however, that the self checks may fail for certain decodes
+ * even though the decodes are OK.
  */
 
 #include <stdio.h>
@@ -42,11 +46,10 @@
 #define my_isnan(x) (false)
 #define my_round(x) ((long) (floor((x) + 0.5)))
 
-static const int    SELF_CHECK          = 0;
-static const int    SELF_CHECK_EXIT     = 0;
+static int          selfCheckEnabled = 0;
 
-static const int    NORMAL_ERROR    = 1;
-static const int    INTERNAL_ERROR  = 2;
+static const int    NORMAL_ERROR     = 1;
+static const int    INTERNAL_ERROR   = 2;
 
 /**
  * Some global constants to be used.
@@ -74,7 +77,7 @@ static double   lonLargestNrOfResults   = 0.0;
  * whenever a incorrect amount or combination of parameters is entered.
  */
 static void usage(const char* appName) {
-    printf("MAPCODE (version %s%s)\n", mapcode_cversion, SELF_CHECK ? ", self-checking" : "");
+    printf("MAPCODE (version %s)\n", mapcode_cversion);
     printf("Copyright (C) 2014-2015 Stichting Mapcode Foundation\n");
     printf("\n");
     printf("Usage:\n");
@@ -201,7 +204,7 @@ static void selfCheckLatLonToMapcode(const double lat, double lon, const char* t
         fprintf(stderr, "error: encoding lat/lon to mapcode failure; "
             "cannot encode lat=%f, lon=%f (default territory=%s)\n",
             lat, lon, territory);
-        if (SELF_CHECK_EXIT) {
+        if (selfCheckEnabled) {
             exit(INTERNAL_ERROR);
         }
         return;
@@ -228,7 +231,7 @@ static void selfCheckLatLonToMapcode(const double lat, double lon, const char* t
             "mapcode '%s %s' decodes to lat=%f(%f), lon=%f(%f), "
             "which does not encode back to '%s %s'\n",
             territory, mapcode, lat, limitLat, lon, limitLon, territory, mapcode);
-        if (SELF_CHECK_EXIT) {
+        if (selfCheckEnabled) {
             exit(INTERNAL_ERROR);
         }
         return;
@@ -249,7 +252,7 @@ static void selfCheckMapcodeToLatLon(const char* territory, const char* mapcode,
     if (err != 0) {
         fprintf(stderr, "error: decoding mapcode to lat/lon failure; "
             "cannot decode '%s %s')\n", territory, mapcode);
-        if (SELF_CHECK_EXIT) {
+        if (selfCheckEnabled) {
             exit(INTERNAL_ERROR);
         }
         return;
@@ -264,7 +267,7 @@ static void selfCheckMapcodeToLatLon(const char* territory, const char* mapcode,
             "lat=%f, lon=%f produces mapcode %s %s, "
             "which decodes to lat=%f (delta=%f), lon=%f (delta=%f)\n",
             lat, lon, territory, mapcode, foundLat, deltaLat, foundLon, deltaLon);
-        if (SELF_CHECK_EXIT) {
+        if (selfCheckEnabled) {
             exit(INTERNAL_ERROR);
         }
         return;
@@ -348,7 +351,7 @@ static void generateAndOutputMapcodes(double lat, double lon, int iShowError, in
         printf("%s %s\n", foundTerritory, foundMapcode);
 
         // Self-checking code to see if encoder produces this Mapcode for the lat/lon.
-        if (SELF_CHECK) {
+        if (selfCheckEnabled) {
             selfCheckLatLonToMapcode(lat, lon, foundTerritory, foundMapcode, extraDigits);
             selfCheckMapcodeToLatLon(foundTerritory, foundMapcode, lat, lon);
         }
@@ -419,6 +422,10 @@ int main(const int argc, const char** argv)
 
     // Provide usage message if no arguments specified.
     const char* appName = argv[0];
+    selfCheckEnabled = (strstr(appName, "debug") != 0);
+    if (selfCheckEnabled) {
+        fprintf(stderr, "(debug mode: self checking enabled)\n");
+    }
     if (argc < 2) {
         usage(appName);
         return NORMAL_ERROR;
@@ -459,7 +466,7 @@ int main(const int argc, const char** argv)
             printf("%f %f\n", lat, lon);
 
             // Self-checking code to see if encoder produces this Mapcode for the lat/lon.
-            if (SELF_CHECK) {
+            if (selfCheckEnabled) {
                 const char* suffix = strstr(mapcode, "-");
                 extraDigits = 0;
                 if (suffix != 0) {
@@ -524,7 +531,7 @@ int main(const int argc, const char** argv)
             printf("%s %s\n", foundTerritory, foundMapcode);
 
             // Self-checking code to see if decoder produces the lat/lon for all of these Mapcodes.
-            if (SELF_CHECK) {
+            if (selfCheckEnabled) {
                 selfCheckMapcodeToLatLon(foundTerritory, foundMapcode, lat, lon);
             }
         }

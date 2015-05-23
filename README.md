@@ -46,6 +46,13 @@ decode Mapcodes.
 
 ## Release Notes
 
+* 1.50.1
+
+    Bug fix for state IN-DD (in India).
+    
+    If the executable name contains "debug", the self checking mechanism is activated. Note, however, that
+    this feature is under construction and produces false negative for certain decodes. 
+    
 * 1.50
 
     Major release. This version is not backwards compatible with mapcode 1.4x: is has dropped support for

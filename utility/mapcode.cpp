@@ -86,7 +86,7 @@ static void usage(const char* appName) {
     printf("       Decode a mapcode to a lat/lon. The default territory code is used if\n");
     printf("       the mapcode is a shorthand local code\n");
     printf("\n");
-    printf("    %s [-e[0-2] | --encode[0-2]] <lat:-90..90> <lon:-180..180> [territory]>\n", appName);
+    printf("    %s [-e[0-8] | --encode[0-8]] <lat:-90..90> <lon:-180..180> [territory]>\n", appName);
     printf("\n");
     printf("       Encode a lat/lon to a mapcode. If the territory code is specified, the\n");
     printf("       encoding will only succeeed if the lat/lon is located in the territory.\n");
@@ -101,7 +101,7 @@ static void usage(const char* appName) {
     printf("       as a fixed 3D grid or random uniformly distributed set of lat/lons with their\n");
     printf("       (x, y, z) coordinates and all mapcode aliases.\n");
     printf("\n");
-    printf("       <extraDigits>: 0, 1, 2; specifies additional accuracy, use 0 for standard.\n");
+    printf("       <extraDigits>: 0-8; specifies additional accuracy, use 0 for standard.\n");
     printf("       <seed> is an optional random seed, use 0 for arbitrary>.\n");
     printf("       (You may wish to specify a specific seed to regenerate test cases).\n");
     printf("\n");
@@ -202,7 +202,7 @@ static void selfCheckLatLonToMapcode(const double lat, double lon, const char* t
     const int nrResults = encodeLatLonToMapcodes(results, limitLat, limitLon, context, extraDigits);
     if (nrResults <= 0) {
         fprintf(stderr, "error: encoding lat/lon to mapcode failure; "
-            "cannot encode lat=%f, lon=%f (default territory=%s)\n",
+            "cannot encode lat=%.12g, lon=%.12g (default territory=%s)\n",
             lat, lon, territory);
         if (selfCheckEnabled) {
             exit(INTERNAL_ERROR);
@@ -228,7 +228,7 @@ static void selfCheckLatLonToMapcode(const double lat, double lon, const char* t
     }
     if (!found) {
         fprintf(stderr, "error: encoding lat/lon to mapcode failure; "
-            "mapcode '%s %s' decodes to lat=%f(%f), lon=%f(%f), "
+            "mapcode '%s %s' decodes to lat=%.12g(%.12g), lon=%.12g(%.12g), "
             "which does not encode back to '%s %s'\n",
             territory, mapcode, lat, limitLat, lon, limitLon, territory, mapcode);
         if (selfCheckEnabled) {
@@ -264,8 +264,8 @@ static void selfCheckMapcodeToLatLon(const char* territory, const char* mapcode,
     }
     if ((deltaLat > DELTA) || (deltaLon > DELTA)) {
         fprintf(stderr, "error: decoding mapcode to lat/lon failure; "
-            "lat=%f, lon=%f produces mapcode %s %s, "
-            "which decodes to lat=%f (delta=%f), lon=%f (delta=%f)\n",
+            "lat=%.12g, lon=%.12g produces mapcode %s %s, "
+            "which decodes to lat=%.12g (delta=%.12g), lon=%.12g (delta=%.12g)\n",
             lat, lon, territory, mapcode, foundLat, deltaLat, foundLon, deltaLon);
         if (selfCheckEnabled) {
             exit(INTERNAL_ERROR);
@@ -389,9 +389,9 @@ static void outputStatistics() {
     fprintf(stderr, "\nStatistics:\n");
     fprintf(stderr, "Total number of 3D points generated     = %d\n", totalNrOfPoints);
     fprintf(stderr, "Total number of mapcodes generated      = %d\n", totalNrOfResults);
-    fprintf(stderr, "Average number of mapcodes per 3D point = %f\n",
+    fprintf(stderr, "Average number of mapcodes per 3D point = %.12g\n",
         ((float) totalNrOfResults) / ((float) totalNrOfPoints));
-    fprintf(stderr, "Largest number of results for 1 mapcode = %d at (%f, %f)\n",
+    fprintf(stderr, "Largest number of results for 1 mapcode = %d at (%.12g, %.12g)\n",
         largestNrOfResults, latLargestNrOfResults, lonLargestNrOfResults);
 }
 
@@ -463,7 +463,7 @@ int main(const int argc, const char** argv)
             }
 
             // Output the decoded lat/lon.
-            printf("%f %f\n", lat, lon);
+            printf("%.12g %.12g\n", lat, lon);
 
             // Self-checking code to see if encoder produces this Mapcode for the lat/lon.
             if (selfCheckEnabled) {
@@ -478,11 +478,17 @@ int main(const int argc, const char** argv)
     }
     else if ((strcmp(cmd, "-e") == 0) || (strcmp(cmd, "-e0") == 0) ||
         (strcmp(cmd, "-e1") == 0) || (strcmp(cmd, "-e2") == 0) ||
+        (strcmp(cmd, "-e3") == 0) || (strcmp(cmd, "-e4") == 0) ||
+        (strcmp(cmd, "-e5") == 0) || (strcmp(cmd, "-e6") == 0) ||
+        (strcmp(cmd, "-e7") == 0) || (strcmp(cmd, "-e8") == 0) ||
         (strcmp(cmd, "--encode") == 0) || (strcmp(cmd, "--encode0") == 0) ||
-        (strcmp(cmd, "--encode1") == 0) || (strcmp(cmd, "--encode2") == 0)) {
+        (strcmp(cmd, "--encode1") == 0) || (strcmp(cmd, "--encode2") == 0) ||
+        (strcmp(cmd, "--encode3") == 0) || (strcmp(cmd, "--encode4") == 0) ||
+        (strcmp(cmd, "--encode5") == 0) || (strcmp(cmd, "--encode5") == 0) ||
+        (strcmp(cmd, "--encode7") == 0) || (strcmp(cmd, "--encode8") == 0)) {
 
         // ------------------------------------------------------------------
-        // Encode: [-e[0-2] | --encode[0-2]] <lat:-90..90> <lon:-180..180> [territory]>
+        // Encode: [-e[0-8] | --encode[0-8]] <lat:-90..90> <lon:-180..180> [territory]>
         // ------------------------------------------------------------------
         if ((argc != 4) && (argc != 5)) {
             fprintf(stderr, "error: incorrect number of arguments\n\n");
@@ -503,6 +509,24 @@ int main(const int argc, const char** argv)
         else if (strstr(cmd, "-e2") || strstr(cmd, "--encode2")) {
             extraDigits = 2;
         }
+        else if (strstr(cmd, "-e3") || strstr(cmd, "--encode3")) {
+            extraDigits = 3;
+        }
+        else if (strstr(cmd, "-e4") || strstr(cmd, "--encode4")) {
+            extraDigits = 4;
+        }
+        else if (strstr(cmd, "-e5") || strstr(cmd, "--encode5")) {
+            extraDigits = 5;
+        }
+        else if (strstr(cmd, "-e6") || strstr(cmd, "--encode6")) {
+            extraDigits = 6;
+        }
+        else if (strstr(cmd, "-e7") || strstr(cmd, "--encode7")) {
+            extraDigits = 7;
+        }
+        else if (strstr(cmd, "-e8") || strstr(cmd, "--encode8")) {
+            extraDigits = 8;
+        }
         else {
             extraDigits = 0;
         }
@@ -519,7 +543,7 @@ int main(const int argc, const char** argv)
         char* results[MAX_NR_OF_MAPCODE_RESULTS];
         const int nrResults = encodeLatLonToMapcodes(results, lat, lon, context, extraDigits);
         if (nrResults <= 0) {
-            fprintf(stderr, "error: cannot encode lat=%f, lon=%f (default territory=%s)\n",
+            fprintf(stderr, "error: cannot encode lat=%.12g, lon=%.12g (default territory=%s)\n",
                 lat, lon, defaultTerritory);
             return NORMAL_ERROR;
         }
@@ -648,7 +672,6 @@ int main(const int argc, const char** argv)
 
         // Statistics.
         resetStatistics(nrOfPoints);
-        int totalNrOfResults = 0;
 
         int gridX = 0;
         int gridY = 0;

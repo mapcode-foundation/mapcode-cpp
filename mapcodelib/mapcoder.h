@@ -18,8 +18,12 @@
 #define UWORD           unsigned short int  // 2-byte unsigned integer.
 #define SUPPORT_FOREIGN_ALPHABETS
 
-#define MAX_NR_OF_MAPCODE_RESULTS           48          // Max. number of results returned by encoder.
-#define MAX_MAPCODE_RESULT_LEN              24          // Max. number of characters in a single result.
+#define MAX_NR_OF_MAPCODE_RESULTS           48          // Max. number of results ever returned by encoder.
+#define MAX_PROPER_MAPCODE_LEN              10          // Max. number of characters in a proper mapcode
+#define MAX_PRECISION_DIGITS                8           // Max. number of extension characters (excluding the hyphen)
+#define MAX_ISOCODE_LEN                     7           // Max. number of characters of a valid territory code (RUS-KAM)
+#define MAX_CLEAN_MAPCODE_LEN               (MAX_PROPER_MAPCODE_LEN + 1 + MAX_PRECISION_DIGITS)  // Max. number of characters in a clean mapcode.
+#define MAX_MAPCODE_RESULT_LEN              (MAX_ISOCODE_LEN + MAX_CLEAN_MAPCODE_LEN + 2)        // Max. number of characters to store a single result (*including* zero-terminator).
 #define COMPARE_MAPCODE_MISSING_CHARACTERS  -999        // Used for compareWithMapcodeFormat.
 
 /**
@@ -213,6 +217,12 @@ const char* decodeToRoman(const UWORD* string);
  */
 const UWORD* encodeToAlphabet(const char* mapcode, int alphabet);
 
+
+/**
+ * list of #defines to support legacy systems
+ */
+/*
+*/
 
 /**
  * list of #defines to support legacy systems

@@ -573,8 +573,8 @@ int main(const int argc, const char** argv)
         }
         if (argc == 3) {
             extraDigits = atoi(argv[2]);
-            if ((extraDigits < 0) || (extraDigits> 2)) {
-                fprintf(stderr, "error: parameter extraDigits must be in [0..2]\n\n");
+            if ((extraDigits < 0) || (extraDigits> 8)) {
+                fprintf(stderr, "error: parameter extraDigits must be in [0..8]\n\n");
                 usage(appName);
                 return NORMAL_ERROR;
             }
@@ -652,8 +652,8 @@ int main(const int argc, const char** argv)
         }
         if (argc >= 4) {
             extraDigits = atoi(argv[3]);
-            if ((extraDigits < 0) || (extraDigits > 2)) {
-                fprintf(stderr, "error: parameter extraDigits must be in [0..2]\n\n");
+            if ((extraDigits < 0) || (extraDigits > 8)) {
+                fprintf(stderr, "error: parameter extraDigits must be in [0..8]\n\n");
                 usage(appName);
                 return NORMAL_ERROR;
             }

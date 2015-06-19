@@ -323,15 +323,15 @@ static double extrax,extray;
 static void decodeExtension(long *nx,long *ny, long dividerx4,long dividery,int ydirection) // add extra precision to a coordinate based on extra chars
 {
 #ifndef VERSION160 // old integer-arithmetic version
-  // long extrax,extray;
+  long extrax,extray;
   if (*extrapostfix) {
     int column1,row1,column2,row2,c1,c2;
     c1 = extrapostfix[0];
-    c1 = decode_chars[c1];
+    c1 = decode_chars[(unsigned int)c1];
     if (c1<0) c1=0; else if (c1>29) c1=29;
     row1 =(c1/5); column1 = (c1%5);
     c2 = (extrapostfix[1]) ? extrapostfix[1] : 72; // 72='H'=code 15=(3+2*6)
-    c2 = decode_chars[c2];
+    c2 = decode_chars[(unsigned int)c2];
     if (c2<0) c2=0; else if (c2>29) c2=29;
     row2 =(c2/6); column2 = (c2%6);
 
@@ -356,11 +356,11 @@ static void decodeExtension(long *nx,long *ny, long dividerx4,long dividery,int 
     int column1,row1,column2,row2;
     double halfcolumn=0;
     int c1 = *extrapostfix++;
-    c1 = decode_chars[c1];
+    c1 = decode_chars[(unsigned int)c1];
     if (c1<0) c1=0; else if (c1>29) c1=29;
     row1 =(c1/5); column1 = (c1%5);
     if (*extrapostfix) {
-      int c2 = decode_chars[(int)*extrapostfix++];
+      int c2 = decode_chars[(unsigned int)*extrapostfix++];
       if (c2<0) c2=0; else if (c2>29) c2=29;
       row2 =(c2/6); column2 = (c2%6);
     }
@@ -458,7 +458,7 @@ static long decodeBase31( const char *code )
   long value=0;
   while (*code!='.' && *code!=0 )
   {
-    value = value*31 + decode_chars[(int)*code++];
+    value = value*31 + decode_chars[(unsigned int)*code++];
   }
   return value;
 }
@@ -488,7 +488,7 @@ static void encode_triple( char *result, long difx,long dify )
 static void decode_triple( const char *result, long *difx, long *dify )
 {
       // decode the first character
-      int c1 = decode_chars[(int)*result++];
+      int c1 = decode_chars[(unsigned int)*result++];
       if ( c1<24 )
       {
         long m = decodeBase31(result);
@@ -999,7 +999,7 @@ static int decodeNameless( const char *orginput, long *x, long *y,         int i
     // now determine X = index of first area, and SIDE
     if ( codex!=21 && A<=31 )
     {
-      int offset = decode_chars[(int)*result];
+      int offset = decode_chars[(unsigned int)*result];
 
       if ( offset < r*(p+1) )
       {
@@ -1014,7 +1014,7 @@ static int decodeNameless( const char *orginput, long *x, long *y,         int i
     else if ( codex!=21 && A<62 )
     {
 
-      X = decode_chars[(int)*result];
+      X = decode_chars[(unsigned int)*result];
       if ( X < (62-A) )
       {
         swapletters=(codex==22);
@@ -1165,7 +1165,7 @@ static int unpack_if_alldigits(char *input) // returns 1 if unpacked, 0 if left 
       break;
     else if (*s=='.' && !dotpos)
       dotpos=s;
-    else if ( decode_chars[(int)*s]<0 || decode_chars[(int)*s]>9 )
+    else if ( decode_chars[(unsigned int)*s]<0 || decode_chars[(unsigned int)*s]>9 )
       return 0;  // nondigit, so stop
   }
 
@@ -1173,7 +1173,7 @@ static int unpack_if_alldigits(char *input) // returns 1 if unpacked, 0 if left 
   {
       if (aonly) // v1.50 encoded only with A's
       {
-        int v = (s[0]=='A' || s[0]=='a' ? 31 : decode_chars[(int)s[0]]) * 32 + (s[1]=='A' || s[1]=='a' ? 31 : decode_chars[(int)s[1]]);
+        int v = (s[0]=='A' || s[0]=='a' ? 31 : decode_chars[(unsigned int)s[0]]) * 32 + (s[1]=='A' || s[1]=='a' ? 31 : decode_chars[(unsigned int)s[1]]);
         *input  = '0'+(v/100);
         s[0]= '0'+((v/10)%10);
         s[1]= '0'+(v%10);
@@ -1191,13 +1191,13 @@ static int unpack_if_alldigits(char *input) // returns 1 if unpacked, 0 if left 
       if (*e=='a' || *e=='A') v+=31;
       else if (*e=='e' || *e=='E') v+=32;
       else if (*e=='u' || *e=='U') v+=33;
-      else if (decode_chars[(int)*e]<0) return -9; // invalid last character!
-      else v+=decode_chars[(int)*e];
+      else if (decode_chars[(unsigned int)*e]<0) return -9; // invalid last character!
+      else v+=decode_chars[(unsigned int)*e];
 
       if (v<100)
       {
-        *s = encode_chars[(int)v/10];
-        *e = encode_chars[(int)v%10];
+        *s = encode_chars[(unsigned int)v/10];
+        *e = encode_chars[(unsigned int)v%10];
       }
       return 1;
     }
@@ -1430,9 +1430,9 @@ static int master_decode(  long *nx,long *ny, // <- store result in nx,ny
     {
       if (*s=='.')
         { if (dot) return -5; else dot=s; }
-      else if ( decode_chars[(int)*s]<0 )
+      else if ( decode_chars[(unsigned int)*s]<0 )
         return -4; // invalid char
-      else if ( decode_chars[(int)*s]<10 ) // digit?
+      else if ( decode_chars[(unsigned int)*s]<10 ) // digit?
         nrd++;
     }
     if (dot==NULL)
@@ -2721,7 +2721,7 @@ int encodeLatLonToMapcodes_full( char **v, double lat, double lon, int tc, int s
     int i;
     for(i=0;i<MAX_MAPCODE_TERRITORY_CODE;i++) {
       master_encode(NULL,i,lon32,lat32,-1,stop_with_one_result,0,0); // 1.29 - also add parents recursively
-      if ((stop_with_one_result||debugStopAt) && nr_global_results>0) break;
+      if ((stop_with_one_result||debugStopAt>=0) && nr_global_results>0) break;
     }
   }
   else

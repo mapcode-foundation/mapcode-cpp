@@ -274,39 +274,6 @@ static void selfCheckMapcodeToLatLon(const char* territory, const char* mapcode,
     }
 }
 
-
-
-/**
- * The method asCoordinate() generates and returns a printable coordinate
- * precisely as it would be interpreted internally by mapcode encoding
- * (i.e. correctly rounded to the nearest one-millionth of a degree).
- * As target, pass a buffer for at least 12 characters (including zero termination).
- * If target = 0, an internal scratch buffer is used (the THIRD call will
- * overwrite the first call).
- */
-static char asCoordinateBuffer[24];
-static int ascoptr;
-static const char* asCoordinate(double coord, char* target)
-{
-    long c = (long) ((coord * 1000000) + ((coord < 0) ? -0.5 : 0.5));
-    int negative = (c < 0);
-    if (negative) {
-        c = -c;
-    }
-    if (target == 0) {
-        ascoptr= ((ascoptr != 0) ? 0 : 12);
-        target = &asCoordinateBuffer[ascoptr];
-    }
-    sprintf(target,"%s%d.%06d", (negative ? "-" : ""), (int) (c / 1000000), (int) (c % 1000000));
-    return target;
-}
-
-
-/**
- * The method printMapcode() generates and outputs Mapcodes for a lat/lon pair.
- * If iShowError != 0, then encoding errors are output to stderr, otherwise they
- * are ignored.
- */
 static void generateAndOutputMapcodes(double lat, double lon, int iShowError, int extraDigits, int useXYZ) {
 
     char* results[MAX_NR_OF_MAPCODE_RESULTS];
@@ -328,7 +295,7 @@ static void generateAndOutputMapcodes(double lat, double lon, int iShowError, in
     const int nrResults = encodeLatLonToMapcodes(results, lat, lon, context, extraDigits);
     if (nrResults <= 0) {
         if (iShowError) {
-            fprintf(stderr, "error: cannot encode lat=%s, lon=%s)\n", asCoordinate(lat, 0), asCoordinate(lon, 0));
+            fprintf(stderr, "error: cannot encode lat=%.12g, lon=%.12g)\n", lat, lon);
             exit(NORMAL_ERROR);
         }
     }
@@ -338,10 +305,10 @@ static void generateAndOutputMapcodes(double lat, double lon, int iShowError, in
         double y;
         double z;
         convertLatLonToXYZ(lat, lon, &x, &y, &z);
-        printf("%d %s %s %lf %lf %lf\n", nrResults, asCoordinate(lat, 0), asCoordinate(lon, 0), x, y, z);
+        printf("%d %.12g %.12g %.12g %.12g %.12g\n", nrResults, lat, lon, x, y, z);
     }
     else {
-        printf("%d %s %s\n", nrResults, asCoordinate(lat, 0), asCoordinate(lon, 0));
+        printf("%d %.12g %.12g\n", nrResults, lat, lon);
     }
     for (int j = 0; j < nrResults; ++j) {
         const char* foundMapcode = results[(j * 2)];

@@ -18,19 +18,60 @@
 #define UWORD           unsigned short int  // 2-byte unsigned integer.
 #define SUPPORT_FOREIGN_ALPHABETS
 
-#define MAX_NR_OF_MAPCODE_RESULTS           48          // Max. number of results ever returned by encoder.
-#define MAX_PROPER_MAPCODE_LEN              10          // Max. number of characters in a proper mapcode
+#define MAX_NR_OF_MAPCODE_RESULTS           21          // Max. number of results ever returned by encoder (e.g. for 26.904899, 95.138515).
+#define MAX_PROPER_MAPCODE_LEN              10          // Max. number of characters in a proper mapcode (including the dot)
 #define MAX_PRECISION_DIGITS                8           // Max. number of extension characters (excluding the hyphen)
-#define MAX_ISOCODE_LEN                     7           // Max. number of characters of a valid territory code (RUS-KAM)
-#define MAX_CLEAN_MAPCODE_LEN               (MAX_PROPER_MAPCODE_LEN + 1 + MAX_PRECISION_DIGITS)  // Max. number of characters in a clean mapcode.
-#define MAX_MAPCODE_RESULT_LEN              (MAX_ISOCODE_LEN + MAX_CLEAN_MAPCODE_LEN + 2)        // Max. number of characters to store a single result (*including* zero-terminator).
+#define MAX_ISOCODE_LEN                     7           // Max. number of characters of a valid territory code; although nothing longer than SIX characters is ever generated (RU-KAM), users can input SEVEN characters (RUS-KAM)
+#define MAX_CLEAN_MAPCODE_LEN               (MAX_PROPER_MAPCODE_LEN + 1 + MAX_PRECISION_DIGITS)  // Max. number of characters in a clean mapcode (excluding zero-terminator)
+#define MAX_MAPCODE_RESULT_LEN              (MAX_ISOCODE_LEN + 1 + MAX_CLEAN_MAPCODE_LEN + 1)    // Max. number of characters to store a single result (including zero-terminator).
 #define COMPARE_MAPCODE_MISSING_CHARACTERS  -999        // Used for compareWithMapcodeFormat.
+
+
+/**
+ * The type Mapcodes hold a number of mapcodes, for example from an encoding call.
+ * If a result contains a space, it splits the territory alphacode from the mapcode.
+ * International mapcodes do not specify a territory alphacode, nor a space.
+ */
+typedef struct {
+  int count;                                                        // The number of mapcode results (length of array).
+  char mapcode[MAX_NR_OF_MAPCODE_RESULTS][MAX_MAPCODE_RESULT_LEN];  // The mapcodes.
+} Mapcodes;
+
 
 /**
  * Encode a latitude, longitude pair (in degrees) to a set of Mapcodes.
  *
  * Arguments:
- *      results         - Results set of Mapcodes. The caller must pass an array of at least MAX_NR_OF_MAPCODE_RESULTS
+ *      mapcodes        - a pointer to an Mapcodes, allocated by the caller.
+ *      lat             - Latitude, in degrees. Range: -90..90.
+ *      lon             - Longitude, in degrees. Range: -180..180.
+ *      territoryCode   - Territory code (obtained from convertTerritoryIsoNameToCode), used as encoding context.
+ *                        Pass 0 to get Mapcodes for all territories.
+ *      extraDigits     - Number of extra "digits" to add to the generated mapcode. The preferred default is 0.
+ *                        Other valid values are 1 and 2, which will add extra letters to the mapcodes to
+ *                        make them represent the coordinate more accurately.
+ *
+ * Returns:
+ *      Number of results stored in parameter results. Always >= 0 (0 if no encoding was possible or an error occurred).
+ *      The results are stored as pairs (Mapcode, territory name) in:
+ *          (results[0], results[1])...(results[(2 * N) - 2], results[(2 * N) - 1])
+ */
+
+int encodeLatLonToMapcodes(
+    Mapcodes* mapcodes,
+    double lat,
+    double lon,
+    int tc,
+    int extraDigits);
+
+/**
+ * WARNING: This method is deprecated and should no longer be used, as it is not thread-safe. Use the version
+ * specified above.
+ *
+ * Encode a latitude, longitude pair (in degrees) to a set of Mapcodes. Not thread-safe!
+ *
+ * Arguments:
+ *      results         - Results set of Mapcodes. The caller must pass an array of at least 2 * MAX_NR_OF_MAPCODE_RESULTS
  *                        string points, which must NOT be allocated or de-allocated by the caller.
  *                        The resulting strings are statically allocated by the library and will be overwritten
  *                        by the next call to this method!
@@ -47,7 +88,7 @@
  *      The results are stored as pairs (Mapcode, territory name) in:
  *          (results[0], results[1])...(results[(2 * N) - 2], results[(2 * N) - 1])
  */
-int encodeLatLonToMapcodes(
+int encodeLatLonToMapcodes(     // Warning: this method is deprecated and not thread-safe.
     char**  results,
     double  lat,
     double  lon,
@@ -135,13 +176,19 @@ int convertTerritoryIsoNameToCode(
  * Convert a territory name to a territory code.
  *
  * Arguments:
+ *      result          - String to store result
  *      territoryCode   - Territory code.
  *      format          - Pass 0 for full name, 1 for short name (state codes may be ambiguous).
  *
  * Returns:
- *      Static result string or 0 if failed. The string is allocated by the library and must NOT be
- *      de-allocated by the caller. It will be overwritten by a subsequent call to this method!
+ *      Pointer to result. Empty if territoryCode illegal.
  */
+char* getTerritoryIsoName(
+    char *result,
+    int tc,
+    int format);
+
+// the old, non-threadsafe routine which uses static storage, overwritten at each call:
 const char *convertTerritoryCodeToIsoName(
     int territoryCode,
     int format);
@@ -168,7 +215,7 @@ int getCountryOrParentCountry(int territoryCode);
  * Returns:
  *      Territory code of the parent country; <0 if the territoryCode was not a state or it was invalid.
  */
-int getParentCountryOfState(int territoryCode);
+int getParentCountryOf(int territoryCode);
 
 /**
  * Alphabets:
@@ -195,10 +242,17 @@ int getParentCountryOfState(int territoryCode);
  * Decode a string to Roman characters.
  *
  * Arguments:
- *      string - String to decode.
+ *      string   - String to decode.
+ *      asciibuf - Buffer to be filled with the result
+ *      maxlen   - Size of asciibuf
  *
  * Returns:
- *      Decoded string. The string is allocated by the library and must NOT be
+ *      pointer to asciibuf, which holds the result
+ */
+char *convertToRoman(char *asciibuf, int maxlen, const UWORD* string);
+/**
+ * old variant, not thread-safe: uses a pre-allocated static buffer, overwritten by the next call
+ *      Returns converted string. allocated by the library. String must NOT be
  *      de-allocated by the caller. It will be overwritten by a subsequent call to this method!
  */
 const char* decodeToRoman(const UWORD* string);
@@ -207,15 +261,25 @@ const char* decodeToRoman(const UWORD* string);
  * Encode a string to Alphabet characters for a language.
  *
  * Arguments:
- *      string      - String to encode.
- *      alphabet    - Alphabet to use. Currently supported are:
+ *      string     - String to encode.
+ *      alphabet   - Alphabet to use. Currently supported are:
  *                      0 = roman, 2 = cyrillic, 4 = hindi, 12 = gurmukhi.
+ *      unibuf     - Buffer to be filled with the result
+ *      maxlen     - Size of unibuf
+ *
  *
  * Returns:
  *      Encoded string. The string is allocated by the library and must NOT be
  *      de-allocated by the caller. It will be overwritten by a subsequent call to this method!
  */
-const UWORD* encodeToAlphabet(const char* mapcode, int alphabet);
+UWORD* convertToAlphabet(UWORD* unibuf, int maxlength, const char *string,int alphabet);
+
+/**
+ * old variant, not thread-safe: uses a pre-allocated static buffer, overwritten by the next call
+ *      Returns converted string. allocated by the library. String must NOT be
+ *      de-allocated by the caller. It will be overwritten by a subsequent call to this method!
+ */
+const UWORD* encodeToAlphabet(const char* string, int alphabet);
 
 
 /**
@@ -227,14 +291,14 @@ const UWORD* encodeToAlphabet(const char* mapcode, int alphabet);
 /**
  * list of #defines to support legacy systems
  */
-#define coord2mc(results,lat,lon,territoryCode)  encodeLatLonToMapcodes(results,lat,lon,territoryCode,0)
-#define coord2mc1(results,lat,lon,territoryCode) encodeLatLonToSingleMapcode(results,lat,lon,territoryCode,0)
+#define coord2mc(results, lat, lon, territoryCode)  encodeLatLonToMapcodes(results, lat, lon,territoryCode, 0)
+#define coord2mc1(results, lat, lon, territoryCode) encodeLatLonToSingleMapcode(results, lat, lon, territoryCode, 0)
 #define mc2coord decodeMapcodeToLatLon
 #define lookslikemapcode compareWithMapcodeFormat
 #define text2tc convertTerritoryIsoNameToCode
 #define tc2text convertTerritoryCodeToIsoName
 #define tccontext getCountryOrParentCountry
-#define tcparent getParentCountryOfState
+#define tcparent getParentCountryOf
 #define decode_to_roman decodeToRoman
 #define encode_to_alphabet encodeToAlphabet
 #define MAX_MAPCODE_TERRITORY_CODE MAX_CCODE

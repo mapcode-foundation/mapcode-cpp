@@ -46,6 +46,12 @@ decode Mapcodes.
 
 ## Release Notes
 
+* 2.0
+
+    Support for up to 8 character extensions (10 micron accuracy).
+    
+    Fixes to the data rectangles for ISO proposal, see Word document for details.
+
 * 1.50.1
 
     Bug fix for state IN-DD (in India).

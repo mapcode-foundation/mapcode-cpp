@@ -196,7 +196,7 @@ static void convertLatLonToXYZ(double latDeg, double lonDeg, double* x, double* 
  */
 static void selfCheckLatLonToMapcode(const double lat, double lon, const char* territory, const char* mapcode, int extraDigits) {
     int context = convertTerritoryIsoNameToCode(territory, 0);
-    char* results[MAX_NR_OF_MAPCODE_RESULTS];
+    char* results[2 * MAX_NR_OF_MAPCODE_RESULTS];
     const double limitLat = (lat < -90.0) ? -90.0 : ((lat > 90.0) ? 90.0 : lat);
     const double limitLon = (lon < -180.0) ? -180.0 : ((lon > 180.0) ? 180.0 : lon);
     const int nrResults = encodeLatLonToMapcodes(results, limitLat, limitLon, context, extraDigits);
@@ -276,7 +276,7 @@ static void selfCheckMapcodeToLatLon(const char* territory, const char* mapcode,
 
 static void generateAndOutputMapcodes(double lat, double lon, int iShowError, int extraDigits, int useXYZ) {
 
-    char* results[MAX_NR_OF_MAPCODE_RESULTS];
+    char* results[2 * MAX_NR_OF_MAPCODE_RESULTS];
     int context = 0;
 
     while (lon > 180) {
@@ -507,7 +507,7 @@ int main(const int argc, const char** argv)
         }
 
         // Encode the lat/lon to a set of Mapcodes.
-        char* results[MAX_NR_OF_MAPCODE_RESULTS];
+        char* results[2 * MAX_NR_OF_MAPCODE_RESULTS];
         const int nrResults = encodeLatLonToMapcodes(results, lat, lon, context, extraDigits);
         if (nrResults <= 0) {
             fprintf(stderr, "error: cannot encode lat=%.12g, lon=%.12g (default territory=%s)\n",
@@ -642,7 +642,7 @@ int main(const int argc, const char** argv)
 
         int gridX = 0;
         int gridY = 0;
-        int line = my_round(sqrt((double)totalNrOfPoints));
+        int line = my_round(sqrt((double) totalNrOfPoints));
         for (int i = 0; i < totalNrOfPoints; ++i) {
             double lat;
             double lon;

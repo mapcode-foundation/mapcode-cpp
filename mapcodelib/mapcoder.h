@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-#define RELEASENEAT                         // Use clean code (mapcoder.c).
-#define UWORD           unsigned short int  // 2-byte unsigned integer.
-#define SUPPORT_FOREIGN_ALPHABETS
+#define UWORD                               unsigned short int  // 2-byte unsigned integer.
+
+#define SUPPORT_FOREIGN_ALPHABETS           // Define to support additional alphabets.
+#define SUPPORT_HIGH_PRECISION              // Define to enable high-precision extension logic.
 
 #define MAX_NR_OF_MAPCODE_RESULTS           21          // Max. number of results ever returned by encoder (e.g. for 26.904899, 95.138515).
 #define MAX_PROPER_MAPCODE_LEN              10          // Max. number of characters in a proper mapcode (including the dot).
@@ -25,7 +26,6 @@
 #define MAX_CLEAN_MAPCODE_LEN               (MAX_PROPER_MAPCODE_LEN + 1 + MAX_PRECISION_DIGITS)  // Max. number of characters in a clean mapcode (excluding zero-terminator).
 #define MAX_MAPCODE_RESULT_LEN              (MAX_ISOCODE_LEN + 1 + MAX_CLEAN_MAPCODE_LEN + 1)    // Max. number of characters to store a single result (including zero-terminator).
 #define COMPARE_MAPCODE_MISSING_CHARACTERS  -999        // Used for compareWithMapcodeFormat.
-
 
 /**
  * The type Mapcodes hold a number of mapcodes, for example from an encoding call.
@@ -61,7 +61,7 @@ int encodeLatLonToMapcodes(
     Mapcodes* mapcodes,
     double lat,
     double lon,
-    int tc,
+    int territoryCode,
     int extraDigits);
 
 /**
@@ -88,7 +88,7 @@ int encodeLatLonToMapcodes(
  *      The results are stored as pairs (Mapcode, territory name) in:
  *          (results[0], results[1])...(results[(2 * N) - 2], results[(2 * N) - 1])
  */
-int encodeLatLonToMapcodes(     // Warning: this method is deprecated and not thread-safe.
+int encodeLatLonToMapcodes_Deprecated(     // Warning: this method is deprecated and not thread-safe.
     char**  results,
     double  lat,
     double  lon,
@@ -184,12 +184,12 @@ int convertTerritoryIsoNameToCode(
  *      Pointer to result. Empty if territoryCode illegal.
  */
 char* getTerritoryIsoName(
-    char *result,
-    int tc,
-    int format);
+    char*   result,
+    int     territoryCode,
+    int     format);
 
 // the old, non-threadsafe routine which uses static storage, overwritten at each call:
-const char *convertTerritoryCodeToIsoName(
+const char* convertTerritoryCodeToIsoName(
     int territoryCode,
     int format);
 
@@ -249,7 +249,7 @@ int getParentCountryOf(int territoryCode);
  * Returns:
  *      pointer to asciibuf, which holds the result
  */
-char *convertToRoman(char *asciibuf, int maxlen, const UWORD* string);
+char* convertToRoman(char* asciibuf, int maxlen, const UWORD* string);
 /**
  * old variant, not thread-safe: uses a pre-allocated static buffer, overwritten by the next call
  *      Returns converted string. allocated by the library. String must NOT be
@@ -272,7 +272,7 @@ const char* decodeToRoman(const UWORD* string);
  *      Encoded string. The string is allocated by the library and must NOT be
  *      de-allocated by the caller. It will be overwritten by a subsequent call to this method!
  */
-UWORD* convertToAlphabet(UWORD* unibuf, int maxlength, const char *string,int alphabet);
+UWORD* convertToAlphabet(UWORD* unibuf, int maxlength, const char* string, int alphabet);
 
 /**
  * old variant, not thread-safe: uses a pre-allocated static buffer, overwritten by the next call
@@ -283,15 +283,9 @@ const UWORD* encodeToAlphabet(const char* string, int alphabet);
 
 
 /**
- * list of #defines to support legacy systems
+ * List of #defines to support legacy systems.
  */
-/*
-*/
-
-/**
- * list of #defines to support legacy systems
- */
-#define coord2mc(results, lat, lon, territoryCode)  encodeLatLonToMapcodes(results, lat, lon,territoryCode, 0)
+#define coord2mc(results, lat, lon, territoryCode)  encodeLatLonToMapcodes_Deprecated(results, lat, lon,territoryCode, 0)
 #define coord2mc1(results, lat, lon, territoryCode) encodeLatLonToSingleMapcode(results, lat, lon, territoryCode, 0)
 #define mc2coord decodeMapcodeToLatLon
 #define lookslikemapcode compareWithMapcodeFormat

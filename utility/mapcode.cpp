@@ -202,7 +202,7 @@ static void selfCheckLatLonToMapcode(const double lat, double lon, const char* t
     char* results[2 * MAX_NR_OF_MAPCODE_RESULTS];
     const double limitLat = (lat < -90.0) ? -90.0 : ((lat > 90.0) ? 90.0 : lat);
     const double limitLon = (lon < -180.0) ? -180.0 : ((lon > 180.0) ? 180.0 : lon);
-    const int nrResults = encodeLatLonToMapcodes(results, limitLat, limitLon, context, extraDigits);
+    const int nrResults = encodeLatLonToMapcodes_Deprecated(results, limitLat, limitLon, context, extraDigits);
     if (nrResults <= 0) {
         fprintf(stderr, "error: encoding lat/lon to mapcode failure; "
             "cannot encode lat=%.12g, lon=%.12g (default territory=%s)\n",
@@ -225,9 +225,9 @@ static void selfCheckLatLonToMapcode(const double lat, double lon, const char* t
             ++foundTerritoryMin;
         }
 
-        found = (((strcasecmp(territory, foundTerritory) == 0) ||
-                    (strcasecmp(territory, foundTerritoryMin) == 0)) &&
-                (strcasecmp(mapcode, foundMapcode) == 0));
+        found = (((strcmp(territory, foundTerritory) == 0) ||
+                    (strcmp(territory, foundTerritoryMin) == 0)) &&
+                (strcmp(mapcode, foundMapcode) == 0));
     }
     if (!found) {
         fprintf(stderr, "error: encoding lat/lon to mapcode failure; "
@@ -295,17 +295,7 @@ static void generateAndOutputMapcodes(double lat, double lon, int iShowError, in
         lat += 180;
     }
 
-#ifndef SUPPORT_HIGH_PRECISION
-    {
-        // Need to truncate lat/lon to microdegrees.
-        long intLon = lon * 1000000.0;
-        long intLat = lat * 1000000.0;
-        lon = (intLon / 1000000.0);
-        lat = (intLat / 1000000.0);
-    }
-#endif
-
-    const int nrResults = encodeLatLonToMapcodes(results, lat, lon, context, extraDigits);
+    const int nrResults = encodeLatLonToMapcodes_Deprecated(results, lat, lon, context, extraDigits);
     if (nrResults <= 0) {
         if (iShowError) {
             fprintf(stderr, "error: cannot encode lat=%.12g, lon=%.12g)\n", lat, lon);
@@ -521,7 +511,7 @@ int main(const int argc, const char** argv)
 
         // Encode the lat/lon to a set of Mapcodes.
         char* results[2 * MAX_NR_OF_MAPCODE_RESULTS];
-        const int nrResults = encodeLatLonToMapcodes(results, lat, lon, context, extraDigits);
+        const int nrResults = encodeLatLonToMapcodes_Deprecated(results, lat, lon, context, extraDigits);
         if (nrResults <= 0) {
             fprintf(stderr, "error: cannot encode lat=%.12g, lon=%.12g (default territory=%s)\n",
                 lat, lon, defaultTerritory);

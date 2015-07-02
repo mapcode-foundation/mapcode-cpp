@@ -18,18 +18,6 @@
 #include <stdlib.h> // atof
 #include <ctype.h>  // toupper
 #include "mapcoder.h"
-
-#undef SUPPORT_HIGH_PRECISION
-
-/*
-  no threadsafe:
-    disambiguate_iso3
-*/
-
-
-#ifndef RELEASENEAT
-#else
-
 #include "basics.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -148,7 +136,6 @@ static const char *get_entity_iso3(char *entity_iso3_result,int ccode)
   return entity_iso3_result;
 }
 
-// static char disambiguate_iso3[4] = { '1','?','?',0 } ; // cache for disambiguation
 static int disambiguate_str( const char *s, int len ) // returns disambiguation >=1, or negative if error
 {
   int res;
@@ -1039,9 +1026,6 @@ static int stateletter(int ccode) // parent
 }
 
 
-
-
-
 // returns -1 (error), or m (also returns *result!=0 in case of success)
 static int encodeNameless( char *result, const encodeRec* enc, int input_ctry, int codexm, int extraDigits, int m )
 {
@@ -1417,6 +1401,11 @@ static void encoderEngine( int ccode, const encodeRec *enc, int stop_with_one_re
 }
 
 
+
+
+
+
+
 // returns nonzero if error
 static int decoderEngine( decodeRec *dec )
 {
@@ -1666,7 +1655,6 @@ static int decoderEngine( decodeRec *dec )
 
   return err;
 }
-
 
 
 #ifdef SUPPORT_FOREIGN_ALPHABETS
@@ -1949,21 +1937,15 @@ static int encodeLatLonToMapcodes_internal( char **v, Mapcodes *mapcodes, double
 }
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//  Wrapper for LBS team
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 // threadsafe
-char* getTerritoryIsoName(char *result, int tc, int format) // formats: 0=full 1=short (returns empty string in case of error)
+char* getTerritoryIsoName(char *result, int territoryCode, int format) // formats: 0=full 1=short (returns empty string in case of error)
 {
-  if (tc<1 || tc>MAX_MAPCODE_TERRITORY_CODE)
+  if (territoryCode<1 || territoryCode>MAX_MAPCODE_TERRITORY_CODE)
     *result=0;
   else {
-    int p=stateletter(tc-1);
+    int p=stateletter(territoryCode-1);
     char iso3[4];
-    const char *ei = get_entity_iso3(iso3,tc-1);
+    const char *ei = get_entity_iso3(iso3,territoryCode-1);
     if (*ei>='0' && *ei<='9') ei++;
     if (format==0 && p)
     {
@@ -1978,7 +1960,6 @@ char* getTerritoryIsoName(char *result, int tc, int format) // formats: 0=full 1
   }
   return result;
 }
-
 
 
 int getParentCountryOf(int tc) // returns negative if tc is not a code that has a parent country
@@ -2020,7 +2001,6 @@ int convertTerritoryIsoNameToCode(const char *string,int optional_tc) // optiona
   }
   if (ccode<0) return -1; else return ccode+1;
 }
-
 
 
 // decode string into lat,lon; returns negative in case of error
@@ -2066,20 +2046,19 @@ UWORD* convertToAlphabet(UWORD* unibuf, int maxlength, const char *mapcode,int a
 }
 
 
+// Legacy: NOT threadsafe
 static char asciibuf[MAX_MAPCODE_RESULT_LEN];
 const char *decodeToRoman(const UWORD* s)
 {
   return convertToRoman(asciibuf,MAX_MAPCODE_RESULT_LEN,s);
 }
 
+// Legacy: NOT threadsafe
 static UWORD unibuf[MAX_MAPCODE_RESULT_LEN];
 const UWORD* encodeToAlphabet(const char *mapcode,int alphabet) // 0=roman, 2=cyrillic
 {
   return convertToAlphabet(unibuf,MAX_MAPCODE_RESULT_LEN,mapcode,alphabet);
 }
-
-
-
 
 #endif
 
@@ -2100,17 +2079,17 @@ int encodeLatLonToSingleMapcode( char *result, double lat, double lon, int tc, i
   return 1;
 }
 
-// encodeLatLonToMapcodes is not threadsafe!
-int encodeLatLon( Mapcodes *results, double lat, double lon, int tc, int extraDigits )
+// Threadsafe
+int encodeLatLonToMapcodes( Mapcodes *results, double lat, double lon, int territoryCode, int extraDigits )
 {
-  return encodeLatLonToMapcodes_internal(NULL,results,lat,lon,tc,0,extraDigits);
+  return encodeLatLonToMapcodes_internal(NULL,results,lat,lon,territoryCode,0,extraDigits);
 }
 
 // Legacy: NOT threadsafe
 Mapcodes rglobal;
-int encodeLatLonToMapcodes( char **v, double lat, double lon, int tc, int extraDigits )
+int encodeLatLonToMapcodes_Deprecated( char **v, double lat, double lon, int territoryCode, int extraDigits )
 {
-  return encodeLatLonToMapcodes_internal(v,&rglobal,lat,lon,tc,0,extraDigits);
+  return encodeLatLonToMapcodes_internal(v,&rglobal,lat,lon,territoryCode,0,extraDigits);
 }
 
 // Legacy: NOT threadsafe
@@ -2121,6 +2100,3 @@ const char *convertTerritoryCodeToIsoName(int tc,int format)
   if (makeiso_buf==makeiso_bufbytes) makeiso_buf=makeiso_bufbytes+8; else makeiso_buf=makeiso_bufbytes;
   return (const char*)getTerritoryIsoName(makeiso_buf,tc,format);
 }
-
-
-#endif // RELEASENEAT

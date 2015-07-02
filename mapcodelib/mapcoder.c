@@ -19,7 +19,7 @@
 #include <ctype.h>  // toupper
 #include "mapcoder.h"
 
-#define SUPPORT_HIGH_PRECISION
+#undef SUPPORT_HIGH_PRECISION
 
 /*
   no threadsafe:

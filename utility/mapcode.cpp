@@ -80,6 +80,9 @@ static void usage(const char* appName) {
     printf("MAPCODE (version %s)\n", mapcode_cversion);
     printf("Copyright (C) 2014-2015 Stichting Mapcode Foundation\n");
     printf("\n");
+#ifndef SUPPORT_HIGH_PRECISION
+    printf("Warning: High precision support is disabled in this build.)\n\n");
+#endif
     printf("Usage:\n");
     printf("    %s [-d| --decode] <default-territory> <mapcode> [<mapcode> ...]\n", appName);
     printf("\n");
@@ -291,6 +294,16 @@ static void generateAndOutputMapcodes(double lat, double lon, int iShowError, in
     while (lat < -90) {
         lat += 180;
     }
+
+#ifndef SUPPORT_HIGH_PRECISION
+    {
+        // Need to truncate lat/lon to microdegrees.
+        long intLon = lon * 1000000.0;
+        long intLat = lat * 1000000.0;
+        lon = (intLon / 1000000.0);
+        lat = (intLat / 1000000.0);
+    }
+#endif
 
     const int nrResults = encodeLatLonToMapcodes(results, lat, lon, context, extraDigits);
     if (nrResults <= 0) {

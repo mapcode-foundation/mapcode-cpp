@@ -86,6 +86,9 @@ static void usage(const char* appName) {
 #ifndef SUPPORT_HIGH_PRECISION
     printf("Warning: High precision support is disabled in this build.)\n\n");
 #endif
+#ifndef LIMIT_TO_MICRODEGREES
+    printf("Warning: This build is limited to using microdegrees.\n\n");
+#endif
     printf("Usage:\n");
     printf("    %s [-d| --decode] <default-territory> <mapcode> [<mapcode> ...]\n", appName);
     printf("\n");

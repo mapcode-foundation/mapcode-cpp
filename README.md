@@ -46,7 +46,7 @@ decode Mapcodes.
 
 ## Release Notes
 
-* 2.0
+* 2.0.0
 
     Support for high-precision mapcodes, with up to 8 character extensions (up to 10 micron accuracy).
     

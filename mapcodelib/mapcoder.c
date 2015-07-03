@@ -1878,8 +1878,8 @@ static int encodeLatLonToMapcodes_internal( char **v, Mapcodes *mapcodes, double
 
   if (lat<-90) lat=-90;
   if (lat> 90) lat= 90;
-  if (lon<-180) lon+=360;
-  if (lon>=180) lon-=360;
+  while (lon<-180) lon+=360;
+  while (lon>=180) lon-=360;
 #ifndef SUPPORT_HIGH_PRECISION
   lat*=1000000; if (lat<0) lat-=0.5; else lat+=0.5;
   lon*=1000000; if (lon<0) lon-=0.5; else lon+=0.5;

@@ -37,7 +37,7 @@ of how to use the library.
 To build the original Mapcode tool, execute:
 
   cd utility
-  gcc mapcode.cpp -o mapcode
+  gcc -Wall -O mapcode.cpp -o mapcode
 
 For help, simply execute the binary file 'mapcode' without no arguments.
 This tool provides a rather extensive command-line interface to encode and
@@ -45,6 +45,12 @@ decode Mapcodes.
 
 
 ## Release Notes
+
+* 2.0.0
+
+    Support for high-precision mapcodes, with up to 8 character extensions (up to 10 micron accuracy).
+    
+    Fixes to the data rectangles (primarily intended for ISO proposal), see Word document for details.
 
 * 1.50.1
 

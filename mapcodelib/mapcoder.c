@@ -18,43 +18,35 @@
 #include <stdlib.h> // atof
 #include <ctype.h>  // toupper
 #include "mapcoder.h"
-
-#ifndef RELEASENEAT
-#else
-
 #include "basics.h"
 
-#define ISEARTH(c) ((c)==ccode_earth)
-#define ISGOODAREA(m) ((m)>=0)
-#define  CCODE_ERR   -1
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Global variables
+//  Structures
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const char *cached_iso3="@";   // cache for ccode_of_iso3
-char disambiguate_iso3[4] = { '1','?','?',0 } ; // cache for disambiguation
-char entity_iso3_result[4];  // cache for entity_iso3
-int current_ccode=-1; // cache for setup_country
+typedef struct {
+  // input
+  long    lat32,lon32;
+  double  fraclat,fraclon;
+  // output
+  Mapcodes *mapcodes;
+} encodeRec;
 
+typedef struct {
+  // input
+  const char *orginput;   // original full input string
+  char minput[MAX_MAPCODE_RESULT_LEN]; // room to manipulate clean copy of input
+  const char *mapcode;    // input mapcode (first character of proper mapcode excluding territory code)
+  const char *extension;  // input extension (or empty)
+  int context;            // input territory context (or negative)
+  const char *iso;        // input territory alphacode (context)
+  // output
+  double lat,lon;         // result
+  long lat32,lon32;       // result in integer arithmetic (millionts of degrees)
+} decodeRec;
 
-#define MAXGLOBALRESULTS 32 // The worst actually seems to be 14, which is at 52.050500, 113.468600
-#define WORSTCASE_MAPCODE_BYTES 16 // worst case is high-precision earth xxxxx.yyyy-zz, rounded upwords to multiple of 4 bytes (assuming latin-only results)
-char global_storage[2048]; // cyclic cache for results
-int storage_ptr;
-char *addstorage(const char *str)
-{
-  int len=strlen(str)+1; // bytes needed;
-  storage_ptr &= (2048-1);
-  if (storage_ptr<0 || storage_ptr+len>2048-2) storage_ptr=0;
-  strcpy(global_storage+storage_ptr,str);
-  storage_ptr+=len;
-  return global_storage+storage_ptr-len;
-}
-char **global_results;
-int nr_global_results;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -62,30 +54,36 @@ int nr_global_results;
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int firstrec(int ccode) { return data_start[ccode]; }
-int lastrec(int ccode)  { return data_start[ccode+1]-1; }
+static int firstrec(int ccode) { return data_start[ccode]; }
+static int lastrec(int ccode)  { return data_start[ccode+1]-1; }
 
-int mIsUsaState( int ccode )       { return (ccode>=usa_from && ccode<=usa_upto); } // ccode_usa
-int mIsIndiaState( int ccode )     { return (ccode>=ind_from && ccode<=ind_upto); } // ccode_ind
-int mIsCanadaState( int ccode )    { return (ccode>=can_from && ccode<=can_upto); } // ccode_can
-int mIsAustraliaState( int ccode ) { return (ccode>=aus_from && ccode<=aus_upto); } // ccode_aus
-int mIsMexicoState( int ccode )    { return (ccode>=mex_from && ccode<=mex_upto); } // ccode_mex
-int mIsBrazilState( int ccode )    { return (ccode>=bra_from && ccode<=bra_upto); } // ccode_bra
-int mIsChinaState( int ccode )     { return (ccode>=chn_from && ccode<=chn_upto); } // ccode_chn
-int mIsRussiaState( int ccode )    { return (ccode>=rus_from && ccode<=rus_upto); } // ccode_rus
-int mIsState( int ccode )  { return mIsUsaState(ccode) || mIsIndiaState(ccode) || mIsCanadaState(ccode) || mIsAustraliaState(ccode) || mIsMexicoState(ccode) || mIsBrazilState(ccode) || mIsChinaState(ccode) || mIsRussiaState(ccode); }
+static int ParentTerritoryOf(int ccode) // returns parent, or -1
+{
+  if (ccode>=usa_from && ccode<=usa_upto) return ccode_usa;
+  if (ccode>=ind_from && ccode<=ind_upto) return ccode_ind;
+  if (ccode>=can_from && ccode<=can_upto) return ccode_can;
+  if (ccode>=aus_from && ccode<=aus_upto) return ccode_aus;
+  if (ccode>=mex_from && ccode<=mex_upto) return ccode_mex;
+  if (ccode>=bra_from && ccode<=bra_upto) return ccode_bra;
+  if (ccode>=rus_from && ccode<=rus_upto) return ccode_rus;
+  if (ccode>=chn_from && ccode<=chn_upto) return ccode_chn;
+  return -1;
+}
 
-int rcodex(int m)           { int c=mminfo[m].flags & 31; return 10*(c/5) + ((c%5)+1); }
-int iscountry(int m)        { return mminfo[m].flags & 32; }
-int isnameless(int m)       { return mminfo[m].flags & 64; }
-int pipetype(int m)         { return (mminfo[m].flags>>7) & 3; }
-int isuseless(int m)        { return mminfo[m].flags & 512; }
-int isSpecialShape22(int m) { return mminfo[m].flags & 1024; }
-char pipeletter(int m)      { return encode_chars[ (mminfo[m].flags>>11)&31 ]; }
-long smartdiv(int m)        { return (mminfo[m].flags>>16); }
+static int isSubdivision( int ccode )  { return (ParentTerritoryOf(ccode)>=0); }
+
+static int coDex(int m)             { int c=mminfo[m].flags & 31; return 10*(c/5) + ((c%5)+1); }
+static int prefixLength(int m)      { int c=mminfo[m].flags & 31; return (c/5); }
+static int postfixLength(int m)     { int c=mminfo[m].flags & 31; return ((c%5)+1); }
+static int isNameless(int m)        { return mminfo[m].flags & 64; }
+static int recType(int m)           { return (mminfo[m].flags>>7) & 3; }
+static int isRestricted(int m)      { return mminfo[m].flags & 512; }
+static int isSpecialShape22(int m)  { return mminfo[m].flags & 1024; }
+static char headerLetter(int m)     { return encode_chars[ (mminfo[m].flags>>11)&31 ]; }
+static long smartDiv(int m)         { return (mminfo[m].flags>>16); }
 
 #define getboundaries(m,minx,miny,maxx,maxy) get_boundaries(m,&(minx),&(miny),&(maxx),&(maxy))
-void get_boundaries(int m,long *minx, long *miny, long *maxx, long *maxy )
+static void get_boundaries(int m,long *minx, long *miny, long *maxx, long *maxy )
 {
   const mminforec *mm = &mminfo[m];
   *minx = mm->minx;
@@ -94,17 +92,34 @@ void get_boundaries(int m,long *minx, long *miny, long *maxx, long *maxy )
   *maxy = mm->maxy;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//  Helper routines
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void makeup(char *s) // strupr for latin
+static int isInRange(long x,long minx,long maxx) // returns nonzero if x in the range minx...maxx
 {
-  char *t;
-  for(t=s;*t!=0;t++)
-      *t = toupper(*t);
+  if ( minx<=x && x<maxx ) return 1;
+  if (x<minx) x+=360000000; else x-=360000000; // 1.32 fix FIJI edge case
+  if ( minx<=x && x<maxx ) return 1;
+  return 0;
+}
+
+static int fitsInside( long x, long y, int m )
+{
+  const mminforec *mm = &mminfo[m];
+  return ( mm->miny <= y && y < mm->maxy && isInRange(x,mm->minx,mm->maxx) );
+}
+
+static long xDivider4( long miny, long maxy )
+{
+  if (miny>=0) // both above equator? then miny is closest
+    return xdivider19[ (miny)>>19 ];
+  if (maxy>=0) // opposite sides? then equator is worst
+    return xdivider19[0];
+  return xdivider19[ (-maxy)>>19 ]; // both negative, so maxy is closest to equator
+}
+
+static int fitsInsideWithRoom( long x, long y, int m )
+{
+  const mminforec *mm = &mminfo[m];
+  long xdiv8 = xDivider4(mm->miny,mm->maxy)/4; // should be /8 but there's some extra margin
+  return ( mm->miny-60 <= y && y < mm->maxy+60 && isInRange(x,mm->minx - xdiv8, mm->maxx + xdiv8) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -113,7 +128,7 @@ void makeup(char *s) // strupr for latin
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const char *entity_iso3(int ccode)
+static const char *get_entity_iso3(char *entity_iso3_result,int ccode)
 {
   if (ccode<0 || ccode>=MAX_MAPCODE_TERRITORY_CODE) ccode=ccode_earth; // solve bad args
   memcpy(entity_iso3_result,entity_iso+ccode*4,3);
@@ -121,12 +136,7 @@ const char *entity_iso3(int ccode)
   return entity_iso3_result;
 }
 
-void disambiguate( int country ) // 1=USA 2=IND 3=CAN 4=AUS 5=MEX 6=BRA 7=RUS 8=CHI
-{
-  disambiguate_iso3[0] = country+'0';
-}
-
-int disambiguate_str( const char *s, int len ) // returns disambiguation >=1, or negative if error
+static int disambiguate_str( const char *s, int len ) // returns disambiguation >=1, or negative if error
 {
   int res;
   const char *p=(len==2 ? parents2 : parents3);
@@ -134,20 +144,27 @@ int disambiguate_str( const char *s, int len ) // returns disambiguation >=1, or
   char country[4];
   if (s[0]==0 || s[1]==0) return -27; // solve bad args
   if (len!=2 && len!=3) return -923; // solve bad args
-  memcpy(country,s,len); country[len]=0; makeup(country);
+  memcpy(country,s,len); country[len]=0;
+  {
+    char *t;
+    for(t=country;*t!=0;t++)
+        *t = toupper(*t);
+  }
   f=strstr(p,country);
   if (f==NULL)
     return -23; // unknown country
   res = 1 + ((f-p)/(len+1));
-  disambiguate(res);
   return res;
 }
 
+
 // returns coode, or negative if invalid
-int ccode_of_iso3(const char *in_iso)
+static int ccode_of_iso3(const char *in_iso, int parentcode )
 {
+  static char disambiguate_iso3[4] = { '1','?','?',0 } ; // cache for disambiguation
+  const char *aliases=ALIASES;
   char iso[4];
-  const char *s = cached_iso3; // assume cached index
+  const char *s;
 
   if (in_iso && in_iso[0] && in_iso[1] )
   {
@@ -155,18 +172,19 @@ int ccode_of_iso3(const char *in_iso)
     {
       if (in_iso[2]=='-')
       {
-        disambiguate_str(in_iso,2);
+        parentcode=disambiguate_str(in_iso,2);
         in_iso+=3;
-        cached_iso3="@";
       }
       else if (in_iso[3]=='-')
       {
-        disambiguate_str(in_iso,3);
+        parentcode=disambiguate_str(in_iso,3);
         in_iso+=4;
-        cached_iso3="@";
       }
     }
   } else return -23; // solve bad args
+
+  if (parentcode>0)
+    disambiguate_iso3[0] = (char)('0'+parentcode);
 
   // make (uppercased) copy of at most three characters
   iso[0]=toupper(in_iso[0]);
@@ -174,76 +192,68 @@ int ccode_of_iso3(const char *in_iso)
   if (iso[1]) iso[2]=toupper(in_iso[2]);
   iso[3]=0;
 
-  if ( memcmp(s,iso,3)!=0 ) // not equal to cache?
+  if ( iso[2]==0 || iso[2]==' ' ) // 2-letter iso code?
   {
-    const char *aliases=ALIASES;
-    if ( iso[2]==0 || iso[2]==' ' ) // 2-letter iso code?
-    {
-      disambiguate_iso3[1] = iso[0];
-      disambiguate_iso3[2] = iso[1];
-      if ( memcmp(s,disambiguate_iso3,3)!=0 ) // still not equal to cache?
-      {
-        s = strstr(entity_iso,disambiguate_iso3); // search disambiguated 2-letter iso
-        if (s==NULL)
-        {
-          s = strstr(aliases,disambiguate_iso3); // search in aliases
-          if ( s && s[3]=='=' )
-          {
-            memcpy(iso,s+4,3);
-            s = strstr(entity_iso,iso); // search disambiguated 2-letter iso
-          } else s=NULL;
-        }
-        if (s==NULL)
-        {
-          // find the FIRST disambiguation option, if any
-          for(s=entity_iso-1;;)
-          {
-            s = strstr(s+1,disambiguate_iso3+1);
-            if (s==NULL)
-              break;
-            if (s && s[-1]>='1' && s[-1]<='9') {
-              s--;
-              break;
-            }
-          }
-          if (s==NULL)
-          {
-            // find first disambiguation option in aliases, if any
-            for(s=aliases-1;;)
-            {
-              s = strstr(s+1,disambiguate_iso3+1);
-              if (s==NULL)
-                break;
-              if (s && s[-1]>='1' && s[-1]<='9') {
-                memcpy(iso,s+3,3);
-                s = strstr(entity_iso,iso); // search disambiguated 2-letter iso
-                break;
-              }
-            }
-          }
+    disambiguate_iso3[1] = iso[0];
+    disambiguate_iso3[2] = iso[1];
 
-          if (s==NULL)
-            return -26;
-          cached_iso3 = s; // cache new result!
+    s = strstr(entity_iso,disambiguate_iso3); // search disambiguated 2-letter iso
+    if (s==NULL)
+    {
+      s = strstr(aliases,disambiguate_iso3); // search in aliases
+      if ( s && s[3]=='=' )
+      {
+        memcpy(iso,s+4,3);
+        s = strstr(entity_iso,iso); // search disambiguated 2-letter iso
+      } else s=NULL;
+    }
+    if (s==NULL)
+    {
+      // find the FIRST disambiguation option, if any
+      for(s=entity_iso-1;;)
+      {
+        s = strstr(s+1,disambiguate_iso3+1);
+        if (s==NULL)
+          break;
+        if (s && s[-1]>='1' && s[-1]<='9') {
+          s--;
+          break;
         }
       }
-    }
-    else
-    {
-      s = strstr(entity_iso,iso); // search 3-letter iso
       if (s==NULL)
       {
-          s = strstr(aliases,iso); // search in aliases
-          if ( s && s[3]=='=' )
-          {
-            memcpy(iso,s+4,3);
-            s = strstr(entity_iso,iso);
-          } else s=NULL;
+        // find first disambiguation option in aliases, if any
+        for(s=aliases-1;;)
+        {
+          s = strstr(s+1,disambiguate_iso3+1);
+          if (s==NULL)
+            break;
+          if (s && s[-1]>='1' && s[-1]<='9') {
+            memcpy(iso,s+3,3);
+            s = strstr(entity_iso,iso); // search disambiguated 2-letter iso
+            break;
+          }
+        }
       }
+
       if (s==NULL)
-        return -23;
-      cached_iso3 = s; // cache new result!
+        return -26;
     }
+  }
+  else
+  {
+    s = strstr(entity_iso,iso); // search 3-letter iso
+    if (s==NULL)
+    {
+        s = strstr(aliases,iso); // search in aliases
+        if ( s && s[3]=='=' )
+        {
+          memcpy(iso,s+4,3);
+          s = strstr(entity_iso,iso);
+        } else s=NULL;
+    }
+    if (s==NULL)
+      return -23;
   }
   // return result
   return (s-entity_iso)/4;
@@ -256,97 +266,134 @@ int ccode_of_iso3(const char *in_iso)
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int use_high_precision=0; // nr of letters of high-precision postfix (if any)
-void addpostfix(char *result,long extrax4,long extray,long dividerx4,long dividery) // append extra characters to result for more precision
+static void encodeExtension(char *result,long extrax4,long extray,long dividerx4,long dividery,int extraDigits,int ydirection,const encodeRec *enc) // append extra characters to result for more precision
 {
-  if (use_high_precision)
+#ifndef SUPPORT_HIGH_PRECISION // old integer-arithmetic version
+  if (extraDigits<0) extraDigits=0; else if (extraDigits>2) extraDigits=2;
+  while (extraDigits-->0)
   {
     long gx=((30*extrax4)/dividerx4);
     long gy=((30*extray )/dividery );
-    long x1=(gx/6);
-    long x2=(gx%6);
-    long y1=(gy/5);
-    long y2=(gy%5);
+    long column1=(gx/6);
+    long column2=(gx%6);
+    long row1=(gy/5);
+    long row2=(gy%5);
     // add postfix:
     char *s = result+strlen(result);
     *s++ = '-';
-    *s++ = encode_chars[ y1*5+x1 ];
-    if (use_high_precision==2)
-      *s++ = encode_chars[ y2*6+x2 ];
+    *s++ = encode_chars[ row1*5+column1 ];
+    if (extraDigits-->0)
+      *s++ = encode_chars[ row2*6+column2 ];
     *s++ = 0;
   }
+#else // new floating-point version
+  char *s = result+strlen(result);
+  double encx = (extrax4+4* enc->fraclon) / (dividerx4);
+  double ency = (extray +   enc->fraclat*ydirection) / (dividery );
+
+  if (extraDigits<0) extraDigits=0; else if (extraDigits>MAX_PRECISION_DIGITS) extraDigits=MAX_PRECISION_DIGITS;
+
+  if (extraDigits>0)
+    *s++ = '-';
+
+  while (extraDigits-->0)
+  {
+    long gx,gy,column1,column2,row1,row2;
+
+    encx*=30; gx=(long)encx; if (gx<0)
+      gx=0;
+    else if (gx>29)
+      gx=29;
+    ency*=30; gy=(long)ency; if (gy<0)
+      gy=0;
+    else if (gy>29)
+      gy=29;
+    column1=(gx/6);
+    column2=(gx%6);
+    row1=(gy/5);
+    row2=(gy%5);
+    // add postfix:
+    *s++ = encode_chars[ row1*5+column1 ];
+    if (extraDigits-->0)
+      *s++ = encode_chars[ row2*6+column2 ];
+    *s = 0;
+    encx-=gx;
+    ency-=gy;
+  }
+#endif
 }
 
-const char *extrapostfix="";
-void add2res(long *nx,long *ny, long dividerx4,long dividery,int ydirection) // add extra precision to a coordinate based on extra chars
+#define decodeChar(c) decode_chars[(unsigned char)c] // force c to be in range of the index, between 0 and 255
+
+// this routine takes the integer-arithmeteic decoding results (in millionths of degrees), adds any floating-point precision digits, and returns the result (still in millionths)
+static void decodeExtension(decodeRec *dec, long dividerx4,long dividery,int ydirection)
 {
+  const char *extrapostfix = dec->extension;
+#ifndef SUPPORT_HIGH_PRECISION // old integer-arithmetic version
   long extrax,extray;
   if (*extrapostfix) {
-    int x1,y1,x2,y2,c1,c2;
+    int column1,row1,column2,row2,c1,c2;
     c1 = extrapostfix[0];
-    c1 = decode_chars[c1];
-    if (c1<0) c1=0; else if (c1>29) c1=29; // solves bugs in input
-    y1 =(c1/5); x1 = (c1%5);
+    c1 = decodeChar(c1);
+    if (c1<0) c1=0; else if (c1>29) c1=29;
+    row1 =(c1/5); column1 = (c1%5);
     c2 = (extrapostfix[1]) ? extrapostfix[1] : 72; // 72='H'=code 15=(3+2*6)
-    c2 = decode_chars[c2];
-    if (c2<0) c2=0; else if (c2>29) c2=29; // solves bugs in input
-    y2 =(c2/6); x2 = (c2%6);
+    c2 = decodeChar(c2);
+    if (c2<0) c2=0; else if (c2>29) c2=29;
+    row2 =(c2/6); column2 = (c2%6);
 
-    extrax = ((x1*12 + 2*x2 + 1)*dividerx4+120)/240;
-    extray = ((y1*10 + 2*y2 + 1)*dividery  +30)/ 60;
+    extrax = ((column1*12 + 2*column2 + 1)*dividerx4+120)/240;
+    extray = ((row1*10 + 2*row2 + 1)*dividery  +30)/ 60;
   }
   else {
     extrax = (dividerx4/8);
     extray = (dividery/2);
   }
-  *nx += extrax;
-  *ny += extray*ydirection;
-}
+  extray *= ydirection;
+  dec->lon32 = extrax + dec->lon32;
+  dec->lat32 = extray + dec->lat32;
+#else // new floating-point version
+  double dividerx=dividerx4/4.0,processor=1.0;
+  dec->lon=0;
+  dec->lat=0;
+  while (*extrapostfix) {
+    int column1,row1,column2,row2;
+    double halfcolumn=0;
+    int c1 = *extrapostfix++;
+    c1 = decodeChar(c1);
+    if (c1<0) c1=0; else if (c1>29) c1=29;
+    row1 =(c1/5); column1 = (c1%5);
+    if (*extrapostfix) {
+      int c2 = decodeChar(*extrapostfix++);
+      if (c2<0) c2=0; else if (c2>29) c2=29;
+      row2 =(c2/6); column2 = (c2%6);
+    }
+    else {
+      row2 = 2;
+      halfcolumn = 0.5;
+      column2 = 3;
+    }
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//  SECOND-LEVEL ECCODING/DECODING : GRID
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-long x_divider( long miny, long maxy )
-{
-  if (miny>=0) // both above equator? then miny is closest
-    return xdivider19[ (miny)>>19 ];
-  if (maxy>=0) // opposite sides? then equator is worst
-    return xdivider19[0];
-  return xdivider19[ (-maxy)>>19 ]; // both negative, so maxy is closest to equator
-}
-
-int isInRange(long x,long minx,long maxx) // returns nonzero if x in the range minx...maxx
-{
-  if ( minx<=x && x<maxx ) return 1;
-  if (x<minx) x+=360000000; else x-=360000000; // 1.32 fix FIJI edge case
-  if ( minx<=x && x<maxx ) return 1;
-  return 0;
-}
-
-int isInArea(long x,long y,int ccode) // returns nonzero if x,y in area (i.e. certain to generate at least one code); (0 can also mean iso3 is an invalid iso code)
-{
-  if (ccode<0) return 0; // solve bad args
-  {
-    extern int iso_end;
-    long minx,miny,maxx,maxy;
-    getboundaries(lastrec(ccode),minx,miny,maxx,maxy);
-    if ( y <  miny ) return 0; // < miny!
-    if ( y >= maxy ) return 0; // >= miny!
-    return isInRange(x,minx,maxx);
+    processor *= 30;
+    dec->lon += ((column1*6 + column2 ))/processor;
+    dec->lat += ((row1*5 + row2 - halfcolumn))/processor;
   }
+
+  dec->lon += (0.5/processor);
+  dec->lat += (0.5/processor);
+
+  dec->lon *= dividerx;
+  dec->lat *= (dividery * ydirection);
+
+  dec->lon += dec->lon32;
+  dec->lat += dec->lat32;
+
+  // also convert back to long
+  dec->lon32 = (long)dec->lon;
+  dec->lat32 = (long)dec->lat;
+#endif
 }
 
-int findAreaFor(long x,long y,int ccode) // returns next ccode returns -1 when no more  contain x,y; pass -1 the first time, pass previous ccode to find the next return value
-{
-  while( (++ccode) < MAX_MAPCODE_TERRITORY_CODE )
-    if ( isInArea(x,y,ccode) )
-      return ccode;
-  return -1;
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -356,7 +403,7 @@ int findAreaFor(long x,long y,int ccode) // returns next ccode returns -1 when n
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // encode 'value' into result[nrchars]
-void fast_encode( char *result, long value, int nrchars )
+static void encodeBase31( char *result, long value, int nrchars )
 {
   result[nrchars]=0; // zero-terminate!
   while ( nrchars-- > 0 )
@@ -367,12 +414,12 @@ void fast_encode( char *result, long value, int nrchars )
 }
 
 // decode 'code' until either a dot or an end-of-string is encountered
-long fast_decode( const char *code )
+static long decodeBase31( const char *code )
 {
   long value=0;
   while (*code!='.' && *code!=0 )
   {
-    value = value*31 + decode_chars[*code++];
+    value = value*31 + decodeChar(*code++);
   }
   return value;
 }
@@ -384,34 +431,34 @@ long fast_decode( const char *code )
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void encode_triple( char *result, long difx,long dify )
+static void encode_triple( char *result, long difx,long dify )
 {
     if ( dify < 4*34 ) // first 4(x34) rows of 6(x28) wide
     {
-      fast_encode( result,   ((difx/28) + 6*(dify/34)), 1 );
-      fast_encode( result+1, ((difx%28)*34 +(dify%34)), 2 );
+      encodeBase31( result,   ((difx/28) + 6*(dify/34)), 1 );
+      encodeBase31( result+1, ((difx%28)*34 +(dify%34)), 2 );
     }
     else // bottom row
     {
-      fast_encode( result,   (difx/24)  + 24           , 1 );
-      fast_encode( result+1, (difx%24)*40 + (dify-136) , 2 );
+      encodeBase31( result,   (difx/24)  + 24           , 1 );
+      encodeBase31( result+1, (difx%24)*40 + (dify-136) , 2 );
     }
 } // encode_triple
 
 
-void decode_triple( const char *result, long *difx, long *dify )
+static void decode_triple( const char *result, long *difx, long *dify )
 {
       // decode the first character
-      int c1 = decode_chars[*result++];
+      int c1 = decodeChar(*result++);
       if ( c1<24 )
       {
-        long m = fast_decode(result);
+        long m = decodeBase31(result);
         *difx = (c1%6) * 28 + (m/34);
         *dify = (c1/6) * 34 + (m%34);
       }
       else // bottom row
       {
-        long x = fast_decode(result);
+        long x = decodeBase31(result);
         *dify = (x%40) + 136;
         *difx = (x/40) + 24*(c1-24);
       }
@@ -419,32 +466,6 @@ void decode_triple( const char *result, long *difx, long *dify )
 
 
 
-void decoderelative( char* r,long *nx,long *ny, long relx,long rely, long dividery,long dividerx )
-{
-  long difx,dify;
-  long nrchars = strlen(r);
-
-  if ( nrchars==3 ) // decode special
-  {
-    decode_triple( r, &difx,&dify );
-  }
-  else
-  {
-    long v;
-    if ( nrchars==4 ) { char t = r[1]; r[1]=r[2]; r[2]=t; } // swap
-    v = fast_decode(r);
-    difx = ( v/yside[nrchars] );
-    dify = ( v%yside[nrchars] );
-    if ( nrchars==4 ) { char t = r[1]; r[1]=r[2]; r[2]=t; } // swap back
-  }
-
-  // reverse y-direction
-  dify = yside[nrchars]-1-dify;
-
-  *nx = relx+(difx * dividerx);
-  *ny = rely+(dify * dividery);
-  add2res(nx,ny,  dividerx<<2,dividery,1);
-} // decoderelative
 
 
 
@@ -455,7 +476,7 @@ void decoderelative( char* r,long *nx,long *ny, long relx,long rely, long divide
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-long encode6( long x, long y, long width, long height )
+static long encodeSixWide( long x, long y, long width, long height )
 {
   long v;
   long D=6;
@@ -470,7 +491,7 @@ long encode6( long x, long y, long width, long height )
   return v;
 }
 
-void decode6( long v, long width, long height, long *x, long *y )
+static void decodeSixWide( long v, long width, long height, long *x, long *y )
 {
   long w;
   long D=6;
@@ -488,52 +509,56 @@ void decode6( long v, long width, long height, long *x, long *y )
 }
 
 
-void decode_grid( const char* input,long *nx,long *ny, int m, long minx, long miny, long maxx, long maxy )
+// decodes dec->mapcode in context of territory rectangle m
+static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter )
 {
+  const char* input = (hasHeaderLetter ? dec->mapcode+1 : dec->mapcode);
   int codexlen = strlen(input)-1;
-  long dc = (long)(strchr(input,'.')-input);
-  char result[16];
+  long prelen = (long)(strchr(input,'.')-input);
+  char result[MAX_PROPER_MAPCODE_LEN+1];
 
-  if (codexlen>14) return; // solve bad args
+  if (codexlen>MAX_PROPER_MAPCODE_LEN) return -109;
   strcpy(result,input);
-  if (dc==1 && codexlen==5)
+  if (prelen==1 && codexlen==5)
   {
-    result[1]=result[2]; result[2]='.'; dc++;
+    result[1]=result[2]; result[2]='.'; prelen++;
   }
 
   {
-    long codexlow = codexlen-dc;
-    long codex = 10*dc + codexlow;
+    long postlen = codexlen-prelen;
+    long codex = 10*prelen + postlen;
     long divx,divy;
 
-    divy = smartdiv(m);
+    divy = smartDiv(m);
     if (divy==1)
     {
-      divx = xside[dc];
-      divy = yside[dc];
+      divx = xside[prelen];
+      divy = yside[prelen];
     }
     else
     {
-      long pw = nc[dc];
+      long pw = nc[prelen];
       divx = ( pw / divy );
       divx = (long)( pw / divy );
     }
 
-    if ( dc==4 && divx==xside[4] && divy==yside[4] )
+    if ( prelen==4 && divx==xside[4] && divy==yside[4] )
     {
       char t = result[1]; result[1]=result[2]; result[2]=t;
     }
 
     {
-      long relx,rely,v=0;
+      long relx=-1,rely=-1,v=0;
+      long minx,maxx,miny,maxy;
+      getboundaries(m,minx,miny,maxx,maxy);
 
-      if ( dc <= MAXFITLONG )
+      if ( prelen <= MAXFITLONG )
       {
-        v = fast_decode(result);
+        v = decodeBase31(result);
 
         if ( divx!=divy && codex>24 ) // D==6 special grid, useful when prefix is 3 or more, and not a nice 961x961
         { // DECODE
-          decode6( v,divx,divy, &relx,&rely );
+          decodeSixWide( v,divx,divy, &relx,&rely );
         }
         else
         {
@@ -549,49 +574,81 @@ void decode_grid( const char* input,long *nx,long *ny, int m, long minx, long mi
         long xgridsize = (maxx-minx+divx-1)/divx; // lonlat per cell
 
         if (relx<0 || rely<0 || relx>=divx || rely>=divy)
-          return;
+          return -111;
 
         // and then encodde relative to THE CORNER of this cell
         rely = miny + (rely*ygridsize);
         relx = minx + (relx*xgridsize);
 
         {
-          long dividery = ( (((ygridsize))+yside[codexlow]-1)/yside[codexlow] );
-          long dividerx = ( (((xgridsize))+xside[codexlow]-1)/xside[codexlow] );
-          decoderelative( result+dc+1,nx,ny, relx,rely, dividery,dividerx );
+          long dividery = ( (((ygridsize))+yside[postlen]-1)/yside[postlen] );
+          long dividerx = ( (((xgridsize))+xside[postlen]-1)/xside[postlen] );
+          // decoderelative
+
+          {
+            char *r = result+prelen+1;
+            long difx,dify;
+
+            if ( postlen==3 ) // decode special
+            {
+              decode_triple( r, &difx,&dify );
+            }
+            else
+            {
+              long v;
+              if ( postlen==4 ) { char t = r[1]; r[1]=r[2]; r[2]=t; } // swap
+              v = decodeBase31(r);
+              difx = ( v/yside[postlen] );
+              dify = ( v%yside[postlen] );
+              if ( postlen==4 ) { char t = r[1]; r[1]=r[2]; r[2]=t; } // swap back
+            }
+
+            // reverse y-direction
+            dify = yside[postlen]-1-dify;
+
+            dec->lon32 = relx+(difx * dividerx);
+            dec->lat32 = rely+(dify * dividery);
+            decodeExtension(dec,  dividerx<<2,dividery,1); // grid
+          } // decoderelative
+
         }
       }
     }
   }
-} // decode_grid
+  return 0;
+}
 
 
 
 
-void encode_grid( char* result, long x,long y, int m, int codex, long minx, long miny, long maxx, long maxy )
+
+static void encodeGrid( char* result, const encodeRec *enc, int const m, int extraDigits, char headerLetter )
 {
-  int orgcodex=codex;
-  *result=0;
-  if ( maxx<=minx || maxy<=miny )
-    return;
+  long minx,miny,maxx,maxy;
+  long y= enc->lat32,x= enc->lon32;
+  int orgcodex=coDex(m);
+  int codex=orgcodex;
+  if (codex==21) codex=22;
   if (codex==14) codex=23;
+  getboundaries(m,minx,miny,maxx,maxy);
+
+  *result=0;
+  if (headerLetter) result++;
 
   { // encode
     long divx,divy;
-    long dc = codex/10;
-    long codexlow = codex%10;
-    long codexlen = dc + codexlow;
-    long pw = nc[dc];
+    long prelen = codex/10;
+    long postlen = codex%10;
 
-    divy = smartdiv(m);
+    divy = smartDiv(m);
     if (divy==1)
     {
-      divx = xside[dc];
-      divy = yside[dc];
+      divx = xside[prelen];
+      divy = yside[prelen];
     }
     else
     {
-      long pw = nc[dc];
+      long pw = nc[prelen];
       divx = ( pw / divy );
       divx = (long)( pw / divy );
     }
@@ -619,13 +676,13 @@ void encode_grid( char* result, long x,long y, int m, int codex, long minx, long
       { // prefix
         long v;
         if ( divx!=divy && codex>24 )
-          v = encode6( relx,rely, divx,divy );
+          v = encodeSixWide( relx,rely, divx,divy );
         else
           v = relx*divy + (divy-1-rely);
-        fast_encode( result, v, dc);
+        encodeBase31( result, v, prelen);
       } // prefix
 
-      if ( dc==4 && divx==xside[4] && divy==yside[4] )
+      if ( prelen==4 && divx==xside[4] && divy==yside[4] )
       {
         char t = result[1]; result[1]=result[2]; result[2]=t;
       }
@@ -634,13 +691,13 @@ void encode_grid( char* result, long x,long y, int m, int codex, long minx, long
       relx = minx + (relx*xgridsize);
 
       { // postfix
-        long dividery = ( (((ygridsize))+yside[codexlow]-1)/yside[codexlow] );
-        long dividerx = ( (((xgridsize))+xside[codexlow]-1)/xside[codexlow] );
+        long dividery = ( (((ygridsize))+yside[postlen]-1)/yside[postlen] );
+        long dividerx = ( (((xgridsize))+xside[postlen]-1)/xside[postlen] );
         long extrax,extray;
 
         {
-          char *resultptr = result+dc;
-          long nrchars=codexlow;
+          char *resultptr = result+prelen;
+
 
           long difx = x-relx;
           long dify = y-rely;
@@ -654,17 +711,17 @@ void encode_grid( char* result, long x,long y, int m, int codex, long minx, long
 
 
           // reverse y-direction
-          dify = yside[nrchars]-1-dify;
+          dify = yside[postlen]-1-dify;
 
-          if ( nrchars==3 ) // encode special
+          if ( postlen==3 ) // encode special
           {
             encode_triple( resultptr, difx,dify );
           }
           else
           {
-            fast_encode(resultptr,       (difx)*yside[nrchars]+dify, nrchars   );
+            encodeBase31(resultptr,       (difx)*yside[postlen]+dify, postlen   );
             // swap 4-long codes for readability
-            if ( nrchars==4 )
+            if ( postlen==4 )
             {
               char t = resultptr[1]; resultptr[1]=resultptr[2]; resultptr[2]=t;
             }
@@ -676,244 +733,77 @@ void encode_grid( char* result, long x,long y, int m, int codex, long minx, long
           result[2]=result[1]; result[1]='.';
         }
 
-        addpostfix(result,extrax<<2,extray,dividerx<<2,dividery);
+        encodeExtension(result,extrax<<2,extray,dividerx<<2,dividery,extraDigits,1,enc); // grid
+        if (headerLetter) { result--; *result=headerLetter; }
       } // postfix
     } // grid
   }  // encode
-} // encode_grid
-
-
-
-
-
-// *********************************************************************************************************************
-
-// indexes
-int iso_start;
-int iso_end;
-
-// counts:
-int iso_count13;
-int iso_count21;
-int iso_count22;
-int iso_count23;
-int iso_count32;
-int iso_count24;
-int iso_count33;
-int iso_count34;
-int iso_count42;
-int iso_count43;
-int iso_count44;
-
-// first occurances
-int iso_first13;
-int iso_first21;
-int iso_first22;
-int iso_first23;
-int iso_first32;
-int iso_first24;
-int iso_first33;
-int iso_first34;
-int iso_first42;
-int iso_first43;
-int iso_first44;
-
-int iso_firststar14;
-int iso_firststar22;
-int iso_firststar23;
-int iso_firststar32;
-int iso_firststar24;
-int iso_firststar33;
-int iso_firststar34;
-int iso_firststar44;
-
-int iso_firstpipe14;
-int iso_firstpipe22;
-int iso_firstpipe23;
-int iso_firstpipe32;
-int iso_firstpipe24;
-int iso_firstpipe33;
-int iso_firstpipe34;
-int iso_firstpipe44;
-
-// pipe letters
-char iso_pipeletter14[32];
-char iso_pipeletter22[32];
-char iso_pipeletter23[32];
-char iso_pipeletter32[32];
-char iso_pipeletter24[32];
-char iso_pipeletter33[32];
-char iso_pipeletter34[32];
-char iso_pipeletter44[32];
-
-void setup_country( int newccode )
-{
-  int iso_count14;
-  int iso_first14;
-
-  int iso_pipecount14;
-  int iso_pipecount22;
-  int iso_pipecount23;
-  int iso_pipecount32;
-  int iso_pipecount24;
-  int iso_pipecount33;
-  int iso_pipecount34;
-  int iso_pipecount44;
-
-
-  if ( current_ccode!=newccode ) // cache check
-  {
-    if (newccode<0 || newccode>=MAX_MAPCODE_TERRITORY_CODE) newccode=ccode_earth; // solve bad args
-    current_ccode=newccode;
-
-    // init
-    iso_start=-1;
-    iso_end=-1;
-
-    iso_count13=0;
-    iso_count14=0;
-    iso_count21=0;
-    iso_count22=0;
-    iso_count23=0;
-    iso_count32=0;
-    iso_count24=0;
-    iso_count33=0;
-    iso_count34=0;
-    iso_count42=0;
-    iso_count43=0;
-    iso_count44=0;
-    iso_pipecount14=0;
-    iso_pipecount22=0;
-    iso_pipecount23=0;
-    iso_pipecount32=0;
-    iso_pipecount24=0;
-    iso_pipecount33=0;
-    iso_pipecount34=0;
-    iso_pipecount44=0;
-    iso_firstpipe14=-1;
-    iso_firstpipe22=-1;
-    iso_firstpipe23=-1;
-    iso_firstpipe32=-1;
-    iso_firstpipe24=-1;
-    iso_firstpipe33=-1;
-    iso_firstpipe34=-1;
-    iso_firstpipe44=-1;
-    iso_first13=-1;
-    iso_first14=-1;
-    iso_first21=-1;
-    iso_first22=-1;
-    iso_first23=-1;
-    iso_first32=-1;
-    iso_first24=-1;
-    iso_first33=-1;
-    iso_first34=-1;
-    iso_first42=-1;
-    iso_first43=-1;
-    iso_first44=-1;
-    iso_firststar14=-1;
-    iso_firststar22=-1;
-    iso_firststar23=-1;
-    iso_firststar32=-1;
-    iso_firststar24=-1;
-    iso_firststar33=-1;
-    iso_firststar34=-1;
-    iso_firststar44=-1;
-
-    {
-      int i;
-
-      iso_start = firstrec(current_ccode);
-      iso_end   = lastrec(current_ccode);
-
-      for ( i=iso_start; i<=iso_end; i++ )
-      {
-        int codex = rcodex(i);
-        int pipe = pipetype(i);
-
-        if ( codex==13 ) { iso_count13++; if ( iso_first13<0 ) iso_first13=i; }
-        if ( codex==21 ) { iso_count21++; if ( iso_first21<0 ) iso_first21=i; }
-        if ( codex==22 ) { if (pipe) { if (iso_firstpipe22<0) iso_firstpipe22=i; if (pipe<2)       iso_pipeletter22[iso_pipecount22++]=pipeletter(i); else if (iso_firststar22<0) iso_firststar22=i;} else { iso_count22++; if ( iso_first22<0 ) iso_first22=i; } }
-        if ( codex==14 ) { if (pipe) { if (iso_firstpipe14<0) iso_firstpipe14=i; if (pipe<2)       iso_pipeletter14[iso_pipecount14++]=pipeletter(i); else if (iso_firststar14<0) iso_firststar14=i;} else { iso_count14++; if ( iso_first14<0 ) iso_first14=i; } }
-        if ( codex==23 ) { if (pipe) { if (iso_firstpipe23<0) iso_firstpipe23=i; if (pipe<2)       iso_pipeletter23[iso_pipecount23++]=pipeletter(i); else if (iso_firststar23<0) iso_firststar23=i;} else { iso_count23++; if ( iso_first23<0 ) iso_first23=i; } }
-        if ( codex==32 ) { if (pipe) { if (iso_firstpipe32<0) iso_firstpipe32=i; if (pipe<2)       iso_pipeletter32[iso_pipecount32++]=pipeletter(i); else if (iso_firststar32<0) iso_firststar32=i;} else { iso_count32++; if ( iso_first32<0 ) iso_first32=i; } }
-        if ( codex==24 ) { if (pipe) { if (iso_firstpipe24<0) iso_firstpipe24=i; if (pipe<2)       iso_pipeletter24[iso_pipecount24++]=pipeletter(i); else if (iso_firststar24<0) iso_firststar24=i;} else { iso_count24++; if ( iso_first24<0 ) iso_first24=i; } }
-        if ( codex==33 ) { if (pipe) { if (iso_firstpipe33<0) iso_firstpipe33=i; if (pipe<2)       iso_pipeletter33[iso_pipecount33++]=pipeletter(i); else if (iso_firststar33<0) iso_firststar33=i;} else { iso_count33++; if ( iso_first33<0 ) iso_first33=i; } }
-        if ( codex==34 ) { if (pipe) { if (iso_firstpipe34<0) iso_firstpipe34=i; if (pipe<2)       iso_pipeletter34[iso_pipecount34++]=pipeletter(i); else if (iso_firststar34<0) iso_firststar34=i;} else { iso_count34++; if ( iso_first34<0 ) iso_first34=i; } }
-        if ( codex==42 ) { iso_count42++; if ( iso_first42<0 ) iso_first42=i; }
-        if ( codex==43 ) { iso_count43++; if ( iso_first43<0 ) iso_first43=i; }
-        if ( codex==44 ) { if (pipe) { if (iso_firstpipe44<0) iso_firstpipe44=i; if (pipe<2)       iso_pipeletter44[iso_pipecount44++]=pipeletter(i); else if (iso_firststar44<0) iso_firststar44=i;} else { iso_count44++; if ( iso_first44<0 ) iso_first44=i; } }
-      }
-    }
-
-    iso_pipeletter14[iso_pipecount14]=0;
-    iso_pipeletter22[iso_pipecount22]=0;
-    iso_pipeletter23[iso_pipecount23]=0;
-    iso_pipeletter32[iso_pipecount32]=0;
-    iso_pipeletter24[iso_pipecount24]=0;
-    iso_pipeletter33[iso_pipecount33]=0;
-    iso_pipeletter34[iso_pipecount34]=0;
-    iso_pipeletter44[iso_pipecount44]=0;
-  }
-} // setup_country
-
-
-int count_city_coordinates_for_country( int codex ) // returns count
-{
-  if (codex==21) return iso_count21;
-  if (codex==22) return iso_count22;
-  if (codex==13) return iso_count13;
-  return 0;
 }
 
 
-int city_for_country( int X, int codex ) // returns m
-{
-  if ( codex==21 ) return iso_first21+X;
-  if ( codex==13 ) return iso_first13+X;
-  return iso_first22+X;
+
+
+
+// find first territory rectangle of the same type as m
+static int firstNamelessRecord(int codex, int m, int firstcode) {
+    int i = m;
+    while (i >= firstcode && coDex(i) == codex && isNameless(i)) i--;
+    return (i+1);
+}
+
+// count all territory rectangles of the same type as m
+static int countNamelessRecords(int codex, int m, int firstcode) {
+    int i = firstNamelessRecord(codex, m, firstcode);
+    int e = m;
+    while (coDex(e) == codex) e++;
+    return (e-i);
 }
 
 
+
+
+// decodes dec->mapcode in context of territory rectangle m, territory dec->context
 // Returns x<0 in case of error, or record#
-int decode_nameless( const char *orginput, long *x, long *y,         int input_ctry, int codex, long debug_oldx, long debug_oldy )
+static int decodeNameless(decodeRec *dec, int m )
 {
-  int A;
+  int A,F;
   char input[8];
-  int codexlen = strlen(orginput)-1;
-  int dc = (codex != 22) ? 2 : 3;
+  int codexm = coDex(m);
+  int dc = (codexm != 22) ? 2 : 3;
 
+  int codexlen = strlen(dec->mapcode)-1;
   if ( codexlen!=4 && codexlen!=5 )
     return -2; // solve bad args
 
-  // copy without dot (its only 4 or 5 chars)
-  strcpy(input,orginput);
-  strcpy(input+dc,orginput+dc+1);
+  // copy without dot
+  strcpy(input,dec->mapcode);
+  strcpy(input+dc,dec->mapcode+dc+1);
 
-  setup_country(input_ctry);
 
-  A = count_city_coordinates_for_country( codex );
-  if ( (A<2 && codex!=21) || (codex==21 && A<1) )
+  A = countNamelessRecords(codexm,m,firstrec(dec->context));
+  F = firstNamelessRecord( codexm,m,firstrec(dec->context));
+
+  if ( (A<2 && codexm!=21) || A<1 )
     return -3;
 
-  {
+  { // check just in case
     int p = 31/A;
     int r = 31%A;
     long v;
-    int m;
     long SIDE;
     int swapletters=0;
     long xSIDE;
     long X=-1;
     long miny,maxy,minx,maxx;
 
-    // make copy of input, so we can swap letters @@@@@@@@@@@@@@@
+    // make copy of input, so we can swap around letters during the decoding
     char result[32];
     strcpy(result,input);
 
     // now determine X = index of first area, and SIDE
-    if ( codex!=21 && A<=31 )
+    if ( codexm!=21 && A<=31 )
     {
-      int offset = decode_chars[*result];
+      int offset = decodeChar(*result);
 
       if ( offset < r*(p+1) )
       {
@@ -921,17 +811,17 @@ int decode_nameless( const char *orginput, long *x, long *y,         int input_c
       }
       else
       {
-        swapletters=(p==1 && codex==22);
+        swapletters=(p==1 && codexm==22);
         X = r + (offset-(r*(p+1))) / p;
       }
     }
-    else if ( codex!=21 && A<62 )
+    else if ( codexm!=21 && A<62 )
     {
 
-      X = decode_chars[*result];
+      X = decodeChar(*result);
       if ( X < (62-A) )
       {
-        swapletters=(codex==22);
+        swapletters=(codexm==22);
       }
       else
       {
@@ -940,19 +830,21 @@ int decode_nameless( const char *orginput, long *x, long *y,         int input_c
     }
     else // code==21 || A>=62
     {
-      long BASEPOWER = (codex==21) ? 961*961 : 961*961*31;
+      long BASEPOWER = (codexm==21) ? 961*961 : 961*961*31;
       long BASEPOWERA = (BASEPOWER/A);
 
       if (A==62) BASEPOWERA++; else BASEPOWERA = 961*(BASEPOWERA/961);
 
-      v = fast_decode(result);
+      v = decodeBase31(result);
       X  = (long)(v/BASEPOWERA);
       v %= BASEPOWERA;
     }
 
+
+
     if (swapletters)
     {
-      m = city_for_country(           X,codex);
+      m = F + X;
       if ( ! isSpecialShape22(m) )
       {
         char t = result[codexlen-3]; result[codexlen-3]=result[codexlen-2]; result[codexlen-2]=t;
@@ -960,20 +852,20 @@ int decode_nameless( const char *orginput, long *x, long *y,         int input_c
     }
 
     // adjust v and X
-    if ( codex!=21 && A<=31 )
+    if ( codexm!=21 && A<=31 )
     {
 
-      v = fast_decode(result);
+      v = decodeBase31(result);
       if (X>0)
       {
         v -= (X*p + (X<r ? X : r)) * (961*961);
       }
 
     }
-    else if ( codex!=21 && A<62 )
+    else if ( codexm!=21 && A<62 )
     {
 
-      v = fast_decode(result+1);
+      v = decodeBase31(result+1);
       if ( X >= (62-A) )
         if ( v >= (16*961*31) )
         {
@@ -982,8 +874,8 @@ int decode_nameless( const char *orginput, long *x, long *y,         int input_c
         }
     }
 
-    m = city_for_country(           X,codex);
-    SIDE = smartdiv(m);
+    m = F + X;
+    SIDE = smartDiv(m);
 
     getboundaries(m,minx,miny,maxx,maxy);
     if ( isSpecialShape22(m) )
@@ -1003,7 +895,7 @@ int decode_nameless( const char *orginput, long *x, long *y,         int input_c
 
       if ( isSpecialShape22(m) )
       {
-        decode6(v,xSIDE,SIDE,&dx,&dy);
+        decodeSixWide(v,xSIDE,SIDE,&dx,&dy);
         dy=SIDE-1-dy;
       }
       else
@@ -1012,30 +904,36 @@ int decode_nameless( const char *orginput, long *x, long *y,         int input_c
         dx = v/SIDE;
       }
 
+
+
       if ( dx>=xSIDE )
       {
         return -123;
       }
 
       {
-        long dividerx4 = x_divider(miny,maxy); // *** note: dividerx4 is 4 times too large!
+        long dividerx4 = xDivider4(miny,maxy); // *** note: dividerx4 is 4 times too large!
         long dividery = 90;
 
-        *x = minx + ((dx * dividerx4)/4); // *** note: FIRST multiply, then divide... more precise, larger rects
-        *y = maxy - (dy*dividery);
+        dec->lon32 = minx + ((dx * dividerx4)/4); // *** note: FIRST multiply, then divide... more precise, larger rects
+        dec->lat32 = maxy - (dy*dividery);
+        decodeExtension(dec, dividerx4,dividery,-1); // nameless
 
-        add2res(x,y, dividerx4,dividery,-1);
+#ifdef SUPPORT_HIGH_PRECISION // BUGFIX!
+        dec->lon += ((dx * dividerx4)%4)/4.0;
+#endif
 
         return m;
       }
     }
   }
-  return -19;
-} // decode_nameless
+}
 
 
 
-void repack_if_alldigits(char *input,int aonly)
+
+
+static void repack_if_alldigits(char *input,int aonly)
 {
   char *s=input;
   int alldigits=1; // assume all digits
@@ -1062,7 +960,7 @@ void repack_if_alldigits(char *input,int aonly)
   }
 }
 
-int unpack_if_alldigits(char *input) // returns 1 if unpacked, 0 if left unchanged, negative if unchanged and an error was detected
+static int unpack_if_alldigits(char *input) // returns 1 if unpacked, 0 if left unchanged, negative if unchanged and an error was detected
 { // rewrite all-digit codes
   char *s=input;
   char *dotpos=NULL;
@@ -1073,7 +971,7 @@ int unpack_if_alldigits(char *input) // returns 1 if unpacked, 0 if left unchang
       break;
     else if (*s=='.' && !dotpos)
       dotpos=s;
-    else if ( decode_chars[*s]<0 || decode_chars[*s]>9 )
+    else if ( decodeChar(*s)<0 || decodeChar(*s)>9 )
       return 0;  // nondigit, so stop
   }
 
@@ -1081,7 +979,7 @@ int unpack_if_alldigits(char *input) // returns 1 if unpacked, 0 if left unchang
   {
       if (aonly) // v1.50 encoded only with A's
       {
-        int v = (s[0]=='A' || s[0]=='a' ? 31 : decode_chars[s[0]]) * 32 + (s[1]=='A' || s[1]=='a' ? 31 : decode_chars[s[1]]);
+        int v = (s[0]=='A' || s[0]=='a' ? 31 : decodeChar(s[0])) * 32 + (s[1]=='A' || s[1]=='a' ? 31 : decodeChar(s[1]));
         *input  = '0'+(v/100);
         s[0]= '0'+((v/10)%10);
         s[1]= '0'+(v%10);
@@ -1099,13 +997,13 @@ int unpack_if_alldigits(char *input) // returns 1 if unpacked, 0 if left unchang
       if (*e=='a' || *e=='A') v+=31;
       else if (*e=='e' || *e=='E') v+=32;
       else if (*e=='u' || *e=='U') v+=33;
-      else if (decode_chars[*e]<0) return -9; // invalid last character!
-      else v+=decode_chars[*e];
+      else if (decodeChar(*e)<0) return -9; // invalid last character!
+      else v+=decodeChar(*e);
 
       if (v<100)
       {
-        *s = encode_chars[v/10];
-        *e = encode_chars[v%10];
+        *s = encode_chars[(unsigned int)v/10];
+        *e = encode_chars[(unsigned int)v%10];
       }
       return 1;
     }
@@ -1114,779 +1012,7 @@ int unpack_if_alldigits(char *input) // returns 1 if unpacked, 0 if left unchang
 }
 
 
-#define VERSION_1_32// 1.32 true recursive processing
-#ifdef VERSION_1_32 // 1.32 true recursive processing
-int result_override=-1;
-#endif
-const char* makeiso(int cc,int longcode); // 0=short / 1=XX-YYY for states, XXX for country / 2=shortest unique
-
-void addresult(char *resultbuffer, char *result, long x,long y, int ccode)
-{
-  // add to global array (if any)
-#ifdef VERSION_1_32 // 1.32 true recursive processing
-  if (result_override>=0) ccode=result_override; // 1.32 true recursive processing
-#endif
-  if (*result && global_results && nr_global_results>=0 && nr_global_results+1<(2*MAXGLOBALRESULTS)) {
-    global_results[nr_global_results++] = addstorage(result);
-    global_results[nr_global_results++] = addstorage(makeiso(ccode,1));
-  }
-  // add to buffer (if any)
-  if (resultbuffer)
-  {
-    if (*resultbuffer) strcat(resultbuffer," ");
-    strcat(resultbuffer,result);
-  }
-} // addresult
-
-
-// returns -1 (error), or m (also returns *result!=0 in case of success)
-int encode_nameless( char *resultbuffer, char *result, long x, long y, int input_ctry, int CODEX, int forcecoder )
-{
-  int A;
-
-  *result=0;
-
-  setup_country(input_ctry);
-  A = count_city_coordinates_for_country( CODEX );
-
-  // determine A = nr of 2.2
-  if ( A>1 )
-  {
-    int p = 31/A;
-    int r = 31%A; // the first r items are p+1
-    long codexlen = (CODEX/10)+(CODEX%10);
-    // determine side of square around centre
-    long SIDE;
-    // now determine X = index of first area
-    long X=0;
-    // loop through country records
-    int j   = (CODEX==21 ? iso_first21 : (CODEX==22 ? iso_first22 : iso_first13));
-    int e = j+(CODEX==21 ? iso_count21 : (CODEX==22 ? iso_count22 : iso_count13));
-    for ( X=0; j<e; j++,X++ )
-    {
-      int m = (j);
-
-      if (forcecoder<0     || forcecoder==m)
-      {
-        long storage_offset;
-        long miny,maxy;
-        long minx,maxx;
-
-        long xSIDE,orgSIDE;
-
-
-        if ( CODEX!=21 && A<=31 )
-        {
-          int size=p; if (X<r) size++; // example: A=7, p=4 r=3:  size(X)={5,5,5,4,4,4,4}
-          storage_offset= (X*p + (X<r ? X : r)) * (961*961); // p=4,r=3: offset(X)={0,5,10,15,19,23,27}-31
-        }
-        else if ( CODEX!=21 && A<62 )
-        {
-          if ( X < (62-A) )
-          {
-            storage_offset = X*(961*961);
-          }
-          else
-          {
-            storage_offset = (62-A +           ((X-62+A)/2) )*(961*961);
-            if ( (X+A) & 1 )
-            {
-              storage_offset += (16*961*31);
-            }
-          }
-        }
-        else
-        {
-          long BASEPOWER = (CODEX==21) ? 961*961 : 961*961*31;
-          long BASEPOWERA = (BASEPOWER/A);
-          if (A==62)
-            BASEPOWERA++;
-          else
-            BASEPOWERA = (961) *           (BASEPOWERA/961);
-
-          storage_offset = X * BASEPOWERA;
-        }
-        SIDE = smartdiv(m);
-
-        getboundaries(m,minx,miny,maxx,maxy);
-        orgSIDE=xSIDE=SIDE;
-        if ( isSpecialShape22(m) ) //  - keep the existing rectangle!
-        {
-            SIDE = 1+((maxy-miny)/90); // new side, based purely on y-distance
-            xSIDE = (orgSIDE*orgSIDE) / SIDE;
-        }
-
-
-
-        if ( miny<=y && y<maxy && isInRange(x,minx,maxx) )
-        {
-          long v = storage_offset;
-
-          long dividerx4 = x_divider(miny,maxy); // *** note: dividerx4 is 4 times too large!
-          long dx = (4*(x-minx))/dividerx4; // like div, but with floating point value
-          long extrax4 = (x-minx)*4 - dx*dividerx4; // like modulus, but with floating point value
-
-          long dividery = 90;
-          long dy     = (maxy-y)/dividery;  // between 0 and SIDE-1
-          long extray = (maxy-y)%dividery;
-
-          if ( isSpecialShape22(m) )
-          {
-            v += encode6(dx,SIDE-1-dy,xSIDE,SIDE);
-          }
-          else
-          {
-            v +=  (dx*SIDE + dy);
-          }
-
-          fast_encode( result, v, codexlen+1 );
-          {
-            int dotp=codexlen;
-            if (CODEX==13)
-              dotp--;
-            memmove(result+dotp,result+dotp-1,4); result[dotp-1]='.';
-          }
-
-          if ( ! isSpecialShape22(m) )
-          if ( CODEX==22 && A<62 && orgSIDE==961 )
-          {
-            char t = result[codexlen-2]; result[codexlen-2]=result[codexlen]; result[codexlen]=t;
-          }
-
-          addpostfix(result,extrax4,extray,dividerx4,dividery);
-
-          return m;
-
-        } // in range
-
-      } // forcecoder?
-    }
-  } // there are multiple 2.2 !
-
-  return -1;
-} // encode_nameless
-
-
-
-
-// returns nonzero if error
-//    -182 no countryname
-int master_decode(  long *nx,long *ny, // <- store result in nx,ny
-          const char *org_input,
-          const char *default_cityname, int input_ctry, // <- context, in case input has no name, or no countryname
-          long debug_oldx,long debug_oldy // <- optional "original coordinates"
-          )
-{
- const char *dot=NULL;
- int err=0;
- int m=-1; // key record for decoding
-
- int ilen=strlen(org_input);
- char input[16]; if (ilen<5 || ilen>14) return -8; strcpy(input,org_input);
-
- {
-   char *min = strchr(input,'-');
-   if (min) {
-     *min++=0;
-     extrapostfix=&org_input[min-input];
-     ilen=strlen(input);
-   } else extrapostfix="";
- }
-
-
- *nx=*ny=0; // reset to zero in case of error
-
- {
-  char *city = (char*)default_cityname;
-
-  int voweled = unpack_if_alldigits(input);
-  if (voweled<0)
-    return -7;
-
-  // debug support: U-lead pre-processing
-  if (*input=='u' || *input=='U')  {
-    strcpy(input,input+1);
-    ilen--;
-    voweled=1;
-  }
-
-  if (ilen>10) return -8;
-
-  // find dot and check that all characters are valid
-  {
-    int nrd=0; // nr of true digits
-    const char *s=input;
-    for ( ; *s!=0; s++ )
-    {
-      if (*s=='.')
-        { if (dot) return -5; else dot=s; }
-      else if ( decode_chars[*s]<0 )
-        return -4; // invalid char
-      else if ( decode_chars[*s]<10 ) // digit?
-        nrd++;
-    }
-    if (dot==NULL)
-      return -2;
-    else if (!voweled && nrd+1==ilen) // there is a dot, and everything else is a digit!
-      return -998;
-  }
-
-//////////// AT THIS POINT, dot=FIRST DOT, input=CLEAN INPUT (no vowels) ilen=INPUT LENGTH
-
-  // analyse input
-  {
-    int prelen = (dot-input);
-    int postlen = ilen-1-prelen;
-    if ( prelen<2 || prelen>5 || postlen<2 || postlen>4 )
-      return -3;
-  }
-
-//////////////////////////////////
-
-    if ( ilen>=10 )
-      input_ctry = ccode_earth;
-
-    if (input_ctry<0) return input_ctry;
-    setup_country(input_ctry);
-
-    // special case: 43 or worse, for a state
-    if ( (ilen==8 || ilen==9) && iso_count43==1 && isuseless((iso_first43)) && ( mIsIndiaState((input_ctry )) || mIsMexicoState((input_ctry )) ) )
-    {
-      input_ctry =
-          mIsMexicoState((input_ctry )) ? ccode_mex :
-          mIsIndiaState((input_ctry )) ? ccode_ind :
-          CCODE_ERR;
-      setup_country(input_ctry);
-    }
-    else if ( ilen==9 && iso_count44==1 && isuseless((iso_first44)) && mIsState((input_ctry ))   )
-    {
-      input_ctry =
-        mIsUsaState((input_ctry )) ? ccode_usa :
-        mIsCanadaState((input_ctry )) ? ccode_can :
-        mIsAustraliaState((input_ctry )) ? ccode_aus :
-        mIsBrazilState((input_ctry )) ? ccode_bra :
-        mIsChinaState((input_ctry )) ? ccode_chn :
-        mIsRussiaState((input_ctry )) ? ccode_rus :
-        CCODE_ERR;
-      setup_country(input_ctry);
-    }
-
-    if (
-             ( ilen==5 && input[2]=='.' && iso_count21==0 && iso_count22==1 )
-          || ( ilen==5 && input[2]=='.' && iso_count21==1 )
-          || ( ilen==6 && input[2]=='.' && iso_count23==1 )
-          || ( ilen==6 && input[3]=='.' && iso_count32==1 )
-          || ( ilen==7 && input[2]=='.' && iso_count24==1 )
-          || ( ilen==7 && input[3]=='.' && iso_count33==1 )
-          || ( ilen==7 && input[4]=='.' && iso_count42==1 )
-          || ( ilen==8 && input[3]=='.' && iso_count34==1 )
-          || ( ilen==8 && input[4]=='.' && iso_count43==1 )
-          || ( ilen==9 && input[4]=='.' && iso_count44==1 )
-       )
-      {
-          long minx,miny,maxx,maxy;
-          if ( ilen==5 && iso_count21==1) m = (iso_first21);
-          if ( ilen==5 && iso_count21==0) m = (iso_first22);
-          if ( ilen==6 && input[2]=='.' ) m = (iso_first23);
-          if ( ilen==6 && input[3]=='.' ) m = (iso_first32);
-          if ( ilen==7 && input[2]=='.' ) m = (iso_first24);
-          if ( ilen==7 && input[3]=='.' ) m = (iso_first33);
-          if ( ilen==7 && input[4]=='.' ) m = (iso_first42);
-          if ( ilen==8 && input[3]=='.' ) m = (iso_first34);
-          if ( ilen==8 && input[4]=='.' ) m = (iso_first43);
-          if ( ilen==9 ) m = (iso_first44);
-
-          getboundaries(m,minx,miny,maxx,maxy);
-          decode_grid( input,nx,ny, m, minx,miny,maxx,maxy);
-
-          //
-          if (isuseless(m)) {
-            int j,fitssomewhere=0;
-            for (j=iso_start; (j)<m; j++) { // look in previous rects
-              long minx,miny,maxx,maxy,xdiv8;
-              if (isuseless((j))) continue;
-              getboundaries((j),minx,miny,maxx,maxy);
-              // 1.33 fix to not remove valid results just across the edge of a territory
-              xdiv8 = x_divider(miny,maxy)/4; // should be /8 but there's some extra margin
-              if ( miny-60<=*ny && *ny<maxy+60 && isInRange(*nx,minx-xdiv8,maxx+xdiv8) ) { fitssomewhere=1; break; }
-            }
-            if (!fitssomewhere) {
-              err=-1234;
-            }
-          }
-
-
-      }
-      else if ( ilen==6 && input[3]=='.' && iso_count22>1 ) // multiple 22 into 3.2
-      {
-        m   = decode_nameless( input, nx,ny, input_ctry, 22, debug_oldx,debug_oldy);
-        if (m<0) err=m; else err=0;
-      }
-      else if ( ilen==6 && input[2]=='.' && iso_count13>1 ) // multiple 13 into 2.3
-      {
-        m   = decode_nameless( input, nx,ny, input_ctry, 13, debug_oldx,debug_oldy);
-        if (m<0) err=m; else err=0;
-      }
-      else if ( ilen==5 ) // multiple 21 into 2.2
-      {
-        if (iso_count21<=0)
-          err=-191;
-        else if ( input[2]!='.' )
-          err=-9;
-        else {
-          m   = decode_nameless( input, nx,ny, input_ctry, 21, debug_oldx,debug_oldy);
-          if (m<0) err=m; else err=0;
-        }
-      }
-      else if (
-                 ( ilen==7 && iso_firststar23>=0 && input[3]=='.')
-              || ( ilen==6 && iso_firststar22>=0 && input[2]=='.')
-        )
-      {
-        int start = (ilen==6 ? iso_firststar22 : iso_firststar23);
-        int rctry = (start);
-
-        long STORAGE_START=0;
-        long value;
-        int j;
-
-        value = fast_decode(input); // decode top
-        value *= (961*31);
-
-        err=-1;
-        for ( j=start; rcodex(j)==rcodex(start) && pipetype(j)>1; j++ )
-        {
-          long minx,miny,maxx,maxy;
-
-
-          m=(j);
-          getboundaries(m,minx,miny,maxx,maxy);
-
-          {
-            // determine how many cells
-            long H = (maxy-miny+89)/90; // multiple of 10m
-            long xdiv = x_divider(miny,maxy);
-            long W = ( (maxx-minx)*4 + (xdiv-1) ) / xdiv;
-            long product = W*H;
-
-            // decode
-            // round up to multiples of YSIDE3*XSIDE3...
-            H = YSIDE3*( (H+YSIDE3-1)/YSIDE3 );
-            W = XSIDE3*( (W+XSIDE3-1)/XSIDE3 );
-            product = (W/XSIDE3)*(H/YSIDE3)*961*31;
-            {
-            long GOODROUNDER = rcodex(m)>=23 ? (961*961*31) : (961*961);
-            if ( pipetype(m)==2 ) // *+ pipe!
-              product = ((STORAGE_START+product+GOODROUNDER-1)/GOODROUNDER)*GOODROUNDER - STORAGE_START;
-            }
-
-
-            if ( value >= STORAGE_START && value < STORAGE_START + product )
-            {
-              // decode
-              long dividerx = (maxx-minx+W-1)/W;
-              long dividery = (maxy-miny+H-1)/H;
-
-              value -= STORAGE_START;
-              value /= (961*31);
-
-              err=0; // decoding pipeletter!
-
-              // PIPELETTER DECODE
-              {
-                long difx,dify;
-                decode_triple(input+ilen-3,&difx,&dify); // decode bottom 3 chars
-                {
-                  long vx = (value / (H/YSIDE3))*XSIDE3 + difx; // is vx/168
-                  long vy = (value % (H/YSIDE3))*YSIDE3 + dify; // is vy/176
-                  *ny = maxy - vy*dividery;
-                  *nx = minx + vx*dividerx;
-
-                  if ( *nx<minx || *nx>=maxx || *ny<miny || *ny>maxy ) // *** CAREFUL! do this test BEFORE adding remainder...
-                  {
-                    err = -122; // invalid code
-                  }
-
-                  add2res(nx,ny, dividerx<<2,dividery,-1);
-
-                }
-              }
-
-              break;
-            }
-            STORAGE_START += product;
-          }
-        } // for j
-      }
-// ************** PIPELETTER 32 33 42 34 43 54=world
-      else if (
-                   ( ilen== 6 && iso_firstpipe22>=0 && iso_firststar22<0 && input[3]=='.' ) // lettered 22-pipes -> 32
-                || ( ilen== 7 && iso_firstpipe23>=0 && iso_firststar23<0 && input[3]=='.' ) // lettered 23-pipes -> 33
-                || ( ilen== 7 && iso_firstpipe32>=0 && iso_firststar32<0 && input[4]=='.' ) // lettered 32-pipes -> 42
-                || ( ilen== 7 && iso_firstpipe14>=0 && iso_firststar14<0 && input[2]=='.' ) // lettered 14-pipes -> 24
-                || ( ilen== 8 && iso_firstpipe24>=0 && iso_firststar24<0 && input[3]=='.' ) // lettered 24-pipes -> 34
-                || ( ilen== 8 && iso_firstpipe33>=0 && iso_firststar33<0 && input[4]=='.' ) // lettered 33-pipes -> 43
-                || ( ilen== 9 && iso_firstpipe34>=0 && iso_firststar34<0 && input[4]=='.' ) // lettered 34-pipes -> 44
-                || ( ilen==10 && iso_firstpipe44>=0 && iso_firststar44<0 && input[5]=='.' ) // lettered 44-pipes -> 54
-              )
-      {
-        const char *pipeptr;
-        char letter=toupper(*input);
-        if (letter=='I') letter='1';
-        if (letter=='O') letter='0';
-        switch (ilen)
-        {
-          case  6: pipeptr = strchr(iso_pipeletter22,letter); if (pipeptr) m=(iso_firstpipe22+(pipeptr-iso_pipeletter22)); break;
-          case  7: if (input[3]=='.') {
-                   pipeptr = strchr(iso_pipeletter23,letter); if (pipeptr) m=(iso_firstpipe23+(pipeptr-iso_pipeletter23)); break;
-          }else if (input[2]=='.') {
-                   pipeptr = strchr(iso_pipeletter14,letter); if (pipeptr) m=(iso_firstpipe14+(pipeptr-iso_pipeletter14)); break;
-          }else{
-                   pipeptr = strchr(iso_pipeletter32,letter); if (pipeptr) m=(iso_firstpipe32+(pipeptr-iso_pipeletter32)); break;
-          }
-          case  8: if (input[3]=='.') {
-                   pipeptr = strchr(iso_pipeletter24,letter); if (pipeptr) m=(iso_firstpipe24+(pipeptr-iso_pipeletter24)); break;
-          }else{
-                   pipeptr = strchr(iso_pipeletter33,letter); if (pipeptr) m=(iso_firstpipe33+(pipeptr-iso_pipeletter33)); break;
-          }
-          case  9: pipeptr = strchr(iso_pipeletter34,letter); if (pipeptr) m=(iso_firstpipe34+(pipeptr-iso_pipeletter34)); break;
-          case 10: pipeptr = strchr(iso_pipeletter44,letter); if (pipeptr) m=(iso_firstpipe44+(pipeptr-iso_pipeletter44)); break;
-        }
-
-        if (!ISGOODAREA(m))
-        {
-          err = -98;
-        }
-        else
-        {
-          long minx,miny,maxx,maxy;
-          ilen--;
-          getboundaries(m,minx,miny,maxx,maxy);
-          decode_grid( input+1,nx,ny, m, minx,miny,maxx,maxy);
-          err=0;
-        }
-      }
-// ************** fail!
-      else // THIS MEANS EVERYTHING HAS FAILED!!!
-      {
-        err=-99;
-      }
- }
-
-// *********************** done, return results...
-
-
-  if (err==0)
-  {
-    // * make sure it fits the country *
-    if (!ISEARTH(input_ctry))
-    {
-      long minx,miny,maxx,maxy,xdiv8;
-      getboundaries((iso_end),minx,miny,maxx,maxy);
-      xdiv8 = x_divider(miny,maxy)/4; // should be /8 but there's some extra margin
-      if ( ! ( miny-60<=*ny && *ny<maxy+60 && isInRange(*nx,minx-xdiv8,maxx+xdiv8) ) ) // no fit?
-      {
-        err=-2222;
-      }
-    }
-  }
-
-
-  return err;
-} // master_decode
-
-
-
-
-
-
-// make sure resultbuffer is large enough!
-// x,y = lon/lat times 1.000.000
-void master_encode( char *resultbuffer, int the_ctry, long x, long y, int forcecoder, int stop_with_one_result, int allow_world, int skip_parentstate )
-{
-  int result_ctry=the_ctry;
-  int i;
-  if (resultbuffer) *resultbuffer=0;
-
-  if (the_ctry<0) return;
-  if (y> 90000000) y-=180000000; else if (y< -90000000) y+=180000000;
-  if (x>179999999) x-=360000000; else if (x<-180000000) x+=360000000;
-
-  ///////////////////////////////////////////////////////////
-  // turn into 3-letter ISO code!
-  ///////////////////////////////////////////////////////////
-  setup_country( the_ctry );
-  i=iso_start;
-
-
-  if (!ISEARTH(the_ctry))
-  {
-    long minx,miny,maxx,maxy;
-    getboundaries((iso_end),minx,miny,maxx,maxy);
-    if ( ! (miny<=y && y<maxy && isInRange(x,minx,maxx) ) )
-    {
-      i=iso_end+1; // skip to "Earth" (if supported)
-      if (!allow_world /*&& skip_parentstate*/) return;
-    }
-  }
-
-
-  ///////////////////////////////////////////////////////////
-  // look for encoding options
-  ///////////////////////////////////////////////////////////
-  {
-    char result[128];
-    long minx,miny,maxx,maxy;
-    long STORAGE_START=0;
-    int forcecoder_starpipe = (forcecoder>=0    && pipetype(forcecoder)>1 );
-    int result_counter=0;
-    *result=0;
-    for( ; i<NR_BOUNDARY_RECS; i++ )
-    {
-      int m=(i);
-      int codex;
-
-      if ( i==iso_end && isuseless(m) && mIsState(the_ctry) ) // last item is a reference to a state's country
-      {
-        if (skip_parentstate)
-          return;
-        if (forcecoder>=0   ) // we would have found it the normal way!
-          return;
-
-#ifdef VERSION_1_32 // 1.32 true recursive processing
-        result_override=the_ctry;  // 1.32 true recursive processing
-#endif
-
-        the_ctry =
-          mIsUsaState(the_ctry) ? ccode_usa :
-          mIsCanadaState(the_ctry) ? ccode_can :
-          mIsIndiaState(the_ctry) ? ccode_ind :
-          mIsMexicoState(the_ctry) ? ccode_mex :
-          mIsBrazilState(the_ctry) ? ccode_bra :
-          mIsChinaState(the_ctry) ? ccode_chn :
-          mIsRussiaState(the_ctry) ? ccode_rus :
-          ccode_aus;
-
-
-#ifdef VERSION_1_32 // 1.32 true recursive processing
-        master_encode( resultbuffer, the_ctry, x,y, forcecoder, stop_with_one_result,/*allow-world*/0,1 );
-        result_override=-1;
-        return; /**/
-#else
-        setup_country( the_ctry );
-        i=iso_start-1; continue;
-#endif
-      }
-
-      if ( i>iso_end )
-      {
-        if (forcecoder>=0    || !allow_world )
-          break;
-        // find first WORLD record...
-        result_ctry=the_ctry=ccode_earth;
-        setup_country(the_ctry);
-        // now process from here...
-        i=iso_start-1; continue;
-      }
-
-
-      if ( isuseless(m) && result_counter==0 && forcecoder<0 ) // skip useless records unless there already is a result
-        continue;
-
-
-      if ( forcecoder>=0    && m!=forcecoder && (forcecoder_starpipe==0 || pipetype(m)<=1)                ) continue; // not the right forcecoder (unless starpipe)
-
-      codex = rcodex(m);
-      if ( codex==54 ) continue; // exlude antarctica "inner coding" options
-
-
-      getboundaries(m,minx,miny,maxx,maxy);
-
-      if ( isnameless(m) )
-      {
-        if ( y<miny || y>=maxy || !isInRange(x,minx,maxx) ) continue;
-        {
-          int ret=encode_nameless( resultbuffer, result, x,y, the_ctry, codex,  m );
-          if (ret>=0)
-          {
-            i=ret;
-          }
-        }
-      }
-      else if ( pipetype(m)>1 )
-      {
-        if ( i<=iso_start || rcodex(i-1)!=codex || pipetype(i-1)<=1 ) // is this the FIRST starpipe?
-        {
-          STORAGE_START=0;
-        }
-
-
-          {
-            // determine how many cells
-            long H = (maxy-miny+89)/90; // multiple of 10m
-            long xdiv = x_divider(miny,maxy);
-            long W = ( (maxx-minx)*4 + (xdiv-1) ) / xdiv;
-            long product = W*H;
-
-            // encodee
-            // round up to multiples of YSIDE3*XSIDE3...
-            H = YSIDE3*( (H+YSIDE3-1)/YSIDE3 );
-            W = XSIDE3*( (W+XSIDE3-1)/XSIDE3 );
-            product = (W/XSIDE3)*(H/YSIDE3)*961*31;
-            {
-            long GOODROUNDER = codex>=23 ? (961*961*31) : (961*961);
-            if ( pipetype(m)==2 ) // plus pipe
-              product = ((STORAGE_START+product+GOODROUNDER-1)/GOODROUNDER)*GOODROUNDER - STORAGE_START;
-            }
-
-          if ( ( !ISGOODAREA(forcecoder) || forcecoder==m ) && ( miny<=y && y<maxy && isInRange(x,minx,maxx) ) )
-          {
-            // encode
-            long dividerx = (maxx-minx+W-1)/W;
-            long vx =     (x-minx)/dividerx;
-            long extrax = (x-minx)%dividerx;
-
-            long dividery = (maxy-miny+H-1)/H;
-            long vy =     (maxy-y)/dividery;
-            long extray = (maxy-y)%dividery;
-
-            long codexlen = (codex/10)+(codex%10);
-            long value = ((vx/XSIDE3)*(H/YSIDE3) + (vy/YSIDE3));
-
-            // PIPELETTER ENCODE
-            fast_encode( result, (STORAGE_START/(961*31)) + value, codexlen-2 );
-            result[codexlen-2]='.';
-            encode_triple( result+codexlen-1, vx%XSIDE3, vy%YSIDE3 );
-
-            addpostfix( result,extrax<<2,extray,dividerx<<2,dividery);
-
-
-            {
-              #ifdef SUPPRESS_MULTIPLE_PIPES
-              while ( i<iso_end && rcodex(i+1)==codex )
-                i++;
-              #endif
-
-            }
-          }
-          STORAGE_START += product;
-        }
-      }
-      else // must be grid, possibly a multi-area
-      {
-          int multi_area = (pipetype(m)==1 ? 1 : 0); // has pipe letter?
-          if (codex==21) { if (iso_count21==1) codex=22; else continue; }
-
-          if ( miny<=y && y<maxy && isInRange(x,minx,maxx) )
-          if ( codex!=55 ) // exclude Earth 55
-          {
-            encode_grid( result+multi_area, x,y, m, codex, minx,miny,maxx,maxy );
-            if (multi_area && result[multi_area])
-            {
-              *result = pipeletter(m);
-            }
-          }
-      } // codex>21 grid, may be multi-area
-
-      // =========== handle result if any
-      if (*result) // GOT A RESULT?
-      {
-        result_counter++;
-
-        repack_if_alldigits(result,0);
-
-        addresult(resultbuffer,result,x,y,result_ctry); // 1.29 - also add parents recursively
-        if (stop_with_one_result) return;
-        *result=0;
-      }
-    } // for i
-  }
-} // master_encode
-
-
-
-
-
-
-#ifndef REMOVE_VALIDCODE
-int valid_code( const char *input ) // returns < 0 if invalid, 0 if potentially valid, 1 if potentially a complete code (i.e. from 2.2 to 5.4, using valid chars)
-{
-  const unsigned char *i = (const unsigned char *)input;
-  int dots=0,prefix=0,postfix=0,alldigits=1,voweled=0;
-  for ( ; *i!=0; i++ )
-  {
-    if ( *i=='.' )
-    {
-      if ( dots++ )
-        return -1; // more than one dot!
-      if (prefix<2)
-        return -2; // prefix less than 2 characters!
-    }
-    else
-    {
-      if ( decode_chars[*i]<0 )
-      {
-
-        if ( decode_chars[*i]<-1 ) // i.e. A, E or U
-        {
-          if ( (*i=='A' || *i=='a') && i==(const unsigned char*)input ) // A is the first letter
-          {
-            voweled=1;
-            prefix--;  // do not count as prefix!
-          }
-          else if (alldigits && !voweled && i[1]=='.') // vowel after digits just before dot
-          {
-            voweled=1;
-          }
-          else if (alldigits && voweled && i[1]==0 && i[-1]!='.') // last char of voweled entry, not right after dot?
-            ;
-          else
-            return -6; // invalid char: vowel
-        }
-        else
-
-        {
-          return -3; // other invalid character
-        }
-      }
-      else // consonant or digit
-      {
-        if (*i<'0' || *i>'9') // nondigit
-        {
-          alldigits=0;
-          if (voweled && i[1]!=0) return -7; // nondigit in voweled entry, not in the last position: invalid
-        }
-      }
-      if (dots)
-      {
-        postfix++;
-        if (postfix>4) return -4; // more than 4 letters postfix
-      }
-      else
-      {
-        prefix++;
-        if (prefix>5) return -5; // more than 5 letters prefix
-      }
-    }
-  }
-
-  // return if it looks like a "complete" code (i.e. one that can be decoded
-  if ( postfix<2 ) return -8;
-  if (alldigits && !voweled) return -11;
-  // note: at this point, prefix is between 2 and 5, and postfix is between 2 and 4 (12 options)
-  if ( postfix==4 )
-  {
-    return 1; // the 4 options 2.4 3.4 4.4 5.4 are all possible!
-  }
-  // note: at this point, prefix is between 2 and 5, and postfix is between 2 and 3
-  if ( prefix==5 ) return -9; // the 2 options 5.2 5.3 are impossible!
-  // note: at this point, prefix is between 2 and 4, and postfix is between 2 and 3
-  return 1; // the other 6 options (2.2 3.2 4.2 2.3 3.3 4.3) are all possible
-}
-#endif // REMOVE_VALIDCODE
-
-
-int stateletter(int ccode) // parent
+static int stateletter(int ccode) // parent
 {
   if (ccode>=usa_from && ccode<=usa_upto) return 1; //ccode_usa
   if (ccode>=ind_from && ccode<=ind_upto) return 2; //ccode_ind
@@ -1899,128 +1025,458 @@ int stateletter(int ccode) // parent
   return 0;
 }
 
-int stateparent(int ccode) // returns parent, or -1
-{
-  if (ccode>=usa_from && ccode<=usa_upto) return ccode_usa;
-  if (ccode>=ind_from && ccode<=ind_upto) return ccode_ind;
-  if (ccode>=can_from && ccode<=can_upto) return ccode_can;
-  if (ccode>=aus_from && ccode<=aus_upto) return ccode_aus;
-  if (ccode>=mex_from && ccode<=mex_upto) return ccode_mex;
-  if (ccode>=bra_from && ccode<=bra_upto) return ccode_bra;
-  if (ccode>=rus_from && ccode<=rus_upto) return ccode_rus;
-  if (ccode>=chn_from && ccode<=chn_upto) return ccode_chn;
-  return -1;
-}
 
-char makeiso_bufbytes[16];
-char *makeiso_buf;
-const char* makeiso(int cc,int longcode) // 0=short / 1=XX-YYY for states, XXX for country / 2=shortest unique
+// returns -1 (error), or m (also returns *result!=0 in case of success)
+static int encodeNameless( char *result, const encodeRec* enc, int input_ctry, int codexm, int extraDigits, int m )
 {
-  if (cc<0 || cc>=MAX_MAPCODE_TERRITORY_CODE) return ""; else
+  // determine how many nameless records there are (A), and which one is this (X)...
+  long y= enc->lat32,x= enc->lon32;
+  int  A = countNamelessRecords(codexm, m, firstrec(input_ctry));
+  long X = m - firstNamelessRecord( codexm, m, firstrec(input_ctry));
+
+  *result=0;
+
   {
-    int p=stateletter(cc);
-    const char* ei=entity_iso3(cc);
-    if (*ei>='0' && *ei<='9') ei++;
-    if (makeiso_buf==makeiso_bufbytes) makeiso_buf=makeiso_bufbytes+8; else makeiso_buf=makeiso_bufbytes;
-    if (longcode && p)
+    int p = 31/A;
+    int r = 31%A; // the first r items are p+1
+    long codexlen = (codexm/10)+(codexm%10);
+    // determine side of square around centre
+    long SIDE;
+
+    long storage_offset;
+    long miny,maxy;
+    long minx,maxx;
+
+    long xSIDE,orgSIDE;
+
+
+    if ( codexm!=21 && A<=31 )
     {
-      memcpy(makeiso_buf,&parents2[p*3-3],2);
-      makeiso_buf[2]='-';
-      strcpy(makeiso_buf+3,ei);
+      int size=p; if (X<r) size++; // example: A=7, p=4 r=3:  size(X)={5,5,5,4,4,4,4}
+      storage_offset= (X*p + (X<r ? X : r)) * (961*961); // p=4,r=3: offset(X)={0,5,10,15,19,23,27}-31
+    }
+    else if ( codexm!=21 && A<62 )
+    {
+      if ( X < (62-A) )
+      {
+        storage_offset = X*(961*961);
+      }
+      else
+      {
+        storage_offset = (62-A +           ((X-62+A)/2) )*(961*961);
+        if ( (X+A) & 1 )
+        {
+          storage_offset += (16*961*31);
+        }
+      }
     }
     else
     {
-      strcpy(makeiso_buf,ei);
-    }
-    return makeiso_buf;
-  }
-}
-
-
-
-int resultlen(const char *result)
-{
-  const char* hpos = strchr(result,'-');
-  if (hpos)
-    return hpos-result;
-  return strlen(result);
-}
-
-// returns empty string if error (e.g. bad iso);
-// returns nonzero if a code was generated
-int mapcode_encode(char *result,long y, long x, const char *iso3, char *isofound)
-{
-  int cc=ccode_of_iso3(iso3);
-  master_encode(result,cc,x,y,-1,1,1,0);
-  if (isofound)
-  {
-    *isofound=0;
-    if (*result) {
-      if (resultlen(result)==10)
-        strcpy(isofound,makeiso(ccode_earth,1));
+      long BASEPOWER = (codexm==21) ? 961*961 : 961*961*31;
+      long BASEPOWERA = (BASEPOWER/A);
+      if (A==62)
+        BASEPOWERA++;
       else
-        strcpy(isofound,makeiso(cc,1));
+        BASEPOWERA = (961) *           (BASEPOWERA/961);
+
+      storage_offset = X * BASEPOWERA;
     }
+    SIDE = smartDiv(m);
+
+    getboundaries(m,minx,miny,maxx,maxy);
+    orgSIDE=xSIDE=SIDE;
+    if ( isSpecialShape22(m) ) //  - keep the existing rectangle!
+    {
+        SIDE = 1+((maxy-miny)/90); // new side, based purely on y-distance
+        xSIDE = (orgSIDE*orgSIDE) / SIDE;
+    }
+
+    if (fitsInside(x,y,m))
+    {
+      long v = storage_offset;
+
+      long dividerx4 = xDivider4(miny,maxy); // *** note: dividerx4 is 4 times too large!
+#ifdef SUPPORT_HIGH_PRECISION // precise encoding: take fraction into account!
+      long xFracture = (long)(4* enc->fraclon);
+#else
+      long xFracture = 0;
+#endif
+      long dx = (4*(x-minx)+xFracture)/dividerx4; // like div, but with floating point value
+      long extrax4 = (x-minx)*4 - dx*dividerx4; // like modulus, but with floating point value
+
+      long dividery = 90;
+      long dy     = (maxy-y)/dividery;  // between 0 and SIDE-1
+      long extray = (maxy-y)%dividery;
+
+#ifdef SUPPORT_HIGH_PRECISION // precise encoding: check if fraction takes this out of range
+      if (extray==0 &&  enc->fraclat>0) {
+          if (dy==0)
+            return -1; // fraction takes this coordinate out of range
+          dy--;
+          extray += dividery;
+
+      }
+#endif
+
+      if ( isSpecialShape22(m) )
+      {
+        v += encodeSixWide(dx,SIDE-1-dy,xSIDE,SIDE);
+      }
+      else
+      {
+        v +=  (dx*SIDE + dy);
+      }
+
+      encodeBase31( result, v, codexlen+1 ); // nameless
+      {
+        int dotp=codexlen;
+        if (codexm==13)
+          dotp--;
+        memmove(result+dotp,result+dotp-1,4); result[dotp-1]='.';
+      }
+
+      if ( ! isSpecialShape22(m) )
+      if ( codexm==22 && A<62 && orgSIDE==961 )
+      {
+        char t = result[codexlen-2]; result[codexlen-2]=result[codexlen]; result[codexlen]=t;
+      }
+
+      encodeExtension(result,extrax4,extray,dividerx4,dividery,extraDigits,-1,enc); // nameless
+
+      return m;
+
+    } // in range
   }
-  return *result;
+  return -1;
 }
+
+
+
+
+// decodes dec->mapcode in context of territory rectangle m
+static int decodeAutoHeader(decodeRec *dec,  int m )
+{
+  const char *input = dec->mapcode;
+  int err = -1;
+  int firstcodex = coDex(m);
+  char *dot = strchr(input,'.');
+
+  long STORAGE_START=0;
+  long value;
+
+  if (dot==NULL)
+    return -201;
+
+  value = decodeBase31(input); // decode top
+  value *= (961*31);
+
+  for ( ; coDex(m)==firstcodex && recType(m)>1; m++ )
+  {
+    long minx,miny,maxx,maxy;
+    getboundaries(m,minx,miny,maxx,maxy);
+
+    {
+      // determine how many cells
+      long H = (maxy-miny+89)/90; // multiple of 10m
+      long xdiv = xDivider4(miny,maxy);
+      long W = ( (maxx-minx)*4 + (xdiv-1) ) / xdiv;
+      long product;
+
+      // decode
+      // round up to multiples of YSIDE3*XSIDE3...
+      H = YSIDE3*( (H+YSIDE3-1)/YSIDE3 );
+      W = XSIDE3*( (W+XSIDE3-1)/XSIDE3 );
+      product = (W/XSIDE3)*(H/YSIDE3)*961*31;
+      {
+        long GOODROUNDER = coDex(m)>=23 ? (961*961*31) : (961*961);
+        if ( recType(m)==2 ) // *+ pipe!
+          product = ((STORAGE_START+product+GOODROUNDER-1)/GOODROUNDER)*GOODROUNDER - STORAGE_START;
+      }
+
+
+      if ( value >= STORAGE_START && value < STORAGE_START + product )
+      {
+        // decode
+        long dividerx = (maxx-minx+W-1)/W;
+        long dividery = (maxy-miny+H-1)/H;
+
+        value -= STORAGE_START;
+        value /= (961*31);
+
+        err=0;
+
+        // PIPELETTER DECODE
+        {
+          long difx,dify;
+          decode_triple(dot+1,&difx,&dify); // decode bottom 3 chars
+          {
+            long vx = (value / (H/YSIDE3))*XSIDE3 + difx; // is vx/168
+            long vy = (value % (H/YSIDE3))*YSIDE3 + dify; // is vy/176
+
+            dec->lat32 = maxy - vy*dividery;
+            dec->lon32 = minx + vx*dividerx;
+            if ( dec->lon32<minx || dec->lon32>=maxx || dec->lat32<miny || dec->lat32>maxy ) // *** CAREFUL! do this test BEFORE adding remainder...
+            {
+              return -122; // invalid code
+            }
+            decodeExtension(dec,  dividerx<<2,dividery,-1); // autoheader decode
+
+          }
+        }
+
+        break;
+      }
+      STORAGE_START += product;
+    }
+  } // for j
+  return 0;
+}
+
+// encode in m (know to fit)
+static int encodeAutoHeader( char *result, const encodeRec *enc, int m, int extraDigits )
+{
+  int i;
+  long STORAGE_START=0;
+  long y= enc->lat32,x= enc->lon32;
+
+  // search back to first of the group
+  int firstindex = m;
+  int codex = coDex(m);
+  while ( recType(firstindex - 1) > 1 && coDex(firstindex - 1) == codex)
+      firstindex--;
+
+  for (i = firstindex; coDex(i) == codex; i++)
+  {
+    long W,H,xdiv,product;
+    long minx,miny,maxx,maxy;
+
+    getboundaries(i,minx,miny,maxx,maxy);
+    // determine how many cells
+    H = (maxy-miny+89)/90; // multiple of 10m
+    xdiv = xDivider4(miny,maxy);
+    W = ( (maxx-minx)*4 + (xdiv-1) ) / xdiv;
+
+    // encodee
+    // round up to multiples of YSIDE3*XSIDE3...
+    H = YSIDE3*( (H+YSIDE3-1)/YSIDE3 );
+    W = XSIDE3*( (W+XSIDE3-1)/XSIDE3 );
+    product = (W/XSIDE3)*(H/YSIDE3)*961*31;
+    if ( recType(i)==2 ) { // plus pipe
+      long GOODROUNDER = codex>=23 ? (961*961*31) : (961*961);
+      product = ((STORAGE_START+product+GOODROUNDER-1)/GOODROUNDER)*GOODROUNDER - STORAGE_START;
+    }
+
+    if ( i==m )
+    {
+      // encode
+      long dividerx = (maxx-minx+W-1)/W;
+      long vx =     (x-minx)/dividerx;
+      long extrax = (x-minx)%dividerx;
+
+      long dividery = (maxy-miny+H-1)/H;
+      long vy =     (maxy-y)/dividery;
+      long extray = (maxy-y)%dividery;
+
+      long codexlen = (codex/10)+(codex%10);
+      long value = (vx/XSIDE3) * (H/YSIDE3);
+
+#ifdef SUPPORT_HIGH_PRECISION // precise encoding: check if fraction takes this out of range
+      if ( extray==0 &&  enc->fraclat>0 ) {
+        if (vy==0) {
+          STORAGE_START += product;
+          continue;
+        }
+        vy--;
+        extray += dividery;
+      }
+#endif
+
+      value += (vy/YSIDE3);
+
+      // PIPELETTER ENCODE
+      encodeBase31( result, (STORAGE_START/(961*31)) + value, codexlen-2 );
+      result[codexlen-2]='.';
+      encode_triple( result+codexlen-1, vx%XSIDE3, vy%YSIDE3 );
+
+      encodeExtension( result,extrax<<2,extray,dividerx<<2,dividery,extraDigits,-1,enc); // autoheader
+      return m;
+    }
+
+    STORAGE_START += product;
+  }
+  return i-1; // return last autoheader record as the (failing) record
+}
+
+
+
+
+
+static int debugStopAt=-1;
+static void encoderEngine( int ccode, const encodeRec *enc, int stop_with_one_result, int extraDigits, int result_override )
+{
+  int from,upto;
+  long y= enc->lat32,x= enc->lon32;
+
+  if (enc==NULL || ccode<0 || ccode>ccode_earth)
+    return; // bad arguments
+
+  from = firstrec(ccode);
+  upto = lastrec(ccode);
+
+  if (ccode != ccode_earth)
+    if ( ! fitsInside(x,y,upto) )
+      return;
+
+  ///////////////////////////////////////////////////////////
+  // look for encoding options
+  ///////////////////////////////////////////////////////////
+  {
+    int i;
+    char result[128];
+    int result_counter=0;
+
+    *result=0;
+    for( i=from; i<=upto; i++ )
+    {
+      int codex = coDex(i);
+      if (codex<54)
+      {
+        if (fitsInside(x,y,i))
+        {
+          if ( isNameless(i) )
+          {
+            int ret = encodeNameless( result, enc, ccode, codex, extraDigits, i );
+            if (ret>=0)
+            {
+              i=ret;
+            }
+          }
+          else if ( recType(i)>1 )
+          {
+            encodeAutoHeader(result,enc,i,extraDigits);
+          }
+          else if ( i==upto && isRestricted(i) && isSubdivision(ccode) ) // if the last item is a reference to a state's country
+          {
+            // *** do a recursive call for the parent ***
+            encoderEngine( ParentTerritoryOf(ccode), enc, stop_with_one_result,extraDigits,ccode );
+            return; /**/
+          }
+          else // must be grid
+          {
+              if ( result_counter>0 || !isRestricted(i) ) // skip isRestricted records unless there already is a result
+              {
+                char headerletter = (recType(i)==1) ? headerLetter(i) : 0;
+                encodeGrid( result, enc, i, extraDigits,headerletter );
+              }
+          }
+
+          // =========== handle result (if any)
+          if (*result)
+          {
+            result_counter++;
+
+            repack_if_alldigits(result,0);
+
+            if (debugStopAt<0 || debugStopAt==i) {
+              int cc = (result_override>=0 ? result_override : ccode);
+              if (*result && enc->mapcodes && enc->mapcodes->count < MAX_NR_OF_MAPCODE_RESULTS) {
+                char *s = enc->mapcodes->mapcode[enc->mapcodes->count++];
+                if (cc==ccode_earth)
+                  strcpy( s , result );
+                else {
+                  getTerritoryIsoName(s,cc+1,0);
+                  strcat(s," ");
+                  strcat(s,result);
+                }
+              }
+              if (debugStopAt==i) return;
+            }
+            if (stop_with_one_result) return;
+            *result=0; // clear for next iteration
+          }
+        }
+      }
+    } // for i
+  }
+}
+
+
+
+
+
 
 
 // returns nonzero if error
-// if ccode_found!=NULL
-int full_mapcode_decode(long *y, long *x, const char *iso3, const char *orginput,int *ccode_found,char *clean_input)
+static int decoderEngine( decodeRec *dec )
 {
-  char input[32];
-  int err,ccode,len;
-  char *s=(char*)orginput;
-  int ilen=strlen(iso3);
+  int parentcode=-1;
+  int err=-255; // unknown error
+  int ccode,len;
+  char *minus;
+  const char *iso3;
+  char *s = dec->minput;
 
-  if (iso3) disambiguate_str(iso3,strlen(iso3));
-
-  if (clean_input) *clean_input=0;
-
-  while (*s>0 && *s<=32) s++; // skip lead
-  len=strlen(s);
-
-  if (len>31) len=31;
-  memcpy(input,s,len); s=input; s[len]=0;
-
-
- {
-   char *min = strchr(s+4,'-');
-   if (min) {
-     *min++=0;
-     extrapostfix=&orginput[min-s];
-     len=strlen(s);
-   } else extrapostfix="";
- }
-
-  // remove trail
-  while (len>0 && s[len-1]>=0 && s[len-1]<=32) { s[--len]=0; }
-
-  if (len>0 && len<10 && ilen<7 && strchr(s,' ')==0) // no space in input (so just a mapcode?); and room for ISO-space-MAPCODE?
+  // copy input, cleaned of leading and trailing whitespace, into private, non-const buffer
   {
-      memmove(s+ilen+1,s,len+1);
+    const char *r = dec->orginput;
+    while (*r>0 && *r<=32) r++; // skip lead
+    len=strlen(r);
+    if (len>MAX_MAPCODE_RESULT_LEN-1) len=MAX_MAPCODE_RESULT_LEN-1;
+    while (len>0 && r[len-1]>=0 && r[len-1]<=32) len--; // remove trail
+    memcpy(s,r,len); s[len]=0;
+  }
+
+  // make input (excluding territory) uppercase, and replace digits 0 and 1 with O and I
+  {
+    char *t = strchr(s,' '); if (t==NULL) t=s;
+    for(;*t!=0;t++)
+    {
+      if (*t>='a' && *t<='z') *t += ('A'-'a');
+      if (*t=='O') *t='0';
+      if (*t=='I') *t='1';
+    }
+  }
+
+  // check if extension, determine length without extension
+  minus = strchr(s+4,'-');
+  if (minus)
+    len=minus-s;
+
+  // make sure there is valid context
+  iso3 = convertTerritoryCodeToIsoName(dec->context,0); // get context string (or empty string)
+  if (*iso3==0) iso3="AAA";
+  parentcode=disambiguate_str(iso3,strlen(iso3)); // pass for future context disambiguation
+
+  // insert context if none in input
+  if (len>0 && len<=9 && strchr(s,' ')==0) // just a non-international mapcode without a territory code?
+  {
+      int ilen=strlen(iso3);
+      memmove(s+ilen+1,s,strlen(s)+1);
       s[ilen]=' ';
       memcpy(s,iso3,ilen);
       len+=(1+ilen);
       iso3="";
   }
+  // parse off extension
+  s[len]=0;
+  if (minus)
+    dec->extension = &s[len+1];
+  else
+    dec->extension="";
 
-
+  // now split off territory, make point to start of proper mapcode
   if (len>8 && (s[3]==' ' || s[3]=='-') && (s[6]==' ' || s[7]==' ')) // assume ISO3 space|minus ISO23 space MAPCODE
   {
-    int p=disambiguate_str(s,3);
-    if (p<0) return p;
+    parentcode=disambiguate_str(s,3);
+    if (parentcode<0) return parentcode;
     s+=4; len-=4;
   }
   else if (len>7 && (s[2]==' ' || s[2]=='-') && (s[5]==' ' || s[6]==' ')) // assume ISO2 space|minus ISO23 space MAPCODE
   {
-    int p=disambiguate_str(s,2);
-    if (p<0) return p;
+    parentcode=disambiguate_str(s,2);
+    if (parentcode<0) return parentcode;
     s+=3; len-=3;
   }
-
 
   if (len>4 && s[3]==' ') // assume ISO whitespace MAPCODE, overriding iso3
   {
@@ -2033,81 +1489,178 @@ int full_mapcode_decode(long *y, long *x, const char *iso3, const char *orginput
     s+=3;len-=3;
   }
 
-
   while (*s>0 && *s<=32) {s++;len--;} // skip further whitespace
 
   // returns nonzero if error
-  ccode = ccode_of_iso3(iso3);
-  if (ccode==ccode_mex && len<8) ccode=ccode_of_iso3("5MX"); // special case for mexico country vs state
+  ccode = ccode_of_iso3(iso3,parentcode);
+  if (ccode==ccode_mex && len<8) ccode=ccode_of_iso3("5MX",-1); // special case for mexico country vs state
 
-  if (ccode_found) *ccode_found=ccode;
-
+  // master_decode(s,ccode)
   {
-    char *t;
-    for(t=s;*t!=0;t++)
-    {
-      if (*t>='a' && *t<='z') *t += ('A'-'a');
-      if (*t=='O') *t='0';
-      if (*t=='I') *t='1';
-    }
+  const char *dot = NULL; // dot position in input
+  int prelen;   // input prefix length
+  int postlen;  // input postfix length
+  int codex;    // input codex
+  int from,upto; // record range for territory
+  int i;
+
+
+  // unpack digits (a-lead or aeu-encoded
+  int voweled = unpack_if_alldigits(s);
+  if (voweled<0)
+    return -7;
+
+  // debug support: U-lead pre-processing
+  if (*s=='u' || *s=='U')  {
+    s++;
+    len--;
+    voweled=1;
   }
 
-  if (*extrapostfix) {
-    strcat(s,"-");
-    strcat(s,extrapostfix);
-    err = master_decode(  x,y,s,"",ccode,0,0);
+  if (len>10) return -8;
+
+  // find dot and check that all characters are valid
+  {
+    int nrd=0; // nr of true digits
+    const char *r=s;
+    for ( ; *r!=0; r++ )
+    {
+      if (*r=='.') {
+        if (dot)
+          return -5; // more than one dot
+        dot=r;
+      }
+      else if ( decodeChar(*r) <  0 ) // invalid char?
+        return -4;
+      else if ( decodeChar(*r) < 10 ) // digit?
+        nrd++;
+    }
+    if (dot==NULL)
+      return -2;
+    else if (!voweled && nrd+1==len) // everything but the dot is digit, so MUST be voweled!
+      return -998;
+  }
+
+//////////// AT THIS POINT, dot=FIRST DOT, input=CLEAN INPUT (no vowels) ilen=INPUT LENGTH
+
+  // analyse input
+  prelen = (dot-s);
+  postlen = len-1-prelen;
+  codex = prelen*10 + postlen;
+  if ( prelen<2 || prelen>5 || postlen<2 || postlen>4 )
+    return -3;
+
+  if (len==10) {
+    // international mapcodes must be in international context
+    ccode = ccode_earth;
+  }
+  else if (isSubdivision(ccode))
+  {
+    // long mapcodes must be interpreted in the parent of a subdivision
+
+	  int parent = ParentTerritoryOf(ccode);
+	  if (len==9 || (len==8 && (parent==ccode_ind || parent==ccode_mex )))
+		  ccode = parent;
+  }
+
+  // remember final territory context
+  dec->context = ccode;
+  dec->mapcode = s;
+
+  err  = -817;
+  from = firstrec(ccode);
+  upto = lastrec(ccode);
+
+   // try all ccode rectangles to decode s (pointing to first character of proper mapcode)
+   for ( i = from; i <= upto; i++ )
+   {
+    int codexi = coDex(i);
+	  if ( recType(i)==0 && !isNameless(i) && (codexi==codex || (codex==22 && codexi==21) ) )
+	  {
+      err = decodeGrid( dec, i, 0 );
+
+      if (isRestricted(i)) {
+        int fitssomewhere=0;
+        int j;
+        for (j=i-1; j>=from; j--) { // look in previous rects
+          if (!isRestricted((j))) {
+            if ( fitsInsideWithRoom(dec->lon32,dec->lat32,j) ) {
+              fitssomewhere=1;
+              break;
+            }
+          }
+        }
+        if (!fitssomewhere) {
+          err=-1234;
+        }
+      }
+
+		  break;
+	  }
+	  else if ( recType(i)==1 && prefixLength(i)+1==prelen && postfixLength(i)==postlen && headerLetter(i)==*s )
+	  {
+      err = decodeGrid( dec, i, 1 );
+		  break;
+	  }
+	  else if (isNameless(i) &&
+	   (	(codexi==21 && codex==22)
+	   ||	(codexi==22 && codex==32)
+	   ||	(codexi==13 && codex==23) ) )
+	  {
+      i = decodeNameless( dec, i);
+      if (i<0) err=i; else err=0;
+		  break;
+	  }
+	  else if ( recType(i)>=2 && postlen==3 && prefixLength(i)+postfixLength(i)==prelen+2 )
+    {
+		  err = decodeAutoHeader( dec, i );
+		  break;
+	  }
+   } // for
+  }
+
+
+#ifdef SUPPORT_HIGH_PRECISION
+  // convert from millionths
+  if (err) {
+    dec->lat = dec->lon = 0;
   }
   else {
-    err = master_decode(  x,y,s,"",ccode,0,0);
+    dec->lat /= (double)1000000.0;
+    dec->lon /= (double)1000000.0;
   }
-
-  if (clean_input && len<=10)
-  {
-    strcpy(clean_input,s);
-    if (*extrapostfix)
-    {
-      strcat(clean_input,"-");
-      strcat(clean_input,extrapostfix);
-    }
-    makeup(clean_input);
-  }
-
-  if (err)
-  {
-    #ifdef REMOVE_VALIDCODE
-      *x=*y=0;
-    #else
-      if (ccode<0 || valid_code(s)<0 ) // bad iso or bad input
-      {
-        *x=*y=0;
-      }
-      else if (err && ccode>=0)
-      {
-        long miny,maxy,minx,maxx;
-        setup_country(ccode);
-        getboundaries((data_start[ccode]),minx,miny,maxx,maxy);
-        *x = (minx+maxx)/2;
-        *y = (miny+maxy)/2;
-      }
-    #endif // REMOVE_VALIDCODE
-  }
+#else
+  // convert from millionths
+  if (err) dec->lat32 = dec->lon32 = 0;
+  dec->lat = dec->lat32/(double)1000000.0;
+  dec->lon = dec->lon32/(double)1000000.0;
+#endif
 
   // normalise between =180 and 180
-  if ( *x>180000000 ) *x-=360000000; else if ( *x<-180000000 ) *x+=360000000;
+  if (dec->lat <  -90.0) dec->lat  = -90.0;
+  if (dec->lat >   90.0) dec->lat  =  90.0;
+  if (dec->lon < -180.0) dec->lon += 360.0;
+  if (dec->lon >= 180.0) dec->lon -= 360.0;
+
+  // store as integers for legacy's sake
+  dec->lat32 = (long)(dec->lat*1000000);
+  dec->lon32 = (long)(dec->lon*1000000);
+
+  // make sure decode result fits the country
+  if (err==0)
+    if ( ccode != ccode_earth )
+      if ( ! fitsInsideWithRoom(dec->lon32,dec->lat32, lastrec(ccode) ) ) {
+        err=-2222;
+  }
 
   return err;
-}
-
-int mapcode_decode(long *y, long *x, const char *iso3, const char *orginput,int *ccode_found)
-{
-  return full_mapcode_decode(y,x,iso3,orginput,ccode_found,NULL);
 }
 
 
 #ifdef SUPPORT_FOREIGN_ALPHABETS
 
 // WARNING - these alphabets have NOT yet been released as standard! use at your own risk! check www.mapcode.com for details.
-UWORD asc2lan[MAX_LANGUAGES][36] = // A-Z equivalents for ascii characters A to Z, 0-9
+static UWORD asc2lan[MAX_LANGUAGES][36] = // A-Z equivalents for ascii characters A to Z, 0-9
 {
   {0x0041,0x0042,0x0043,0x0044,0x0045,0x0046,0x0047,0x0048,0x0049,0x004a,0x004b,0x004c,0x004d,0x004e,0x004f,0x0050,0x0051,0x0052,0x0053,0x0054,0x0055,0x0056,0x0057,0x0058,0x0059,0x005a, 0x0030,0x0031,0x0032,0x0033,0x0034,0x0035,0x0036,0x0037,0x0038,0x0039}, // roman
   {0x0391,0x0392,0x039e,0x0394,0x003f,0x0395,0x0393,0x0397,0x0399,0x03a0,0x039a,0x039b,0x039c,0x039d,0x039f,0x03a1,0x0398,0x03a8,0x03a3,0x03a4,0x003f,0x03a6,0x03a9,0x03a7,0x03a5,0x0396, 0x0030,0x0031,0x0032,0x0033,0x0034,0x0035,0x0036,0x0037,0x0038,0x0039}, // greek
@@ -2160,11 +1713,10 @@ static struct { UWORD min; UWORD max; const char *convert; } unicode2asc[] =
 
 
 
-char asciibuf[16];
-const char *decode_utf16(const UWORD* s)
+char *convertToRoman(char *asciibuf, int maxlen, const UWORD* s)
 {
   char *w = asciibuf;
-  const char *e = w+16-1;
+  const char *e = w+maxlen-1;
   for ( ; *s!=0 && w<e ; s++  )
   {
     if ( *s>=1 && *s<='z' ) // normal ascii
@@ -2195,11 +1747,10 @@ const char *decode_utf16(const UWORD* s)
 }
 
 
-UWORD unibuf[16];
-const UWORD* encode_utf16(const char *mapcode,int language) // convert mapcode to language (0=roman 1=greek 2=cyrillic 3=hebrew)
+static UWORD* encode_utf16(UWORD* unibuf,int maxlen,const char *mapcode,int language) // convert mapcode to language (0=roman 1=greek 2=cyrillic 3=hebrew)
 {
   UWORD *w = unibuf;
-  const UWORD *e = w+16-1;
+  const UWORD *e = w+maxlen-1;
   const char *r = mapcode;
   while( *r!=0 && w<e )
   {
@@ -2227,279 +1778,202 @@ const UWORD* encode_utf16(const char *mapcode,int language) // convert mapcode t
 
 
 
-#define TOKENSEP  0
-#define TOKENDOT  1
-#define TOKENCHR  2
-#define TOKENZERO 3
-#define TOKENHYPH 4
+#define TOKENSEP   0
+#define TOKENDOT   1
+#define TOKENCHR   2
+#define TOKENVOWEL 3
+#define TOKENZERO  4
+#define TOKENHYPH  5
 #define ERR -1
 #define Prt -9 // partial
 #define GO  99
 
-  static signed char fullmc_statemachine[23][5] = {
-                      // WHI DOT DET ZER HYP
-  /* 0 start        */ {  0 ,ERR, 1 ,ERR,ERR }, // looking for very first detter
-  /* 1 gotL         */ { ERR,ERR, 2 ,ERR,ERR }, // got one detter, MUST get another one
-  /* 2 gotLL        */ { 18 , 6 , 3 ,ERR,14  }, // GOT2: white: got territory + start prefix | dot: 2.X mapcode | det:3letter | hyphen: 2-state
-  /* 3 gotLLL       */ { 18 , 6 , 4 ,ERR,14  }, // white: got territory + start prefix | dot: 3.X mapcode | det:4letterprefix | hyphen: 3-state
-  /* 4 gotprefix4   */ { ERR, 6 , 5 ,ERR,ERR }, // dot: 4.X mapcode | det: got 5th prefix letter
-  /* 5 gotprefix5   */ { ERR, 6 ,ERR,ERR,ERR }, // got 5char so MUST get dot!
-  /* 6 prefix.      */ { ERR,ERR, 7 ,Prt,ERR }, // MUST get first letter after dot
-  /* 7 prefix.L     */ { ERR,ERR, 8 ,Prt,ERR }, // MUST get second letter after dot
-  /* 8 prefix.LL    */ { 22 ,ERR, 9 , GO,11  }, // get 3d letter after dot | X.2- | X.2 done!
-  /* 9 prefix.LLL   */ { 22 ,ERR,10 , GO,11  }, // get 4th letter after dot | X.3- | X.3 done!
-  /*10 prefix.LLLL  */ { 22 ,ERR,ERR, GO,11  }, // X.4- | x.4 done!
+  static signed char fullmc_statemachine[23][6] = {
+                      // WHI DOT DET VOW ZER HYP
+  /* 0 start        */ {  0 ,ERR, 1 , 1 ,ERR,ERR }, // looking for very first detter
+  /* 1 gotL         */ { ERR,ERR, 2 , 2 ,ERR,ERR }, // got one detter, MUST get another one
+  /* 2 gotLL        */ { 18 , 6 , 3 , 3 ,ERR,14  }, // GOT2: white: got territory + start prefix | dot: 2.X mapcode | det:3letter | hyphen: 2-state
+  /* 3 gotLLL       */ { 18 , 6 , 4 ,ERR,ERR,14  }, // white: got territory + start prefix | dot: 3.X mapcode | det:4letterprefix | hyphen: 3-state
+  /* 4 gotprefix4   */ { ERR, 6 , 5 ,ERR,ERR,ERR }, // dot: 4.X mapcode | det: got 5th prefix letter
+  /* 5 gotprefix5   */ { ERR, 6 ,ERR,ERR,ERR,ERR }, // got 5char so MUST get dot!
+  /* 6 prefix.      */ { ERR,ERR, 7 , 7 ,Prt,ERR }, // MUST get first letter after dot
+  /* 7 prefix.L     */ { ERR,ERR, 8 , 8 ,Prt,ERR }, // MUST get second letter after dot
+  /* 8 prefix.LL    */ { 22 ,ERR, 9 , 9 , GO,11  }, // get 3d letter after dot | X.2- | X.2 done!
+  /* 9 prefix.LLL   */ { 22 ,ERR,10 ,10 , GO,11  }, // get 4th letter after dot | X.3- | X.3 done!
+  /*10 prefix.LLLL  */ { 22 ,ERR,ERR,ERR, GO,11  }, // X.4- | x.4 done!
 
-  /*11 mc-          */ { ERR,ERR,12 ,Prt,ERR }, // MUST get first precision letter
-  /*12 mc-L         */ { 22 ,ERR,13 , GO,ERR }, // Get 2nd precision letter | done X.Y-1
-  /*13 mc-LL        */ { 22 ,ERR,ERR, GO,ERR }, // done X.Y-2 (*or skip whitespace*)
+  /*11 mc-          */ { ERR,ERR,12 ,ERR,Prt,ERR }, // MUST get first precision letter
+  /*12 mc-L         */ { 22 ,ERR,13 ,ERR, GO,ERR }, // Get 2nd precision letter | done X.Y-1
+  /*13 mc-LL*       */ { 22 ,ERR,13 ,ERR, GO,ERR }, // *** keep reading precision detters *** until whitespace or done
 
-  /*14 ctry-        */ { ERR,ERR,15 ,ERR,ERR }, // MUST get first state letter
-  /*15 ctry-L       */ { ERR,ERR,16 ,ERR,ERR }, // MUST get 2nd state letter
-  /*16 ctry-LL      */ { 18 ,ERR,17 ,ERR,ERR }, // white: got CCC-SS and get prefix | got 3d letter
-  /*17 ctry-LLL     */ { 18 ,ERR,ERR,ERR,ERR }, // got CCC-SSS so MUST get whitespace and then get prefix
+  /*14 ctry-        */ { ERR,ERR,15 ,15 ,ERR,ERR }, // MUST get first state letter
+  /*15 ctry-L       */ { ERR,ERR,16 ,16 ,ERR,ERR }, // MUST get 2nd state letter
+  /*16 ctry-LL      */ { 18 ,ERR,17 ,17 ,ERR,ERR }, // white: got CCC-SS and get prefix | got 3d letter
+  /*17 ctry-LLL     */ { 18 ,ERR,ERR,ERR,ERR,ERR }, // got CCC-SSS so MUST get whitespace and then get prefix
 
-  /*18 startprefix  */ { 18 ,ERR,19 ,ERR,ERR }, // skip more whitespace, MUST get 1st prefix letter
-  /*19 gotprefix1   */ { ERR,ERR,20 ,ERR,ERR }, // MUST get second prefix letter
-  /*20 gotprefix2   */ { ERR, 6 ,21 ,ERR,ERR }, // dot: 2.X mapcode | det: 3d perfix letter
-  /*21 gotprefix3   */ { ERR, 6 , 4 ,ERR,ERR }, // dot: 3.x mapcode | det: got 4th prefix letter
+  /*18 startprefix  */ { 18 ,ERR,19 ,19 ,ERR,ERR }, // skip more whitespace, MUST get 1st prefix letter
+  /*19 gotprefix1   */ { ERR,ERR,20 ,ERR,ERR,ERR }, // MUST get second prefix letter
+  /*20 gotprefix2   */ { ERR, 6 ,21 ,ERR,ERR,ERR }, // dot: 2.X mapcode | det: 3d perfix letter
+  /*21 gotprefix3   */ { ERR, 6 , 4 ,ERR,ERR,ERR }, // dot: 3.x mapcode | det: got 4th prefix letter
 
-  /*22 whitespace   */ { 22 ,ERR,ERR, GO,ERR }  // whitespace until end of string
-
+  /*22 whitespace   */ { 22 ,ERR,ERR,ERR, GO,ERR }  // whitespace until end of string
   };
+
+
 
   // pass fullcode=1 to recognise territory and mapcode, pass fullcode=0 to only recognise proper mapcode (without optional territory)
   // returns 0 if ok, negative in case of error (where -999 represents "may BECOME a valid mapcode if more characters are added)
   int compareWithMapcodeFormat(const char *s,int fullcode)
   {
-    int nondigits=0;
+    int nondigits=0,vowels=0;
     int state=(fullcode ? 0 : 18); // initial state
     for(;;s++) {
       int newstate,token;
-      // recognise token
-      if (*s>='0' && *s<='9') token=TOKENCHR;
-      else if ((*s>='a' && *s<='z') || (*s>='A' && *s<='Z'))
-        { token=TOKENCHR; if (state!=11 && state!=12) nondigits++; }
-      else if (*s=='.' ) token=TOKENDOT;
+      // recognise token: decode returns -2=a -3=e -4=0, 0..9 for digit or "o" or "i", 10..31 for char, -1 for illegal char
+      if (*s=='.' ) token=TOKENDOT;
       else if (*s=='-' ) token=TOKENHYPH;
       else if (*s== 0  ) token=TOKENZERO;
       else if (*s==' ' || *s=='\t') token=TOKENSEP;
-      else return -4; // invalid character
+      else {
+        signed char c = decode_chars[(unsigned char)*s];
+        if (c<0) { // vowel or illegal?
+          token=TOKENVOWEL; vowels++;
+          if (c==-1) // illegal?
+            return -4;
+        } else if (c<10) { // digit
+          token=TOKENCHR; // digit
+        } else { // charcter B-Z
+          token=TOKENCHR;
+          if (state!=11 && state!=12 && state!=13) nondigits++;
+        }
+      }
       newstate = fullmc_statemachine[state][token];
       if (newstate==ERR)
         return -(1000+10*state+token);
-      if (newstate==GO )
-        return (nondigits>0 ? 0 : -5);
-      if (newstate==Prt)
+      else if (newstate==GO )
+        return (nondigits ? (vowels>0 ? -6 : 0) : (vowels>0 && vowels<=2 ? 0 : -5));
+      else if (newstate==Prt)
         return -999;
+      else if (newstate==18)
+        nondigits=vowels=0;
       state=newstate;
-      if (state==18)
-        nondigits=0;
     }
   }
 
-int lookslike_mapcode(const char *s)  // return -999 if partial, 0 if ok, negative if not
-{
-  // old-style recognizer, does not suport territory context
-  return compareWithMapcodeFormat(s,0);
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Freebee: interpret coordinates, separated by either space or comma (if comma, whitespace allowed everywhere else)
-//   [signletters*] v1 [degreesymbol [v2 [minutesym [v3 [secondsym]]]]] [letter]
+//  Engine
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-unsigned char *addnum(unsigned char *r,long v,int fill2,unsigned char unit)
-{
-  if (v>=100) { *r++=(unsigned char)('0'+(v/100)); v%=100; }
-  if (fill2 || v>=10) { *r++=(unsigned char)('0'+(v/10)); v%=10; }
-  *r++=(unsigned char)('0'+v);
-  if (unit) *r++=unit;
-  *r=0;
-  return r;
-}
 
-void asdms1(unsigned char *r,double v,long max,unsigned char degsym) // worst case is -###d##'##", 11 char ex zts (or 10 if max=90)
+// pass point to an array of pointers (at least 42), will be made to point to result strings...
+// returns nr of results;
+static int encodeLatLonToMapcodes_internal( char **v, Mapcodes *mapcodes, double lat, double lon, int tc, int stop_with_one_result, int extraDigits ) // 1.31 allow to stop after one result
 {
-  long d,m,s;
-  if (v<0) { *r++='-'; v=-v; }
-  s = (long)(3600*v+0.5); // round to seconds
-  if (s>max) s=max;
-  d=s/3600;
-  r=addnum(r,d,0,degsym);
-  s%=3600;
-  if (s)
+  encodeRec enc;
+  enc.mapcodes = mapcodes;
+  enc.mapcodes->count=0;
+
+  if (lat<-90) lat=-90;
+  if (lat> 90) lat= 90;
+  while (lon<-180) lon+=360;
+  while (lon>=180) lon-=360;
+#ifndef SUPPORT_HIGH_PRECISION
+  lat*=1000000; if (lat<0) lat-=0.5; else lat+=0.5;
+  lon*=1000000; if (lon<0) lon-=0.5; else lon+=0.5;
+  enc.lat32=(long)lat;
+  enc.lon32=(long)lon;
+#else // precise encoding: do NOT round, instead remember the fraction...
+  lat+= 90;
+  lon+=180;
+  lat*=1000000;
+  lon*=1000000;
+  enc.lat32=(long)lat;
+  enc.lon32=(long)lon;
+  enc.fraclat=lat-enc.lat32;
+  enc.fraclon=lon-enc.lon32;
+  // for 8-digit precision, cells are divided into 810,000 by 810,000 minicells.
+  enc.fraclat *= 810000; if (enc.fraclat<1) enc.fraclat=0; else { if (enc.fraclat>809999) { enc.fraclat=0; enc.lat32++; } else enc.fraclat /= 810000; }
+  enc.fraclon *= 810000; if (enc.fraclon<1) enc.fraclon=0; else { if (enc.fraclon>809999) { enc.fraclon=0; enc.lon32++; } else enc.fraclon /= 810000; }
+  enc.lat32-= 90000000;
+  enc.lon32%=360000000;
+  enc.lon32-=180000000;
+#endif
+
+  if (tc==0) // ALL results?
   {
-    m=s/60;
-    r=addnum(r,m,1,'\'');
-    s%=60;
-    if (s)
-      r=addnum(r,s,1,'\"');
+    int i;
+    for(i=0;i<MAX_MAPCODE_TERRITORY_CODE;i++) {
+      encoderEngine(i,&enc,stop_with_one_result,extraDigits,-1);
+      if ((stop_with_one_result||debugStopAt>=0) && enc.mapcodes->count>0) break;
+    }
   }
-}
-
-unsigned char *asdms(unsigned char *r,double lat,double lon,unsigned char degsym) // worst case EXcluding zts is 22 bytes: -##d##'##",-###d##'##"
-{
-  asdms1(r,lat,90*3600,degsym);
-  strcat((char*)r,",");
-  asdms1(r+strlen((char*)r),lon,180*3600,degsym);
-  return r;
-}
-
-int interpret_coord( const unsigned char *i, int islat, double *result )
-{
-  int expnow=0; // expect now: 0=deg 1=min 2=sec 3=none
-  double d=0,m=0,s=0;
-
-  #define isdig(c) ((c)>='0' && (c)<='9')
-  #define iswhite(c) ((c)>0 && (c)<=32)
-  #define skipwhite(i) {while (iswhite(*i)) i++;}
-  #define skipnum(i) {while (isdig(*i)) i++;}
-  #define skipfp(i) {skipnum(i); if (*i=='.') {i++;skipnum(i);}}
-
-  const char *winds = islat ? "nsNS+- " : "ewEW+- ";
-
-  // skip white spaces, signs and appropriate wind direction letters
-  char *p;
-  int sign=1;
-
-  while (*i && (p=(char*)strchr(winds,*i))!=NULL) { { if ( (p-(char*)winds) & 1 ) sign*=-1; } i++; }
-
-  // we are now at a lead digit, or there is an error
-  if (!isdig(*i))
-    return -12; // digit expected
-
-  while ( expnow<4 && isdig(*i) )
+  else
   {
-    // get value
-    double v=atof((char*)i); skipfp(i); skipwhite(i);
-    if ( *i && strchr("oOdD\x0F8\x0BA\x0B0\x0A7",*i) ) // degree symbol? $F8=248degree $BA=186 $B0=176 $A7=167
-    {
-      i++; skipwhite(i);
-      d=v; expnow=1; // after degree, expect minutes
-    }
-    else if ( *i && strchr("\'`mM\x0B4\x093",*i) && i[1]!=i[0] ) // minute symbol (NOT repeated, else assume seconds symbol)  $B4=180 $93=147
-    {
-      i++; skipwhite(i);
-      m=v; expnow=2; // after minutes, expect seconds
-    }
-    else if ( *i && strchr("\"\'`\x094\x084",*i) ) // seconds symbol? $94=148 $84=132
-    {
-      if (i[0]==i[1]) i++; i++; skipwhite(i);
-      s=v; expnow=3; // after seconds, expect something explicitly specified
-    }
-    else // anything else? assume that we got what we expected
-    {
-      if (expnow==0) d=v; else if (expnow==1) m=v; else if (expnow==2) s=v; else return -18; // -18 = trailing unitless number
-      expnow=4;
+    encoderEngine((tc-1),&enc,stop_with_one_result,extraDigits,-1);
+  }
+
+  if (v)
+  {
+    int i;
+    for(i=0;i<enc.mapcodes->count;i++) {
+      char *s = &enc.mapcodes->mapcode[i][0];
+      char *p = strchr( s, ' ' );
+      if (p==NULL) {
+        v[i*2+1] = (char*) "AAA";
+        v[i*2  ] = s;
+      }
+      else {
+        *p++=0;
+        v[i*2+1] = s;
+        v[i*2  ] = p;
+      }
     }
   }
 
-  // allow all posisble final endsigns
-  { while (*i && (p=(char*)strchr(winds,*i))!=NULL) { if ( (p-(char*)winds) & 1 ) sign*=-1; i++; } }
-
-  // we now MUST be at the end of the string!
-  if (*i)
-    return -17; // trash trailing
-
-  *result = (d+m/60.0+s/3600.0) * sign;
-  if ( islat && (*result< -90 || *result> 90)) return -13;
-  if (!islat && (*result<-180 || *result>180)) return -14;
-
-  return 0;
+  return enc.mapcodes->count;
 }
 
-int interpret_coords( unsigned char *i, double *x, double *y  ) // returns negative if impossible
+
+// threadsafe
+char* getTerritoryIsoName(char *result, int territoryCode, int format) // formats: 0=full 1=short (returns empty string in case of error)
 {
-  unsigned char *sep=NULL;
-  unsigned char *altsep=NULL;
-  unsigned char *s;
-  unsigned char *firstcompass=NULL;
-  skipwhite(i); // skip leading nonsense
-  for (s=i;*s!=0;s++)
-  {
-    switch (*s)
+  if (territoryCode<1 || territoryCode>MAX_MAPCODE_TERRITORY_CODE)
+    *result=0;
+  else {
+    int p=stateletter(territoryCode-1);
+    char iso3[4];
+    const char *ei = get_entity_iso3(iso3,territoryCode-1);
+    if (*ei>='0' && *ei<='9') ei++;
+    if (format==0 && p)
     {
-    case 'N':case 'S':case 'W':case 'E':
-    case 'n':case 's':case 'w':case 'e':
-      if (firstcompass==NULL) firstcompass=s; // determine first compass letter before comma (if any)
-      break;
-    case '+':case '-':
-    case '0':case '1':case '2':case '3':case '4':case '5':case '6':case '7':case '8':case '9':
-    case '\"': case 148: case 132: // second CP1252
-    case 'm': case 'M': case '\'': case '`': case 180: case 147: // minute CP1252
-    case 'o': case 'O': case 'd': case 'D': case 248: case 186: case 176: case 167: // 167:cp850
-    case '.':
-      break;
-    case ' ':
-      if (altsep) altsep=i; else altsep=s;
-      while (*s==' ') s++;
-      s--;
-      break;
-    case ',': case 130:
-      if (sep) return -1; // more than one comma!
-      sep=s;
-      if (firstcompass==NULL) firstcompass=s;
-      break;
-    default:
-      return -2; // invalid char
-    }
-  }
-  if (sep==NULL && altsep!=NULL) sep=altsep; // use whitespace as sep if no comma
-  if (sep==NULL) return -3; // no separator
-  if (sep==i) return -4; // separator as lead
-
-  {
-    int e;
-
-    if (firstcompass && *firstcompass && strchr("EWew",*firstcompass))
-    {
-      unsigned char t=*sep; *sep=0;
-      e=interpret_coord(i,0,x);
-      *sep=t;
-      if (!e) e=interpret_coord(sep+1,1,y);
+      memcpy(result,&parents2[p*3-3],2);
+      result[2]='-';
+      strcpy(result+3,ei);
     }
     else
     {
-      unsigned char t=*sep; *sep=0;
-      e=interpret_coord(i,1,y);
-      *sep=t;
-      if (!e) e=interpret_coord(sep+1,0,x);
+      strcpy(result,ei);
     }
-
-    if (e) return e;
   }
-
-  return 0; // POSSIBLE
+  return result;
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//  Wrapper for LBS team
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-const char *convertTerritoryCodeToIsoName(int tc,int format) // formats: 0=full 1=short (returns empty string in case of error)
+int getParentCountryOf(int tc) // returns negative if tc is not a code that has a parent country
 {
-  return makeiso(tc-1,(format==0));
-}
-
-int getParentCountryOfState(int tc) // returns negative if tc is not a code that has a parent country
-{
-    int parentccode=stateparent(tc-1); // returns parent ccode or -1
+    int parentccode=ParentTerritoryOf(tc-1); // returns parent ccode or -1
     if (parentccode>=0) return parentccode+1;
     return -1;
 }
+
 int getCountryOrParentCountry(int tc) // returns tc if tc is a country, parent country if tc is a state, -1 if tc is invalid
 {
   if (tc>0 && tc<MAX_MAPCODE_TERRITORY_CODE)
   {
-    int tp=getParentCountryOfState(tc);
+    int tp=getParentCountryOf(tc);
     if (tp>0) return tp;
     return tc;
   }
@@ -2513,7 +1987,7 @@ int convertTerritoryIsoNameToCode(const char *string,int optional_tc) // optiona
   while (*string>0 && *string<=32) string++; // skip leading whitespace
   if (ccode<0 || strchr(string,'-')>=0 || strlen(string)>3 )
   {
-    ccode=ccode_of_iso3(string); // ignore optional_tc
+    ccode=ccode_of_iso3(string,-1); // ignore optional_tc
   }
   else // there is a ccode, there is no hyphen in the string, and the string is as most 3 chars
   {
@@ -2523,105 +1997,106 @@ int convertTerritoryIsoNameToCode(const char *string,int optional_tc) // optiona
     strcpy(tmp,convertTerritoryCodeToIsoName(tc,1)); // short parent country code
     strcat(tmp,"-");
     strcat(tmp,string);
-    ccode=ccode_of_iso3(tmp);
+    ccode=ccode_of_iso3(tmp,-1);
   }
   if (ccode<0) return -1; else return ccode+1;
 }
 
-// pass point to an array of pointers (at least 64), will be made to point to result strings...
-// returns nr of results;
-int encodeLatLonToMapcodes_full( char **v, double lat, double lon, int tc, int stop_with_one_result, int extraDigits ) // 1.31 allow to stop after one result
-{
-  int ccode=tc-1;
-  if (tc==0) ccode=0;
-  if (ccode<0 || ccode>=MAX_MAPCODE_TERRITORY_CODE) return 0;
-  if (lat<-90 || lat>90 || lon<-180 || lon>180) return 0;
-  if (extraDigits<0) extraDigits=0; else if (extraDigits>2) extraDigits=2; use_high_precision=extraDigits;
-  lat*=1000000; if (lat<0) lat-=0.5; else lat+=0.5;
-  lon*=1000000; if (lon<0) lon-=0.5; else lon+=0.5;
-  nr_global_results=0;
-  global_results=v;
-  if (ccode==0)
-  {
-    int i;
-    for(i=0;i<MAX_MAPCODE_TERRITORY_CODE;i++) {
-      master_encode(NULL,i,(long)lon,(long)lat,-1,stop_with_one_result,0,0); // 1.29 - also add parents recursively
-      if (stop_with_one_result && nr_global_results>0) break;
-    }
-  }
-  else
-  {
-    master_encode(NULL,ccode,(long)lon,(long)lat,-1,stop_with_one_result,0,0); // 1.29 - also add parents recursively
-  }
-  global_results=NULL;
-  return nr_global_results/2;
-}
 
-// decode string into nx,ny; returns negative in case of error
-int decodeMapcodeToLatLon( double *lat, double *lon, const char *string, int context_tc ) // context_tc is used to disambiguate ambiguous short mapcode inputs; pass 0 or negative if not available
+// decode string into lat,lon; returns negative in case of error
+int decodeMapcodeToLatLon( double *lat, double *lon, const char *input, int context_tc ) // context_tc is used to disambiguate ambiguous short mapcode inputs; pass 0 or negative if not available
 {
-  if (lat==NULL || lon==NULL || string==NULL)
+  if (lat==NULL || lon==NULL || input==NULL)
   {
     return -100;
   }
   else
   {
-    long llat,llon;
-    const char *iso3 = convertTerritoryCodeToIsoName(context_tc,0);
-    int err=full_mapcode_decode(&llat,&llon,iso3,string,NULL,NULL);
-    *lat = llat/1000000.0;
-    *lon = llon/1000000.0;
-    if (*lat < -90.0) *lat = -90.0;
-    if (*lat > 90.0) *lat = 90.0;
-    if (*lon < -180.0) *lat = -180.0;
-    if (*lon > 180.0) *lat = 180.0;
-    return err;
+    int ret;
+    decodeRec dec;
+    dec.orginput = input;
+    dec.context = context_tc;
+
+    ret = decoderEngine(&dec);
+    *lat = dec.lat;
+    *lon = dec.lon;
+    return ret;
   }
 }
 
 #ifdef SUPPORT_FOREIGN_ALPHABETS
 
-const char *decodeToRoman(const UWORD* s)
-{
-  return decode_utf16(s);
-}
-
-const UWORD* encodeToAlphabet(const char *mapcode,int alphabet) // 0=roman, 2=cyrillic
+UWORD* convertToAlphabet(UWORD* unibuf, int maxlength, const char *mapcode,int alphabet) // 0=roman, 2=cyrillic
 {
   if ( asc2lan[alphabet][4]==0x003f ) // alphabet has no letter E
     if ( strchr(mapcode,'E') || strchr(mapcode,'U') || strchr(mapcode,'e') || strchr(mapcode,'u') ) // v1.50 get rid of E and U
     {
-      char u[16];
-      strcpy(u,mapcode);
+      // safely copy mapcode into temporary buffer u
+      char u[MAX_MAPCODE_RESULT_LEN];
+      int len = strlen(mapcode);
+      if (len>=MAX_MAPCODE_RESULT_LEN)
+        len=MAX_MAPCODE_RESULT_LEN-1;
+      memcpy(u,mapcode,len);
+      u[len]=0;
       unpack_if_alldigits(u);
       repack_if_alldigits(u,1);
-      return encode_utf16(u,alphabet);
+      mapcode=u;
     }
-  return encode_utf16(mapcode,alphabet);
+  return encode_utf16(unibuf,maxlength,mapcode,alphabet);
+}
+
+
+// Legacy: NOT threadsafe
+static char asciibuf[MAX_MAPCODE_RESULT_LEN];
+const char *decodeToRoman(const UWORD* s)
+{
+  return convertToRoman(asciibuf,MAX_MAPCODE_RESULT_LEN,s);
+}
+
+// Legacy: NOT threadsafe
+static UWORD unibuf[MAX_MAPCODE_RESULT_LEN];
+const UWORD* encodeToAlphabet(const char *mapcode,int alphabet) // 0=roman, 2=cyrillic
+{
+  return convertToAlphabet(unibuf,MAX_MAPCODE_RESULT_LEN,mapcode,alphabet);
 }
 
 #endif
 
-int encodeLatLonToMapcodes( char **v, double lat, double lon, int tc, int extraDigits )
-{
-  return encodeLatLonToMapcodes_full(v,lat,lon,tc,0,extraDigits);
-}
-
 int encodeLatLonToSingleMapcode( char *result, double lat, double lon, int tc, int extraDigits )
 {
   char *v[2];
-  int ret=encodeLatLonToMapcodes_full(v,lat,lon,tc,1,extraDigits);
+  Mapcodes rlocal;
+  int ret=encodeLatLonToMapcodes_internal(v,&rlocal,lat,lon,tc,1,extraDigits);
   *result=0;
-  if (ret>0) {
-    if (strcmp(v[1],"AAA")!=0) {
-      strcpy(result,v[1]);
-      strcat(result," ");
-    }
-    strcat(result,v[0]);
+  if (ret<=0) // no solutions?
+    return -1;
+  // prefix territory unless international
+  if (strcmp(v[1],"AAA")!=0) {
+    strcpy(result,v[1]);
+    strcat(result," ");
   }
-  return ret;
+  strcat(result,v[0]);
+  return 1;
 }
 
+// Threadsafe
+int encodeLatLonToMapcodes( Mapcodes *results, double lat, double lon, int territoryCode, int extraDigits )
+{
+  return encodeLatLonToMapcodes_internal(NULL,results,lat,lon,territoryCode,0,extraDigits);
+}
 
-#endif // RELEASENEAT
+// Legacy: NOT threadsafe
+Mapcodes rglobal;
+int encodeLatLonToMapcodes_Deprecated( char **v, double lat, double lon, int territoryCode, int extraDigits )
+{
+  return encodeLatLonToMapcodes_internal(v,&rglobal,lat,lon,territoryCode,0,extraDigits);
+}
 
+// Legacy: NOT threadsafe
+static char makeiso_bufbytes[16];
+static char *makeiso_buf;
+const char *convertTerritoryCodeToIsoName(int tc,int format)
+{
+  if (makeiso_buf==makeiso_bufbytes) makeiso_buf=makeiso_bufbytes+8; else makeiso_buf=makeiso_bufbytes;
+  return (const char*)getTerritoryIsoName(makeiso_buf,tc,format);
+}

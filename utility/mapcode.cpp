@@ -43,6 +43,9 @@
 #include <time.h>
 #include "../mapcodelib/mapcoder.c"
 
+// Specific define to be able to limit output to microdegrees, for test files.
+#undef LIMIT_TO_MICRODEGREES
+
 #define my_isnan(x) (false)
 #define my_round(x) ((long) (floor((x) + 0.5)))
 
@@ -282,18 +285,28 @@ static void generateAndOutputMapcodes(double lat, double lon, int iShowError, in
     char* results[2 * MAX_NR_OF_MAPCODE_RESULTS];
     int context = 0;
 
-    while (lon > 180) {
-        lon -= 360;
+    while (lon > 180.0) {
+        lon -= 360.0;
     }
-    while (lon < -180) {
-        lon += 360;
+    while (lon < -180.0) {
+        lon += 360.0;
     }
-    while (lat > 90) {
-        lat -= 180;
+    while (lat > 90.0) {
+        lat -= 180.0;
     }
-    while (lat < -90) {
-        lat += 180;
+    while (lat < -90.0) {
+        lat += 180.0;
     }
+
+#ifdef LIMIT_TO_MICRODEGREES
+    {
+        // Need to truncate lat/lon to microdegrees.
+        long lon32 = lon * 1000000.0;
+        long lat32 = lat * 1000000.0;
+        lon = (lon32 / 1000000.0);
+        lat = (lat32 / 1000000.0);
+    }
+#endif
 
     const int nrResults = encodeLatLonToMapcodes_Deprecated(results, lat, lon, context, extraDigits);
     if (nrResults <= 0) {

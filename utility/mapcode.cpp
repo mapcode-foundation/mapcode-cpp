@@ -47,7 +47,7 @@
 #undef LIMIT_TO_MICRODEGREES
 
 #define my_isnan(x) (false)
-#define my_round(x) ((int) (floor((x) + 0.5)))
+#define my_round(x) ((long) (floor((x) + 0.5)))
 
 static int          selfCheckEnabled = 0;
 
@@ -456,7 +456,7 @@ int main(const int argc, const char** argv)
                 const char* suffix = strstr(mapcode, "-");
                 extraDigits = 0;
                 if (suffix != 0) {
-                    extraDigits = (int) (strlen(suffix) - 1);
+                    extraDigits = strlen(suffix) - 1;
                 }
                 selfCheckLatLonToMapcode(lat, lon, defaultTerritory, mapcode, extraDigits);
             }
@@ -651,7 +651,7 @@ int main(const int argc, const char** argv)
                 srand(seed);
             }
             else {
-                srand((unsigned int) time(0));
+                srand(time(0));
             }
         }
         useXYZ = (strstr(cmd, "XYZ") != 0);

@@ -153,7 +153,7 @@ static int disambiguate_str( const char *s, int len ) // returns disambiguation 
   f=strstr(p,country);
   if (f==NULL)
     return -23; // unknown country
-  res = 1 + ((f-p)/(len+1));
+  res = 1 + (int)((f-p)/(len+1));
   return res;
 }
 
@@ -256,7 +256,7 @@ static int ccode_of_iso3(const char *in_iso, int parentcode )
       return -23;
   }
   // return result
-  return (s-entity_iso)/4;
+  return (int)((s-entity_iso)/4);
 }
 
 
@@ -513,7 +513,7 @@ static void decodeSixWide( long v, long width, long height, long *x, long *y )
 static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter )
 {
   const char* input = (hasHeaderLetter ? dec->mapcode+1 : dec->mapcode);
-  int codexlen = strlen(input)-1;
+  int codexlen = (int)(strlen(input)-1);
   long prelen = (long)(strchr(input,'.')-input);
   char result[MAX_PROPER_MAPCODE_LEN+1];
 
@@ -679,7 +679,7 @@ static void encodeGrid( char* result, const encodeRec *enc, int const m, int ext
           v = encodeSixWide( relx,rely, divx,divy );
         else
           v = relx*divy + (divy-1-rely);
-        encodeBase31( result, v, prelen);
+        encodeBase31( result, v, (int)prelen);
       } // prefix
 
       if ( prelen==4 && divx==xside[4] && divy==yside[4] )
@@ -719,7 +719,7 @@ static void encodeGrid( char* result, const encodeRec *enc, int const m, int ext
           }
           else
           {
-            encodeBase31(resultptr,       (difx)*yside[postlen]+dify, postlen   );
+            encodeBase31(resultptr, (difx)*yside[postlen]+dify, (int)postlen);
             // swap 4-long codes for readability
             if ( postlen==4 )
             {
@@ -771,7 +771,7 @@ static int decodeNameless(decodeRec *dec, int m )
   int codexm = coDex(m);
   int dc = (codexm != 22) ? 2 : 3;
 
-  int codexlen = strlen(dec->mapcode)-1;
+  int codexlen = (int)(strlen(dec->mapcode)-1);
   if ( codexlen!=4 && codexlen!=5 )
     return -2; // solve bad args
 
@@ -789,7 +789,7 @@ static int decodeNameless(decodeRec *dec, int m )
   { // check just in case
     int p = 31/A;
     int r = 31%A;
-    long v;
+    long v=0;
     long SIDE;
     int swapletters=0;
     long xSIDE;
@@ -844,7 +844,7 @@ static int decodeNameless(decodeRec *dec, int m )
 
     if (swapletters)
     {
-      m = F + X;
+      m = (int)(F + X);
       if ( ! isSpecialShape22(m) )
       {
         char t = result[codexlen-3]; result[codexlen-3]=result[codexlen-2]; result[codexlen-2]=t;
@@ -874,7 +874,7 @@ static int decodeNameless(decodeRec *dec, int m )
         }
     }
 
-    m = F + X;
+    m = (int)(F + X);
     SIDE = smartDiv(m);
 
     getboundaries(m,minx,miny,maxx,maxy);
@@ -1127,9 +1127,9 @@ static int encodeNameless( char *result, const encodeRec* enc, int input_ctry, i
         v +=  (dx*SIDE + dy);
       }
 
-      encodeBase31( result, v, codexlen+1 ); // nameless
+      encodeBase31( result, v, (int)(codexlen+1) ); // nameless
       {
-        int dotp=codexlen;
+        int dotp=(int)codexlen;
         if (codexm==13)
           dotp--;
         memmove(result+dotp,result+dotp-1,4); result[dotp-1]='.';
@@ -1157,7 +1157,6 @@ static int encodeNameless( char *result, const encodeRec* enc, int input_ctry, i
 static int decodeAutoHeader(decodeRec *dec,  int m )
 {
   const char *input = dec->mapcode;
-  int err = -1;
   int firstcodex = coDex(m);
   char *dot = strchr(input,'.');
 
@@ -1202,8 +1201,6 @@ static int decodeAutoHeader(decodeRec *dec,  int m )
 
         value -= STORAGE_START;
         value /= (961*31);
-
-        err=0;
 
         // PIPELETTER DECODE
         {
@@ -1294,7 +1291,7 @@ static int encodeAutoHeader( char *result, const encodeRec *enc, int m, int extr
       value += (vy/YSIDE3);
 
       // PIPELETTER ENCODE
-      encodeBase31( result, (STORAGE_START/(961*31)) + value, codexlen-2 );
+      encodeBase31( result, (STORAGE_START/(961*31)) + value, (int)(codexlen-2));
       result[codexlen-2]='.';
       encode_triple( result+codexlen-1, vx%XSIDE3, vy%YSIDE3 );
 
@@ -1420,7 +1417,7 @@ static int decoderEngine( decodeRec *dec )
   {
     const char *r = dec->orginput;
     while (*r>0 && *r<=32) r++; // skip lead
-    len=strlen(r);
+    len=(int)strlen(r);
     if (len>MAX_MAPCODE_RESULT_LEN-1) len=MAX_MAPCODE_RESULT_LEN-1;
     while (len>0 && r[len-1]>=0 && r[len-1]<=32) len--; // remove trail
     memcpy(s,r,len); s[len]=0;
@@ -1440,17 +1437,17 @@ static int decoderEngine( decodeRec *dec )
   // check if extension, determine length without extension
   minus = strchr(s+4,'-');
   if (minus)
-    len=minus-s;
+    len=(int)(minus-s);
 
   // make sure there is valid context
   iso3 = convertTerritoryCodeToIsoName(dec->context,0); // get context string (or empty string)
   if (*iso3==0) iso3="AAA";
-  parentcode=disambiguate_str(iso3,strlen(iso3)); // pass for future context disambiguation
+  parentcode=disambiguate_str(iso3,(int)strlen(iso3)); // pass for future context disambiguation
 
   // insert context if none in input
   if (len>0 && len<=9 && strchr(s,' ')==0) // just a non-international mapcode without a territory code?
   {
-      int ilen=strlen(iso3);
+      int ilen=(int)strlen(iso3);
       memmove(s+ilen+1,s,strlen(s)+1);
       s[ilen]=' ';
       memcpy(s,iso3,ilen);
@@ -1544,7 +1541,7 @@ static int decoderEngine( decodeRec *dec )
 //////////// AT THIS POINT, dot=FIRST DOT, input=CLEAN INPUT (no vowels) ilen=INPUT LENGTH
 
   // analyse input
-  prelen = (dot-s);
+  prelen = (int)(dot-s);
   postlen = len-1-prelen;
   codex = prelen*10 + postlen;
   if ( prelen<2 || prelen>5 || postlen<2 || postlen>4 )
@@ -2033,7 +2030,7 @@ UWORD* convertToAlphabet(UWORD* unibuf, int maxlength, const char *mapcode,int a
     {
       // safely copy mapcode into temporary buffer u
       char u[MAX_MAPCODE_RESULT_LEN];
-      int len = strlen(mapcode);
+      int len = (int)strlen(mapcode);
       if (len>=MAX_MAPCODE_RESULT_LEN)
         len=MAX_MAPCODE_RESULT_LEN-1;
       memcpy(u,mapcode,len);

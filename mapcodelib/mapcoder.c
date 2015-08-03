@@ -20,6 +20,11 @@
 #include "mapcoder.h"
 #include "basics.h"
 
+#define FAST_ENCODE
+#ifdef FAST_ENCODE
+#include "dividemaps.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //  Structures
@@ -57,32 +62,37 @@ typedef struct {
 static int firstrec(int ccode) { return data_start[ccode]; }
 static int lastrec(int ccode)  { return data_start[ccode+1]-1; }
 
+static int ParentLetter(int ccode) // returns parent index (>0), or 0
+{
+  if (ccode>=usa_from && ccode<=usa_upto) return 1;
+  if (ccode>=ind_from && ccode<=ind_upto) return 2;
+  if (ccode>=can_from && ccode<=can_upto) return 3;
+  if (ccode>=aus_from && ccode<=aus_upto) return 4;
+  if (ccode>=mex_from && ccode<=mex_upto) return 5;
+  if (ccode>=bra_from && ccode<=bra_upto) return 6;
+  if (ccode>=rus_from && ccode<=rus_upto) return 7;
+  if (ccode>=chn_from && ccode<=chn_upto) return 8;
+  return 0;
+}
+
 static int ParentTerritoryOf(int ccode) // returns parent, or -1
 {
-  if (ccode>=usa_from && ccode<=usa_upto) return ccode_usa;
-  if (ccode>=ind_from && ccode<=ind_upto) return ccode_ind;
-  if (ccode>=can_from && ccode<=can_upto) return ccode_can;
-  if (ccode>=aus_from && ccode<=aus_upto) return ccode_aus;
-  if (ccode>=mex_from && ccode<=mex_upto) return ccode_mex;
-  if (ccode>=bra_from && ccode<=bra_upto) return ccode_bra;
-  if (ccode>=rus_from && ccode<=rus_upto) return ccode_rus;
-  if (ccode>=chn_from && ccode<=chn_upto) return ccode_chn;
-  return -1;
+  return parentnr[ParentLetter(ccode)];
 }
 
 static int isSubdivision( int ccode )  { return (ParentTerritoryOf(ccode)>=0); }
 
-static int coDex(int m)             { int c=mminfo[m].flags & 31; return 10*(c/5) + ((c%5)+1); }
-static int prefixLength(int m)      { int c=mminfo[m].flags & 31; return (c/5); }
-static int postfixLength(int m)     { int c=mminfo[m].flags & 31; return ((c%5)+1); }
-static int isNameless(int m)        { return mminfo[m].flags & 64; }
-static int recType(int m)           { return (mminfo[m].flags>>7) & 3; }
-static int isRestricted(int m)      { return mminfo[m].flags & 512; }
-static int isSpecialShape22(int m)  { return mminfo[m].flags & 1024; }
-static char headerLetter(int m)     { return encode_chars[ (mminfo[m].flags>>11)&31 ]; }
-static long smartDiv(int m)         { return (mminfo[m].flags>>16); }
+static int coDex(int m)      { int c=mminfo[m].flags & 31; return 10*(c/5) + ((c%5)+1); }
+#define prefixLength(m)      ((int)((mminfo[m].flags & 31)/5))
+#define postfixLength(m)     ((int)(((mminfo[m].flags & 31)%5)+1))
+#define isNameless(m)        (mminfo[m].flags & 64)
+#define recType(m)           ((mminfo[m].flags>>7) & 3)
+#define isRestricted(m)      (mminfo[m].flags & 512)
+#define isSpecialShape22(m)  (mminfo[m].flags & 1024)
+#define headerLetter(m)      (encode_chars[(mminfo[m].flags>>11)&31])
+#define smartDiv(m)          (mminfo[m].flags>>16)
+#define boundaries(m)        (&mminfo[m])
 
-#define getboundaries(m,minx,miny,maxx,maxy) get_boundaries(m,&(minx),&(miny),&(maxx),&(maxy))
 static void get_boundaries(int m,long *minx, long *miny, long *maxx, long *maxy )
 {
   const mminforec *mm = &mminfo[m];
@@ -102,8 +112,8 @@ static int isInRange(long x,long minx,long maxx) // returns nonzero if x in the 
 
 static int fitsInside( long x, long y, int m )
 {
-  const mminforec *mm = &mminfo[m];
-  return ( mm->miny <= y && y < mm->maxy && isInRange(x,mm->minx,mm->maxx) );
+  const mminforec *b = boundaries(m);
+  return ( b->miny <= y && y < b->maxy && isInRange(x,b->minx,b->maxx) );
 }
 
 static long xDivider4( long miny, long maxy )
@@ -117,9 +127,9 @@ static long xDivider4( long miny, long maxy )
 
 static int fitsInsideWithRoom( long x, long y, int m )
 {
-  const mminforec *mm = &mminfo[m];
-  long xdiv8 = xDivider4(mm->miny,mm->maxy)/4; // should be /8 but there's some extra margin
-  return ( mm->miny-60 <= y && y < mm->maxy+60 && isInRange(x,mm->minx - xdiv8, mm->maxx + xdiv8) );
+  const mminforec *b = boundaries(m);
+  long xdiv8 = xDivider4(b->miny,b->maxy)/4; // should be /8 but there's some extra margin
+  return ( b->miny-60 <= y && y < b->maxy+60 && isInRange(x,b->minx - xdiv8, b->maxx + xdiv8) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -138,7 +148,6 @@ static const char *get_entity_iso3(char *entity_iso3_result,int ccode)
 
 static int disambiguate_str( const char *s, int len ) // returns disambiguation >=1, or negative if error
 {
-  int res;
   const char *p=(len==2 ? parents2 : parents3);
   const char *f;
   char country[4];
@@ -153,8 +162,7 @@ static int disambiguate_str( const char *s, int len ) // returns disambiguation 
   f=strstr(p,country);
   if (f==NULL)
     return -23; // unknown country
-  res = 1 + (int)((f-p)/(len+1));
-  return res;
+  return 1 + (int)((f-p)/(len+1));
 }
 
 
@@ -326,7 +334,7 @@ static void encodeExtension(char *result,long extrax4,long extray,long dividerx4
 #define decodeChar(c) decode_chars[(unsigned char)c] // force c to be in range of the index, between 0 and 255
 
 // this routine takes the integer-arithmeteic decoding results (in millionths of degrees), adds any floating-point precision digits, and returns the result (still in millionths)
-static void decodeExtension(decodeRec *dec, long dividerx4,long dividery,int ydirection)
+static int decodeExtension(decodeRec *dec, long dividerx4,long dividery,int ydirection)
 {
   const char *extrapostfix = dec->extension;
 #ifndef SUPPORT_HIGH_PRECISION // old integer-arithmetic version
@@ -361,11 +369,11 @@ static void decodeExtension(decodeRec *dec, long dividerx4,long dividery,int ydi
     double halfcolumn=0;
     int c1 = *extrapostfix++;
     c1 = decodeChar(c1);
-    if (c1<0) c1=0; else if (c1>29) c1=29;
+    if (c1<0 || c1==30) return -1; // illegal extension character
     row1 =(c1/5); column1 = (c1%5);
     if (*extrapostfix) {
       int c2 = decodeChar(*extrapostfix++);
-      if (c2<0) c2=0; else if (c2>29) c2=29;
+      if (c2<0 || c2==30) return -1; // illegal extension character
       row2 =(c2/6); column2 = (c2%6);
     }
     else {
@@ -392,6 +400,7 @@ static void decodeExtension(decodeRec *dec, long dividerx4,long dividery,int ydi
   dec->lon32 = (long)dec->lon;
   dec->lat32 = (long)dec->lat;
 #endif
+  return 0;
 }
 
 
@@ -526,7 +535,7 @@ static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter )
 
   {
     long postlen = codexlen-prelen;
-    long codex = 10*prelen + postlen;
+
     long divx,divy;
 
     divy = smartDiv(m);
@@ -548,41 +557,41 @@ static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter )
     }
 
     {
-      long relx=-1,rely=-1,v=0;
-      long minx,maxx,miny,maxy;
-      getboundaries(m,minx,miny,maxx,maxy);
+      long relx=0,rely=0,v=0;
 
       if ( prelen <= MAXFITLONG )
       {
         v = decodeBase31(result);
 
-        if ( divx!=divy && codex>24 ) // D==6 special grid, useful when prefix is 3 or more, and not a nice 961x961
+        if ( divx!=divy && prelen>2 ) // D==6 special grid, useful when prefix is 3 or more, and not a nice 961x961
         { // DECODE
           decodeSixWide( v,divx,divy, &relx,&rely );
         }
         else
         {
           relx = (v/divy);
-          rely = (v%divy);
-          rely = divy-1-rely;
+          rely = divy - 1 - (v%divy);
         }
 
       }
 
       {
-        long ygridsize = (maxy-miny+divy-1)/divy; // lonlat per cell
-        long xgridsize = (maxx-minx+divx-1)/divx; // lonlat per cell
+        const mminforec *b=boundaries(m);
+        long ygridsize = (b->maxy - b->miny + divy - 1)/divy; // lonlat per cell
+        long xgridsize = (b->maxx - b->minx + divx - 1)/divx; // lonlat per cell
 
         if (relx<0 || rely<0 || relx>=divx || rely>=divy)
           return -111;
 
         // and then encodde relative to THE CORNER of this cell
-        rely = miny + (rely*ygridsize);
-        relx = minx + (relx*xgridsize);
+        rely = b->miny + (rely*ygridsize);
+        relx = b->minx + (relx*xgridsize);
 
         {
-          long dividery = ( (((ygridsize))+yside[postlen]-1)/yside[postlen] );
-          long dividerx = ( (((xgridsize))+xside[postlen]-1)/xside[postlen] );
+          long xp = xside[postlen];
+          long dividerx = ( (((xgridsize))+xp-1)/xp );
+          long yp = yside[postlen];
+          long dividery = ( (((ygridsize))+yp-1)/yp );
           // decoderelative
 
           {
@@ -598,24 +607,23 @@ static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter )
               long v;
               if ( postlen==4 ) { char t = r[1]; r[1]=r[2]; r[2]=t; } // swap
               v = decodeBase31(r);
-              difx = ( v/yside[postlen] );
-              dify = ( v%yside[postlen] );
+              difx = ( v/yp );
+              dify = ( v%yp );
               if ( postlen==4 ) { char t = r[1]; r[1]=r[2]; r[2]=t; } // swap back
             }
 
             // reverse y-direction
-            dify = yside[postlen]-1-dify;
+            dify = yp-1-dify;
 
             dec->lon32 = relx+(difx * dividerx);
             dec->lat32 = rely+(dify * dividery);
-            decodeExtension(dec,  dividerx<<2,dividery,1); // grid
+            return decodeExtension(dec,  dividerx<<2,dividery,1); // grid
           } // decoderelative
 
         }
       }
     }
   }
-  return 0;
 }
 
 
@@ -624,21 +632,21 @@ static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter )
 
 static void encodeGrid( char* result, const encodeRec *enc, int const m, int extraDigits, char headerLetter )
 {
-  long minx,miny,maxx,maxy;
   long y= enc->lat32,x= enc->lon32;
+  const mminforec *b=boundaries(m);
+
   int orgcodex=coDex(m);
-  int codex=orgcodex;
-  if (codex==21) codex=22;
-  if (codex==14) codex=23;
-  getboundaries(m,minx,miny,maxx,maxy);
+  int codexm=orgcodex;
+  if (codexm==21) codexm=22;
+  if (codexm==14) codexm=23;
 
   *result=0;
   if (headerLetter) result++;
 
   { // encode
     long divx,divy;
-    long prelen = codex/10;
-    long postlen = codex%10;
+    int prelen = codexm/10;
+    int postlen = codexm%10;
 
     divy = smartDiv(m);
     if (divy==1)
@@ -654,10 +662,10 @@ static void encodeGrid( char* result, const encodeRec *enc, int const m, int ext
     }
 
     { // grid
-      long ygridsize = (maxy-miny+divy-1)/divy;
-      long xgridsize = (maxx-minx+divx-1)/divx;
-      long rely = y-miny;
-      long relx = x-minx;
+      long ygridsize = (b->maxy-b->miny+divy-1)/divy;
+      long xgridsize = (b->maxx-b->minx+divx-1)/divx;
+      long rely = y-b->miny;
+      long relx = x-b->minx;
 
       if ( relx<0 )
       {
@@ -675,11 +683,11 @@ static void encodeGrid( char* result, const encodeRec *enc, int const m, int ext
 
       { // prefix
         long v;
-        if ( divx!=divy && codex>24 )
+        if ( divx!=divy && prelen>2 )
           v = encodeSixWide( relx,rely, divx,divy );
         else
           v = relx*divy + (divy-1-rely);
-        encodeBase31( result, v, (int)prelen);
+        encodeBase31( result, v, prelen);
       } // prefix
 
       if ( prelen==4 && divx==xside[4] && divy==yside[4] )
@@ -687,8 +695,8 @@ static void encodeGrid( char* result, const encodeRec *enc, int const m, int ext
         char t = result[1]; result[1]=result[2]; result[2]=t;
       }
 
-      rely = miny + (rely*ygridsize);
-      relx = minx + (relx*xgridsize);
+      rely = b->miny + (rely*ygridsize);
+      relx = b->minx + (relx*xgridsize);
 
       { // postfix
         long dividery = ( (((ygridsize))+yside[postlen]-1)/yside[postlen] );
@@ -719,7 +727,7 @@ static void encodeGrid( char* result, const encodeRec *enc, int const m, int ext
           }
           else
           {
-            encodeBase31(resultptr, (difx)*yside[postlen]+dify, (int)postlen);
+            encodeBase31(resultptr,       (difx)*yside[postlen]+dify, postlen   );
             // swap 4-long codes for readability
             if ( postlen==4 )
             {
@@ -745,26 +753,27 @@ static void encodeGrid( char* result, const encodeRec *enc, int const m, int ext
 
 
 // find first territory rectangle of the same type as m
-static int firstNamelessRecord(int codex, int m, int firstcode) {
+static int firstNamelessRecord(int m, int firstcode) {
     int i = m;
-    while (i >= firstcode && coDex(i) == codex && isNameless(i)) i--;
+    int codexm = coDex(m);
+    while (i >= firstcode && coDex(i) == codexm && isNameless(i)) i--;
     return (i+1);
 }
 
 // count all territory rectangles of the same type as m
-static int countNamelessRecords(int codex, int m, int firstcode) {
-    int i = firstNamelessRecord(codex, m, firstcode);
-    int e = m;
-    while (coDex(e) == codex) e++;
-    return (e-i);
+static int countNamelessRecords(int m, int firstcode) {
+    int i = firstNamelessRecord(m, firstcode);
+    int codexm = coDex(m);
+    while (coDex(m) == codexm) m++;
+    return (m-i);
 }
 
 
 
 
 // decodes dec->mapcode in context of territory rectangle m, territory dec->context
-// Returns x<0 in case of error, or record#
-static int decodeNameless(decodeRec *dec, int m )
+// Returns negative in case of error
+static int decodeNameless(decodeRec *dec, int m)
 {
   int A,F;
   char input[8];
@@ -780,21 +789,18 @@ static int decodeNameless(decodeRec *dec, int m )
   strcpy(input+dc,dec->mapcode+dc+1);
 
 
-  A = countNamelessRecords(codexm,m,firstrec(dec->context));
-  F = firstNamelessRecord( codexm,m,firstrec(dec->context));
+  A = countNamelessRecords(m,firstrec(dec->context));
+  F = firstNamelessRecord(m,firstrec(dec->context));
 
-  if ( (A<2 && codexm!=21) || A<1 )
-    return -3;
-
-  { // check just in case
+  {
     int p = 31/A;
     int r = 31%A;
-    long v=0;
+    long v;
     long SIDE;
     int swapletters=0;
     long xSIDE;
-    long X=-1;
-    long miny,maxy,minx,maxx;
+    int X=-1;
+    const mminforec *b;
 
     // make copy of input, so we can swap around letters during the decoding
     char result[32];
@@ -836,57 +842,43 @@ static int decodeNameless(decodeRec *dec, int m )
       if (A==62) BASEPOWERA++; else BASEPOWERA = 961*(BASEPOWERA/961);
 
       v = decodeBase31(result);
-      X  = (long)(v/BASEPOWERA);
+      X  = (int)(v/BASEPOWERA);
       v %= BASEPOWERA;
     }
 
 
 
-    if (swapletters)
-    {
-      m = (int)(F + X);
-      if ( ! isSpecialShape22(m) )
-      {
+    if (swapletters) {
+      if ( ! isSpecialShape22(F+X) ) {
         char t = result[codexlen-3]; result[codexlen-3]=result[codexlen-2]; result[codexlen-2]=t;
       }
     }
 
-    // adjust v and X
-    if ( codexm!=21 && A<=31 )
-    {
-
+    if ( codexm!=21 && A<=31 ) {
       v = decodeBase31(result);
-      if (X>0)
-      {
+      if (X>0) {
         v -= (X*p + (X<r ? X : r)) * (961*961);
       }
-
     }
-    else if ( codexm!=21 && A<62 )
-    {
-
+    else if ( codexm!=21 && A<62 ) {
       v = decodeBase31(result+1);
-      if ( X >= (62-A) )
-        if ( v >= (16*961*31) )
-        {
+      if ( X >= (62-A) ) {
+        if ( v >= (16*961*31) ) {
           v -= (16*961*31);
           X++;
         }
+      }
     }
 
     m = (int)(F + X);
-    SIDE = smartDiv(m);
 
-    getboundaries(m,minx,miny,maxx,maxy);
-    if ( isSpecialShape22(m) )
-    {
-      xSIDE = SIDE*SIDE;
-      SIDE = 1+((maxy-miny)/90); // side purely on y range
+    xSIDE = SIDE = smartDiv(m);
+
+    b=boundaries(m);
+    if ( isSpecialShape22(m) ) {
+      xSIDE *= SIDE;
+      SIDE = 1+((b->maxy-b->miny)/90); // side purely on y range
       xSIDE = xSIDE / SIDE;
-    }
-    else
-    {
-      xSIDE=SIDE;
     }
 
     // decode
@@ -912,18 +904,18 @@ static int decodeNameless(decodeRec *dec, int m )
       }
 
       {
-        long dividerx4 = xDivider4(miny,maxy); // *** note: dividerx4 is 4 times too large!
-        long dividery = 90;
+        long dividerx4 = xDivider4(b->miny,b->maxy); // *** note: dividerx4 is 4 times too large!
+        long dividery = 90; int err;
 
-        dec->lon32 = minx + ((dx * dividerx4)/4); // *** note: FIRST multiply, then divide... more precise, larger rects
-        dec->lat32 = maxy - (dy*dividery);
-        decodeExtension(dec, dividerx4,dividery,-1); // nameless
+        dec->lon32 = b->minx + ((dx * dividerx4)/4); // *** note: FIRST multiply, then divide... more precise, larger rects
+        dec->lat32 = b->maxy - (dy*dividery);
+        err = decodeExtension(dec, dividerx4,dividery,-1); // nameless
 
-#ifdef SUPPORT_HIGH_PRECISION // BUGFIX!
+#ifdef SUPPORT_HIGH_PRECISION
         dec->lon += ((dx * dividerx4)%4)/4.0;
 #endif
 
-        return m;
+        return err;
       }
     }
   }
@@ -1012,40 +1004,31 @@ static int unpack_if_alldigits(char *input) // returns 1 if unpacked, 0 if left 
 }
 
 
-static int stateletter(int ccode) // parent
+/*
 {
-  if (ccode>=usa_from && ccode<=usa_upto) return 1; //ccode_usa
-  if (ccode>=ind_from && ccode<=ind_upto) return 2; //ccode_ind
-  if (ccode>=can_from && ccode<=can_upto) return 3; //ccode_can
-  if (ccode>=aus_from && ccode<=aus_upto) return 4; //ccode_aus
-  if (ccode>=mex_from && ccode<=mex_upto) return 5; //ccode_mex
-  if (ccode>=bra_from && ccode<=bra_upto) return 6; //ccode_bra
-  if (ccode>=rus_from && ccode<=rus_upto) return 7; //ccode_rus
-  if (ccode>=chn_from && ccode<=chn_upto) return 8; //ccode_chn
-  return 0;
 }
-
+*/
 
 // returns -1 (error), or m (also returns *result!=0 in case of success)
-static int encodeNameless( char *result, const encodeRec* enc, int input_ctry, int codexm, int extraDigits, int m )
+static int encodeNameless( char *result, const encodeRec* enc, int input_ctry, int extraDigits, int m )
 {
   // determine how many nameless records there are (A), and which one is this (X)...
   long y= enc->lat32,x= enc->lon32;
-  int  A = countNamelessRecords(codexm, m, firstrec(input_ctry));
-  long X = m - firstNamelessRecord( codexm, m, firstrec(input_ctry));
+  int  A = countNamelessRecords(m, firstrec(input_ctry));
+  long X = m - firstNamelessRecord(m, firstrec(input_ctry));
 
   *result=0;
 
   {
     int p = 31/A;
     int r = 31%A; // the first r items are p+1
-    long codexlen = (codexm/10)+(codexm%10);
+    int codexm = coDex(m);
+    int codexlen = (codexm/10)+(codexm%10);
     // determine side of square around centre
     long SIDE;
 
     long storage_offset;
-    long miny,maxy;
-    long minx,maxx;
+    const mminforec *b;
 
     long xSIDE,orgSIDE;
 
@@ -1083,11 +1066,12 @@ static int encodeNameless( char *result, const encodeRec* enc, int input_ctry, i
     }
     SIDE = smartDiv(m);
 
-    getboundaries(m,minx,miny,maxx,maxy);
+
+    b=boundaries(m);
     orgSIDE=xSIDE=SIDE;
     if ( isSpecialShape22(m) ) //  - keep the existing rectangle!
     {
-        SIDE = 1+((maxy-miny)/90); // new side, based purely on y-distance
+        SIDE = 1+((b->maxy-b->miny)/90); // new side, based purely on y-distance
         xSIDE = (orgSIDE*orgSIDE) / SIDE;
     }
 
@@ -1095,18 +1079,18 @@ static int encodeNameless( char *result, const encodeRec* enc, int input_ctry, i
     {
       long v = storage_offset;
 
-      long dividerx4 = xDivider4(miny,maxy); // *** note: dividerx4 is 4 times too large!
+      long dividerx4 = xDivider4(b->miny,b->maxy); // *** note: dividerx4 is 4 times too large!
 #ifdef SUPPORT_HIGH_PRECISION // precise encoding: take fraction into account!
       long xFracture = (long)(4* enc->fraclon);
 #else
       long xFracture = 0;
 #endif
-      long dx = (4*(x-minx)+xFracture)/dividerx4; // like div, but with floating point value
-      long extrax4 = (x-minx)*4 - dx*dividerx4; // like modulus, but with floating point value
+      long dx = (4*(x-b->minx)+xFracture)/dividerx4; // like div, but with floating point value
+      long extrax4 = (x-b->minx)*4 - dx*dividerx4; // like modulus, but with floating point value
 
       long dividery = 90;
-      long dy     = (maxy-y)/dividery;  // between 0 and SIDE-1
-      long extray = (maxy-y)%dividery;
+      long dy     = (b->maxy-y)/dividery;  // between 0 and SIDE-1
+      long extray = (b->maxy-y)%dividery;
 
 #ifdef SUPPORT_HIGH_PRECISION // precise encoding: check if fraction takes this out of range
       if (extray==0 &&  enc->fraclat>0) {
@@ -1120,16 +1104,16 @@ static int encodeNameless( char *result, const encodeRec* enc, int input_ctry, i
 
       if ( isSpecialShape22(m) )
       {
-        v += encodeSixWide(dx,SIDE-1-dy,xSIDE,SIDE);
+        v += encodeSixWide(dx, SIDE-1-dy, xSIDE, SIDE);
       }
       else
       {
         v +=  (dx*SIDE + dy);
       }
 
-      encodeBase31( result, v, (int)(codexlen+1) ); // nameless
+      encodeBase31(result, v, codexlen + 1); // nameless
       {
-        int dotp=(int)codexlen;
+        int dotp=codexlen;
         if (codexm==13)
           dotp--;
         memmove(result+dotp,result+dotp-1,4); result[dotp-1]='.';
@@ -1157,7 +1141,7 @@ static int encodeNameless( char *result, const encodeRec* enc, int input_ctry, i
 static int decodeAutoHeader(decodeRec *dec,  int m )
 {
   const char *input = dec->mapcode;
-  int firstcodex = coDex(m);
+  int codexm = coDex(m);
   char *dot = strchr(input,'.');
 
   long STORAGE_START=0;
@@ -1169,64 +1153,54 @@ static int decodeAutoHeader(decodeRec *dec,  int m )
   value = decodeBase31(input); // decode top
   value *= (961*31);
 
-  for ( ; coDex(m)==firstcodex && recType(m)>1; m++ )
+  for ( ; coDex(m)==codexm && recType(m)>1; m++ )
   {
-    long minx,miny,maxx,maxy;
-    getboundaries(m,minx,miny,maxx,maxy);
-
-    {
+      const mminforec *b=boundaries(m);
       // determine how many cells
-      long H = (maxy-miny+89)/90; // multiple of 10m
-      long xdiv = xDivider4(miny,maxy);
-      long W = ( (maxx-minx)*4 + (xdiv-1) ) / xdiv;
+      long H = (b->maxy - b->miny + 89)/90; // multiple of 10m
+      long xdiv = xDivider4(b->miny,b->maxy);
+      long W = ( (b->maxx-b->minx)*4 + (xdiv-1) ) / xdiv;
       long product;
 
       // decode
-      // round up to multiples of YSIDE3*XSIDE3...
-      H = YSIDE3*( (H+YSIDE3-1)/YSIDE3 );
-      W = XSIDE3*( (W+XSIDE3-1)/XSIDE3 );
-      product = (W/XSIDE3)*(H/YSIDE3)*961*31;
-      {
-        long GOODROUNDER = coDex(m)>=23 ? (961*961*31) : (961*961);
-        if ( recType(m)==2 ) // *+ pipe!
-          product = ((STORAGE_START+product+GOODROUNDER-1)/GOODROUNDER)*GOODROUNDER - STORAGE_START;
-      }
+      H = 176*( (H+176-1)/176 );
+      W = 168*( (W+168-1)/168 );
+      product = (W/168) * (H/176) * 961 * 31;
 
+      if (recType(m) == 2) {
+        long GOODROUNDER = coDex(m)>=23 ? (961*961*31) : (961*961);
+        product = ((STORAGE_START+product+GOODROUNDER-1)/GOODROUNDER)*GOODROUNDER - STORAGE_START;
+      }
 
       if ( value >= STORAGE_START && value < STORAGE_START + product )
       {
-        // decode
-        long dividerx = (maxx-minx+W-1)/W;
-        long dividery = (maxy-miny+H-1)/H;
+        long dividerx = (b->maxx-b->minx+W-1)/W;
+        long dividery = (b->maxy-b->miny+H-1)/H;
 
         value -= STORAGE_START;
         value /= (961*31);
 
-        // PIPELETTER DECODE
         {
           long difx,dify;
           decode_triple(dot+1,&difx,&dify); // decode bottom 3 chars
           {
-            long vx = (value / (H/YSIDE3))*XSIDE3 + difx; // is vx/168
-            long vy = (value % (H/YSIDE3))*YSIDE3 + dify; // is vy/176
+            long vx = (value / (H/176))*168 + difx; // is vx/168
+            long vy = (value % (H/176))*176 + dify; // is vy/176
 
-            dec->lat32 = maxy - vy*dividery;
-            dec->lon32 = minx + vx*dividerx;
-            if ( dec->lon32<minx || dec->lon32>=maxx || dec->lat32<miny || dec->lat32>maxy ) // *** CAREFUL! do this test BEFORE adding remainder...
+            dec->lat32 = b->maxy - vy * dividery;
+            dec->lon32 = b->minx + vx * dividerx;
+            if (dec->lon32 < b->minx || dec->lon32 >= b->maxx || dec->lat32 < b->miny || dec->lat32 > b->maxy) // *** CAREFUL! do this test BEFORE adding remainder...
             {
               return -122; // invalid code
             }
-            decodeExtension(dec,  dividerx<<2,dividery,-1); // autoheader decode
-
           }
         }
 
-        break;
+        return decodeExtension(dec,  dividerx<<2,dividery,-1); // autoheader decode
       }
       STORAGE_START += product;
-    }
   } // for j
-  return 0;
+  return -1;
 }
 
 // encode in m (know to fit)
@@ -1238,44 +1212,43 @@ static int encodeAutoHeader( char *result, const encodeRec *enc, int m, int extr
 
   // search back to first of the group
   int firstindex = m;
-  int codex = coDex(m);
-  while ( recType(firstindex - 1) > 1 && coDex(firstindex - 1) == codex)
+  int codexm = coDex(m);
+  while ( recType(firstindex - 1) > 1 && coDex(firstindex - 1) == codexm) {
       firstindex--;
+  }
 
-  for (i = firstindex; coDex(i) == codex; i++)
+  for (i = firstindex; coDex(i) == codexm; i++)
   {
     long W,H,xdiv,product;
-    long minx,miny,maxx,maxy;
-
-    getboundaries(i,minx,miny,maxx,maxy);
+    const mminforec *b=boundaries(i);
     // determine how many cells
-    H = (maxy-miny+89)/90; // multiple of 10m
-    xdiv = xDivider4(miny,maxy);
-    W = ( (maxx-minx)*4 + (xdiv-1) ) / xdiv;
+    H = (b->maxy-b->miny+89)/90; // multiple of 10m
+    xdiv = xDivider4(b->miny,b->maxy);
+    W = ( (b->maxx-b->minx)*4 + (xdiv-1) ) / xdiv;
 
     // encodee
-    // round up to multiples of YSIDE3*XSIDE3...
-    H = YSIDE3*( (H+YSIDE3-1)/YSIDE3 );
-    W = XSIDE3*( (W+XSIDE3-1)/XSIDE3 );
-    product = (W/XSIDE3)*(H/YSIDE3)*961*31;
+    // round up to multiples of 176*168...
+    H = 176*( (H+176-1)/176 );
+    W = 168*( (W+168-1)/168 );
+    product = (W/168)*(H/176)*961*31;
     if ( recType(i)==2 ) { // plus pipe
-      long GOODROUNDER = codex>=23 ? (961*961*31) : (961*961);
+      long GOODROUNDER = codexm>=23 ? (961*961*31) : (961*961);
       product = ((STORAGE_START+product+GOODROUNDER-1)/GOODROUNDER)*GOODROUNDER - STORAGE_START;
     }
 
     if ( i==m )
     {
       // encode
-      long dividerx = (maxx-minx+W-1)/W;
-      long vx =     (x-minx)/dividerx;
-      long extrax = (x-minx)%dividerx;
+      long dividerx = (b->maxx-b->minx+W-1)/W;
+      long vx =     (x-b->minx)/dividerx;
+      long extrax = (x-b->minx)%dividerx;
 
-      long dividery = (maxy-miny+H-1)/H;
-      long vy =     (maxy-y)/dividery;
-      long extray = (maxy-y)%dividery;
+      long dividery = (b->maxy-b->miny+H-1)/H;
+      long vy =     (b->maxy-y)/dividery;
+      long extray = (b->maxy-y)%dividery;
 
-      long codexlen = (codex/10)+(codex%10);
-      long value = (vx/XSIDE3) * (H/YSIDE3);
+      long codexlen = (codexm/10)+(codexm%10);
+      long value = (vx/168) * (H/176);
 
 #ifdef SUPPORT_HIGH_PRECISION // precise encoding: check if fraction takes this out of range
       if ( extray==0 &&  enc->fraclat>0 ) {
@@ -1288,12 +1261,12 @@ static int encodeAutoHeader( char *result, const encodeRec *enc, int m, int extr
       }
 #endif
 
-      value += (vy/YSIDE3);
+      value += (vy/176);
 
       // PIPELETTER ENCODE
-      encodeBase31( result, (STORAGE_START/(961*31)) + value, (int)(codexlen-2));
+      encodeBase31( result, (STORAGE_START/(961*31)) + value, (int)codexlen - 2);
       result[codexlen-2]='.';
-      encode_triple( result+codexlen-1, vx%XSIDE3, vy%YSIDE3 );
+      encode_triple( result+codexlen-1, vx%168, vy%176 );
 
       encodeExtension( result,extrax<<2,extray,dividerx<<2,dividery,extraDigits,-1,enc); // autoheader
       return m;
@@ -1342,7 +1315,7 @@ static void encoderEngine( int ccode, const encodeRec *enc, int stop_with_one_re
         {
           if ( isNameless(i) )
           {
-            int ret = encodeNameless( result, enc, ccode, codex, extraDigits, i );
+            int ret = encodeNameless( result, enc, ccode, extraDigits, i );
             if (ret>=0)
             {
               i=ret;
@@ -1555,9 +1528,9 @@ static int decoderEngine( decodeRec *dec )
   {
     // long mapcodes must be interpreted in the parent of a subdivision
 
-	  int parent = ParentTerritoryOf(ccode);
-	  if (len==9 || (len==8 && (parent==ccode_ind || parent==ccode_mex )))
-		  ccode = parent;
+    int parent = ParentTerritoryOf(ccode);
+    if (len==9 || (len==8 && (parent==ccode_ind || parent==ccode_mex )))
+      ccode = parent;
   }
 
   // remember final territory context
@@ -1572,8 +1545,8 @@ static int decoderEngine( decodeRec *dec )
    for ( i = from; i <= upto; i++ )
    {
     int codexi = coDex(i);
-	  if ( recType(i)==0 && !isNameless(i) && (codexi==codex || (codex==22 && codexi==21) ) )
-	  {
+    if ( recType(i)==0 && !isNameless(i) && (codexi==codex || (codex==22 && codexi==21) ) )
+    {
       err = decodeGrid( dec, i, 0 );
 
       if (isRestricted(i)) {
@@ -1592,27 +1565,26 @@ static int decoderEngine( decodeRec *dec )
         }
       }
 
-		  break;
-	  }
-	  else if ( recType(i)==1 && prefixLength(i)+1==prelen && postfixLength(i)==postlen && headerLetter(i)==*s )
-	  {
-      err = decodeGrid( dec, i, 1 );
-		  break;
-	  }
-	  else if (isNameless(i) &&
-	   (	(codexi==21 && codex==22)
-	   ||	(codexi==22 && codex==32)
-	   ||	(codexi==13 && codex==23) ) )
-	  {
-      i = decodeNameless( dec, i);
-      if (i<0) err=i; else err=0;
-		  break;
-	  }
-	  else if ( recType(i)>=2 && postlen==3 && prefixLength(i)+postfixLength(i)==prelen+2 )
+      break;
+    }
+    else if ( recType(i)==1 && prefixLength(i)+1==prelen && postfixLength(i)==postlen && headerLetter(i)==*s )
     {
-		  err = decodeAutoHeader( dec, i );
-		  break;
-	  }
+      err = decodeGrid( dec, i, 1 );
+      break;
+    }
+    else if (isNameless(i) &&
+     (  (codexi==21 && codex==22)
+     ||  (codexi==22 && codex==32)
+     ||  (codexi==13 && codex==23) ) )
+    {
+      err = decodeNameless( dec, i);
+      break;
+    }
+    else if ( recType(i)>=2 && postlen==3 && prefixLength(i)+postfixLength(i)==prelen+2 )
+    {
+      err = decodeAutoHeader( dec, i );
+      break;
+    }
    } // for
   }
 
@@ -1834,7 +1806,7 @@ static UWORD* encode_utf16(UWORD* unibuf,int maxlen,const char *mapcode,int lang
       else {
         signed char c = decode_chars[(unsigned char)*s];
         if (c<0) { // vowel or illegal?
-          token=TOKENVOWEL; vowels++;
+          token=TOKENVOWEL; vowels++; // assume vowel (-2,-3,-4)
           if (c==-1) // illegal?
             return -4;
         } else if (c<10) { // digit
@@ -1899,13 +1871,41 @@ static int encodeLatLonToMapcodes_internal( char **v, Mapcodes *mapcodes, double
   enc.lon32-=180000000;
 #endif
 
-  if (tc==0) // ALL results?
+  if (tc<=0) // ALL results?
   {
+#ifdef FAST_ENCODE
+    int HOR=1;
+    int i=0; // pointer into redivar
+    for(;;)
+    {
+      long v = redivar[i++];
+      HOR=1-HOR;
+      if ( v>=0 && v<1024 ) { // leaf?
+        int j,nr = (int)v;
+        for (j=0;j<=nr;j++) {
+          int ctry = (j==nr ? ccode_earth : redivar[i+j]);
+          encoderEngine( ctry,&enc,stop_with_one_result,extraDigits,-1);
+          if ((stop_with_one_result||debugStopAt>=0) && enc.mapcodes->count>0) break;
+        }
+        break;
+      }
+      else {
+        long coord = (HOR ? enc.lon32 : enc.lat32);
+        if ( coord > v ) {
+          i = redivar[i];
+        }
+        else {
+          i++;
+        }
+      }
+    }
+#else
     int i;
     for(i=0;i<MAX_MAPCODE_TERRITORY_CODE;i++) {
       encoderEngine(i,&enc,stop_with_one_result,extraDigits,-1);
       if ((stop_with_one_result||debugStopAt>=0) && enc.mapcodes->count>0) break;
     }
+#endif
   }
   else
   {
@@ -1940,7 +1940,7 @@ char* getTerritoryIsoName(char *result, int territoryCode, int format) // format
   if (territoryCode<1 || territoryCode>MAX_MAPCODE_TERRITORY_CODE)
     *result=0;
   else {
-    int p=stateletter(territoryCode-1);
+    int p=ParentLetter(territoryCode-1);
     char iso3[4];
     const char *ei = get_entity_iso3(iso3,territoryCode-1);
     if (*ei>='0' && *ei<='9') ei++;

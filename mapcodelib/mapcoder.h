@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define mapcode_cversion "2.0.2"
 
 #define UWORD                               unsigned short int  // 2-byte unsigned integer.
 
@@ -162,11 +163,11 @@ int compareWithMapcodeFormat(
  * Convert a territory name to a territory code.
  *
  * Arguments:
- *      isoNam           - Territory name to convert.
- *      parentTerritory  - Parent territory code, or 0 if not available.
+ *      isoNam               - Territory name to convert.
+ *      parentTerritoryCode  - Parent territory code, or 0 if not available.
  *
  * Returns:
- *      Territory code >= 0 if succeeded, or <0 if failed.
+ *      Territory code >0 if succeeded, or <0 if failed.
  */
 int convertTerritoryIsoNameToCode(
     const char* isoName,

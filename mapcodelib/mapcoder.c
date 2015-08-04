@@ -148,7 +148,7 @@ static int disambiguate_str( const char *s, int len ) // returns disambiguation 
   {
     char *t;
     for(t=country;*t!=0;t++)
-        *t = toupper(*t);
+        *t = (char) toupper(*t);
   }
   f=strstr(p,country);
   if (f==NULL)
@@ -185,9 +185,9 @@ static int ccode_of_iso3(const char *in_iso, int parentcode )
   } else return -23; // solve bad args
 
   // make (uppercased) copy of at most three characters
-  iso[0]=toupper(in_iso[0]);
-  if (iso[0]) iso[1]=toupper(in_iso[1]);
-  if (iso[1]) iso[2]=toupper(in_iso[2]);
+  iso[0]=(char) toupper(in_iso[0]);
+  if (iso[0]) iso[1]=(char)toupper(in_iso[1]);
+  if (iso[1]) iso[2]=(char)toupper(in_iso[2]);
   iso[3]=0;
 
   if ( iso[2]==0 || iso[2]==' ' ) // 2-letter iso code?
@@ -556,7 +556,6 @@ static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter )
     {
       int pw = nc[prelen];
       divx = ( pw / divy );
-      divx = ( pw / divy );
     }
 
     if ( prelen==4 && divx==xside[4] && divy==yside[4] )
@@ -612,11 +611,11 @@ static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter )
             }
             else
             {
-              int v;
+              int v2;
               if ( postlen==4 ) { char t = r[1]; r[1]=r[2]; r[2]=t; } // swap
-              v = decodeBase31(r);
-              difx = ( v/yp );
-              dify = ( v%yp );
+              v2 = decodeBase31(r);
+              difx = ( v2 /yp );
+              dify = ( v2 %yp );
               if ( postlen==4 ) { char t = r[1]; r[1]=r[2]; r[2]=t; } // swap back
             }
 
@@ -665,7 +664,6 @@ static void encodeGrid( char* result, const encodeRec *enc, int const m, int ext
     else
     {
       int pw = nc[prelen];
-      divx = ( pw / divy );
       divx = ( pw / divy );
     }
 
@@ -807,7 +805,7 @@ static int decodeNameless(decodeRec *dec, int m)
     int SIDE;
     int swapletters=0;
     int xSIDE;
-    int X=-1;
+    int X;
     const mminforec *b;
 
     // make copy of input, so we can swap around letters during the decoding
@@ -980,9 +978,9 @@ static int unpack_if_alldigits(char *input) // returns 1 if unpacked, 0 if left 
       if (aonly) // v1.50 encoded only with A's
       {
         int v = (s[0]=='A' || s[0]=='a' ? 31 : decodeChar(s[0])) * 32 + (s[1]=='A' || s[1]=='a' ? 31 : decodeChar(s[1]));
-        *input  = '0'+(v/100);
-        s[0]= '0'+((v/10)%10);
-        s[1]= '0'+(v%10);
+        *input  = (char) ('0'+(v/100));
+        s[0]= (char) ('0'+((v/10)%10));
+        s[1]= (char) ('0'+(v%10));
         return 1;
       } // v1.50
 
@@ -1043,7 +1041,6 @@ static int encodeNameless( char *result, const encodeRec* enc, int input_ctry, i
 
     if ( codexm!=21 && A<=31 )
     {
-      int size=p; if (X<r) size++; // example: A=7, p=4 r=3:  size(X)={5,5,5,4,4,4,4}
       storage_offset= (X*p + (X<r ? X : r)) * (961*961); // p=4,r=3: offset(X)={0,5,10,15,19,23,27}-31
     }
     else if ( codexm!=21 && A<62 )
@@ -1272,7 +1269,7 @@ static int encodeAutoHeader( char *result, const encodeRec *enc, int m, int extr
       value += (vy/176);
 
       // PIPELETTER ENCODE
-      encodeBase31( result, (STORAGE_START/(961*31)) + value, (int)codexlen - 2);
+      encodeBase31( result, (STORAGE_START/(961*31)) + value, codexlen - 2);
       result[codexlen-2]='.';
       encode_triple( result+codexlen-1, vx%168, vy%176 );
 
@@ -1343,7 +1340,7 @@ static void encoderEngine( int ccode, const encodeRec *enc, int stop_with_one_re
           {
               if ( result_counter>0 || !isRestricted(i) ) // skip isRestricted records unless there already is a result
               {
-                char headerletter = (recType(i)==1) ? headerLetter(i) : 0;
+                char headerletter = (char)((recType(i)==1) ? headerLetter(i) : 0);
                 encodeGrid( result, enc, i, extraDigits,headerletter );
               }
           }
@@ -1387,7 +1384,7 @@ static void encoderEngine( int ccode, const encodeRec *enc, int stop_with_one_re
 // returns nonzero if error
 static int decoderEngine( decodeRec *dec )
 {
-  int parentcode=-1;
+  int parentcode;
   int err=-255; // unknown error
   int ccode,len;
   char *minus;
@@ -1736,7 +1733,7 @@ static UWORD* encode_utf16(UWORD* unibuf,int maxlen,const char *mapcode,int lang
     if ( c<0 || c>'Z' ) // not in any valid range?
       *w++ = '?';
     else if ( c<'A' ) // valid but not a letter (e.g. a dot, a space...)
-      *w++ = c; // leave untranslated
+      *w++ = (UWORD)c; // leave untranslated
     else
       *w++ = asc2lan[language][c-'A'];
   }
@@ -1886,10 +1883,10 @@ static int encodeLatLonToMapcodes_internal( char **v, Mapcodes *mapcodes, double
     int i=0; // pointer into redivar
     for(;;)
     {
-      int v = redivar[i++];
+      int v2 = redivar[i++];
       HOR=1-HOR;
-      if ( v>=0 && v<1024 ) { // leaf?
-        int j,nr = (int)v; 
+      if ( v2 >=0 && v2 <1024 ) { // leaf?
+        int j,nr = v2;
         for (j=0;j<=nr;j++) {
           int ctry = (j==nr ? ccode_earth : redivar[i+j]);
           encoderEngine( ctry,&enc,stop_with_one_result,extraDigits,-1);
@@ -1899,7 +1896,7 @@ static int encodeLatLonToMapcodes_internal( char **v, Mapcodes *mapcodes, double
       }
       else {
         int coord = (HOR ? enc.lon32 : enc.lat32); 
-        if ( coord > v ) {
+        if ( coord > v2) {
           i = redivar[i];
         }
         else {

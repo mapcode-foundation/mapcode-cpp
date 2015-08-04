@@ -54,10 +54,10 @@ decode Mapcodes.
 
     Speed-up of encoding (4 times faster than 2.0.1).
 
-    Added optional mapcode_countrynames.h, with the English short names, formal names, 
+    Added optional `mapcode_countrynames.h`, with the English short names, formal names, 
     and name variants of all territories.
 
-    Added optional mapcode_countrynames_short.h with only the short English names and 
+    Added optional `mapcode_countrynames_short.h` with only the short English names and 
     name variants.
 
     Stricter processing of high-precision letters (now fails on illegal high-precision 
@@ -66,7 +66,7 @@ decode Mapcodes.
     Fix to allow illegal letters "i" and "o" in Hindi, Bengali, Tibetan and Gurmukhi 
     (so they can later be interpreted as digits 1 and 0).
 
-    Fix for some unrecognized aliases in convertTerritoryIsoNameToCode().
+    Fix for some unrecognized aliases in `convertTerritoryIsoNameToCode()`.
     
 * 2.0.1
 

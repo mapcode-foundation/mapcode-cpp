@@ -26,7 +26,6 @@
 #define MAX_ISOCODE_LEN                     7           // Max. number of characters of a valid territory code; although nothing longer than SIX characters is ever generated (RU-KAM), users can input SEVEN characters (RUS-KAM).
 #define MAX_CLEAN_MAPCODE_LEN               (MAX_PROPER_MAPCODE_LEN + 1 + MAX_PRECISION_DIGITS)  // Max. number of characters in a clean mapcode (excluding zero-terminator).
 #define MAX_MAPCODE_RESULT_LEN              (MAX_ISOCODE_LEN + 1 + MAX_CLEAN_MAPCODE_LEN + 1)    // Max. number of characters to store a single result (including zero-terminator).
-#define COMPARE_MAPCODE_MISSING_CHARACTERS  -999        // Used for compareWithMapcodeFormat.
 
 /**
  * The type Mapcodes hold a number of mapcodes, for example from an encoding call.
@@ -34,8 +33,8 @@
  * International mapcodes do not specify a territory alphacode, nor a space.
  */
 typedef struct {
-  int count;                                                        // The number of mapcode results (length of array).
-  char mapcode[MAX_NR_OF_MAPCODE_RESULTS][MAX_MAPCODE_RESULT_LEN];  // The mapcodes.
+    int count;                                                        // The number of mapcode results (length of array).
+    char mapcode[MAX_NR_OF_MAPCODE_RESULTS][MAX_MAPCODE_RESULT_LEN];  // The mapcodes.
 } Mapcodes;
 
 
@@ -59,11 +58,11 @@ typedef struct {
  */
 
 int encodeLatLonToMapcodes(
-    Mapcodes* mapcodes,
-    double lat,
-    double lon,
-    int territoryCode,
-    int extraDigits);
+        Mapcodes *mapcodes,
+        double lat,
+        double lon,
+        int territoryCode,
+        int extraDigits);
 
 /**
  * WARNING: This method is deprecated and should no longer be used, as it is not thread-safe. Use the version
@@ -90,11 +89,11 @@ int encodeLatLonToMapcodes(
  *          (results[0], results[1])...(results[(2 * N) - 2], results[(2 * N) - 1])
  */
 int encodeLatLonToMapcodes_Deprecated(     // Warning: this method is deprecated and not thread-safe.
-    char**  results,
-    double  lat,
-    double  lon,
-    int     territoryCode,
-    int     extraDigits);
+        char **results,
+        double lat,
+        double lon,
+        int territoryCode,
+        int extraDigits);
 
 /**
  * Encode a latitude, longitude pair (in degrees) to a single Mapcode: the shortest possible for the given territory
@@ -117,11 +116,11 @@ int encodeLatLonToMapcodes_Deprecated(     // Warning: this method is deprecated
  *      0 if encoding failed, or >0 if it succeeded.
  */
 int encodeLatLonToSingleMapcode(
-    char* result,
-    double lat,
-    double lon,
-    int territoryCode,
-    int extraDigits);
+        char *result,
+        double lat,
+        double lon,
+        int territoryCode,
+        int extraDigits);
 
 /**
  * Decode a Mapcode to  a latitude, longitude pair (in degrees).
@@ -137,10 +136,10 @@ int encodeLatLonToSingleMapcode(
  *      0 if encoding succeeded, nonzero in case of error
  */
 int decodeMapcodeToLatLon(
-    double*     lat,
-    double*     lon,
-    const char* mapcode,
-    int         territoryCode);
+        double *lat,
+        double *lon,
+        const char *mapcode,
+        int territoryCode);
 
 /**
  * Checks if a string has the format of a Mapcode. (Note: The method is called compareXXX rather than hasXXX because
@@ -156,8 +155,8 @@ int decodeMapcodeToLatLon(
  *      to lack some characters.
  */
 int compareWithMapcodeFormat(
-    const char* check,
-    int         includesTerritory);
+        const char *check,
+        int includesTerritory);
 
 /**
  * Convert a territory name to a territory code.
@@ -170,8 +169,8 @@ int compareWithMapcodeFormat(
  *      Territory code >0 if succeeded, or <0 if failed.
  */
 int convertTerritoryIsoNameToCode(
-    const char* isoName,
-    int         parentTerritoryCode);
+        const char *isoName,
+        int parentTerritoryCode);
 
 /**
  * Convert a territory name to a territory code.
@@ -184,15 +183,15 @@ int convertTerritoryIsoNameToCode(
  * Returns:
  *      Pointer to result. Empty if territoryCode illegal.
  */
-char* getTerritoryIsoName(
-    char*   result,
-    int     territoryCode,
-    int     format);
+char *getTerritoryIsoName(
+        char *result,
+        int territoryCode,
+        int format);
 
 // the old, non-threadsafe routine which uses static storage, overwritten at each call:
-const char* convertTerritoryCodeToIsoName(
-    int territoryCode,
-    int format);
+const char *convertTerritoryCodeToIsoName(
+        int territoryCode,
+        int format);
 
 /**
  * Given a territory code, return the territory code itself it it was a country, or return its parent
@@ -250,13 +249,14 @@ int getParentCountryOf(int territoryCode);
  * Returns:
  *      pointer to asciibuf, which holds the result
  */
-char* convertToRoman(char* asciibuf, int maxlen, const UWORD* string);
+char *convertToRoman(char *asciibuf, int maxlen, const UWORD *string);
+
 /**
  * old variant, not thread-safe: uses a pre-allocated static buffer, overwritten by the next call
  *      Returns converted string. allocated by the library. String must NOT be
  *      de-allocated by the caller. It will be overwritten by a subsequent call to this method!
  */
-const char* decodeToRoman(const UWORD* string);
+const char *decodeToRoman(const UWORD *string);
 
 /**
  * Encode a string to Alphabet characters for a language.
@@ -273,14 +273,14 @@ const char* decodeToRoman(const UWORD* string);
  *      Encoded string. The string is allocated by the library and must NOT be
  *      de-allocated by the caller. It will be overwritten by a subsequent call to this method!
  */
-UWORD* convertToAlphabet(UWORD* unibuf, int maxlength, const char* string, int alphabet);
+UWORD *convertToAlphabet(UWORD *unibuf, int maxlength, const char *string, int alphabet);
 
 /**
  * old variant, not thread-safe: uses a pre-allocated static buffer, overwritten by the next call
  *      Returns converted string. allocated by the library. String must NOT be
  *      de-allocated by the caller. It will be overwritten by a subsequent call to this method!
  */
-const UWORD* encodeToAlphabet(const char* string, int alphabet);
+const UWORD *encodeToAlphabet(const char *string, int alphabet);
 
 
 /**

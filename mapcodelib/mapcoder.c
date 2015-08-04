@@ -33,7 +33,7 @@
 
 typedef struct {
   // input
-  long    lat32,lon32;
+  int    lat32,lon32;
   double  fraclat,fraclon;
   // output
   Mapcodes *mapcodes;
@@ -49,7 +49,7 @@ typedef struct {
   const char *iso;        // input territory alphacode (context)
   // output
   double lat,lon;         // result
-  long lat32,lon32;       // result in integer arithmetic (millionts of degrees)
+  int lat32,lon32;       // result in integer arithmetic (millionts of degrees)
 } decodeRec;
 
 
@@ -83,9 +83,9 @@ static int ParentTerritoryOf(int ccode) // returns parent, or -1
 static int isSubdivision( int ccode )  { return (ParentTerritoryOf(ccode)>=0); }
 
 static int coDex(int m)      { int c=mminfo[m].flags & 31; return 10*(c/5) + ((c%5)+1); }
-#define prefixLength(m)      ((int)((mminfo[m].flags & 31)/5))
-#define postfixLength(m)     ((int)(((mminfo[m].flags & 31)%5)+1))
-#define isNameless(m)        (mminfo[m].flags & 64)
+#define prefixLength(m)      (((mminfo[m].flags & 31)/5))
+#define postfixLength(m)     ((((mminfo[m].flags & 31)%5)+1))
+#define isNameless(m)        ((mminfo[m].flags & 64))
 #define recType(m)           ((mminfo[m].flags>>7) & 3)
 #define isRestricted(m)      (mminfo[m].flags & 512)
 #define isSpecialShape22(m)  (mminfo[m].flags & 1024)
@@ -93,16 +93,7 @@ static int coDex(int m)      { int c=mminfo[m].flags & 31; return 10*(c/5) + ((c
 #define smartDiv(m)          (mminfo[m].flags>>16)
 #define boundaries(m)        (&mminfo[m])
 
-static void get_boundaries(int m,long *minx, long *miny, long *maxx, long *maxy )
-{
-  const mminforec *mm = &mminfo[m];
-  *minx = mm->minx;
-  *miny = mm->miny;
-  *maxx = mm->maxx;
-  *maxy = mm->maxy;
-}
-
-static int isInRange(long x,long minx,long maxx) // returns nonzero if x in the range minx...maxx
+static int isInRange(int x,int minx,int maxx) // returns nonzero if x in the range minx...maxx
 {
   if ( minx<=x && x<maxx ) return 1;
   if (x<minx) x+=360000000; else x-=360000000; // 1.32 fix FIJI edge case
@@ -110,13 +101,13 @@ static int isInRange(long x,long minx,long maxx) // returns nonzero if x in the 
   return 0;
 }
 
-static int fitsInside( long x, long y, int m )
+static int fitsInside( int x, int y, int m )
 {
   const mminforec *b = boundaries(m);
   return ( b->miny <= y && y < b->maxy && isInRange(x,b->minx,b->maxx) );
 }
 
-static long xDivider4( long miny, long maxy )
+static int xDivider4( int miny, int maxy )
 {
   if (miny>=0) // both above equator? then miny is closest
     return xdivider19[ (miny)>>19 ];
@@ -125,10 +116,10 @@ static long xDivider4( long miny, long maxy )
   return xdivider19[ (-maxy)>>19 ]; // both negative, so maxy is closest to equator
 }
 
-static int fitsInsideWithRoom( long x, long y, int m )
+static int fitsInsideWithRoom( int x, int y, int m )
 {
   const mminforec *b = boundaries(m);
-  long xdiv8 = xDivider4(b->miny,b->maxy)/4; // should be /8 but there's some extra margin
+  int xdiv8 = xDivider4(b->miny,b->maxy)/4; // should be /8 but there's some extra margin
   return ( b->miny-60 <= y && y < b->maxy+60 && isInRange(x,b->minx - xdiv8, b->maxx + xdiv8) );
 }
 
@@ -169,10 +160,10 @@ static int disambiguate_str( const char *s, int len ) // returns disambiguation 
 // returns coode, or negative if invalid
 static int ccode_of_iso3(const char *in_iso, int parentcode )
 {
-  static char disambiguate_iso3[4] = { '1','?','?',0 } ; // cache for disambiguation
   const char *aliases=ALIASES;
   char iso[4];
   const char *s;
+  int hyphenated=0;
 
   if (in_iso && in_iso[0] && in_iso[1] )
   {
@@ -181,18 +172,17 @@ static int ccode_of_iso3(const char *in_iso, int parentcode )
       if (in_iso[2]=='-')
       {
         parentcode=disambiguate_str(in_iso,2);
+        hyphenated=(parentcode>0);
         in_iso+=3;
       }
       else if (in_iso[3]=='-')
       {
         parentcode=disambiguate_str(in_iso,3);
+        hyphenated=(parentcode>0);
         in_iso+=4;
       }
     }
   } else return -23; // solve bad args
-
-  if (parentcode>0)
-    disambiguate_iso3[0] = (char)('0'+parentcode);
 
   // make (uppercased) copy of at most three characters
   iso[0]=toupper(in_iso[0]);
@@ -202,6 +192,9 @@ static int ccode_of_iso3(const char *in_iso, int parentcode )
 
   if ( iso[2]==0 || iso[2]==' ' ) // 2-letter iso code?
   {
+    static char disambiguate_iso3[4] = { '1','?','?',0 } ; // cache for disambiguation
+    if (parentcode>0)
+      disambiguate_iso3[0] = (char)('0'+parentcode);
     disambiguate_iso3[1] = iso[0];
     disambiguate_iso3[2] = iso[1];
 
@@ -209,11 +202,19 @@ static int ccode_of_iso3(const char *in_iso, int parentcode )
     if (s==NULL)
     {
       s = strstr(aliases,disambiguate_iso3); // search in aliases
+      if ( s==NULL || s[3]!='=' )
+      {
+        s=NULL;
+        if (disambiguate_iso3[0]<='9') {
+          disambiguate_iso3[0]='0';
+          s = strstr(aliases,disambiguate_iso3); // search in aliases
+        }
+      }
       if ( s && s[3]=='=' )
       {
         memcpy(iso,s+4,3);
         s = strstr(entity_iso,iso); // search disambiguated 2-letter iso
-      } else s=NULL;
+      }
     }
     if (s==NULL)
     {
@@ -251,14 +252,21 @@ static int ccode_of_iso3(const char *in_iso, int parentcode )
   else
   {
     s = strstr(entity_iso,iso); // search 3-letter iso
-    if (s==NULL)
+    if (s==NULL || hyphenated)
     {
-        s = strstr(aliases,iso); // search in aliases
-        if ( s && s[3]=='=' )
-        {
-          memcpy(iso,s+4,3);
-          s = strstr(entity_iso,iso);
-        } else s=NULL;
+        const char *a = aliases;
+        while(a) {
+          a = strstr(a,iso); // search in aliases
+          if ( a && a[3]=='=' && (a[4]>'9' || a[4]==(char)(48+parentcode) || parentcode<0) )
+          {
+            memcpy(iso,a+4,3); a=NULL;
+            s = strstr(entity_iso,iso);            
+          } else {
+            if (a) {
+              a++;
+            }
+          }
+        }
     }
     if (s==NULL)
       return -23;
@@ -274,18 +282,18 @@ static int ccode_of_iso3(const char *in_iso, int parentcode )
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static void encodeExtension(char *result,long extrax4,long extray,long dividerx4,long dividery,int extraDigits,int ydirection,const encodeRec *enc) // append extra characters to result for more precision
+static void encodeExtension(char *result,int extrax4,int extray,int dividerx4,int dividery,int extraDigits,int ydirection,const encodeRec *enc) // append extra characters to result for more precision
 {
 #ifndef SUPPORT_HIGH_PRECISION // old integer-arithmetic version
   if (extraDigits<0) extraDigits=0; else if (extraDigits>2) extraDigits=2;
   while (extraDigits-->0)
   {
-    long gx=((30*extrax4)/dividerx4);
-    long gy=((30*extray )/dividery );
-    long column1=(gx/6);
-    long column2=(gx%6);
-    long row1=(gy/5);
-    long row2=(gy%5);
+    int gx=((30*extrax4)/dividerx4);
+    int gy=((30*extray )/dividery );
+    int column1=(gx/6);
+    int column2=(gx%6);
+    int row1=(gy/5);
+    int row2=(gy%5);
     // add postfix:
     char *s = result+strlen(result);
     *s++ = '-';
@@ -306,13 +314,13 @@ static void encodeExtension(char *result,long extrax4,long extray,long dividerx4
 
   while (extraDigits-->0)
   {
-    long gx,gy,column1,column2,row1,row2;
+    int gx,gy,column1,column2,row1,row2;
 
-    encx*=30; gx=(long)encx; if (gx<0)
+    encx*=30; gx=(int)encx; if (gx<0)
       gx=0;
     else if (gx>29)
       gx=29;
-    ency*=30; gy=(long)ency; if (gy<0)
+    ency*=30; gy=(int)ency; if (gy<0)
       gy=0;
     else if (gy>29)
       gy=29;
@@ -334,11 +342,11 @@ static void encodeExtension(char *result,long extrax4,long extray,long dividerx4
 #define decodeChar(c) decode_chars[(unsigned char)c] // force c to be in range of the index, between 0 and 255
 
 // this routine takes the integer-arithmeteic decoding results (in millionths of degrees), adds any floating-point precision digits, and returns the result (still in millionths)
-static int decodeExtension(decodeRec *dec, long dividerx4,long dividery,int ydirection)
+static int decodeExtension(decodeRec *dec, int dividerx4,int dividery,int ydirection)
 {
   const char *extrapostfix = dec->extension;
 #ifndef SUPPORT_HIGH_PRECISION // old integer-arithmetic version
-  long extrax,extray;
+  int extrax,extray;
   if (*extrapostfix) {
     int column1,row1,column2,row2,c1,c2;
     c1 = extrapostfix[0];
@@ -396,9 +404,9 @@ static int decodeExtension(decodeRec *dec, long dividerx4,long dividery,int ydir
   dec->lon += dec->lon32;
   dec->lat += dec->lat32;
 
-  // also convert back to long
-  dec->lon32 = (long)dec->lon;
-  dec->lat32 = (long)dec->lat;
+  // also convert back to int
+  dec->lon32 = (int)dec->lon;
+  dec->lat32 = (int)dec->lat;
 #endif
   return 0;
 }
@@ -412,7 +420,7 @@ static int decodeExtension(decodeRec *dec, long dividerx4,long dividery,int ydir
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // encode 'value' into result[nrchars]
-static void encodeBase31( char *result, long value, int nrchars )
+static void encodeBase31( char *result, int value, int nrchars )
 {
   result[nrchars]=0; // zero-terminate!
   while ( nrchars-- > 0 )
@@ -423,9 +431,9 @@ static void encodeBase31( char *result, long value, int nrchars )
 }
 
 // decode 'code' until either a dot or an end-of-string is encountered
-static long decodeBase31( const char *code )
+static int decodeBase31( const char *code )
 {
-  long value=0;
+  int value=0;
   while (*code!='.' && *code!=0 )
   {
     value = value*31 + decodeChar(*code++);
@@ -440,7 +448,7 @@ static long decodeBase31( const char *code )
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static void encode_triple( char *result, long difx,long dify )
+static void encode_triple( char *result, int difx,int dify )
 {
     if ( dify < 4*34 ) // first 4(x34) rows of 6(x28) wide
     {
@@ -455,19 +463,19 @@ static void encode_triple( char *result, long difx,long dify )
 } // encode_triple
 
 
-static void decode_triple( const char *result, long *difx, long *dify )
+static void decode_triple( const char *result, int *difx, int *dify )
 {
       // decode the first character
       int c1 = decodeChar(*result++);
       if ( c1<24 )
       {
-        long m = decodeBase31(result);
+        int m = decodeBase31(result);
         *difx = (c1%6) * 28 + (m/34);
         *dify = (c1/6) * 34 + (m%34);
       }
       else // bottom row
       {
-        long x = decodeBase31(result);
+        int x = decodeBase31(result);
         *dify = (x%40) + 136;
         *difx = (x/40) + 24*(c1-24);
       }
@@ -485,12 +493,12 @@ static void decode_triple( const char *result, long *difx, long *dify )
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static long encodeSixWide( long x, long y, long width, long height )
+static int encodeSixWide( int x, int y, int width, int height )
 {
-  long v;
-  long D=6;
-  long col = x/6;
-  long maxcol = (width-4)/6;
+  int v;
+  int D=6;
+  int col = x/6;
+  int maxcol = (width-4)/6;
   if ( col>=maxcol )
   {
     col=maxcol;
@@ -500,12 +508,12 @@ static long encodeSixWide( long x, long y, long width, long height )
   return v;
 }
 
-static void decodeSixWide( long v, long width, long height, long *x, long *y )
+static void decodeSixWide( int v, int width, int height, int *x, int *y )
 {
-  long w;
-  long D=6;
-  long col = v / (height*6);
-  long maxcol = (width-4)/6;
+  int w;
+  int D=6;
+  int col = v / (height*6);
+  int maxcol = (width-4)/6;
   if ( col>=maxcol )
   {
     col=maxcol;
@@ -523,7 +531,7 @@ static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter )
 {
   const char* input = (hasHeaderLetter ? dec->mapcode+1 : dec->mapcode);
   int codexlen = (int)(strlen(input)-1);
-  long prelen = (long)(strchr(input,'.')-input);
+  int prelen = (int)(strchr(input,'.')-input);
   char result[MAX_PROPER_MAPCODE_LEN+1];
 
   if (codexlen>MAX_PROPER_MAPCODE_LEN) return -109;
@@ -534,9 +542,9 @@ static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter )
   }
 
   {
-    long postlen = codexlen-prelen;
-
-    long divx,divy;
+    int postlen = codexlen-prelen;
+    
+    int divx,divy;
 
     divy = smartDiv(m);
     if (divy==1)
@@ -546,9 +554,9 @@ static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter )
     }
     else
     {
-      long pw = nc[prelen];
+      int pw = nc[prelen];
       divx = ( pw / divy );
-      divx = (long)( pw / divy );
+      divx = ( pw / divy );
     }
 
     if ( prelen==4 && divx==xside[4] && divy==yside[4] )
@@ -557,7 +565,7 @@ static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter )
     }
 
     {
-      long relx=0,rely=0,v=0;
+      int relx=0,rely=0,v=0;
 
       if ( prelen <= MAXFITLONG )
       {
@@ -577,8 +585,8 @@ static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter )
 
       {
         const mminforec *b=boundaries(m);
-        long ygridsize = (b->maxy - b->miny + divy - 1)/divy; // lonlat per cell
-        long xgridsize = (b->maxx - b->minx + divx - 1)/divx; // lonlat per cell
+        int ygridsize = (b->maxy - b->miny + divy - 1)/divy; // lonlat per cell
+        int xgridsize = (b->maxx - b->minx + divx - 1)/divx; // lonlat per cell
 
         if (relx<0 || rely<0 || relx>=divx || rely>=divy)
           return -111;
@@ -588,15 +596,15 @@ static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter )
         relx = b->minx + (relx*xgridsize);
 
         {
-          long xp = xside[postlen];
-          long dividerx = ( (((xgridsize))+xp-1)/xp );
-          long yp = yside[postlen];
-          long dividery = ( (((ygridsize))+yp-1)/yp );
+          int xp = xside[postlen];
+          int dividerx = ( (((xgridsize))+xp-1)/xp );
+          int yp = yside[postlen];
+          int dividery = ( (((ygridsize))+yp-1)/yp );
           // decoderelative
 
           {
             char *r = result+prelen+1;
-            long difx,dify;
+            int difx,dify;
 
             if ( postlen==3 ) // decode special
             {
@@ -604,7 +612,7 @@ static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter )
             }
             else
             {
-              long v;
+              int v;
               if ( postlen==4 ) { char t = r[1]; r[1]=r[2]; r[2]=t; } // swap
               v = decodeBase31(r);
               difx = ( v/yp );
@@ -632,7 +640,7 @@ static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter )
 
 static void encodeGrid( char* result, const encodeRec *enc, int const m, int extraDigits, char headerLetter )
 {
-  long y= enc->lat32,x= enc->lon32;
+  int y= enc->lat32,x= enc->lon32;
   const mminforec *b=boundaries(m);
 
   int orgcodex=coDex(m);
@@ -644,7 +652,7 @@ static void encodeGrid( char* result, const encodeRec *enc, int const m, int ext
   if (headerLetter) result++;
 
   { // encode
-    long divx,divy;
+    int divx,divy;
     int prelen = codexm/10;
     int postlen = codexm%10;
 
@@ -656,16 +664,16 @@ static void encodeGrid( char* result, const encodeRec *enc, int const m, int ext
     }
     else
     {
-      long pw = nc[prelen];
+      int pw = nc[prelen];
       divx = ( pw / divy );
-      divx = (long)( pw / divy );
+      divx = ( pw / divy );
     }
 
     { // grid
-      long ygridsize = (b->maxy-b->miny+divy-1)/divy;
-      long xgridsize = (b->maxx-b->minx+divx-1)/divx;
-      long rely = y-b->miny;
-      long relx = x-b->minx;
+      int ygridsize = (b->maxy-b->miny+divy-1)/divy;
+      int xgridsize = (b->maxx-b->minx+divx-1)/divx;
+      int rely = y-b->miny;
+      int relx = x-b->minx;
 
       if ( relx<0 )
       {
@@ -682,7 +690,7 @@ static void encodeGrid( char* result, const encodeRec *enc, int const m, int ext
       if (relx>=divx || rely>=divy) return;
 
       { // prefix
-        long v;
+        int v;
         if ( divx!=divy && prelen>2 )
           v = encodeSixWide( relx,rely, divx,divy );
         else
@@ -699,16 +707,16 @@ static void encodeGrid( char* result, const encodeRec *enc, int const m, int ext
       relx = b->minx + (relx*xgridsize);
 
       { // postfix
-        long dividery = ( (((ygridsize))+yside[postlen]-1)/yside[postlen] );
-        long dividerx = ( (((xgridsize))+xside[postlen]-1)/xside[postlen] );
-        long extrax,extray;
+        int dividery = ( (((ygridsize))+yside[postlen]-1)/yside[postlen] );
+        int dividerx = ( (((xgridsize))+xside[postlen]-1)/xside[postlen] );
+        int extrax,extray;
 
         {
           char *resultptr = result+prelen;
 
 
-          long difx = x-relx;
-          long dify = y-rely;
+          int difx = x-relx;
+          int dify = y-rely;
 
           *resultptr++ = '.';
 
@@ -728,7 +736,7 @@ static void encodeGrid( char* result, const encodeRec *enc, int const m, int ext
           else
           {
             encodeBase31(resultptr,       (difx)*yside[postlen]+dify, postlen   );
-            // swap 4-long codes for readability
+            // swap 4-int codes for readability
             if ( postlen==4 )
             {
               char t = resultptr[1]; resultptr[1]=resultptr[2]; resultptr[2]=t;
@@ -795,10 +803,10 @@ static int decodeNameless(decodeRec *dec, int m)
   {
     int p = 31/A;
     int r = 31%A;
-    long v;
-    long SIDE;
+    int v;
+    int SIDE;
     int swapletters=0;
-    long xSIDE;
+    int xSIDE;
     int X=-1;
     const mminforec *b;
 
@@ -836,18 +844,18 @@ static int decodeNameless(decodeRec *dec, int m)
     }
     else // code==21 || A>=62
     {
-      long BASEPOWER = (codexm==21) ? 961*961 : 961*961*31;
-      long BASEPOWERA = (BASEPOWER/A);
+      int BASEPOWER = (codexm==21) ? 961*961 : 961*961*31;
+      int BASEPOWERA = (BASEPOWER/A);
 
       if (A==62) BASEPOWERA++; else BASEPOWERA = 961*(BASEPOWERA/961);
 
       v = decodeBase31(result);
-      X  = (int)(v/BASEPOWERA);
+      X  = (v/BASEPOWERA);
       v %= BASEPOWERA;
     }
 
 
-
+    
     if (swapletters) {
       if ( ! isSpecialShape22(F+X) ) {
         char t = result[codexlen-3]; result[codexlen-3]=result[codexlen-2]; result[codexlen-2]=t;
@@ -870,7 +878,7 @@ static int decodeNameless(decodeRec *dec, int m)
       }
     }
 
-    m = (int)(F + X);
+    m = (F + X);
 
     xSIDE = SIDE = smartDiv(m);
 
@@ -883,7 +891,7 @@ static int decodeNameless(decodeRec *dec, int m)
 
     // decode
     {
-      long dx,dy;
+      int dx,dy;
 
       if ( isSpecialShape22(m) )
       {
@@ -904,8 +912,8 @@ static int decodeNameless(decodeRec *dec, int m)
       }
 
       {
-        long dividerx4 = xDivider4(b->miny,b->maxy); // *** note: dividerx4 is 4 times too large!
-        long dividery = 90; int err;
+        int dividerx4 = xDivider4(b->miny,b->maxy); // *** note: dividerx4 is 4 times too large!
+        int dividery = 90; int err;
 
         dec->lon32 = b->minx + ((dx * dividerx4)/4); // *** note: FIRST multiply, then divide... more precise, larger rects
         dec->lat32 = b->maxy - (dy*dividery);
@@ -1013,9 +1021,9 @@ static int unpack_if_alldigits(char *input) // returns 1 if unpacked, 0 if left 
 static int encodeNameless( char *result, const encodeRec* enc, int input_ctry, int extraDigits, int m )
 {
   // determine how many nameless records there are (A), and which one is this (X)...
-  long y= enc->lat32,x= enc->lon32;
+  int y= enc->lat32,x= enc->lon32;
   int  A = countNamelessRecords(m, firstrec(input_ctry));
-  long X = m - firstNamelessRecord(m, firstrec(input_ctry));
+  int X = m - firstNamelessRecord(m, firstrec(input_ctry));
 
   *result=0;
 
@@ -1025,12 +1033,12 @@ static int encodeNameless( char *result, const encodeRec* enc, int input_ctry, i
     int codexm = coDex(m);
     int codexlen = (codexm/10)+(codexm%10);
     // determine side of square around centre
-    long SIDE;
+    int SIDE;
 
-    long storage_offset;
+    int storage_offset;
     const mminforec *b;
 
-    long xSIDE,orgSIDE;
+    int xSIDE,orgSIDE;
 
 
     if ( codexm!=21 && A<=31 )
@@ -1055,8 +1063,8 @@ static int encodeNameless( char *result, const encodeRec* enc, int input_ctry, i
     }
     else
     {
-      long BASEPOWER = (codexm==21) ? 961*961 : 961*961*31;
-      long BASEPOWERA = (BASEPOWER/A);
+      int BASEPOWER = (codexm==21) ? 961*961 : 961*961*31;
+      int BASEPOWERA = (BASEPOWER/A);
       if (A==62)
         BASEPOWERA++;
       else
@@ -1066,7 +1074,7 @@ static int encodeNameless( char *result, const encodeRec* enc, int input_ctry, i
     }
     SIDE = smartDiv(m);
 
-
+    
     b=boundaries(m);
     orgSIDE=xSIDE=SIDE;
     if ( isSpecialShape22(m) ) //  - keep the existing rectangle!
@@ -1077,20 +1085,20 @@ static int encodeNameless( char *result, const encodeRec* enc, int input_ctry, i
 
     if (fitsInside(x,y,m))
     {
-      long v = storage_offset;
+      int v = storage_offset;
 
-      long dividerx4 = xDivider4(b->miny,b->maxy); // *** note: dividerx4 is 4 times too large!
+      int dividerx4 = xDivider4(b->miny,b->maxy); // *** note: dividerx4 is 4 times too large!
 #ifdef SUPPORT_HIGH_PRECISION // precise encoding: take fraction into account!
-      long xFracture = (long)(4* enc->fraclon);
+      int xFracture = (int)(4* enc->fraclon);
 #else
-      long xFracture = 0;
+      int xFracture = 0;
 #endif
-      long dx = (4*(x-b->minx)+xFracture)/dividerx4; // like div, but with floating point value
-      long extrax4 = (x-b->minx)*4 - dx*dividerx4; // like modulus, but with floating point value
+      int dx = (4*(x-b->minx)+xFracture)/dividerx4; // like div, but with floating point value
+      int extrax4 = (x-b->minx)*4 - dx*dividerx4; // like modulus, but with floating point value
 
-      long dividery = 90;
-      long dy     = (b->maxy-y)/dividery;  // between 0 and SIDE-1
-      long extray = (b->maxy-y)%dividery;
+      int dividery = 90;
+      int dy     = (b->maxy-y)/dividery;  // between 0 and SIDE-1
+      int extray = (b->maxy-y)%dividery;
 
 #ifdef SUPPORT_HIGH_PRECISION // precise encoding: check if fraction takes this out of range
       if (extray==0 &&  enc->fraclat>0) {
@@ -1106,7 +1114,7 @@ static int encodeNameless( char *result, const encodeRec* enc, int input_ctry, i
       {
         v += encodeSixWide(dx, SIDE-1-dy, xSIDE, SIDE);
       }
-      else
+      else 
       {
         v +=  (dx*SIDE + dy);
       }
@@ -1144,8 +1152,8 @@ static int decodeAutoHeader(decodeRec *dec,  int m )
   int codexm = coDex(m);
   char *dot = strchr(input,'.');
 
-  long STORAGE_START=0;
-  long value;
+  int STORAGE_START=0;
+  int value;
 
   if (dot==NULL)
     return -201;
@@ -1157,10 +1165,10 @@ static int decodeAutoHeader(decodeRec *dec,  int m )
   {
       const mminforec *b=boundaries(m);
       // determine how many cells
-      long H = (b->maxy - b->miny + 89)/90; // multiple of 10m
-      long xdiv = xDivider4(b->miny,b->maxy);
-      long W = ( (b->maxx-b->minx)*4 + (xdiv-1) ) / xdiv;
-      long product;
+      int H = (b->maxy - b->miny + 89)/90; // multiple of 10m
+      int xdiv = xDivider4(b->miny,b->maxy);
+      int W = ( (b->maxx-b->minx)*4 + (xdiv-1) ) / xdiv;
+      int product;
 
       // decode
       H = 176*( (H+176-1)/176 );
@@ -1168,24 +1176,24 @@ static int decodeAutoHeader(decodeRec *dec,  int m )
       product = (W/168) * (H/176) * 961 * 31;
 
       if (recType(m) == 2) {
-        long GOODROUNDER = coDex(m)>=23 ? (961*961*31) : (961*961);
+        int GOODROUNDER = coDex(m)>=23 ? (961*961*31) : (961*961);
         product = ((STORAGE_START+product+GOODROUNDER-1)/GOODROUNDER)*GOODROUNDER - STORAGE_START;
       }
 
       if ( value >= STORAGE_START && value < STORAGE_START + product )
       {
-        long dividerx = (b->maxx-b->minx+W-1)/W;
-        long dividery = (b->maxy-b->miny+H-1)/H;
+        int dividerx = (b->maxx-b->minx+W-1)/W;
+        int dividery = (b->maxy-b->miny+H-1)/H;
 
         value -= STORAGE_START;
         value /= (961*31);
 
         {
-          long difx,dify;
+          int difx,dify;
           decode_triple(dot+1,&difx,&dify); // decode bottom 3 chars
           {
-            long vx = (value / (H/176))*168 + difx; // is vx/168
-            long vy = (value % (H/176))*176 + dify; // is vy/176
+            int vx = (value / (H/176))*168 + difx; // is vx/168
+            int vy = (value % (H/176))*176 + dify; // is vy/176
 
             dec->lat32 = b->maxy - vy * dividery;
             dec->lon32 = b->minx + vx * dividerx;
@@ -1207,8 +1215,8 @@ static int decodeAutoHeader(decodeRec *dec,  int m )
 static int encodeAutoHeader( char *result, const encodeRec *enc, int m, int extraDigits )
 {
   int i;
-  long STORAGE_START=0;
-  long y= enc->lat32,x= enc->lon32;
+  int STORAGE_START=0;
+  int y= enc->lat32,x= enc->lon32;
 
   // search back to first of the group
   int firstindex = m;
@@ -1219,7 +1227,7 @@ static int encodeAutoHeader( char *result, const encodeRec *enc, int m, int extr
 
   for (i = firstindex; coDex(i) == codexm; i++)
   {
-    long W,H,xdiv,product;
+    int W,H,xdiv,product;
     const mminforec *b=boundaries(i);
     // determine how many cells
     H = (b->maxy-b->miny+89)/90; // multiple of 10m
@@ -1232,23 +1240,23 @@ static int encodeAutoHeader( char *result, const encodeRec *enc, int m, int extr
     W = 168*( (W+168-1)/168 );
     product = (W/168)*(H/176)*961*31;
     if ( recType(i)==2 ) { // plus pipe
-      long GOODROUNDER = codexm>=23 ? (961*961*31) : (961*961);
+      int GOODROUNDER = codexm>=23 ? (961*961*31) : (961*961);
       product = ((STORAGE_START+product+GOODROUNDER-1)/GOODROUNDER)*GOODROUNDER - STORAGE_START;
     }
 
     if ( i==m )
     {
       // encode
-      long dividerx = (b->maxx-b->minx+W-1)/W;
-      long vx =     (x-b->minx)/dividerx;
-      long extrax = (x-b->minx)%dividerx;
+      int dividerx = (b->maxx-b->minx+W-1)/W;
+      int vx =     (x-b->minx)/dividerx;
+      int extrax = (x-b->minx)%dividerx;
 
-      long dividery = (b->maxy-b->miny+H-1)/H;
-      long vy =     (b->maxy-y)/dividery;
-      long extray = (b->maxy-y)%dividery;
+      int dividery = (b->maxy-b->miny+H-1)/H;
+      int vy =     (b->maxy-y)/dividery;
+      int extray = (b->maxy-y)%dividery;
 
-      long codexlen = (codexm/10)+(codexm%10);
-      long value = (vx/168) * (H/176);
+      int codexlen = (codexm/10)+(codexm%10);
+      int value = (vx/168) * (H/176);
 
 #ifdef SUPPORT_HIGH_PRECISION // precise encoding: check if fraction takes this out of range
       if ( extray==0 &&  enc->fraclat>0 ) {
@@ -1285,7 +1293,7 @@ static int debugStopAt=-1;
 static void encoderEngine( int ccode, const encodeRec *enc, int stop_with_one_result, int extraDigits, int result_override )
 {
   int from,upto;
-  long y= enc->lat32,x= enc->lon32;
+  int y= enc->lat32,x= enc->lon32;
 
   if (enc==NULL || ccode<0 || ccode>ccode_earth)
     return; // bad arguments
@@ -1526,7 +1534,7 @@ static int decoderEngine( decodeRec *dec )
   }
   else if (isSubdivision(ccode))
   {
-    // long mapcodes must be interpreted in the parent of a subdivision
+    // int mapcodes must be interpreted in the parent of a subdivision
 
     int parent = ParentTerritoryOf(ccode);
     if (len==9 || (len==8 && (parent==ccode_ind || parent==ccode_mex )))
@@ -1612,8 +1620,8 @@ static int decoderEngine( decodeRec *dec )
   if (dec->lon >= 180.0) dec->lon -= 360.0;
 
   // store as integers for legacy's sake
-  dec->lat32 = (long)(dec->lat*1000000);
-  dec->lon32 = (long)(dec->lon*1000000);
+  dec->lat32 = (int)(dec->lat*1000000);
+  dec->lon32 = (int)(dec->lon*1000000);
 
   // make sure decode result fits the country
   if (err==0)
@@ -1852,15 +1860,15 @@ static int encodeLatLonToMapcodes_internal( char **v, Mapcodes *mapcodes, double
 #ifndef SUPPORT_HIGH_PRECISION
   lat*=1000000; if (lat<0) lat-=0.5; else lat+=0.5;
   lon*=1000000; if (lon<0) lon-=0.5; else lon+=0.5;
-  enc.lat32=(long)lat;
-  enc.lon32=(long)lon;
+  enc.lat32=(int)lat;
+  enc.lon32=(int)lon;
 #else // precise encoding: do NOT round, instead remember the fraction...
   lat+= 90;
   lon+=180;
   lat*=1000000;
   lon*=1000000;
-  enc.lat32=(long)lat;
-  enc.lon32=(long)lon;
+  enc.lat32=(int)lat;
+  enc.lon32=(int)lon;
   enc.fraclat=lat-enc.lat32;
   enc.fraclon=lon-enc.lon32;
   // for 8-digit precision, cells are divided into 810,000 by 810,000 minicells.
@@ -1878,10 +1886,10 @@ static int encodeLatLonToMapcodes_internal( char **v, Mapcodes *mapcodes, double
     int i=0; // pointer into redivar
     for(;;)
     {
-      long v = redivar[i++];
+      int v = redivar[i++];
       HOR=1-HOR;
       if ( v>=0 && v<1024 ) { // leaf?
-        int j,nr = (int)v;
+        int j,nr = (int)v; 
         for (j=0;j<=nr;j++) {
           int ctry = (j==nr ? ccode_earth : redivar[i+j]);
           encoderEngine( ctry,&enc,stop_with_one_result,extraDigits,-1);
@@ -1890,7 +1898,7 @@ static int encodeLatLonToMapcodes_internal( char **v, Mapcodes *mapcodes, double
         break;
       }
       else {
-        long coord = (HOR ? enc.lon32 : enc.lat32);
+        int coord = (HOR ? enc.lon32 : enc.lat32); 
         if ( coord > v ) {
           i = redivar[i];
         }
@@ -1982,7 +1990,7 @@ int convertTerritoryIsoNameToCode(const char *string,int optional_tc) // optiona
   int ccode = optional_tc-1;
   if (string==NULL) return -1;
   while (*string>0 && *string<=32) string++; // skip leading whitespace
-  if (ccode<0 || strchr(string,'-')>=0 || strlen(string)>3 )
+  if (ccode<0 || strchr(string,'-') || strlen(string)>3 )
   {
     ccode=ccode_of_iso3(string,-1); // ignore optional_tc
   }

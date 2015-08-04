@@ -569,10 +569,6 @@ int main(const int argc, const char** argv)
 
         resetStatistics(NR_BOUNDARY_RECS);
         for (int i = 0; i < totalNrOfPoints; ++i) {
-            long minLonE6;
-            long maxLonE6;
-            long minLatE6;
-            long maxLatE6;
             double minLon;
             double maxLon;
             double minLat;
@@ -580,11 +576,11 @@ int main(const int argc, const char** argv)
             double lat;
             double lon;
 
-            get_boundaries(i, &minLonE6, &minLatE6, &maxLonE6, &maxLatE6);
-            minLon = ((double) minLonE6) / 1.0E6;
-            maxLon = ((double) maxLonE6) / 1.0E6;
-            minLat = ((double) minLatE6) / 1.0E6;
-            maxLat = ((double) maxLatE6) / 1.0E6;
+            const mminforec *mm = boundaries(i);            
+            minLon = ((double) mm->minx) / 1.0E6;
+            maxLon = ((double) mm->maxx) / 1.0E6;
+            minLat = ((double) mm->miny) / 1.0E6;
+            maxLat = ((double) mm->maxy) / 1.0E6;
 
             // Try center.
             lat = (maxLat - minLat ) / 2.0;

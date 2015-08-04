@@ -7,7 +7,7 @@ Copyright (C) 2014-2015 Stichting Mapcode Foundation (http://www.mapcode.com)
 **Online documentation can be found at: http://mapcode-foundation.github.io/mapcode-cpp/**
 
 
-## The C/C++ Library: `mapcodelib/`
+# The C/C++ Library: `mapcodelib/`
 
 The directory 'mapcodelib' contains the files:
 
@@ -29,7 +29,7 @@ In that case, basics.h will state a version number of the for:
 where "xxx" states the geographical limitation.
 
 
-## A Real-Life Example, The 'mapcode' Codec Tool: `utility/`
+# A Real-Life Example, The 'mapcode' Codec Tool: `utility/`
 
 The directory 'utility' contains a Mapcode encoding/decoding utility, as an example
 of how to use the library.
@@ -48,8 +48,30 @@ This tool provides a rather extensive command-line interface to encode and
 decode Mapcodes.
 
 
-## Release Notes
+# Release Notes
 
+* 2.0.2
+
+    Speed-up of encoding (4 times faster than 2.0.1).
+
+    Added optional `mapcode_countrynames.h`, with the English short names, formal names, 
+    and name variants of all territories.
+
+    Added optional `mapcode_countrynames_short.h` with only the short English names and 
+    name variants.
+
+    Stricter processing of high-precision letters (now fails on illegal high-precision 
+    letters, which includes the letter Z).
+
+    Fix to allow illegal letters "i" and "o" in Hindi, Bengali, Tibetan and Gurmukhi 
+    (so they can later be interpreted as digits 1 and 0).
+
+    Fix for some unrecognized aliases in `convertTerritoryIsoNameToCode()`.
+    
+* 2.0.1
+
+    Removed compiler warnings. 
+    
 * 2.0.0
 
     Support for high-precision mapcodes, with up to 8 character extensions (up to 10 micron accuracy).
@@ -127,7 +149,7 @@ decode Mapcodes.
 
     Initial release to the public domain.
 
-## License
+# License
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

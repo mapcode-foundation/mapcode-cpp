@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-#define UWORD unsigned short int // 2-byte unsigned integer
-
-#define mapcode_cversion "2.0.1"
+#define mapcode_dataversion "2.0" // coords 2.0.2
 #define MAXWIDE 10
 #define BASEX 31
 #define MAXFITLONG 6
-#define XSIDE3 168 
-#define YSIDE3 176
 
-#define ALIASES "2UK=2UT,2CG=2CT,1GU=GUM,1UM=UMI,1VI=VIR,1PR=PRI,1AS=ASM,1MP=MNP,4CX=CXR,4CC=CCK,4NF=NFK,4HM=HMD,COL=5CL,5ME=5MX,MEX=5MX,5TM=TAM,5AG=AGU,5BC=BCN,5BS=BCS,5CM=CAM,5CS=CHP,5CH=CHH,5CO=COA,5DF=DIF,5DG=DUR,5GT=GUA,5GR=GRO,5HG=HID,5JA=JAL,5MI=MIC,5MO=MOR,5NA=NAY,5NL=NLE,5OA=OAX,5PB=PUE,5QE=QUE,5QR=ROO,5SL=SLP,5SI=SIN,5SO=SON,5TB=TAB,5TL=TLA,5VE=VER,5YU=YUC,5ZA=ZAC,811=8BJ,812=8TJ,813=8HE,814=8SX,815=8NM,821=8LN,822=8JL,823=8HL,831=8SH,832=8JS,833=8ZJ,834=8AH,835=8FJ,836=8JX,837=8SD,841=8HA,842=8HB,843=8HN,844=8GD,845=8GX,846=8HI,850=8CQ,851=8SC,852=8GZ,853=8YN,854=8XZ,861=8SN,862=8GS,863=8QH,864=8NX,865=8XJ,871=TWN,891=HKG,892=MAC,8TW=TWN,8HK=HKG,8MC=MAC,BEL=7BE,KIR=7KI,PRI=7PO,CHE=7CH,KHM=7KM,PER=7PM,TAM=7TT,0US=USA,0AU=AUS,0RU=RUS,0CN=CHN,TAA=SHN,ASC=SHN,DGA=IOT,WAK=MHL,JTN=UMI,MID=1HI,2OD=2OR,"
+#define ALIASES "2UK=2UT,2CG=2CT,1GU=GUM,1UM=UMI,1VI=VIR,1AS=ASM,1MP=MNP,4CX=CXR,4CC=CCK,4NF=NFK,4HM=HMD,COL=5CL,5ME=5MX,MEX=5MX,5AG=AGU,5BC=BCN,5BS=BCS,5CM=CAM,5CS=CHP,5CH=CHH,5CO=COA,5DF=DIF,5DG=DUR,5GT=GUA,5GR=GRO,5HG=HID,5JA=JAL,5MI=MIC,5MO=MOR,5NA=NAY,5NL=NLE,5OA=OAX,5PB=PUE,5QE=QUE,5QR=ROO,5SL=SLP,5SI=SIN,5SO=SON,5TB=TAB,5TL=TLA,5VE=VER,5YU=YUC,5ZA=ZAC,811=8BJ,812=8TJ,813=8HE,814=8SX,815=8NM,821=8LN,822=8JL,823=8HL,831=8SH,832=8JS,833=8ZJ,834=8AH,835=8FJ,836=8JX,837=8SD,841=8HA,842=8HB,843=8HN,844=8GD,845=8GX,846=8HI,850=8CQ,851=8SC,852=8GZ,853=8YN,854=8XZ,861=8SN,862=8GS,863=8QH,864=8NX,865=8XJ,871=TWN,891=HKG,892=MAC,8TW=TWN,8HK=HKG,8MC=MAC,BEL=7BE,KIR=7KI,PRI=7PO,CHE=7CH,KHM=7KM,PER=7PM,TAM=7TT,0US=USA,0AU=AUS,0RU=RUS,0CN=CHN,TAA=SHN,ASC=SHN,DGA=IOT,WAK=MHL,JTN=UMI,MID=1HI,1PR=PRI,5TM=TAM,TAM=TAM,2OD=2OR,"
 
 #define MAX_CCODE 533 // total number of areas (i.e. recognised iso codes) in this database
 static const char *entity_iso = ""
@@ -84,37 +80,31 @@ static const char *entity_iso = ""
 
 #define  usa_from    343
 #define  usa_upto    393
-#define  ccode_usa   410
 #define  ind_from    271
 #define  ind_upto    306
 #define  ccode_ind   407
 #define  can_from    394
 #define  can_upto    406
-#define  ccode_can   495
 #define  aus_from    307
 #define  aus_upto    315
-#define  ccode_aus   408
 #define  mex_from    233
 #define  mex_upto    264
 #define  ccode_mex   411
 #define  bra_from    316
 #define  bra_upto    342
-#define  ccode_bra   409
 #define  chn_from    497
 #define  chn_upto    527
-#define  ccode_chn   528
 #define  rus_from    412
 #define  rus_upto    494
-#define  ccode_rus   496
-#define  ccode_ata   531
 #define  ccode_earth 532
 
 #define parents3 "USA,IND,CAN,AUS,MEX,BRA,RUS,CHN,"
 #define parents2 "US,IN,CA,AU,MX,BR,RU,CN,"
+static const int parentnr[9] = {-1,410,407,495,408,411,409,496,528};
 
 
 
-static const UWORD xdivider19[172] = {
+static const int xdivider19[172] = {
 	  360,  360,  360,  360,  360,  360,  361,  361,  361,  361,
 	  362,  362,  362,  363,  363,  363,  364,  364,  365,  366,
 	  366,  367,  367,  368,  369,  370,  370,  371,  372,  373,
@@ -135,11 +125,11 @@ static const UWORD xdivider19[172] = {
 	23681,59485
 };
 
-static const long nc[MAXFITLONG+1] = { 1, 31, 961, 29791, 923521, 28629151, 887503681 };
+static const int nc[MAXFITLONG+1] = { 1, 31, 961, 29791, 923521, 28629151, 887503681 };
 
-static const long xside[MAXWIDE] = { 0, 5,  31,  168,    961,    168*31,     29791,       165869,         923521,        5141947};
+static const int xside[MAXWIDE] = { 0, 5,  31,  168,    961,    168*31,     29791,       165869,         923521,        5141947};
 
-static const long yside[MAXWIDE] = { 0, 6,  31,  176,    961,    176*31,     29791,       165869,         923521,        5141947};
+static const int yside[MAXWIDE] = { 0, 6,  31,  176,    961,    176*31,     29791,       165869,         923521,        5141947};
 
 static const signed char decode_chars[256] = {
 	 -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -167,7 +157,7 @@ static const char encode_chars[34] = {
 		,'A','E','U'};
 
 
-static const UWORD data_start[MAX_CCODE+1] = {
+static const int data_start[MAX_CCODE+1] = {
 0, 3, 6, 10, 14, 17, 19, 20, 31, 32, 
 34, 36, 38, 43, 45, 48, 52, 59, 63, 65, 
 67, 71, 73, 81, 87, 95, 97, 132, 139, 149, 
@@ -227,7 +217,7 @@ static const UWORD data_start[MAX_CCODE+1] = {
 #define NR_RECS 16344
 #define WORST_RECS_PER_CCODE 195 // 8 Argentina @43
 
-typedef struct { long minx; long miny; long maxx; long maxy; unsigned long flags; } mminforec;
+typedef struct { int minx; int miny; int maxx; int maxy; int flags; } mminforec;
 
 #ifndef MAKE_SOURCE_DIGITAL
 static const mminforec mminfo[NR_RECS+1] = {

@@ -104,7 +104,7 @@ static int isInRange(int x, int minx, int maxx) // returns nonzero if x in the r
 {
     if (minx <= x && x < maxx) { return 1; }
     if (x < minx) { x += 360000000; } else { x -= 360000000; } // 1.32 fix FIJI edge case
-    if (minx <= x && x < maxx) return 1;
+    if (minx <= x && x < maxx) { return 1; }
     return 0;
 }
 
@@ -148,17 +148,19 @@ static int disambiguate_str(const char *s, int len) // returns disambiguation >=
     const char *f;
     char country[4];
     if (s[0] == 0 || s[1] == 0) { return -27; } // solve bad args
-    if (len != 2 && len != 3) return -923; // solve bad args
+    if (len != 2 && len != 3) { return -923; } // solve bad args
     memcpy(country, s, len);
     country[len] = 0;
     {
         char *t;
-        for (t = country; *t != 0; t++)
+        for (t = country; *t != 0; t++) {
             *t = (char) toupper(*t);
+        }
     }
     f = strstr(p, country);
-    if (f == NULL)
-        return -23; // unknown country
+    if (f == NULL) {
+        return -23;
+    } // unknown country
     return 1 + (int) ((f - p) / (len + 1));
 }
 
@@ -187,15 +189,16 @@ static int ccode_of_iso3(const char *in_iso, int parentcode) {
 
     // make (uppercased) copy of at most three characters
     iso[0] = (char) toupper(in_iso[0]);
-    if (iso[0]) iso[1] = (char) toupper(in_iso[1]);
-    if (iso[1]) iso[2] = (char) toupper(in_iso[2]);
+    if (iso[0]) { iso[1] = (char) toupper(in_iso[1]); }
+    if (iso[1]) { iso[2] = (char) toupper(in_iso[2]); }
     iso[3] = 0;
 
     if (iso[2] == 0 || iso[2] == ' ') // 2-letter iso code?
     {
         static char disambiguate_iso3[4] = {'1', '?', '?', 0}; // cache for disambiguation
-        if (parentcode > 0)
+        if (parentcode > 0) {
             disambiguate_iso3[0] = (char) ('0' + parentcode);
+        }
         disambiguate_iso3[1] = iso[0];
         disambiguate_iso3[2] = iso[1];
 
@@ -218,8 +221,9 @@ static int ccode_of_iso3(const char *in_iso, int parentcode) {
             // find the FIRST disambiguation option, if any
             for (s = entity_iso - 1; ;) {
                 s = strstr(s + 1, disambiguate_iso3 + 1);
-                if (s == NULL)
+                if (s == NULL) {
                     break;
+                }
                 if (s && s[-1] >= '1' && s[-1] <= '9') {
                     s--;
                     break;
@@ -229,8 +233,9 @@ static int ccode_of_iso3(const char *in_iso, int parentcode) {
                 // find first disambiguation option in aliases, if any
                 for (s = aliases - 1; ;) {
                     s = strstr(s + 1, disambiguate_iso3 + 1);
-                    if (s == NULL)
+                    if (s == NULL) {
                         break;
+                    }
                     if (s && s[-1] >= '1' && s[-1] <= '9') {
                         memcpy(iso, s + 3, 3);
                         s = strstr(entity_iso, iso); // search disambiguated 2-letter iso
@@ -239,8 +244,9 @@ static int ccode_of_iso3(const char *in_iso, int parentcode) {
                 }
             }
 
-            if (s == NULL)
+            if (s == NULL) {
                 return -26;
+            }
         }
     }
     else {
@@ -260,8 +266,9 @@ static int ccode_of_iso3(const char *in_iso, int parentcode) {
                 }
             }
         }
-        if (s == NULL)
+        if (s == NULL) {
             return -23;
+        }
     }
     // return result
     return (int) ((s - entity_iso) / 4);
@@ -384,7 +391,7 @@ static int decodeExtension(decodeRec *dec, int dividerx4, int dividery, int ydir
         column1 = (c1 % 5);
         if (*extrapostfix) {
             int c2 = decodeChar(*extrapostfix++);
-            if (c2 < 0 || c2 == 30) return -1; // illegal extension character
+            if (c2 < 0 || c2 == 30) { return -1; } // illegal extension character
             row2 = (c2 / 6);
             column2 = (c2 % 6);
         }
@@ -833,7 +840,7 @@ static int decodeNameless(decodeRec *dec, int m) {
             int BASEPOWER = (codexm == 21) ? 961 * 961 : 961 * 961 * 31;
             int BASEPOWERA = (BASEPOWER / A);
 
-            if (A == 62) BASEPOWERA++; else BASEPOWERA = 961 * (BASEPOWERA / 961);
+            if (A == 62) { BASEPOWERA++; } else { BASEPOWERA = 961 * (BASEPOWERA / 961); }
 
             v = decodeBase31(result);
             X = (v / BASEPOWERA);
@@ -960,12 +967,13 @@ static int unpack_if_alldigits(
     int aonly = (*s == 'A' || *s == 'a');
     if (aonly) { s++; } //*** v1.50
     for (; *s != 0 && s[2] != 0 && s[2] != '-'; s++) {
-        if (*s == '-')
+        if (*s == '-') {
             break;
-        else if (*s == '.' && !dotpos)
+        } else if (*s == '.' && !dotpos) {
             dotpos = s;
-        else if (decodeChar(*s) < 0 || decodeChar(*s) > 9)
-            return 0;  // nondigit, so stop
+        } else if (decodeChar(*s) < 0 || decodeChar(*s) > 9) {
+            return 0;
+        }  // nondigit, so stop
     }
 
     if (dotpos) {
@@ -985,14 +993,19 @@ static int unpack_if_alldigits(
             char *e = s + 1;  // s is vowel, e is lastchar
 
             int v = 0;
-            if (*s == 'e' || *s == 'E') v = 34;
-            else if (*s == 'u' || *s == 'U') v = 68;
+            if (*s == 'e' || *s == 'E') {
+                v = 34;
+            } else if (*s == 'u' || *s == 'U') { v = 68; }
 
-            if (*e == 'a' || *e == 'A') v += 31;
-            else if (*e == 'e' || *e == 'E') v += 32;
-            else if (*e == 'u' || *e == 'U') v += 33;
-            else if (decodeChar(*e) < 0) return -9; // invalid last character!
-            else v += decodeChar(*e);
+            if (*e == 'a' || *e == 'A') {
+                v += 31;
+            } else if (*e == 'e' || *e == 'E') {
+                v += 32;
+            } else if (*e == 'u' || *e == 'U') {
+                v += 33;
+            } else if (decodeChar(*e) < 0) {
+                return -9; // invalid last character!
+            } else { v += decodeChar(*e); }
 
             if (v < 100) {
                 *s = encode_chars[(unsigned int) v / 10];
@@ -1282,8 +1295,11 @@ static void encoderEngine(int ccode, const encodeRec *enc, int stop_with_one_res
     from = firstrec(ccode);
     upto = lastrec(ccode);
 
-    if (ccode != ccode_earth) if (!fitsInside(x, y, upto))
-        return;
+    if (ccode != ccode_earth) {
+        if (!fitsInside(x, y, upto)) {
+            return;
+        }
+    }
 
     ///////////////////////////////////////////////////////////
     // look for encoding options
@@ -1342,9 +1358,9 @@ static void encoderEngine(int ccode, const encodeRec *enc, int stop_with_one_res
                                     strcat(s, result);
                                 }
                             }
-                            if (debugStopAt == i) return;
+                            if (debugStopAt == i) { return; }
                         }
-                        if (stop_with_one_result) return;
+                        if (stop_with_one_result) { return; }
                         *result = 0; // clear for next iteration
                     }
                 }
@@ -1368,8 +1384,8 @@ static int decoderEngine(decodeRec *dec) {
         const char *r = dec->orginput;
         while (*r > 0 && *r <= 32) { r++; } // skip lead
         len = (int) strlen(r);
-        if (len > MAX_MAPCODE_RESULT_LEN - 1) len = MAX_MAPCODE_RESULT_LEN - 1;
-        while (len > 0 && r[len - 1] >= 0 && r[len - 1] <= 32) len--; // remove trail
+        if (len > MAX_MAPCODE_RESULT_LEN - 1) { len = MAX_MAPCODE_RESULT_LEN - 1; }
+        while (len > 0 && r[len - 1] >= 0 && r[len - 1] <= 32) { len--; } // remove trail
         memcpy(s, r, len);
         s[len] = 0;
     }
@@ -1466,8 +1482,9 @@ static int decoderEngine(decodeRec *dec) {
 
         // unpack digits (a-lead or aeu-encoded
         int voweled = unpack_if_alldigits(s);
-        if (voweled < 0)
+        if (voweled < 0) {
             return -7;
+        }
 
         // debug support: U-lead pre-processing
         if (*s == 'u' || *s == 'U') {
@@ -1476,7 +1493,7 @@ static int decoderEngine(decodeRec *dec) {
             voweled = 1;
         }
 
-        if (len > 10) return -8;
+        if (len > 10) { return -8; }
 
         // find dot and check that all characters are valid
         {
@@ -1484,19 +1501,22 @@ static int decoderEngine(decodeRec *dec) {
             const char *r = s;
             for (; *r != 0; r++) {
                 if (*r == '.') {
-                    if (dot)
-                        return -5; // more than one dot
+                    if (dot) {
+                        return -5;
+                    } // more than one dot
                     dot = r;
                 }
-                else if (decodeChar(*r) < 0) // invalid char?
+                else if (decodeChar(*r) < 0) { // invalid char?
                     return -4;
-                else if (decodeChar(*r) < 10) // digit?
+                } else if (decodeChar(*r) < 10) { // digit?
                     nrd++;
+                }
             }
-            if (dot == NULL)
+            if (dot == NULL) {
                 return -2;
-            else if (!voweled && nrd + 1 == len) // everything but the dot is digit, so MUST be voweled!
+            } else if (!voweled && nrd + 1 == len) { // everything but the dot is digit, so MUST be voweled!
                 return -998;
+            }
         }
 
 //////////// AT THIS POINT, dot=FIRST DOT, input=CLEAN INPUT (no vowels) ilen=INPUT LENGTH
@@ -1505,8 +1525,9 @@ static int decoderEngine(decodeRec *dec) {
         prelen = (int) (dot - s);
         postlen = len - 1 - prelen;
         codex = prelen * 10 + postlen;
-        if (prelen < 2 || prelen > 5 || postlen < 2 || postlen > 4)
+        if (prelen < 2 || prelen > 5 || postlen < 2 || postlen > 4) {
             return -3;
+        }
 
         if (len == 10) {
             // international mapcodes must be in international context
@@ -1516,8 +1537,9 @@ static int decoderEngine(decodeRec *dec) {
             // int mapcodes must be interpreted in the parent of a subdivision
 
             int parent = ParentTerritoryOf(ccode);
-            if (len == 9 || (len == 8 && (parent == ccode_ind || parent == ccode_mex)))
+            if (len == 9 || (len == 8 && (parent == ccode_ind || parent == ccode_mex))) {
                 ccode = parent;
+            }
         }
 
         // remember final territory context
@@ -1589,18 +1611,22 @@ static int decoderEngine(decodeRec *dec) {
 #endif
 
     // normalise between =180 and 180
-    if (dec->lat < -90.0) dec->lat = -90.0;
-    if (dec->lat > 90.0) dec->lat = 90.0;
-    if (dec->lon < -180.0) dec->lon += 360.0;
-    if (dec->lon >= 180.0) dec->lon -= 360.0;
+    if (dec->lat < -90.0) { dec->lat = -90.0; }
+    if (dec->lat > 90.0) { dec->lat = 90.0; }
+    if (dec->lon < -180.0) { dec->lon += 360.0; }
+    if (dec->lon >= 180.0) { dec->lon -= 360.0; }
 
     // store as integers for legacy's sake
     dec->lat32 = (int) (dec->lat * 1000000);
     dec->lon32 = (int) (dec->lon * 1000000);
 
     // make sure decode result fits the country
-    if (err == 0) if (ccode != ccode_earth) if (!fitsInsideWithRoom(dec->lon32, dec->lat32, lastrec(ccode))) {
-        err = -2222;
+    if (err == 0) {
+        if (ccode != ccode_earth) {
+            if (!fitsInsideWithRoom(dec->lon32, dec->lat32, lastrec(ccode))) {
+                err = -2222;
+            }
+        }
     }
 
     return err;
@@ -2007,7 +2033,7 @@ int convertTerritoryIsoNameToCode(const char *string, int optional_tc) // option
         strcat(tmp, string);
         ccode = ccode_of_iso3(tmp, -1);
     }
-    if (ccode < 0) return -1; else return ccode + 1;
+    if (ccode < 0) { return -1; } else { return ccode + 1; }
 }
 
 
@@ -2037,7 +2063,7 @@ UWORD *convertToAlphabet(UWORD *unibuf, int maxlength, const char *mapcode, int 
 {
     if (asc2lan[alphabet][4] == 0x003f) { // alphabet has no letter E
         if (strchr(mapcode, 'E') || strchr(mapcode, 'U') || strchr(mapcode, 'e') ||
-                                                            strchr(mapcode, 'u')) // v1.50 get rid of E and U
+            strchr(mapcode, 'u')) // v1.50 get rid of E and U
         {
             // safely copy mapcode into temporary buffer u
             char u[MAX_MAPCODE_RESULT_LEN];

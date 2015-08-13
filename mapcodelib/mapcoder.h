@@ -13,6 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define mapcode_cversion "2.0.2"
 
 #define UWORD                               unsigned short int  // 2-byte unsigned integer.
@@ -314,3 +319,7 @@ const UWORD *encodeToAlphabet(const char *string, int alphabet);
 #define MAPCODE_LANGUAGE_BENGALI       MAPCODE_ALPHABET_BENGALI
 #define MAPCODE_LANGUAGE_GURMUKHI      MAPCODE_ALPHABET_GURMUKHI
 #define MAPCODE_LANGUAGE_TIBETAN       MAPCODE_ALPHABET_TIBETAN
+
+#ifdef __cplusplus
+}
+#endif

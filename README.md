@@ -55,6 +55,10 @@ decode Mapcodes.
 
 # Release Notes
 
+* 2.0.2.4
+
+    Added point structs to source
+
 * 2.0.2.3
 
     Cleaned up source

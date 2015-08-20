@@ -32,8 +32,18 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 typedef struct {
+    int lat;
+    int lon;
+} point32;
+
+typedef struct { // point
+    double lat;
+    double lon;
+} point;
+
+typedef struct {
     // input
-    int lat32, lon32;
+    point32 coord32;
     double fraclat, fraclon;
     // output
     Mapcodes *mapcodes;
@@ -48,8 +58,8 @@ typedef struct {
     int context;            // input territory context (or negative)
     const char *iso;        // input territory alphacode (context)
     // output
-    double lat, lon;         // result
-    int lat32, lon32;       // result in integer arithmetic (millionts of degrees)
+    point result;           // result
+    point32 coord32;        // result in integer arithmetic (millionts of degrees)
 } decodeRec;
 
 
@@ -106,9 +116,9 @@ static int isInRange(int x, int minx, int maxx) // returns nonzero if x in the r
     return 0;
 }
 
-static int fitsInside(int x, int y, int m) {
+static int fitsInside(const point32 *coord32, int m) {
     const mminforec *b = boundaries(m);
-    return (b->miny <= y && y < b->maxy && isInRange(x, b->minx, b->maxx));
+    return (b->miny <= coord32->lat && coord32->lat < b->maxy && isInRange(coord32->lon, b->minx, b->maxx));
 }
 
 static int xDivider4(int miny, int maxy) {
@@ -121,10 +131,10 @@ static int xDivider4(int miny, int maxy) {
     return xdivider19[(-maxy) >> 19]; // both negative, so maxy is closest to equator
 }
 
-static int fitsInsideWithRoom(int x, int y, int m) {
+static int fitsInsideWithRoom(const point32 *coord32, int m) {
     const mminforec *b = boundaries(m);
     int xdiv8 = xDivider4(b->miny, b->maxy) / 4; // should be /8 but there's some extra margin
-    return (b->miny - 60 <= y && y < b->maxy + 60 && isInRange(x, b->minx - xdiv8, b->maxx + xdiv8));
+    return (b->miny - 60 <= coord32->lat && coord32->lat < b->maxy + 60 && isInRange(coord32->lon, b->minx - xdiv8, b->maxx + xdiv8));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -308,9 +318,9 @@ static void encodeExtension(char *result, int extrax4, int extray, int dividerx4
         ency *= 30;
         gy = (int) ency;
         if (gy < 0) {
-            gy = 0;
+            gy = 0; 
         } else if (gy > 29) {
-            gy = 29;
+            gy = 29; 
         }
         column1 = (gx / 6);
         column2 = (gx % 6);
@@ -333,8 +343,8 @@ static void encodeExtension(char *result, int extrax4, int extray, int dividerx4
 static int decodeExtension(decodeRec *dec, int dividerx4, int dividery, int ydirection) {
     const char *extrapostfix = dec->extension;
     double dividerx = dividerx4 / 4.0, processor = 1.0;
-    dec->lon = 0;
-    dec->lat = 0;
+    dec->result.lon = 0;
+    dec->result.lat = 0;
     while (*extrapostfix) {
         int column1, row1, column2, row2;
         double halfcolumn = 0;
@@ -356,22 +366,22 @@ static int decodeExtension(decodeRec *dec, int dividerx4, int dividery, int ydir
         }
 
         processor *= 30;
-        dec->lon += ((column1 * 6 + column2)) / processor;
-        dec->lat += ((row1 * 5 + row2 - halfcolumn)) / processor;
+        dec->result.lon += ((column1 * 6 + column2)) / processor;
+        dec->result.lat += ((row1 * 5 + row2 - halfcolumn)) / processor;
     }
 
-    dec->lon += (0.5 / processor);
-    dec->lat += (0.5 / processor);
+    dec->result.lon += (0.5 / processor);
+    dec->result.lat += (0.5 / processor);
 
-    dec->lon *= dividerx;
-    dec->lat *= (dividery * ydirection);
+    dec->result.lon *= dividerx;
+    dec->result.lat *= (dividery * ydirection);
 
-    dec->lon += dec->lon32;
-    dec->lat += dec->lat32;
+    dec->result.lon += dec->coord32.lon;
+    dec->result.lat += dec->coord32.lat;
 
     // also convert back to int
-    dec->lon32 = (int) floor(dec->lon);
-    dec->lat32 = (int) floor(dec->lat);
+    dec->coord32.lon = (int) floor(dec->result.lon);
+    dec->coord32.lat = (int) floor(dec->result.lat);
     return 0;
 }
 
@@ -578,8 +588,8 @@ static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter) {
                         // reverse y-direction
                         dify = yp - 1 - dify;
 
-                        dec->lon32 = relx + (difx * dividerx);
-                        dec->lat32 = rely + (dify * dividery);
+                        dec->coord32.lon = relx + (difx * dividerx);
+                        dec->coord32.lat = rely + (dify * dividery);
 
                         {
                             int err = decodeExtension(dec, dividerx << 2, dividery, 1); // grid
@@ -599,7 +609,6 @@ static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter) {
 
 // returns *result==0 in case of error
 static void encodeGrid(char *result, const encodeRec *enc, int const m, int extraDigits, char headerLetter) {
-    int y = enc->lat32, x = enc->lon32;
     const mminforec *b = boundaries(m);
 
     int orgcodex = coDex(m);
@@ -628,7 +637,8 @@ static void encodeGrid(char *result, const encodeRec *enc, int const m, int extr
         { // grid
             int ygridsize = (b->maxy - b->miny + divy - 1) / divy;
             int xgridsize = (b->maxx - b->minx + divx - 1) / divx;
-            int rely = y - b->miny;
+            int rely = enc->coord32.lat - b->miny;
+            int x = enc->coord32.lon;
             int relx = x - b->minx;
 
             if (relx < 0) {
@@ -677,7 +687,7 @@ static void encodeGrid(char *result, const encodeRec *enc, int const m, int extr
 
 
                     int difx = x - relx;
-                    int dify = y - rely;
+                    int dify = enc->coord32.lat - rely;
 
                     *resultptr++ = '.';
 
@@ -867,11 +877,11 @@ static int decodeNameless(decodeRec *dec, int m) {
                 int err;
 
                 // *** note: FIRST multiply, then divide... more precise, larger rects
-                dec->lon32 = b->minx + ((dx * dividerx4) / 4);
-                dec->lat32 = b->maxy - (dy * dividery);
+                dec->coord32.lon = b->minx + ((dx * dividerx4) / 4);
+                dec->coord32.lat = b->maxy - (dy * dividery);
 
                 err = decodeExtension(dec, dividerx4, dividery, -1); // nameless
-                dec->lon += ((dx * dividerx4) % 4) / 4.0;
+                dec->result.lon += ((dx * dividerx4) % 4) / 4.0;
 
                 return err;
             }
@@ -979,7 +989,6 @@ static int unpack_if_alldigits(
 // *result==0 in case of error
 static void encodeNameless(char *result, const encodeRec *enc, int input_ctry, int extraDigits, int m) {
     // determine how many nameless records there are (A), and which one is this (X)...
-    int y = enc->lat32, x = enc->lon32;
     int A = countNamelessRecords(m, firstrec(input_ctry));
     int X = m - firstNamelessRecord(m, firstrec(input_ctry));
 
@@ -1039,12 +1048,12 @@ static void encodeNameless(char *result, const encodeRec *enc, int input_ctry, i
 
             int dividerx4 = xDivider4(b->miny, b->maxy); // *** note: dividerx4 is 4 times too large!
             int xFracture = (int) (4 * enc->fraclon);
-            int dx = (4 * (x - b->minx) + xFracture) / dividerx4; // like div, but with floating point value
-            int extrax4 = (x - b->minx) * 4 - dx * dividerx4; // like modulus, but with floating point value
+            int dx = (4 * (enc->coord32.lon - b->minx) + xFracture) / dividerx4; // div with quarters
+            int extrax4 = (enc->coord32.lon - b->minx) * 4 - dx * dividerx4; // mod with quarters
 
             int dividery = 90;
-            int dy = (b->maxy - y) / dividery;  // between 0 and SIDE-1
-            int extray = (b->maxy - y) % dividery;
+            int dy = (b->maxy - enc->coord32.lat) / dividery;  // between 0 and SIDE-1
+            int extray = (b->maxy - enc->coord32.lat) % dividery;
 
             if (extray == 0 && enc->fraclat > 0) {
                 dy--;
@@ -1134,11 +1143,11 @@ static int decodeAutoHeader(decodeRec *dec, int m) {
                     int vx = (value / (H / 176)) * 168 + difx; // is vx/168
                     int vy = (value % (H / 176)) * 176 + dify; // is vy/176
 
-                    dec->lat32 = b->maxy - vy * dividery;
-                    dec->lon32 = b->minx + vx * dividerx;
+                    dec->coord32.lat = b->maxy - vy * dividery;
+                    dec->coord32.lon = b->minx + vx * dividerx;
 
-                    if (dec->lon32 < b->minx || dec->lon32 >= b->maxx || dec->lat32 < b->miny ||
-                        dec->lat32 > b->maxy) // *** CAREFUL! do this test BEFORE adding remainder...
+                    if (dec->coord32.lon < b->minx || dec->coord32.lon >= b->maxx || dec->coord32.lat < b->miny ||
+                        dec->coord32.lat > b->maxy) // *** CAREFUL! do this test BEFORE adding remainder...
                     {
                         return -122; // invalid code
                     }
@@ -1158,7 +1167,6 @@ static int decodeAutoHeader(decodeRec *dec, int m) {
 static void encodeAutoHeader(char *result, const encodeRec *enc, int m, int extraDigits) {
     int i;
     int STORAGE_START = 0;
-    int y = enc->lat32, x = enc->lon32;
     int W, H, xdiv, product;
     const mminforec *b;
 
@@ -1192,12 +1200,12 @@ static void encodeAutoHeader(char *result, const encodeRec *enc, int m, int extr
     {
         // encode
         int dividerx = (b->maxx - b->minx + W - 1) / W;
-        int vx = (x - b->minx) / dividerx;
-        int extrax = (x - b->minx) % dividerx;
+        int vx = (enc->coord32.lon - b->minx) / dividerx;
+        int extrax = (enc->coord32.lon - b->minx) % dividerx;
 
         int dividery = (b->maxy - b->miny + H - 1) / H;
-        int vy = (b->maxy - y) / dividery;
-        int extray = (b->maxy - y) % dividery;
+        int vy = (b->maxy - enc->coord32.lat) / dividery;
+        int extray = (b->maxy - enc->coord32.lat) % dividery;
 
         int codexlen = (codexm / 10) + (codexm % 10);
         int value = (vx / 168) * (H / 176);
@@ -1222,7 +1230,6 @@ static void encoderEngine(int ccode, const encodeRec *enc, int stop_with_one_res
                           int requiredEncoder,
                           int result_override) {
     int from, upto;
-    int y = enc->lat32, x = enc->lon32;
 
     if (enc == NULL || ccode < 0 || ccode > ccode_earth) {
         return;
@@ -1232,7 +1239,7 @@ static void encoderEngine(int ccode, const encodeRec *enc, int stop_with_one_res
     upto = lastrec(ccode);
 
     if (ccode != ccode_earth) {
-        if (!fitsInside(x, y, upto)) {
+        if (!fitsInside(&enc->coord32, upto)) {
             return;
         }
     }
@@ -1247,7 +1254,7 @@ static void encoderEngine(int ccode, const encodeRec *enc, int stop_with_one_res
 
         *result = 0;
         for (i = from; i <= upto; i++) {
-            if (fitsInside(x, y, i)) {
+            if (fitsInside(&enc->coord32, i)) {
                 if (isNameless(i)) {
                     encodeNameless(result, enc, ccode, extraDigits, i);
                 }
@@ -1412,13 +1419,13 @@ static int decoderEngine(decodeRec *dec) {
 
         // try all ccode rectangles to decode s (pointing to first character of proper mapcode)
         for (i = from; i <= upto; i++) {
-            int r = recType(i);            
+            int r = recType(i);
             if (r == 0) {
                 if (isNameless(i)) {
                     int codexi = coDex(i);
                     if ((codexi == 21 && codex == 22)
-                          || (codexi == 22 && codex == 32)
-                          || (codexi == 13 && codex == 23)) {
+                        || (codexi == 22 && codex == 32)
+                        || (codexi == 13 && codex == 23)) {
                         err = decodeNameless(dec, i);
                         break;
                     }
@@ -1434,12 +1441,12 @@ static int decoderEngine(decodeRec *dec) {
                             int j;
                             for (j = i - 1; j >= from; j--) { // look in previous rects
                                 if (!isRestricted(j)) {
-                                    if (fitsInsideWithRoom(dec->lon32, dec->lat32, j)) {
+                                    if (fitsInsideWithRoom(&dec->coord32, j)) {
                                         fitssomewhere = 1;
                                         break;
-                                    } 
-                                } 
-                            } 
+                                    }
+                                }
+                            }
                             if (!fitssomewhere) {
                                 err = -1234;
                             }
@@ -1448,7 +1455,7 @@ static int decoderEngine(decodeRec *dec) {
                     }
                 }
             }
-            else if (r == 1) { 
+            else if (r == 1) {
                 int codexi = coDex(i);
                 if (codex == codexi + 10 && headerLetter(i) == *s) {
                     err = decodeGrid(dec, i, 1);
@@ -1468,27 +1475,27 @@ static int decoderEngine(decodeRec *dec) {
 
     // convert from millionths
     if (err) {
-        dec->lat = dec->lon = 0;
+        dec->result.lat = dec->result.lon = 0;
     }
     else {
-        dec->lat /= (double) 1000000.0;
-        dec->lon /= (double) 1000000.0;
+        dec->result.lat /= (double) 1000000.0;
+        dec->result.lon /= (double) 1000000.0;
     }
 
     // normalise between =180 and 180
-    if (dec->lat < -90.0) { dec->lat = -90.0; }
-    if (dec->lat > 90.0) { dec->lat = 90.0; }
-    if (dec->lon < -180.0) { dec->lon += 360.0; }
-    if (dec->lon >= 180.0) { dec->lon -= 360.0; }
+    if (dec->result.lat < -90.0) { dec->result.lat = -90.0; }
+    if (dec->result.lat > 90.0) { dec->result.lat = 90.0; }
+    if (dec->result.lon < -180.0) { dec->result.lon += 360.0; }
+    if (dec->result.lon >= 180.0) { dec->result.lon -= 360.0; }
 
     // store as integers for legacy's sake
-    dec->lat32 = (int) floor(dec->lat * 1000000);
-    dec->lon32 = (int) floor(dec->lon * 1000000);
+    dec->coord32.lat = (int) floor(dec->result.lat * 1000000);
+    dec->coord32.lon = (int) floor(dec->result.lon * 1000000);
 
     // make sure decode result fits the country
     if (err == 0) {
         if (ccode != ccode_earth) {
-            if (!fitsInsideWithRoom(dec->lon32, dec->lat32, lastrec(ccode))) {
+            if (!fitsInsideWithRoom(&dec->coord32, lastrec(ccode))) {
                 err = -2222; // EVER?
             }
         }
@@ -1755,28 +1762,28 @@ static int encodeLatLonToMapcodes_internal(char **v, Mapcodes *mapcodes, double 
     lon += 180;
     lat *= 1000000;
     lon *= 1000000;
-    enc.lat32 = (int) lat;
-    enc.lon32 = (int) lon;
-    enc.fraclat = lat - enc.lat32;
-    enc.fraclon = lon - enc.lon32;
+    enc.coord32.lat = (int) lat;
+    enc.coord32.lon = (int) lon;
+    enc.fraclat = lat - enc.coord32.lat;
+    enc.fraclon = lon - enc.coord32.lon;
     // for 8-digit precision, cells are divided into 810,000 by 810,000 minicells.
     enc.fraclat *= 810000;
     if (enc.fraclat < 1) { enc.fraclat = 0; } else {
         if (enc.fraclat > 809999) {
             enc.fraclat = 0;
-            enc.lat32++;
+            enc.coord32.lat++;
         } else { enc.fraclat /= 810000; }
     }
     enc.fraclon *= 810000;
     if (enc.fraclon < 1) { enc.fraclon = 0; } else {
         if (enc.fraclon > 809999) {
             enc.fraclon = 0;
-            enc.lon32++;
+            enc.coord32.lon++;
         } else { enc.fraclon /= 810000; }
     }
-    enc.lat32 -= 90000000;
-    enc.lon32 %= 360000000;
-    enc.lon32 -= 180000000;
+    enc.coord32.lat -= 90000000;
+    enc.coord32.lon %= 360000000;
+    enc.coord32.lon -= 180000000;
 
     if (tc <= 0) // ALL results?
     {
@@ -1796,7 +1803,7 @@ static int encodeLatLonToMapcodes_internal(char **v, Mapcodes *mapcodes, double 
                 break;
             }
             else {
-                int coord = (HOR ? enc.lon32 : enc.lat32);
+                int coord = (HOR ? enc.coord32.lon : enc.coord32.lat);
                 if (coord > v2) {
                     i = redivar[i];
                 }
@@ -1923,8 +1930,8 @@ int decodeMapcodeToLatLon(double *lat, double *lon, const char *input,
         dec.context = context_tc;
 
         ret = decoderEngine(&dec);
-        *lat = dec.lat;
-        *lon = dec.lon;
+        *lat = dec.result.lat;
+        *lon = dec.result.lon;
         return ret;
     }
 }

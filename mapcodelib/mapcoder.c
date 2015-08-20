@@ -25,6 +25,11 @@
 #include "mapcode_fast_encode.h"
 #endif
 
+#define FAST_ALPHA
+#ifdef FAST_ALPHA
+#include "mapcode_fastalpha.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //  Structures
@@ -58,8 +63,8 @@ typedef struct {
     int context;            // input territory context (or negative)
     const char *iso;        // input territory alphacode (context)
     // output
-    point result;           // result
-    point32 coord32;        // result in integer arithmetic (millionts of degrees)
+    point result;         // result
+    point32 coord32;          // result in integer arithmetic (millionts of degrees)
 } decodeRec;
 
 
@@ -73,6 +78,10 @@ static int firstrec(int ccode) { return data_start[ccode]; }
 
 static int lastrec(int ccode) { return data_start[ccode + 1] - 1; }
 
+#ifdef FAST_ALPHA
+#define ParentLetter(ccode) (parentletter[ccode])
+#else
+
 static int ParentLetter(int ccode) // returns parent index (>0), or 0
 {
     if (ccode >= usa_from && ccode <= usa_upto) { return 1; }
@@ -85,6 +94,8 @@ static int ParentLetter(int ccode) // returns parent index (>0), or 0
     if (ccode >= chn_from && ccode <= chn_upto) { return 8; }
     return 0;
 }
+
+#endif
 
 static int ParentTerritoryOf(int ccode) // returns parent, or -1
 {
@@ -1886,7 +1897,38 @@ int getCountryOrParentCountry(int tc) {
 }
 
 #ifdef FAST_ALPHA
-    // in preparation of faster name search
+
+int cmp_alphacode(const void *e1, const void *e2) {
+    const alphaRec *a1 = (const alphaRec *) e1;
+    const alphaRec *a2 = (const alphaRec *) e2;
+    return strcmp(a1->alphaCode, a2->alphaCode);
+} // cmp
+
+int binfindmatch(int parentcode, const char *str) {
+    char tmp[5];
+    if (parentcode < 0) { return -1; }
+    if (parentcode > 0) {
+        tmp[0] = '0' + parentcode;
+        memcpy(tmp + 1, str, 3);
+        tmp[4] = 0;
+        str = tmp;
+    } //
+    { // binary-search the result
+        const alphaRec *p;
+        alphaRec t;
+        t.alphaCode = str;
+        t.ccode = parentcode;
+
+        p = (const alphaRec *) bsearch(&t, alphaSearch, NRTERREC, sizeof(alphaRec), cmp_alphacode);
+        if (p) {
+            if (strcmp(str, p->alphaCode) == 0) {
+                return p->ccode + 1;
+            } // match
+        } // found
+    } //
+    return -1;
+}
+
 #endif
 
 int convertTerritoryIsoNameToCode(const char *string, int optional_tc) // optional_tc: pass 0 or negative if unknown
@@ -1896,7 +1938,21 @@ int convertTerritoryIsoNameToCode(const char *string, int optional_tc) // option
     while (*string > 0 && *string <= 32) { string++; } // skip leading whitespace
 
 #ifdef FAST_ALPHA
-    // in preparation of faster name search
+    if (string[0] && string[1]) {
+        if (string[2] == '-') {
+            return binfindmatch(disambiguate_str(string, 2), string + 3);
+        } else if (string[2] && string[3] == '-') {
+            return binfindmatch(disambiguate_str(string, 3), string + 4);
+        } else if (optional_tc > 0) {
+            int parentcode = parentnumber[ccode];
+            int b = binfindmatch(parentcode, string);
+            if (b > 0) {
+                return b;
+            } //
+        } //
+        return binfindmatch(0, string);
+    } // else, fail:
+    return -1;
 #else
     if (ccode < 0 || strchr(string, '-') || strlen(string) > 3) {
         ccode = ccode_of_iso3(string, -1); // ignore optional_tc

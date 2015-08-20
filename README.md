@@ -56,6 +56,10 @@ decode Mapcodes.
 
 # Release Notes
 
+* 2.1.0
+
+    Fixes floating point inaccuracy (prevent encode(decode(M)) != M
+
 * 2.0.3
 
     Added #define FAST_ALPHA for faster alphacode string recognition;

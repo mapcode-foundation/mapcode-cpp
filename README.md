@@ -1,4 +1,4 @@
-# Mapcode Library for C/C++
+﻿# Mapcode Library for C/C++
 
 Copyright (C) 2014-2015 Stichting Mapcode Foundation (http://www.mapcode.com)
 
@@ -11,9 +11,14 @@ Copyright (C) 2014-2015 Stichting Mapcode Foundation (http://www.mapcode.com)
 
 The directory 'mapcodelib' contains the files:
 
-    mapcoder.h      <-- Header file with method prototypes and defines for caller.
+    mapcoder.h                    <-- Header file with method prototypes and defines for caller.
     mapcoder.c
     basics.h
+
+    mapcode_fastencode.h          <-- include unless FAST_ENCODE is undefined 
+    
+    mapcode_countrynames.h        <-- optional array with english territory names, including official names
+    mapcode_countrynames_short.h  <-- optional array with english territory names
 
 Together these provide routine to encode/decode Mapcodes.
 
@@ -50,21 +55,26 @@ decode Mapcodes.
 
 # Release Notes
 
+* 2.0.2.1
+
+    Cleaned up source, removed legacy code; Renamed  dividemaps.h to mapcode_fast_encode.h;
+     
+    Improved convertToRoman and convertToAlphabet to trim and skip leading territory;
+
+    Rolled back 2.0.2 fix for letters "i" and "o" in Hindi, Bengali, Tibetan and Gurmukhi;
+
 * 2.0.2
 
     Speed-up of encoding (4 times faster than 2.0.1).
 
-    Added optional `mapcode_countrynames.h`, with the English short names, formal names, 
-    and name variants of all territories.
-
-    Added optional `mapcode_countrynames_short.h` with only the short English names and 
-    name variants.
+    Added optional `mapcode_countrynames.h` (with the English short names, formal names, 
+    and name variants of all territories) and `mapcode_countrynames_short.h` (with only 
+    the short English names and name variants.
 
     Stricter processing of high-precision letters (now fails on illegal high-precision 
     letters, which includes the letter Z).
 
-    Fix to allow illegal letters "i" and "o" in Hindi, Bengali, Tibetan and Gurmukhi 
-    (so they can later be interpreted as digits 1 and 0).
+    Fix for letters "i" and "o" in Hindi, Bengali, Tibetan and Gurmukhi;
 
     Fix for some unrecognized aliases in `convertTerritoryIsoNameToCode()`.
     
@@ -162,3 +172,4 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+

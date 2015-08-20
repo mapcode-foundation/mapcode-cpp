@@ -478,8 +478,6 @@ static void decodeSixWide(int v, int width, int height, int *x, int *y) {
     *y = height - 1 - (w / D);
 }
 
-static int debugStopAt = -1;
-
 // decodes dec->mapcode in context of territory rectangle m; returns negative if error
 static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter) {
     const char *input = (hasHeaderLetter ? dec->mapcode + 1 : dec->mapcode);
@@ -1221,6 +1219,7 @@ static void encodeAutoHeader(char *result, const encodeRec *enc, int m, int extr
 
 
 static void encoderEngine(int ccode, const encodeRec *enc, int stop_with_one_result, int extraDigits,
+                          int requiredEncoder,
                           int result_override) {
     int from, upto;
     int y = enc->lat32, x = enc->lon32;
@@ -1261,13 +1260,13 @@ static void encoderEngine(int ccode, const encodeRec *enc, int stop_with_one_res
                              isSubdivision(ccode)) // if the last item is a reference to a state's country
                     {
                         // *** do a recursive call for the parent ***
-                        encoderEngine(ParentTerritoryOf(ccode), enc, stop_with_one_result, extraDigits, ccode);
+                        encoderEngine(ParentTerritoryOf(ccode), enc, stop_with_one_result, extraDigits, requiredEncoder, ccode);
                         return; /**/
                     }
                     else // must be grid
                     {
                         // skip isRestricted records unless there already is a result
-                        if (result_counter > 0 || !isRestricted(i)) {
+                        if (result_counter || !isRestricted(i)) {
                             char headerletter = (char) ((recType(i) == 1) ? headerLetter(i) : 0);
                             encodeGrid(result, enc, i, extraDigits, headerletter);
                         }
@@ -1279,7 +1278,7 @@ static void encoderEngine(int ccode, const encodeRec *enc, int stop_with_one_res
 
                         repack_if_alldigits(result, 0);
 
-                        if (debugStopAt < 0 || debugStopAt == i) {
+                        if (requiredEncoder < 0 || requiredEncoder == i) {
                             int cc = (result_override >= 0 ? result_override : ccode);
                             if (*result && enc->mapcodes && enc->mapcodes->count < MAX_NR_OF_MAPCODE_RESULTS) {
                                 char *s = enc->mapcodes->mapcode[enc->mapcodes->count++];
@@ -1291,7 +1290,7 @@ static void encoderEngine(int ccode, const encodeRec *enc, int stop_with_one_res
                                     strcat(s, result);
                                 }
                             }
-                            if (debugStopAt == i) { return; }
+                            if (requiredEncoder == i) { return; }
                         }
                         if (stop_with_one_result) { return; }
                         *result = 0; // clear for next iteration
@@ -1301,7 +1300,6 @@ static void encoderEngine(int ccode, const encodeRec *enc, int stop_with_one_res
         } // for i
     }
 }
-
 
 // returns nonzero if error
 static int decoderEngine(decodeRec *dec) {
@@ -1494,7 +1492,7 @@ static int decoderEngine(decodeRec *dec) {
                     int fitssomewhere = 0;
                     int j;
                     for (j = i - 1; j >= from; j--) { // look in previous rects
-                        if (!isRestricted((j))) {
+                        if (!isRestricted(j)) {
                             if (fitsInsideWithRoom(dec->lon32, dec->lat32, j)) {
                                 fitssomewhere = 1;
                                 break;
@@ -1504,8 +1502,7 @@ static int decoderEngine(decodeRec *dec) {
                     if (!fitssomewhere) {
                         err = -1234;
                     }
-                }
-                // *** make sure decode fits somewhere ***
+                } // *** make sure decode fits somewhere ***
                 break;
             }
             else if (recType(i) == 1 && prefixLength(i) + 1 == prelen && postfixLength(i) == postlen &&
@@ -1800,8 +1797,8 @@ int compareWithMapcodeFormat(const char *s, int fullcode) {
 // pass point to an array of pointers (at least 42), will be made to point to result strings...
 // returns nr of results;
 static int encodeLatLonToMapcodes_internal(char **v, Mapcodes *mapcodes, double lat, double lon, int tc,
-                                           int stop_with_one_result,
-                                           int extraDigits) // 1.31 allow to stop after one result
+                                           int stop_with_one_result, int requiredEncoder,
+                                           int extraDigits) 
 {
     encodeRec enc;
     enc.mapcodes = mapcodes;
@@ -1809,7 +1806,7 @@ static int encodeLatLonToMapcodes_internal(char **v, Mapcodes *mapcodes, double 
 
     if (lat < -90) { lat = -90; } else if (lat > 90) { lat = 90; }
     if (lon < -180 || lon > 180) {
-        lon -= (360 * floor(lon/360));
+        lon -= (360.0 * floor(lon / 360));
         if (lon >= 180) { lon -= 360; }
     }
 
@@ -1852,8 +1849,8 @@ static int encodeLatLonToMapcodes_internal(char **v, Mapcodes *mapcodes, double 
                 int j, nr = v2;
                 for (j = 0; j <= nr; j++) {
                     int ctry = (j == nr ? ccode_earth : redivar[i + j]);
-                    encoderEngine(ctry, &enc, stop_with_one_result, extraDigits, -1);
-                    if ((stop_with_one_result || debugStopAt >= 0) && enc.mapcodes->count > 0) { break; }
+                    encoderEngine(ctry, &enc, stop_with_one_result, extraDigits, requiredEncoder, -1);
+                    if ((stop_with_one_result || requiredEncoder >= 0) && enc.mapcodes->count > 0) { break; }
                 }
                 break;
             }
@@ -1870,13 +1867,13 @@ static int encodeLatLonToMapcodes_internal(char **v, Mapcodes *mapcodes, double 
 #else
     int i;
     for(i=0;i<MAX_MAPCODE_TERRITORY_CODE;i++) {
-      encoderEngine(i,&enc,stop_with_one_result,extraDigits,-1);
-      if ((stop_with_one_result||debugStopAt>=0) && enc.mapcodes->count > 0) break;
+      encoderEngine(i,&enc,stop_with_one_result,extraDigits, requiredEncoder, -1);
+      if ((stop_with_one_result||requiredEncoder>=0) && enc.mapcodes->count > 0) break;
     }
 #endif
     }
     else {
-        encoderEngine((tc - 1), &enc, stop_with_one_result, extraDigits, -1);
+        encoderEngine((tc - 1), &enc, stop_with_one_result, extraDigits, requiredEncoder, -1);
     }
 
     if (v) {
@@ -2036,6 +2033,9 @@ const char *decodeToRoman(const UWORD *s) {
 }
 
 // Legacy: NOT threadsafe
+static int debugStopAt = -1; // to externally test-restrict internal encoding, do not use!
+
+// Legacy: NOT threadsafe
 static UWORD unibuf[MAX_MAPCODE_RESULT_LEN];
 
 const UWORD *encodeToAlphabet(const char *mapcode, int alphabet) // 0=roman, 2=cyrillic
@@ -2048,7 +2048,7 @@ const UWORD *encodeToAlphabet(const char *mapcode, int alphabet) // 0=roman, 2=c
 int encodeLatLonToSingleMapcode(char *result, double lat, double lon, int tc, int extraDigits) {
     char *v[2];
     Mapcodes rlocal;
-    int ret = encodeLatLonToMapcodes_internal(v, &rlocal, lat, lon, tc, 1, extraDigits);
+    int ret = encodeLatLonToMapcodes_internal(v, &rlocal, lat, lon, tc, 1, debugStopAt, extraDigits);
     *result = 0;
     if (ret <= 0) { // no solutions?
         return -1;
@@ -2064,14 +2064,14 @@ int encodeLatLonToSingleMapcode(char *result, double lat, double lon, int tc, in
 
 // Threadsafe
 int encodeLatLonToMapcodes(Mapcodes *results, double lat, double lon, int territoryCode, int extraDigits) {
-    return encodeLatLonToMapcodes_internal(NULL, results, lat, lon, territoryCode, 0, extraDigits);
+    return encodeLatLonToMapcodes_internal(NULL, results, lat, lon, territoryCode, 0, debugStopAt, extraDigits);
 }
 
 // Legacy: NOT threadsafe
 Mapcodes rglobal;
 
 int encodeLatLonToMapcodes_Deprecated(char **v, double lat, double lon, int territoryCode, int extraDigits) {
-    return encodeLatLonToMapcodes_internal(v, &rglobal, lat, lon, territoryCode, 0, extraDigits);
+    return encodeLatLonToMapcodes_internal(v, &rglobal, lat, lon, territoryCode, 0, debugStopAt, extraDigits);
 }
 
 // Legacy: NOT threadsafe

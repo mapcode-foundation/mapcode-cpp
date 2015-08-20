@@ -16,6 +16,7 @@ The directory 'mapcodelib' contains the files:
     basics.h
 
     mapcode_fastencode.h          <-- include unless FAST_ENCODE is undefined 
+    mapcode_fastalpha.h           <-- needed only if FAST_ALPHA is defined
     
     mapcode_countrynames.h        <-- optional array with english territory names, including official names
     mapcode_countrynames_short.h  <-- optional array with english territory names
@@ -54,6 +55,10 @@ decode Mapcodes.
 
 
 # Release Notes
+
+* 2.0.3
+
+    Added #define FAST_ALPHA for faster alphacode string recognition;
 
 * 2.0.2.4
 

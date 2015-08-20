@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-#include <string.h> // strlen strcpy strcat memcpy memmove strstr strchr memcmp
+#include <string.h> // strlen strcpy strcat memcpy memmove strstr strchr memcmp strupr
 #include <stdlib.h> // atof
 #include <ctype.h>  // toupper
+#include <math.h>   // floor
 #include "mapcoder.h"
 #include "basics.h"
 
@@ -170,12 +171,7 @@ static int disambiguate_str(const char *s, int len) // returns disambiguation 1-
     if (len != 2 && len != 3) { return -923; } // solve bad args
     memcpy(country, s, len);
     country[len] = 0;
-    {
-        char *t;
-        for (t = country; *t != 0; t++) {
-            *t = (char) toupper(*t);
-        }
-    }
+    strupr(country);
     f = strstr(p, country);
     if (f == NULL) {
         return -23; // unknown country
@@ -1357,6 +1353,10 @@ static int decoderEngine(decodeRec *dec) {
         if (ccode == ccode_mex && len < 8) {
             ccode = ccode_of_iso3("5MX", -1);
         } // special case for mexico country vs state
+        if (*s=='u' || *s=='U') {
+            strcpy(s,s+1);
+            repack_if_alldigits(s, 1);
+        }
         dec->context = ccode;
         dec->mapcode = s;
         dec->extension = "";
@@ -1905,23 +1905,25 @@ int cmp_alphacode(const void *e1, const void *e2) {
 } // cmp
 
 int binfindmatch(int parentcode, const char *str) {
+    // build a 4-letter uppercase search term
     char tmp[5];
     if (parentcode < 0) { return -1; }
     if (parentcode > 0) {
         tmp[0] = '0' + parentcode;
         memcpy(tmp + 1, str, 3);
-        tmp[4] = 0;
-        str = tmp;
-    } //
+    } else {
+        memcpy(tmp, str, 4);
+    }
+    tmp[4] = 0;
     { // binary-search the result
         const alphaRec *p;
         alphaRec t;
-        t.alphaCode = str;
+        t.alphaCode = strupr(tmp);
         t.ccode = parentcode;
 
         p = (const alphaRec *) bsearch(&t, alphaSearch, NRTERREC, sizeof(alphaRec), cmp_alphacode);
         if (p) {
-            if (strcmp(str, p->alphaCode) == 0) {
+            if (strcmp(t.alphaCode, p->alphaCode) == 0) { // only interested in PERFECT match
                 return p->ccode + 1;
             } // match
         } // found

@@ -55,6 +55,10 @@ decode Mapcodes.
 
 # Release Notes
 
+* 2.0.2.3
+
+    Cleaned up source
+
 * 2.0.2.2
 
     Cleaned up source

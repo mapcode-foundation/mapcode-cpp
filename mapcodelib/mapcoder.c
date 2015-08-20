@@ -1159,6 +1159,8 @@ static void encodeAutoHeader(char *result, const encodeRec *enc, int m, int extr
     int i;
     int STORAGE_START = 0;
     int y = enc->lat32, x = enc->lon32;
+    int W, H, xdiv, product;
+    const mminforec *b;
 
     // search back to first of the group
     int firstindex = m;
@@ -1167,9 +1169,8 @@ static void encodeAutoHeader(char *result, const encodeRec *enc, int m, int extr
         firstindex--;
     }
 
-    for (i = firstindex; coDex(i) == codexm; i++) {
-        int W, H, xdiv, product;
-        const mminforec *b = boundaries(i);
+    for (i = firstindex; i <= m; i++) {
+        b = boundaries(i);
         // determine how many cells
         H = (b->maxy - b->miny + 89) / 90; // multiple of 10m
         xdiv = xDivider4(b->miny, b->maxy);
@@ -1183,40 +1184,39 @@ static void encodeAutoHeader(char *result, const encodeRec *enc, int m, int extr
             int GOODROUNDER = codexm >= 23 ? (961 * 961 * 31) : (961 * 961);
             product = ((STORAGE_START + product + GOODROUNDER - 1) / GOODROUNDER) * GOODROUNDER - STORAGE_START;
         }
+        if (i < m) {
+            STORAGE_START += product;
+        }
+    }
 
-        if (i == m) {
-            // encode
-            int dividerx = (b->maxx - b->minx + W - 1) / W;
-            int vx = (x - b->minx) / dividerx;
-            int extrax = (x - b->minx) % dividerx;
+    {
+        // encode
+        int dividerx = (b->maxx - b->minx + W - 1) / W;
+        int vx = (x - b->minx) / dividerx;
+        int extrax = (x - b->minx) % dividerx;
 
-            int dividery = (b->maxy - b->miny + H - 1) / H;
-            int vy = (b->maxy - y) / dividery;
-            int extray = (b->maxy - y) % dividery;
+        int dividery = (b->maxy - b->miny + H - 1) / H;
+        int vy = (b->maxy - y) / dividery;
+        int extray = (b->maxy - y) % dividery;
 
-            int codexlen = (codexm / 10) + (codexm % 10);
-            int value = (vx / 168) * (H / 176);
+        int codexlen = (codexm / 10) + (codexm % 10);
+        int value = (vx / 168) * (H / 176);
 
-            if (extray == 0 && enc->fraclat > 0) {
-                vy--;
-                extray += dividery;
-            }
-
-            value += (vy / 176);
-
-            // PIPELETTER ENCODE
-            encodeBase31(result, (STORAGE_START / (961 * 31)) + value, codexlen - 2);
-            result[codexlen - 2] = '.';
-            encode_triple(result + codexlen - 1, vx % 168, vy % 176);
-
-            encodeExtension(result, extrax << 2, extray, dividerx << 2, dividery, extraDigits, -1, enc); // autoheader
-            return;
+        if (extray == 0 && enc->fraclat > 0) {
+            vy--;
+            extray += dividery;
         }
 
-        STORAGE_START += product;
+        value += (vy / 176);
+
+        // PIPELETTER ENCODE
+        encodeBase31(result, (STORAGE_START / (961 * 31)) + value, codexlen - 2);
+        result[codexlen - 2] = '.';
+        encode_triple(result + codexlen - 1, vx % 168, vy % 176);
+
+        encodeExtension(result, extrax << 2, extray, dividerx << 2, dividery, extraDigits, -1, enc); // autoheader
     }
 }
-
 
 static void encoderEngine(int ccode, const encodeRec *enc, int stop_with_one_result, int extraDigits,
                           int requiredEncoder,
@@ -1247,54 +1247,53 @@ static void encoderEngine(int ccode, const encodeRec *enc, int stop_with_one_res
 
         *result = 0;
         for (i = from; i <= upto; i++) {
-            int codex = coDex(i);
-            if (codex < 54) {
-                if (fitsInside(x, y, i)) {
-                    if (isNameless(i)) {
-                        encodeNameless(result, enc, ccode, extraDigits, i);
-                    }
-                    else if (recType(i) > 1) {
-                        encodeAutoHeader(result, enc, i, extraDigits);
-                    }
-                    else if (i == upto && isRestricted(i) &&
-                             isSubdivision(ccode)) // if the last item is a reference to a state's country
-                    {
-                        // *** do a recursive call for the parent ***
-                        encoderEngine(ParentTerritoryOf(ccode), enc, stop_with_one_result, extraDigits, requiredEncoder, ccode);
-                        return; /**/
-                    }
-                    else // must be grid
-                    {
-                        // skip isRestricted records unless there already is a result
-                        if (result_counter || !isRestricted(i)) {
+            if (fitsInside(x, y, i)) {
+                if (isNameless(i)) {
+                    encodeNameless(result, enc, ccode, extraDigits, i);
+                }
+                else if (recType(i) > 1) {
+                    encodeAutoHeader(result, enc, i, extraDigits);
+                }
+                else if (i == upto && isRestricted(i) &&
+                         isSubdivision(ccode)) // if the last item is a reference to a state's country
+                {
+                    // *** do a recursive call for the parent ***
+                    encoderEngine(ParentTerritoryOf(ccode), enc, stop_with_one_result, extraDigits, requiredEncoder, ccode);
+                    return; /**/
+                }
+                else // must be grid
+                {
+                    // skip isRestricted records unless there already is a result
+                    if (result_counter || !isRestricted(i)) {
+                        if (coDex(i) < 54) {
                             char headerletter = (char) ((recType(i) == 1) ? headerLetter(i) : 0);
                             encodeGrid(result, enc, i, extraDigits, headerletter);
                         }
                     }
+                }
 
-                    // =========== handle result (if any)
-                    if (*result) {
-                        result_counter++;
+                // =========== handle result (if any)
+                if (*result) {
+                    result_counter++;
 
-                        repack_if_alldigits(result, 0);
+                    repack_if_alldigits(result, 0);
 
-                        if (requiredEncoder < 0 || requiredEncoder == i) {
-                            int cc = (result_override >= 0 ? result_override : ccode);
-                            if (*result && enc->mapcodes && enc->mapcodes->count < MAX_NR_OF_MAPCODE_RESULTS) {
-                                char *s = enc->mapcodes->mapcode[enc->mapcodes->count++];
-                                if (cc == ccode_earth) {
-                                    strcpy(s, result);
-                                } else {
-                                    getTerritoryIsoName(s, cc + 1, 0);
-                                    strcat(s, " ");
-                                    strcat(s, result);
-                                }
+                    if (requiredEncoder < 0 || requiredEncoder == i) {
+                        int cc = (result_override >= 0 ? result_override : ccode);
+                        if (*result && enc->mapcodes && enc->mapcodes->count < MAX_NR_OF_MAPCODE_RESULTS) {
+                            char *s = enc->mapcodes->mapcode[enc->mapcodes->count++];
+                            if (cc == ccode_earth) {
+                                strcpy(s, result);
+                            } else {
+                                getTerritoryIsoName(s, cc + 1, 0);
+                                strcat(s, " ");
+                                strcat(s, result);
                             }
-                            if (requiredEncoder == i) { return; }
                         }
-                        if (stop_with_one_result) { return; }
-                        *result = 0; // clear for next iteration
+                        if (requiredEncoder == i) { return; }
                     }
+                    if (stop_with_one_result) { return; }
+                    *result = 0; // clear for next iteration
                 }
             }
         } // for i
@@ -1303,227 +1302,169 @@ static void encoderEngine(int ccode, const encodeRec *enc, int stop_with_one_res
 
 // returns nonzero if error
 static int decoderEngine(decodeRec *dec) {
-    int parentcode;
-    int err;
-    int ccode, len;
-    char *minus;
-    const char *iso3;
-    char *s = dec->minput;
+    int hasvowels = 0;
+    int hasletters = 0;
+    int ccode;
+    int err = -817;
+    int codex, prelen;    // input codex
+    int from, upto; // record range for territory
+    int i;
+    const char *dot = NULL;
+    char *s;
 
-    // copy input, cleaned of leading and trailing whitespace, into private, non-const buffer
     {
-        const char *r = dec->orginput;
-        while (*r > 0 && *r <= 32) { r++; } // skip lead
-        len = (int) strlen(r);
+        int len;
+        char *w;
+        // skip whitesace
+        s = (char *) dec->orginput;
+        while (*s <= 32 && *s > 0) { s++; }
+        // remove trail and overhead
+        len = strlen(s);
         if (len > MAX_MAPCODE_RESULT_LEN - 1) { len = MAX_MAPCODE_RESULT_LEN - 1; }
-        while (len > 0 && r[len - 1] >= 0 && r[len - 1] <= 32) { len--; } // remove trail
-        memcpy(s, r, len);
-        s[len] = 0;
-    }
-
-    // make input (excluding territory) uppercase, and replace digits 0 and 1 with O and I
-    {
-        char *t = strchr(s, ' ');
-        if (t == NULL) { t = s; }
-        for (; *t != 0; t++) {
-            if (*t >= 'a' && *t <= 'z') { *t += ('A' - 'a'); }
-            if (*t == 'O') { *t = '0'; }
-            if (*t == 'I') { *t = '1'; }
+        while (len > 0 && s[len - 1] <= 32 && s[len - 1] >= 0) { len--; }
+        // copy into dec->minput;
+        memcpy(w = dec->minput, s, len);
+        w[len] = 0;
+        // split off iso
+        s = strchr(w, ' ');
+        if (s) {
+            *s++ = 0;
+            while (*s > 0 && *s <= 32) { s++; }
+            ccode = ccode_of_iso3(w, dec->context);
         }
-    }
-
-    // check if extension, determine length without extension
-    minus = strchr(s + 4, '-');
-    if (minus) {
-        len = (int) (minus - s);
-    }
-
-    // make sure there is valid context
-    iso3 = convertTerritoryCodeToIsoName(dec->context, 0); // get context string (or empty string)
-    if (*iso3 == 0) { iso3 = "AAA"; }
-    parentcode = disambiguate_str(iso3, (int) strlen(iso3)); // pass for future context disambiguation
-
-    // insert context if none in input
-    if (len > 0 && len <= 9 && strchr(s, ' ') == 0) // just a non-international mapcode without a territory code?
-    {
-        int ilen = (int) strlen(iso3);
-        memmove(s + ilen + 1, s, strlen(s) + 1);
-        s[ilen] = ' ';
-        memcpy(s, iso3, ilen);
-        len += (1 + ilen);
-        iso3 = "";
-    }
-    // parse off extension
-    s[len] = 0;
-    if (minus) {
-        dec->extension = &s[len + 1];
-    } else {
+        else {
+            ccode = dec->context - 1;
+            s = w;
+        }
+        if (ccode == ccode_mex && len < 8) {
+            ccode = ccode_of_iso3("5MX", -1);
+        } // special case for mexico country vs state
+        dec->context = ccode;
+        dec->mapcode = s;
         dec->extension = "";
-    }
-
-    // now split off territory, make point to start of proper mapcode
-    if (len > 8 && (s[3] == ' ' || s[3] == '-') &&
-        (s[6] == ' ' || s[7] == ' ')) // assume ISO3 space|minus ISO23 space MAPCODE
-    {
-        parentcode = disambiguate_str(s, 3);
-        if (parentcode < 0) { return parentcode; }
-        s += 4;
-        len -= 4;
-    }
-    else if (len > 7 && (s[2] == ' ' || s[2] == '-') &&
-             (s[5] == ' ' || s[6] == ' ')) // assume ISO2 space|minus ISO23 space MAPCODE
-    {
-        parentcode = disambiguate_str(s, 2);
-        if (parentcode < 0) { return parentcode; }
-        s += 3;
-        len -= 3;
-    }
-
-    if (len > 4 && s[3] == ' ') // assume ISO whitespace MAPCODE, overriding iso3
-    {
-        iso3 = s; // overrides iso code!
-        s += 4;
-        len -= 4;
-    }
-    else if (len > 3 && s[2] == ' ') // assume ISO2 whitespace MAPCODE, overriding iso3
-    {
-        iso3 = s; // overrides iso code!
-        s += 3;
-        len -= 3;
-    }
-
-    while (*s > 0 && *s <= 32) {
-        s++;
-        len--;
-    } // skip further whitespace
-
-    // returns nonzero if error
-    ccode = ccode_of_iso3(iso3, parentcode);
-    if (ccode == ccode_mex && len < 8) { ccode = ccode_of_iso3("5MX", -1); } // special case for mexico country vs state
-
-    // master_decode(s,ccode)
-    {
-        const char *dot = NULL; // dot position in input
-        int prelen;   // input prefix length
-        int postlen;  // input postfix length
-        int codex;    // input codex
-        int from, upto; // record range for territory
-        int i;
-
-
-        // unpack digits (a-lead or aeu-encoded
-        int voweled = unpack_if_alldigits(s);
-        if (voweled < 0) {
-            return -7;
-        }
-
-        // debug support: U-lead pre-processing
-        if (*s == 'u' || *s == 'U') {
-            s++;
-            len--;
-            voweled = 1;
-        }
-
-        if (len > 10) { return -8; }
-
-        // find dot and check that all characters are valid
-        {
-            int nrd = 0; // nr of true digits
-            const char *r = s;
-            for (; *r != 0; r++) {
-                if (*r == '.') {
-                    if (dot) {
-                        return -5;
-                    } // more than one dot
-                    dot = r;
-                }
-                else if (decodeChar(*r) < 0) { // invalid char?
-                    return -4;
-                } else if (decodeChar(*r) < 10) { // digit?
-                    nrd++;
+        // make upper, handle i and o, split off high precision characters if any
+        for (w = s; *w != 0; w++) {
+            // uppercase
+            if (*w >= 'a' && *w <= 'z') {
+                *w += ('A' - 'a');
+            }
+            // analyse
+            if (*w >= 'A' && *w <= 'Z') {
+                if (*w == 'O') {
+                    *w = '0';
+                } else if (*w == 'I') {
+                    *w = '1';
+                } else if (*w == 'A' || *w == 'E' || *w == 'U') {
+                    hasvowels = 1;
+                } else {
+                    hasletters = 1;
                 }
             }
-            if (dot == NULL) {
-                return -2;
-            } else if (!voweled && nrd + 1 == len) { // everything but the dot is digit, so MUST be voweled!
-                return -998;
-            }//
-        }//
-
-//////////// AT THIS POINT, dot=FIRST DOT, input=CLEAN INPUT (no vowels) ilen=INPUT LENGTH
-
-        // analyse input
-        prelen = (int) (dot - s);
-        postlen = len - 1 - prelen;
-        codex = prelen * 10 + postlen;
-        if (prelen < 2 || prelen > 5 || postlen < 2 || postlen > 4) {
-            return -3;
+            else if (*w == '.') {
+                if (dot) {
+                    return -18;
+                } // already had a dot
+                prelen = (int) ((dot = w) - s);
+            }
+            else if (*w == '-') {
+                if (*dec->extension) {
+                    return -17;
+                } // already had a hyphen
+                dec->extension = w + 1;
+                *w = 0;
+            }
+            else if (decodeChar(*w) < 0) { // invalid char?
+                return -4;
+            }
+        }
+        if (!dot) {
+            return -27;
         }
 
-        if (len == 10) {
+        codex = prelen * 10 + strlen(dot) - 1;
+
+        if (hasvowels) {
+            if (unpack_if_alldigits(s) <= 0) {
+                return -77;
+            }
+        }
+        else if (!hasletters) {
+            return -78;
+        }
+
+        if (codex == 54) {
             // international mapcodes must be in international context
             ccode = ccode_earth;
         }
         else if (isSubdivision(ccode)) {
             // int mapcodes must be interpreted in the parent of a subdivision
-
             int parent = ParentTerritoryOf(ccode);
-            if (len == 9 || (len == 8 && (parent == ccode_ind || parent == ccode_mex))) {
+            if (codex == 44 || ((codex == 34 || codex == 43) && (parent == ccode_ind || parent == ccode_mex))) {                
                 ccode = parent;
-            } //
-        } //
+            }
+        }
 
-        // remember final territory context
-        dec->context = ccode;
-        dec->mapcode = s;
+    }
 
-        err = -817;
+    {
         from = firstrec(ccode);
         upto = lastrec(ccode);
 
         // try all ccode rectangles to decode s (pointing to first character of proper mapcode)
         for (i = from; i <= upto; i++) {
-            int codexi = coDex(i);
-            if (recType(i) == 0 && !isNameless(i) && (codexi == codex || (codex == 22 && codexi == 21))) {
-                err = decodeGrid(dec, i, 0);
-
-                // *** make sure decode fits somewhere ***
-                if (isRestricted(i)) {
-                    int fitssomewhere = 0;
-                    int j;
-                    for (j = i - 1; j >= from; j--) { // look in previous rects
-                        if (!isRestricted(j)) {
-                            if (fitsInsideWithRoom(dec->lon32, dec->lat32, j)) {
-                                fitssomewhere = 1;
-                                break;
-                            } 
-                        } 
-                    } 
-                    if (!fitssomewhere) {
-                        err = -1234;
+            int r = recType(i);            
+            if (r == 0) {
+                if (isNameless(i)) {
+                    int codexi = coDex(i);
+                    if ((codexi == 21 && codex == 22)
+                          || (codexi == 22 && codex == 32)
+                          || (codexi == 13 && codex == 23)) {
+                        err = decodeNameless(dec, i);
+                        break;
                     }
-                } // *** make sure decode fits somewhere ***
-                break;
+                }
+                else {
+                    int codexi = coDex(i);
+                    if (codexi == codex || (codex == 22 && codexi == 21)) {
+                        err = decodeGrid(dec, i, 0);
+
+                        // *** make sure decode fits somewhere ***
+                        if (isRestricted(i)) {
+                            int fitssomewhere = 0;
+                            int j;
+                            for (j = i - 1; j >= from; j--) { // look in previous rects
+                                if (!isRestricted(j)) {
+                                    if (fitsInsideWithRoom(dec->lon32, dec->lat32, j)) {
+                                        fitssomewhere = 1;
+                                        break;
+                                    } 
+                                } 
+                            } 
+                            if (!fitssomewhere) {
+                                err = -1234;
+                            }
+                        } // *** make sure decode fits somewhere ***
+                        break;
+                    }
+                }
             }
-            else if (recType(i) == 1 && prefixLength(i) + 1 == prelen && postfixLength(i) == postlen &&
-                     headerLetter(i) == *s) {
-                err = decodeGrid(dec, i, 1);
-                break;
+            else if (r == 1) { 
+                int codexi = coDex(i);
+                if (codex == codexi + 10 && headerLetter(i) == *s) {
+                    err = decodeGrid(dec, i, 1);
+                    break;
+                }
             }
-            else if (isNameless(i) &&
-                     ((codexi == 21 && codex == 22)
-                      || (codexi == 22 && codex == 32)
-                      || (codexi == 13 && codex == 23))) {
-                err = decodeNameless(dec, i);
-                break;
-            }
-            else if (recType(i) >= 2 && postlen == 3 && prefixLength(i) + postfixLength(i) == prelen + 2) {
-                err = decodeAutoHeader(dec, i);
-                break;
+            else { //r>1
+                int codexi = coDex(i);
+                if (codex == 23 && codexi == 22 || codex == 33 && codexi == 23) {
+                    err = decodeAutoHeader(dec, i);
+                    break;
+                }
             }
         } // for
-    }
 
+    }
 
     // convert from millionths
     if (err) {
@@ -1798,7 +1739,7 @@ int compareWithMapcodeFormat(const char *s, int fullcode) {
 // returns nr of results;
 static int encodeLatLonToMapcodes_internal(char **v, Mapcodes *mapcodes, double lat, double lon, int tc,
                                            int stop_with_one_result, int requiredEncoder,
-                                           int extraDigits) 
+                                           int extraDigits)
 {
     encodeRec enc;
     enc.mapcodes = mapcodes;

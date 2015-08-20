@@ -64,8 +64,13 @@ typedef struct {
     int context;            // input territory context (or negative)
     const char *iso;        // input territory alphacode (context)
     // output
-    point result;         // result
-    point32 coord32;          // result in integer arithmetic (millionts of degrees)
+    point result;           // result
+    point32 coord32;        // result in integer arithmetic (millionts of degrees)
+#ifdef FORCE_RECODE
+    #define MICROMETER (0.000001) // millionth millionth degree ~ 0,1 micron ~ 1/810000th
+    point range_min;        
+    point range_max;
+#endif
 } decodeRec;
 
 
@@ -301,8 +306,14 @@ static void encodeExtension(char *result, int extrax4, int extray, int dividerx4
                             const encodeRec *enc) // append extra characters to result for more precision
 {
     char *s = result + strlen(result);
-    double encx = (extrax4 + 4 * enc->fraclon) / (dividerx4);
-    double ency = (extray + enc->fraclat * ydirection) / (dividery);
+    int factorx = MAX_PRECISION_FACTOR * dividerx4; // 30^4
+    int factory = MAX_PRECISION_FACTOR * dividery; // 30^4
+    int valx = (int) floor(MAX_PRECISION_FACTOR * (extrax4 + 4 * enc->fraclon));
+    int valy = (int) floor(MAX_PRECISION_FACTOR * (extray + enc->fraclat * ydirection));
+
+    // protect against floating point errors
+    if (valx<0) { valx=0; } else if (valx>=factorx) { valx=factorx-1; }
+    if (valy<0) { valy=0; } else if (valy>=factory) { valy=factory-1; }
 
     if (extraDigits < 0) { extraDigits = 0; } else if (extraDigits > MAX_PRECISION_DIGITS) {
         extraDigits = MAX_PRECISION_DIGITS;
@@ -315,20 +326,14 @@ static void encodeExtension(char *result, int extrax4, int extray, int dividerx4
     while (extraDigits-- > 0) {
         int gx, gy, column1, column2, row1, row2;
 
-        encx *= 30;
-        gx = (int) encx;
-        if (gx < 0) {
-            gx = 0;
-        } else if (gx > 29) {
-            gx = 29;
-        }
-        ency *= 30;
-        gy = (int) ency;
-        if (gy < 0) {
-            gy = 0; 
-        } else if (gy > 29) {
-            gy = 29; 
-        }
+        factorx /= 30;
+        gx = (valx / factorx);
+        valx -= factorx * gx;
+
+        factory /= 30;
+        gy = (valy / factory);
+        valy -= factory * gy;
+
         column1 = (gx / 6);
         column2 = (gx % 6);
         row1 = (gy / 5);
@@ -339,22 +344,21 @@ static void encodeExtension(char *result, int extrax4, int extray, int dividerx4
             *s++ = encode_chars[row2 * 6 + column2];
         }
         *s = 0;
-        encx -= gx;
-        ency -= gy;
     }
 }
 
 #define decodeChar(c) decode_chars[(unsigned char)c] // force c to be in range of the index, between 0 and 255
 
 // this routine takes the integer-arithmeteic decoding results (in millionths of degrees), adds any floating-point precision digits, and returns the result (still in millionths)
-static int decodeExtension(decodeRec *dec, int dividerx4, int dividery, int ydirection) {
+static int decodeExtension(decodeRec *dec, int dividerx4, int dividery0, int lon_offset4) {
     const char *extrapostfix = dec->extension;
-    double dividerx = dividerx4 / 4.0, processor = 1.0;
-    dec->result.lon = 0;
-    dec->result.lat = 0;
+    double dividerx = dividerx4 / 4.0, dividery = dividery0;
+    int lon32 = 0;
+    int lat32 = 0;
+    int processor = 1;
+    int odd = 0;
     while (*extrapostfix) {
         int column1, row1, column2, row2;
-        double halfcolumn = 0;
         int c1 = *extrapostfix++;
         c1 = decodeChar(c1);
         if (c1 < 0 || c1 == 30) { return -1; } // illegal extension character
@@ -367,25 +371,39 @@ static int decodeExtension(decodeRec *dec, int dividerx4, int dividery, int ydir
             column2 = (c2 % 6);
         }
         else {
-            row2 = 2;
-            halfcolumn = 0.5;
-            column2 = 3;
+            odd = 1;
+            row2 = 0;
+            column2 = 0;
         }
 
-        processor *= 30;
-        dec->result.lon += ((column1 * 6 + column2)) / processor;
-        dec->result.lat += ((row1 * 5 + row2 - halfcolumn)) / processor;
+        processor *= 30;        
+        lon32 = lon32 * 30 + column1 * 6 + column2;
+        lat32 = lat32 * 30 + row1 * 5 + row2;
     }
 
-    dec->result.lon += (0.5 / processor);
-    dec->result.lat += (0.5 / processor);
+    dec->result.lon = dec->coord32.lon + (lon32 * dividerx / processor) + lon_offset4 / 4.0;
+    dec->result.lat = dec->coord32.lat + (lat32 * dividery / processor);
 
-    dec->result.lon *= dividerx;
-    dec->result.lat *= (dividery * ydirection);
+#ifdef FORCE_RECODE
+    dec->range_min.lon = dec->result.lon;
+    dec->range_min.lat = dec->result.lat;
+    if (odd) {
+        dec->range_max.lon = dec->range_min.lon + (dividerx / (processor / 6));
+        dec->range_max.lat = dec->range_min.lat + (dividery / (processor / 5));
+    } else {
+        dec->range_max.lon = dec->range_min.lon + (dividerx / processor);
+        dec->range_max.lat = dec->range_min.lat + (dividery / processor);
+    } //
+#endif // FORCE_RECODE
 
-    dec->result.lon += dec->coord32.lon;
-    dec->result.lat += dec->coord32.lat;
-
+    if (odd) {
+        dec->result.lon += dividerx / (2 * processor / 6);
+        dec->result.lat += dividery / (2 * processor / 5);
+    } else {
+        dec->result.lon += (dividerx / (2 * processor));
+        dec->result.lat += (dividery / (2 * processor));
+    } // not odd
+     
     // also convert back to int
     dec->coord32.lon = (int) floor(dec->result.lon);
     dec->coord32.lat = (int) floor(dec->result.lat);
@@ -597,12 +615,29 @@ static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter) {
 
                         dec->coord32.lon = relx + (difx * dividerx);
                         dec->coord32.lat = rely + (dify * dividery);
+                        if (!fitsInside(&dec->coord32,m)) { 
+                            return -912;
+                        } 
 
                         {
-                            int err = decodeExtension(dec, dividerx << 2, dividery, 1); // grid
+                            int err = decodeExtension(dec, dividerx << 2, dividery, 0); // grid
                             if (err) {
                                 return err;
                             }
+#ifdef FORCE_RECODE
+                            if (dec->result.lon >= relx + xgridsize) {
+                                dec->coord32.lon = (int) floor(dec->result.lon = relx + xgridsize - MICROMETER);
+                            } // keep in inner cell
+                            if (dec->result.lat >= rely + ygridsize) {
+                                dec->coord32.lat = (int) floor(dec->result.lat = rely + ygridsize - MICROMETER);
+                            } // keep in inner cell
+                            if (dec->result.lon >= b->maxx) {
+                                dec->coord32.lon = (int) floor(dec->result.lon = b->maxx - MICROMETER);
+                            } // keep in territory
+                            if (dec->result.lat >= b->maxy) {
+                                dec->coord32.lat = (int) floor(dec->result.lat = b->maxy - MICROMETER);
+                            } // keep in territory
+#endif // FORCE_RECODE
 
                             return 0;
                         }
@@ -875,7 +910,7 @@ static int decodeNameless(decodeRec *dec, int m) {
 
 
             if (dx >= xSIDE) {
-                return -123; //EVER?
+                return -123;
             }
 
             {
@@ -887,8 +922,17 @@ static int decodeNameless(decodeRec *dec, int m) {
                 dec->coord32.lon = b->minx + ((dx * dividerx4) / 4);
                 dec->coord32.lat = b->maxy - (dy * dividery);
 
-                err = decodeExtension(dec, dividerx4, dividery, -1); // nameless
-                dec->result.lon += ((dx * dividerx4) % 4) / 4.0;
+                err = decodeExtension(dec, dividerx4, -dividery, ((dx * dividerx4) % 4)); // nameless
+
+#ifdef FORCE_RECODE
+                // keep within outer rect
+                if (dec->result.lat < b->miny) {
+                    dec->result.lat = (dec->coord32.lat = b->miny);
+                } // keep in territory
+                if (dec->result.lon >= b->maxx) {
+                    dec->coord32.lon = (int) floor(dec->result.lon = b->maxx - MICROMETER);
+                } // keep in territory
+#endif
 
                 return err;
             }
@@ -1157,11 +1201,20 @@ static int decodeAutoHeader(decodeRec *dec, int m) {
                         dec->coord32.lat > b->maxy) // *** CAREFUL! do this test BEFORE adding remainder...
                     {
                         return -122; // invalid code
-                    }
+                    } 
                 }
             }
 
-            err = decodeExtension(dec, dividerx << 2, dividery, -1); // autoheader decode
+            err = decodeExtension(dec, dividerx << 2, -dividery, 0); // autoheader decode
+
+#ifdef FORCE_RECODE
+            if (dec->result.lat < b->miny) {
+                dec->result.lat = (dec->coord32.lat = b->miny);
+            } // keep in territory
+            if (dec->result.lon >= b->maxx) {
+                dec->coord32.lon = (int) floor(dec->result.lon = b->maxx - MICROMETER);
+            } // keep in territory
+#endif
 
             return err;
         }
@@ -1447,21 +1500,63 @@ static int decoderEngine(decodeRec *dec) {
                         err = decodeGrid(dec, i, 0);
 
                         // *** make sure decode fits somewhere ***
-                        if (isRestricted(i)) {
+                        if (err==0 && isRestricted(i)) {
                             int fitssomewhere = 0;
                             int j;
                             for (j = i - 1; j >= from; j--) { // look in previous rects
                                 if (!isRestricted(j)) {
-                                    if (fitsInsideWithRoom(&dec->coord32, j)) {
+                                    if (fitsInside(&dec->coord32, j)) {
                                         fitssomewhere = 1;
                                         break;
                                     }
                                 }
                             }
+#ifdef FORCE_RECODE
+                            if (err==0 && !fitssomewhere) {
+                                for (j = from; j < i; j++) { // try all smaller rectangles j
+                                  if (!isRestricted(j)) {
+                                    const mminforec *b = boundaries(j);
+                                    int bminx = b->minx;
+                                    int bmaxx = b->maxx;                                    
+                                    point p = dec->result;
+
+                                    if (bmaxx < 0 && p.lon > 0) {
+                                        bminx += 360000000;
+                                        bmaxx += 360000000;
+                                    } //
+
+                                    if (p.lat < b->miny && b->miny <= dec->range_max.lat) { 
+                                        p.lat = b->miny; 
+                                    } // keep in range
+                                    if (p.lat >= b->maxy && b->maxy >  dec->range_min.lat) { 
+                                        p.lat = b->maxy - MICROMETER; 
+                                    } // keep in range
+                                    if (p.lon < bminx && bminx <= dec->range_max.lon) { 
+                                        p.lon = bminx; 
+                                    } // keep in range
+                                    if (p.lon >= bmaxx && bmaxx >  dec->range_min.lon) { 
+                                        p.lon = bmaxx - MICROMETER; 
+                                    } // keep in range
+
+                                    if ( p.lat > dec->range_min.lat && p.lat < dec->range_max.lat &&
+                                         p.lon > dec->range_min.lon && p.lon < dec->range_max.lon &&
+                                             b->miny <= p.lat && p.lat < b->maxy && 
+                                             bminx <= p.lon && p.lon < bmaxx ) {
+
+                                        dec->result = p;
+                                        dec->coord32.lat = (int) floor(p.lat);
+                                        dec->coord32.lon = (int) floor(p.lon);
+                                        fitssomewhere = 1;
+                                        break;                                        
+                                    } // candidate
+                                  } // isRestricted
+                                } // for j
+                            }
+#endif //FORCE_RECODE
                             if (!fitssomewhere) {
                                 err = -1234;
                             }
-                        } // *** make sure decode fits somewhere ***
+                        }  // *** make sure decode fits somewhere ***
                         break;
                     }
                 }
@@ -1507,8 +1602,36 @@ static int decoderEngine(decodeRec *dec) {
     if (err == 0) {
         if (ccode != ccode_earth) {
             if (!fitsInsideWithRoom(&dec->coord32, lastrec(ccode))) {
-                err = -2222; // EVER?
+                err = -2222;
             }
+#ifdef FORCE_RECODE
+            else {
+                const mminforec *b = boundaries(lastrec(ccode));
+                int bminx = b->minx;
+                int bmaxx = b->maxx;
+                if (dec->coord32.lon < 0 && bminx > 0) {
+                    bminx -= 360000000;
+                    bmaxx -= 360000000;
+                }
+
+                if (dec->result.lat < b->miny / 1000000.0) {
+                    dec->result.lat =  b->miny / 1000000.0;
+                } // keep in encompassing territory
+                if (dec->result.lat >= b->maxy / 1000000.0) {
+                    dec->result.lat =  (b->maxy - MICROMETER) / 1000000.0;
+                } // keep in encompassing territory
+
+                if (dec->result.lon < bminx / 1000000.0) {
+                    dec->result.lon = bminx / 1000000.0;
+                } // keep in encompassing territory
+                if (dec->result.lon >= bmaxx / 1000000.0) {
+                    dec->result.lon =  (bmaxx - MICROMETER) / 1000000.0;
+                } // keep in encompassing territory
+
+                dec->coord32.lat = (int) floor(dec->result.lat * 1000000);
+                dec->coord32.lon = (int) floor(dec->result.lon * 1000000);
+            } // FORCE_RECODE
+#endif
         }
     }
 
@@ -1764,37 +1887,36 @@ static int encodeLatLonToMapcodes_internal(char **v, Mapcodes *mapcodes, double 
     enc.mapcodes->count = 0;
 
     if (lat < -90) { lat = -90; } else if (lat > 90) { lat = 90; }
-    if (lon < -180 || lon > 180) {
-        lon -= (360.0 * floor(lon / 360));
-        if (lon >= 180) { lon -= 360; }
-    }
+    lat += 90; // lat now [0..180]
+    lon -= (360.0 * floor(lon / 360)); // lon now in [0..360>
 
-    lat += 90;
-    lon += 180;
     lat *= 1000000;
     lon *= 1000000;
     enc.coord32.lat = (int) lat;
     enc.coord32.lon = (int) lon;
     enc.fraclat = lat - enc.coord32.lat;
     enc.fraclon = lon - enc.coord32.lon;
-    // for 8-digit precision, cells are divided into 810,000 by 810,000 minicells.
-    enc.fraclat *= 810000;
-    if (enc.fraclat < 1) { enc.fraclat = 0; } else {
-        if (enc.fraclat > 809999) {
-            enc.fraclat = 0;
-            enc.coord32.lat++;
-        } else { enc.fraclat /= 810000; }
-    }
-    enc.fraclon *= 810000;
-    if (enc.fraclon < 1) { enc.fraclon = 0; } else {
-        if (enc.fraclon > 809999) {
-            enc.fraclon = 0;
-            enc.coord32.lon++;
-        } else { enc.fraclon /= 810000; }
+    {
+        double f;
+        // for 8-digit precision, cells are divided into 810,000 by 810,000 minicells.
+        f = enc.fraclat * MAX_PRECISION_FACTOR;
+        if (f < 1) { enc.fraclat = 0; } else {
+            if (f >= (MAX_PRECISION_FACTOR - 0.5)) {
+                enc.fraclat = 0;
+                enc.coord32.lat++;
+            }
+        }
+        f = enc.fraclon * MAX_PRECISION_FACTOR;
+        if (f < 1) { enc.fraclon = 0; } else {
+            if (f >= (MAX_PRECISION_FACTOR - 0.5)) {
+                enc.fraclon = 0;
+                enc.coord32.lon++;
+            }
+        }
     }
     enc.coord32.lat -= 90000000;
-    enc.coord32.lon %= 360000000;
-    enc.coord32.lon -= 180000000;
+    if (enc.coord32.lon >= 180000000)
+        enc.coord32.lon -= 360000000;
 
     if (tc <= 0) // ALL results?
     {

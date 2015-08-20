@@ -18,16 +18,18 @@
 extern "C" {
 #endif
 
-#define mapcode_cversion "2.0.3"
+#define mapcode_cversion "2.1.0"
 
 #define UWORD                               unsigned short int  // 2-byte unsigned integer.
 
 #define SUPPORT_FOREIGN_ALPHABETS           // Define to support additional alphabets.
 #define SUPPORT_HIGH_PRECISION              // Define to enable high-precision extension logic.
+#define FORCE_RECODE                        // Define to enforce that encode(decode(M)) generates M
 
 #define MAX_NR_OF_MAPCODE_RESULTS           21          // Max. number of results ever returned by encoder (e.g. for 26.904899, 95.138515).
 #define MAX_PROPER_MAPCODE_LEN              10          // Max. number of characters in a proper mapcode (including the dot).
-#define MAX_PRECISION_DIGITS                8           // Max. number of extension characters (excluding the hyphen).
+#define MAX_PRECISION_DIGITS                8           // Max. number of extension characters (excluding the hyphen). Must be even.
+#define MAX_PRECISION_FACTOR                810000      // 30 to the power (MAX_PRECISION_DIGITS/2)
 #define MAX_ISOCODE_LEN                     7           // Max. number of characters of a valid territory code; although nothing longer than SIX characters is ever generated (RU-KAM), users can input SEVEN characters (RUS-KAM).
 #define MAX_CLEAN_MAPCODE_LEN               (MAX_PROPER_MAPCODE_LEN + 1 + MAX_PRECISION_DIGITS)  // Max. number of characters in a clean mapcode (excluding zero-terminator).
 #define MAX_MAPCODE_RESULT_LEN              (MAX_ISOCODE_LEN + 1 + MAX_CLEAN_MAPCODE_LEN + 1)    // Max. number of characters to store a single result (including zero-terminator).

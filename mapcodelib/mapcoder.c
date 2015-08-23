@@ -2134,35 +2134,49 @@ int decodeMapcodeToLatLon(double *lat, double *lon, const char *input,
 UWORD *convertToAlphabet(UWORD *unibuf, int maxlength, const char *mapcode, int alphabet) // 0=roman, 2=cyrillic
 {
     UWORD *startbuf = unibuf;
+    UWORD *lastspot = &unibuf[maxlength - 1];
+    if (maxlength>0) {
+        char u[MAX_MAPCODE_RESULT_LEN];
 
-    while (*mapcode > 0 && *mapcode < 32) { mapcode++; }
-    { // skip lead
-      char *e = strrchr(mapcode, ' ');
-      if (e) { 
-        while (mapcode <= e) {
-          *unibuf++ = *mapcode++; 
-        }
-      }
-    } 
+        // skip leading spaces
+        while (*mapcode > 0 && *mapcode <= 32) { mapcode++; }
 
-    if (asc2lan[alphabet][4] == 0x003f) { // alphabet has no letter E
-        if (strchr(mapcode, 'E') || strchr(mapcode, 'U') || strchr(mapcode, 'e') ||
-            strchr(mapcode, 'u')) // v1.50 get rid of E and U
-        {
-            // safely copy mapcode into temporary buffer u
-            char u[MAX_MAPCODE_RESULT_LEN];
-            int len = (int) strlen(mapcode);
-            if (len >= MAX_MAPCODE_RESULT_LEN) {
-                len = MAX_MAPCODE_RESULT_LEN - 1;
+        // straight-copy everything up to and including first space
+        { 
+          char *e = strchr(mapcode, ' ');
+          if (e) { 
+            while (mapcode <= e) {
+              if (unibuf == lastspot) { // buffer fully filled?
+                  // zero-terminate and return
+                  *unibuf = 0;
+                  return startbuf;
+              }
+              *unibuf++ = *mapcode++;
             }
-            memcpy(u, mapcode, len);
-            u[len] = 0;
-            unpack_if_alldigits(u);
-            repack_if_alldigits(u, 1);
-            mapcode = u;
+          }
+        } 
+
+        // re-pack E/U-voweled mapcodes when necessary:
+        if (asc2lan[alphabet][4] == 0x003f) { // alphabet has no letter E
+            if (strchr(mapcode, 'E') || strchr(mapcode, 'U') || 
+                strchr(mapcode, 'e') || strchr(mapcode, 'u'))
+            {
+                // copy trimmed mapcode into temporary buffer u
+                int len = (int) strlen(mapcode);
+                if (len > MAX_MAPCODE_RESULT_LEN - 1) {
+                    len = MAX_MAPCODE_RESULT_LEN - 1;
+                }
+                while (len>0 && mapcode[len-1]>0 && mapcode[len-1]<=32) { len--; }
+                memcpy(u, mapcode, len);
+                u[len] = 0;
+                // re-pack into A-voweled mapcode
+                unpack_if_alldigits(u);
+                repack_if_alldigits(u, 1);
+                mapcode = u;
+            }
         }
+        encode_utf16(unibuf, 1 + (int)(lastspot - unibuf), mapcode, alphabet);
     }
-    encode_utf16(unibuf, maxlength, mapcode, alphabet);
     return startbuf;
 }
 

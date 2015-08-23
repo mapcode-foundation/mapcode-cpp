@@ -27,6 +27,9 @@ Documentation, including example snippets of C source code, can be found in
 
     mapcode_library.doc     (Microsoft Word format).
 
+A unit test can be found in the unittest\ subdirectory.
+Compile and run unittest\unittest/c to see if the library performs as expected.
+
 Also see www.mapcode.com for background and reference materials.
 
 Note: this version may be restricted to a particular area of the Earth!
@@ -55,6 +58,11 @@ decode Mapcodes.
 
 
 # Release Notes
+
+* 2.1.1
+
+    Added unittest\*.* which can be compiled and executed to check
+    if the mapcode library performs as expected.
 
 * 2.1.0
 

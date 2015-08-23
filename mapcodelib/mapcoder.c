@@ -185,6 +185,7 @@ static int disambiguate_str(const char *s, int len) // returns disambiguation 1-
 }
 
 
+#ifndef FAST_ALPHA
 // returns coode, or negative if invalid
 static int ccode_of_iso3(const char *in_iso, int parentcode) {
     const char *aliases = ALIASES;
@@ -196,12 +197,14 @@ static int ccode_of_iso3(const char *in_iso, int parentcode) {
         if (in_iso[2]) {
             if (in_iso[2] == '-') {
                 parentcode = disambiguate_str(in_iso, 2);
-                hyphenated = (parentcode > 0);
+                if (parentcode < 0) { return parentcode; }
+                hyphenated = 1;
                 in_iso += 3;
             }
             else if (in_iso[3] == '-') {
                 parentcode = disambiguate_str(in_iso, 3);
-                hyphenated = (parentcode > 0);
+                if (parentcode < 0) { return parentcode; }
+                hyphenated = 1;
                 in_iso += 4;
             }
         }
@@ -211,11 +214,12 @@ static int ccode_of_iso3(const char *in_iso, int parentcode) {
     iso[0] = (char) toupper(in_iso[0]);
     if (iso[0]) { iso[1] = (char) toupper(in_iso[1]); }
     if (iso[1]) { iso[2] = (char) toupper(in_iso[2]); }
+    if (iso[2] && in_iso[3]!=0 && in_iso[3]!='-') { return -41; }
     iso[3] = 0;
 
     if (iso[2] == 0 || iso[2] == ' ') // 2-letter iso code?
     {
-        static char disambiguate_iso3[4] = {'1', '?', '?', 0}; // cache for disambiguation
+        static char disambiguate_iso3[4] = {'0', '?', '?', 0}; // cache for disambiguation
         if (parentcode > 0) {
             disambiguate_iso3[0] = (char) ('0' + parentcode);
         }
@@ -227,7 +231,7 @@ static int ccode_of_iso3(const char *in_iso, int parentcode) {
             s = strstr(aliases, disambiguate_iso3); // search in aliases
             if (s == NULL || s[3] != '=') {
                 s = NULL;
-                if (disambiguate_iso3[0] <= '9') {
+                if (disambiguate_iso3[0] <= '9' && !hyphenated) {
                     disambiguate_iso3[0] = '0';
                     s = strstr(aliases, disambiguate_iso3); // search in aliases
                 }
@@ -237,7 +241,7 @@ static int ccode_of_iso3(const char *in_iso, int parentcode) {
                 s = strstr(entity_iso, iso); // search disambiguated 2-letter iso
             }
         }
-        if (s == NULL) {
+        if (s == NULL && !hyphenated) {
             // find the FIRST disambiguation option, if any
             for (s = entity_iso - 1; ;) {
                 s = strstr(s + 1, disambiguate_iso3 + 1);
@@ -293,7 +297,7 @@ static int ccode_of_iso3(const char *in_iso, int parentcode) {
     // return result
     return (int) ((s - entity_iso) / 4);
 }
-
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -357,6 +361,9 @@ static int decodeExtension(decodeRec *dec, int dividerx4, int dividery0, int lon
     int lat32 = 0;
     int processor = 1;
     int odd = 0;
+    if (strlen(extrapostfix)>MAX_PRECISION_DIGITS) {
+        return -79; // too many digits
+    }
     while (*extrapostfix) {
         int column1, row1, column2, row2;
         int c1 = *extrapostfix++;
@@ -978,8 +985,8 @@ static void repack_if_alldigits(char *input, int aonly) {
     }
 }
 
-static int unpack_if_alldigits(
-        char *input) // returns 1 if unpacked, 0 if left unchanged, negative if unchanged and an error was detected
+// returns 1 if unpacked, 0 if left unchanged, negative if unchanged and an error was detected
+static int unpack_if_alldigits(char *input) 
 { // rewrite all-digit codes
     char *s = input;
     char *dotpos = NULL;
@@ -1029,6 +1036,8 @@ static int unpack_if_alldigits(
             if (v < 100) {
                 *s = encode_chars[(unsigned int) v / 10];
                 *e = encode_chars[(unsigned int) v % 10];
+            } else {
+                return -31; // overflow (ending in UE or UU)
             }
             return 1;
         }
@@ -1397,14 +1406,14 @@ static int decoderEngine(decodeRec *dec) {
         if (s) {
             *s++ = 0;
             while (*s > 0 && *s <= 32) { s++; }
-            ccode = ccode_of_iso3(w, dec->context);
+            ccode = convertTerritoryIsoNameToCode(w, dec->context-1) - 1;
         }
         else {
             ccode = dec->context - 1;
             s = w;
         }
         if (ccode == ccode_mex && len < 8) {
-            ccode = ccode_of_iso3("5MX", -1);
+            ccode = convertTerritoryIsoNameToCode("5MX", -1) - 1;
         } // special case for mexico country vs state
         if (*s=='u' || *s=='U') {
             strcpy(s,s+1);
@@ -1412,7 +1421,7 @@ static int decoderEngine(decodeRec *dec) {
         }
         dec->context = ccode;
         dec->mapcode = s;
-        dec->extension = "";
+        dec->extension = NULL;
         // make upper, handle i and o, split off high precision characters if any
         for (w = s; *w != 0; w++) {
             // uppercase
@@ -1427,7 +1436,7 @@ static int decoderEngine(decodeRec *dec) {
                     *w = '1';
                 } else if (*w == 'A' || *w == 'E' || *w == 'U') {
                     hasvowels = 1;
-                } else {
+                } else if (dec->extension == NULL) {
                     hasletters = 1;
                 }
             }
@@ -1438,9 +1447,9 @@ static int decoderEngine(decodeRec *dec) {
                 prelen = (int) ((dot = w) - s);
             }
             else if (*w == '-') {
-                if (*dec->extension) {
-                    return -17;
-                } // already had a hyphen
+                if (dec->extension != NULL) {
+                    return -17; // already had a hyphen
+                } 
                 dec->extension = w + 1;
                 *w = 0;
             }
@@ -1450,6 +1459,9 @@ static int decoderEngine(decodeRec *dec) {
         }
         if (!dot) {
             return -27;
+        }
+        if (dec->extension == NULL) { 
+            dec->extension = "";
         }
 
         codex = prelen * 10 + strlen(dot) - 1;
@@ -1642,7 +1654,7 @@ static int decoderEngine(decodeRec *dec) {
 #ifdef SUPPORT_FOREIGN_ALPHABETS
 
 // WARNING - these alphabets have NOT yet been released as standard! use at your own risk! check www.mapcode.com for details.
-static UWORD asc2lan[MAX_LANGUAGES][36] = // A-Z equivalents for ascii characters A to Z, 0-9
+static UWORD asc2lan[MAPCODE_ALPHABETS_TOTAL][36] = // A-Z equivalents for ascii characters A to Z, 0-9
         {
                 {0x0041, 0x0042, 0x0043, 0x0044, 0x0045, 0x0046, 0x0047, 0x0048, 0x0049, 0x004a, 0x004b, 0x004c, 0x004d, 0x004e, 0x004f, 0x0050, 0x0051, 0x0052, 0x0053, 0x0054, 0x0055, 0x0056, 0x0057, 0x0058, 0x0059, 0x005a, 0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0x0037, 0x0038, 0x0039}, // roman
                 {0x0391, 0x0392, 0x039e, 0x0394, 0x003f, 0x0395, 0x0393, 0x0397, 0x0399, 0x03a0, 0x039a, 0x039b, 0x039c, 0x039d, 0x039f, 0x03a1, 0x0398, 0x03a8, 0x03a3, 0x03a4, 0x003f, 0x03a6, 0x03a9, 0x03a7, 0x03a5, 0x0396, 0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0x0037, 0x0038, 0x0039}, // greek
@@ -2118,38 +2130,53 @@ int decodeMapcodeToLatLon(double *lat, double *lon, const char *input,
 
 #ifdef SUPPORT_FOREIGN_ALPHABETS
 
+// convert as much as will fit of mapcode into unibuf
 UWORD *convertToAlphabet(UWORD *unibuf, int maxlength, const char *mapcode, int alphabet) // 0=roman, 2=cyrillic
 {
     UWORD *startbuf = unibuf;
+    UWORD *lastspot = &unibuf[maxlength - 1];
+    if (maxlength>0) {
+        char u[MAX_MAPCODE_RESULT_LEN];
 
-    while (*mapcode > 0 && *mapcode < 32) { mapcode++; }
-    { // skip lead
-      char *e = strrchr(mapcode, ' ');
-      if (e) { 
-        while (mapcode <= e) {
-          *unibuf++ = *mapcode++; 
-        }
-      }
-    } 
+        // skip leading spaces
+        while (*mapcode > 0 && *mapcode <= 32) { mapcode++; }
 
-    if (asc2lan[alphabet][4] == 0x003f) { // alphabet has no letter E
-        if (strchr(mapcode, 'E') || strchr(mapcode, 'U') || strchr(mapcode, 'e') ||
-            strchr(mapcode, 'u')) // v1.50 get rid of E and U
-        {
-            // safely copy mapcode into temporary buffer u
-            char u[MAX_MAPCODE_RESULT_LEN];
-            int len = (int) strlen(mapcode);
-            if (len >= MAX_MAPCODE_RESULT_LEN) {
-                len = MAX_MAPCODE_RESULT_LEN - 1;
+        // straight-copy everything up to and including first space
+        { 
+          char *e = strchr(mapcode, ' ');
+          if (e) { 
+            while (mapcode <= e) {
+              if (unibuf == lastspot) { // buffer fully filled?
+                  // zero-terminate and return
+                  *unibuf = 0;
+                  return startbuf;
+              }
+              *unibuf++ = *mapcode++;
             }
-            memcpy(u, mapcode, len);
-            u[len] = 0;
-            unpack_if_alldigits(u);
-            repack_if_alldigits(u, 1);
-            mapcode = u;
+          }
+        } 
+
+        // re-pack E/U-voweled mapcodes when necessary:
+        if (asc2lan[alphabet][4] == 0x003f) { // alphabet has no letter E
+            if (strchr(mapcode, 'E') || strchr(mapcode, 'U') || 
+                strchr(mapcode, 'e') || strchr(mapcode, 'u'))
+            {
+                // copy trimmed mapcode into temporary buffer u
+                int len = (int) strlen(mapcode);
+                if (len > MAX_MAPCODE_RESULT_LEN - 1) {
+                    len = MAX_MAPCODE_RESULT_LEN - 1;
+                }
+                while (len>0 && mapcode[len-1]>0 && mapcode[len-1]<=32) { len--; }
+                memcpy(u, mapcode, len);
+                u[len] = 0;
+                // re-pack into A-voweled mapcode
+                unpack_if_alldigits(u);
+                repack_if_alldigits(u, 1);
+                mapcode = u;
+            }
         }
+        encode_utf16(unibuf, 1 + (int)(lastspot - unibuf), mapcode, alphabet);
     }
-    encode_utf16(unibuf, maxlength, mapcode, alphabet);
     return startbuf;
 }
 

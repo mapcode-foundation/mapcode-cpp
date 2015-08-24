@@ -309,6 +309,7 @@ static void encodeExtension(char *result, int extrax4, int extray, int dividerx4
                             int ydirection,
                             const encodeRec *enc) // append extra characters to result for more precision
 {
+  if (extraDigits > 0) { // anything to do?
     char *s = result + strlen(result);
     int factorx = MAX_PRECISION_FACTOR * dividerx4; // 30^4
     int factory = MAX_PRECISION_FACTOR * dividery; // 30^4
@@ -319,7 +320,7 @@ static void encodeExtension(char *result, int extrax4, int extray, int dividerx4
     if (valx<0) { valx=0; } else if (valx>=factorx) { valx=factorx-1; }
     if (valy<0) { valy=0; } else if (valy>=factory) { valy=factory-1; }
 
-    if (extraDigits < 0) { extraDigits = 0; } else if (extraDigits > MAX_PRECISION_DIGITS) {
+    if (extraDigits > MAX_PRECISION_DIGITS) {
         extraDigits = MAX_PRECISION_DIGITS;
     }
 
@@ -347,8 +348,9 @@ static void encodeExtension(char *result, int extrax4, int extray, int dividerx4
         if (extraDigits-- > 0) {
             *s++ = encode_chars[row2 * 6 + column2];
         }
-        *s = 0;
     }
+    *s = 0; // terminate the result
+  }
 }
 
 #define decodeChar(c) decode_chars[(unsigned char)c] // force c to be in range of the index, between 0 and 255

@@ -50,7 +50,7 @@ typedef struct { // point
 typedef struct {
     // input
     point32 coord32;
-    double fraclat, fraclon;
+    double fraclat, fraclon; // fractions, pre-multiplied into integers
     // output
     Mapcodes *mapcodes;
 } encodeRec;
@@ -309,17 +309,18 @@ static void encodeExtension(char *result, int extrax4, int extray, int dividerx4
                             int ydirection,
                             const encodeRec *enc) // append extra characters to result for more precision
 {
+  if (extraDigits > 0) { // anything to do?
     char *s = result + strlen(result);
-    int factorx = MAX_PRECISION_FACTOR * dividerx4; // 30^4
-    int factory = MAX_PRECISION_FACTOR * dividery; // 30^4
-    int valx = (int) floor(MAX_PRECISION_FACTOR * (extrax4 + 4 * enc->fraclon));
-    int valy = (int) floor(MAX_PRECISION_FACTOR * (extray + enc->fraclat * ydirection));
+    double factorx = MAX_PRECISION_FACTOR * dividerx4; // perfect integer!
+    double factory = MAX_PRECISION_FACTOR * dividery; // perfect integer!
+    double valx = (MAX_PRECISION_FACTOR * extrax4) + enc->fraclon; // perfect integer!
+    double valy = (MAX_PRECISION_FACTOR * extray ) + (ydirection * enc->fraclat); // perfect integer!
 
     // protect against floating point errors
     if (valx<0) { valx=0; } else if (valx>=factorx) { valx=factorx-1; }
     if (valy<0) { valy=0; } else if (valy>=factory) { valy=factory-1; }
 
-    if (extraDigits < 0) { extraDigits = 0; } else if (extraDigits > MAX_PRECISION_DIGITS) {
+    if (extraDigits > MAX_PRECISION_DIGITS) {
         extraDigits = MAX_PRECISION_DIGITS;
     }
 
@@ -331,11 +332,11 @@ static void encodeExtension(char *result, int extrax4, int extray, int dividerx4
         int gx, gy, column1, column2, row1, row2;
 
         factorx /= 30;
-        gx = (valx / factorx);
+        gx = (int)(valx / factorx);
         valx -= factorx * gx;
 
         factory /= 30;
-        gy = (valy / factory);
+        gy = (int)(valy / factory);
         valy -= factory * gy;
 
         column1 = (gx / 6);
@@ -347,8 +348,9 @@ static void encodeExtension(char *result, int extrax4, int extray, int dividerx4
         if (extraDigits-- > 0) {
             *s++ = encode_chars[row2 * 6 + column2];
         }
-        *s = 0;
     }
+    *s = 0; // terminate the result
+  }
 }
 
 #define decodeChar(c) decode_chars[(unsigned char)c] // force c to be in range of the index, between 0 and 255
@@ -388,8 +390,8 @@ static int decodeExtension(decodeRec *dec, int dividerx4, int dividery0, int lon
         lat32 = lat32 * 30 + row1 * 5 + row2;
     }
 
-    dec->result.lon = dec->coord32.lon + (lon32 * dividerx / processor) + lon_offset4 / 4.0;
-    dec->result.lat = dec->coord32.lat + (lat32 * dividery / processor);
+    dec->result.lon = dec->coord32.lon + ((lon32 * dividerx) / processor) + lon_offset4 / 4.0;
+    dec->result.lat = dec->coord32.lat + ((lat32 * dividery) / processor);
 
 #ifdef FORCE_RECODE
     dec->range_min.lon = dec->result.lon;
@@ -1107,7 +1109,7 @@ static void encodeNameless(char *result, const encodeRec *enc, int input_ctry, i
             int v = storage_offset;
 
             int dividerx4 = xDivider4(b->miny, b->maxy); // *** note: dividerx4 is 4 times too large!
-            int xFracture = (int) (4 * enc->fraclon);
+            int xFracture = (int)(enc->fraclon / MAX_PRECISION_FACTOR);
             int dx = (4 * (enc->coord32.lon - b->minx) + xFracture) / dividerx4; // div with quarters
             int extrax4 = (enc->coord32.lon - b->minx) * 4 - dx * dividerx4; // mod with quarters
 
@@ -1524,7 +1526,7 @@ static int decoderEngine(decodeRec *dec) {
                                 }
                             }
 #ifdef FORCE_RECODE
-                            if (err==0 && !fitssomewhere) {
+                            if (!fitssomewhere) {
                                 for (j = from; j < i; j++) { // try all smaller rectangles j
                                   if (!isRestricted(j)) {
                                     const mminforec *b = boundaries(j);
@@ -1898,37 +1900,26 @@ static int encodeLatLonToMapcodes_internal(char **v, Mapcodes *mapcodes, double 
     enc.mapcodes = mapcodes;
     enc.mapcodes->count = 0;
 
-    if (lat < -90) { lat = -90; } else if (lat > 90) { lat = 90; }
-    lat += 90; // lat now [0..180]
-    lon -= (360.0 * floor(lon / 360)); // lon now in [0..360>
-
-    lat *= 1000000;
-    lon *= 1000000;
-    enc.coord32.lat = (int) lat;
-    enc.coord32.lon = (int) lon;
-    enc.fraclat = lat - enc.coord32.lat;
-    enc.fraclon = lon - enc.coord32.lon;
     {
         double f;
-        // for 8-digit precision, cells are divided into 810,000 by 810,000 minicells.
-        f = enc.fraclat * MAX_PRECISION_FACTOR;
-        if (f < 1) { enc.fraclat = 0; } else {
-            if (f >= (MAX_PRECISION_FACTOR - 0.5)) {
-                enc.fraclat = 0;
-                enc.coord32.lat++;
-            }
-        }
-        f = enc.fraclon * MAX_PRECISION_FACTOR;
-        if (f < 1) { enc.fraclon = 0; } else {
-            if (f >= (MAX_PRECISION_FACTOR - 0.5)) {
-                enc.fraclon = 0;
-                enc.coord32.lon++;
-            }
-        }
+        if (lat < -90) { lat = -90; } else if (lat > 90) { lat = 90; }
+        lat += 90; // lat now [0..180]
+        lat *= (double) 810000000000;
+        enc.fraclat  = floor(lat+0.1);
+        f = enc.fraclat  / (double) 810000;
+        enc.coord32.lat = (int)f;
+        enc.fraclat  -= (double)enc.coord32.lat * (double) 810000;
+        enc.coord32.lat -= 90000000;
+
+        lon -= (360.0 * floor(lon / 360)); // lon now in [0..360>
+        lon *= (double)3240000000000;
+        enc.fraclon = floor(lon+0.1);
+        f = enc.fraclon / (double)3240000;
+        enc.coord32.lon = (int)f;
+        enc.fraclon -= (double)enc.coord32.lon * (double)3240000;
+        if (enc.coord32.lon >= 180000000)
+            enc.coord32.lon -= 360000000;
     }
-    enc.coord32.lat -= 90000000;
-    if (enc.coord32.lon >= 180000000)
-        enc.coord32.lon -= 360000000;
 
     if (tc <= 0) // ALL results?
     {

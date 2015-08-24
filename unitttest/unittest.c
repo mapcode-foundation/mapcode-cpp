@@ -249,7 +249,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
     }
 
     // test all global solutions at all precisions...
-    for (precision = 0; precision < 8; precision++) {
+    for (precision = 0; precision <= 8; precision++) { 
         nrresults = encodeLatLonToMapcodes(&mapcodes, y, x, 0, precision);
         for (i = 0; i < nrresults; i++) {
             const char *str = mapcodes.mapcode[i];
@@ -304,7 +304,9 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
                     // report if decode doesnt encode back to the same mapcode
                     nrTests++;
                     if (!found) {
-                        printf("*** WARNING *** %s does not re-encode(%f,%f) (%f,%f)\n", str, y, x, lat, lon);
+                        printf("*** WARNING *** %s does not re-encode (%0.15f,%0.15f) from (%0.15f,%0.15f)\n", str, lat, lon, y, x);
+                        printGeneratedMapcodes(&mapcodes2);
+                        printGeneratedMapcodes(&mapcodes);
                         nrWarnings++;
                         if (nrWarnings > 16) {
                             printf("*** ERROR *** too many warnings...\n");
@@ -503,7 +505,7 @@ void main() {
 #ifdef XSIDE3    
     const char *mapcode_dataversion = "undefined";
 #endif
-    printf("Mapcode C Library Unit test 2.1.1\n");
+    printf("Mapcode C Library Unit test 2.1.2\n");
     printf("Library version %s (Data version %s)\n", mapcode_cversion, mapcode_dataversion);
 
     printf("-----------------------------------------------------------\nAlphabet tests\n");

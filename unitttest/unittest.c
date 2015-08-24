@@ -505,7 +505,7 @@ void main() {
 #ifdef XSIDE3    
     const char *mapcode_dataversion = "undefined";
 #endif
-    printf("Mapcode C Library Unit test 2.1.1\n");
+    printf("Mapcode C Library Unit test 2.1.2\n");
     printf("Library version %s (Data version %s)\n", mapcode_cversion, mapcode_dataversion);
 
     printf("-----------------------------------------------------------\nAlphabet tests\n");

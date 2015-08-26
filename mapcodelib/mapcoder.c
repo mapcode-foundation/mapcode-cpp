@@ -1652,6 +1652,34 @@ static int decoderEngine(decodeRec *dec) {
 }
 
 
+
+// PI
+#define _PI 3.14159265358979323846
+
+// Radius of Earth.
+#define EARTH_RADIUS_X_METERS 6378137
+#define EARTH_RADIUS_Y_METERS 6356752
+
+// Circumference of Earth.
+#define EARTH_CIRCUMFERENCE_X (EARTH_RADIUS_X_METERS * 2 * _PI)
+#define EARTH_CIRCUMFERENCE_Y (EARTH_RADIUS_Y_METERS * 2 * _PI)
+
+// Meters per degree latitude is fixed. For longitude: use factor * cos(midpoint of two degree latitudes).
+#define METERS_PER_DEGREE_LAT (EARTH_CIRCUMFERENCE_Y / 360.0)
+#define METERS_PER_DEGREE_LON (EARTH_CIRCUMFERENCE_X / 360.0)
+
+double distanceInMeters(double latDeg1, double lonDeg1, double latDeg2, double lonDeg2) {
+    if (lonDeg1 < 0 && lonDeg2 > 1) { lonDeg1 += 360; }
+    if (lonDeg2 < 0 && lonDeg1 > 1) { lonDeg2 += 360; }
+    {
+        const double dy = (latDeg2 - latDeg1) * METERS_PER_DEGREE_LAT;
+        const double dx = (lonDeg2 - lonDeg1) * METERS_PER_DEGREE_LON * cos((latDeg1 + latDeg2) * _PI / 360.0);
+        return sqrt(dx * dx + dy * dy);
+    }
+}
+
+
+
 #ifdef SUPPORT_FOREIGN_ALPHABETS
 
 // WARNING - these alphabets have NOT yet been released as standard! use at your own risk! check www.mapcode.com for details.

@@ -59,6 +59,10 @@ decode Mapcodes.
 
 # Release Notes
 
+* 2.1.3
+
+    Added useful routine DistanceInMeters to API
+
 * 2.1.2
 
     Rewrote fraction floating points to integer arithmetic

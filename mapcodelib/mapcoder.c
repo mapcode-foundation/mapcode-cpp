@@ -1273,16 +1273,16 @@ static void encodeAutoHeader(char *result, const encodeRec *enc, int m, int extr
 
     {
         // encode
-        const int dividerx = (b->maxx - b->minx + W - 1) / W;
-        const int vx = (enc->coord32.lon - b->minx) / dividerx;
-        const int extrax = (enc->coord32.lon - b->minx) % dividerx;
+        int dividerx = (b->maxx - b->minx + W - 1) / W;
+        int vx = (enc->coord32.lon - b->minx) / dividerx;
+        int extrax = (enc->coord32.lon - b->minx) % dividerx;
 
-        const int dividery = (b->maxy - b->miny + H - 1) / H;
-        const int vy = (b->maxy - enc->coord32.lat) / dividery;
-        const int extray = (b->maxy - enc->coord32.lat) % dividery;
+        int dividery = (b->maxy - b->miny + H - 1) / H;
+        int vy = (b->maxy - enc->coord32.lat) / dividery;
+        int extray = (b->maxy - enc->coord32.lat) % dividery;
 
-        const int codexlen = (codexm / 10) + (codexm % 10);
-        const int value = (vx / 168) * (H / 176);
+        int codexlen = (codexm / 10) + (codexm % 10);
+        int value = (vx / 168) * (H / 176);
 
         if (extray == 0 && enc->fraclat > 0) {
             vy--;

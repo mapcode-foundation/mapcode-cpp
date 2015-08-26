@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <string.h> // strlen strcpy strcat memcpy memmove strstr strchr memcmp strupr
+#include <string.h> // strlen strcpy strcat memcpy memmove strstr strchr memcmp
 #include <stdlib.h> // atof
 #include <ctype.h>  // toupper
 #include <math.h>   // floor
@@ -85,7 +85,7 @@ static int firstrec(int ccode) { return data_start[ccode]; }
 static int lastrec(int ccode) { return data_start[ccode + 1] - 1; }
 
 #ifdef FAST_ALPHA
-#define ParentLetter(ccode) (parentletter[ccode])
+#define ParentLetter(ccode) ((int)parentletter[ccode])
 #else
 
 static int ParentLetter(int ccode) // returns parent index (>0), or 0
@@ -167,6 +167,11 @@ static const char *get_entity_iso3(char *entity_iso3_result, int ccode) {
     return entity_iso3_result;
 }
 
+static void makeupper(char *s)
+{
+    for(;*s;*s++) { *s = toupper(*s); }
+}
+
 static int disambiguate_str(const char *s, int len) // returns disambiguation 1-8, or negative if error
 {
     const char *p = (len == 2 ? parents2 : parents3);
@@ -176,7 +181,7 @@ static int disambiguate_str(const char *s, int len) // returns disambiguation 1-
     if (len != 2 && len != 3) { return -923; } // solve bad args
     memcpy(country, s, len);
     country[len] = 0;
-    strupr(country);
+    makeupper(country);
     f = strstr(p, country);
     if (f == NULL) {
         return -23; // unknown country
@@ -455,12 +460,12 @@ static int decodeBase31(const char *code) {
 static void encode_triple(char *result, int difx, int dify) {
     if (dify < 4 * 34) // first 4(x34) rows of 6(x28) wide
     {
-        encodeBase31(result, ((difx / 28) + 6 * (dify / 34)), 1);
+        *result = encode_chars[ ((difx / 28) + 6 * (dify / 34)) ];
         encodeBase31(result + 1, ((difx % 28) * 34 + (dify % 34)), 2);
     }
     else // bottom row
     {
-        encodeBase31(result, (difx / 24) + 24, 1);
+        *result = encode_chars[ (difx / 24) + 24 ];
         encodeBase31(result + 1, (difx % 24) * 40 + (dify - 136), 2);
     }
 } // encode_triple
@@ -550,11 +555,10 @@ static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter) {
             divy = yside[prelen];
         }
         else {
-            int pw = nc[prelen];
-            divx = (pw / divy);
+            divx = (nc[prelen] / divy);
         }
 
-        if (prelen == 4 && divx == xside[4] && divy == yside[4]) {
+        if (prelen == 4 && divx == 961 && divy == 961) {
             char t = result[1];
             result[1] = result[2];
             result[2] = t;
@@ -589,9 +593,9 @@ static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter) {
 
                 {
                     int xp = xside[postlen];
-                    int dividerx = ((((xgridsize)) + xp - 1) / xp);
+                    int dividerx = ((xgridsize + xp - 1) / xp);
                     int yp = yside[postlen];
-                    int dividery = ((((ygridsize)) + yp - 1) / yp);
+                    int dividery = ((ygridsize + yp - 1) / yp);
                     // decoderelative
 
                     {
@@ -664,8 +668,12 @@ static void encodeGrid(char *result, const encodeRec *enc, int const m, int extr
 
     int orgcodex = coDex(m);
     int codexm = orgcodex;
-    if (codexm == 21) { codexm = 22; }
-    if (codexm == 14) { codexm = 23; }
+    if (codexm == 21) {
+        codexm = 22; 
+    }
+    else if (codexm == 14) {
+        codexm = 23;
+    }
 
     *result = 0;
     if (headerLetter) { result++; }
@@ -681,8 +689,7 @@ static void encodeGrid(char *result, const encodeRec *enc, int const m, int extr
             divy = yside[prelen];
         }
         else {
-            int pw = nc[prelen];
-            divx = (pw / divy);
+            divx = (nc[prelen] / divy);
         }
 
         { // grid
@@ -719,7 +726,7 @@ static void encodeGrid(char *result, const encodeRec *enc, int const m, int extr
                 encodeBase31(result, v, prelen);
             } // prefix
 
-            if (prelen == 4 && divx == xside[4] && divy == yside[4]) {
+            if (prelen == 4 && divx == 961 && divy == 961) {
                 char t = result[1];
                 result[1] = result[2];
                 result[2] = t;
@@ -729,8 +736,8 @@ static void encodeGrid(char *result, const encodeRec *enc, int const m, int extr
             relx = b->minx + (relx * xgridsize);
 
             { // postfix
-                int dividery = ((((ygridsize)) + yside[postlen] - 1) / yside[postlen]);
-                int dividerx = ((((xgridsize)) + xside[postlen] - 1) / xside[postlen]);
+                int dividery = ((ygridsize + yside[postlen] - 1) / yside[postlen]);
+                int dividerx = ((xgridsize + xside[postlen] - 1) / xside[postlen]);
                 int extrax, extray;
 
                 {
@@ -842,7 +849,7 @@ static int decodeNameless(decodeRec *dec, int m) {
                 X = offset / (p + 1);
             }
             else {
-                swapletters = (p == 1 && codexm == 22);
+                swapletters = ((p == 1) && (codexm == 22));
                 X = r + (offset - (r * (p + 1))) / p;
             }
         }
@@ -898,17 +905,16 @@ static int decodeNameless(decodeRec *dec, int m) {
         xSIDE = SIDE = smartDiv(m);
 
         b = boundaries(m);
-        if (isSpecialShape22(m)) {
-            xSIDE *= SIDE;
-            SIDE = 1 + ((b->maxy - b->miny) / 90); // side purely on y range
-            xSIDE = xSIDE / SIDE;
-        }
 
         // decode
         {
             int dx, dy;
 
             if (isSpecialShape22(m)) {
+                xSIDE *= SIDE;
+                SIDE = 1 + ((b->maxy - b->miny) / 90); // side purely on y range
+                xSIDE = xSIDE / SIDE;
+
                 decodeSixWide(v, xSIDE, SIDE, &dx, &dy);
                 dy = SIDE - 1 - dy;
             }
@@ -1070,7 +1076,7 @@ static void encodeNameless(char *result, const encodeRec *enc, int input_ctry, i
         int xSIDE, orgSIDE;
 
         if (codexm != 21 && A <= 31) {
-            storage_offset = (X * p + (X < r ? X : r)) * (961 * 961); // p=4,r=3: offset(X)={0,5,10,15,19,23,27}-31
+            storage_offset = (X * p + (X < r ? X : r)) * (961 * 961);
         }
         else if (codexm != 21 && A < 62) {
             if (X < (62 - A)) {
@@ -1099,11 +1105,6 @@ static void encodeNameless(char *result, const encodeRec *enc, int input_ctry, i
 
         b = boundaries(m);
         orgSIDE = xSIDE = SIDE;
-        if (isSpecialShape22(m)) //  - keep the existing rectangle!
-        {
-            SIDE = 1 + ((b->maxy - b->miny) / 90); // new side, based purely on y-distance
-            xSIDE = (orgSIDE * orgSIDE) / SIDE;
-        }
 
         {
             int v = storage_offset;
@@ -1111,10 +1112,10 @@ static void encodeNameless(char *result, const encodeRec *enc, int input_ctry, i
             int dividerx4 = xDivider4(b->miny, b->maxy); // *** note: dividerx4 is 4 times too large!
             int xFracture = (int)(enc->fraclon / MAX_PRECISION_FACTOR);
             int dx = (4 * (enc->coord32.lon - b->minx) + xFracture) / dividerx4; // div with quarters
-            int extrax4 = (enc->coord32.lon - b->minx) * 4 - dx * dividerx4; // mod with quarters
+            int extrax4 = (enc->coord32.lon - b->minx) * 4 - (dx * dividerx4); // mod with quarters
 
             int dividery = 90;
-            int dy = (b->maxy - enc->coord32.lat) / dividery;  // between 0 and SIDE-1
+            int dy = (b->maxy - enc->coord32.lat) / dividery;
             int extray = (b->maxy - enc->coord32.lat) % dividery;
 
             if (extray == 0 && enc->fraclat > 0) {
@@ -1123,6 +1124,8 @@ static void encodeNameless(char *result, const encodeRec *enc, int input_ctry, i
             }
 
             if (isSpecialShape22(m)) {
+                SIDE = 1 + ((b->maxy - b->miny) / 90); // new side, based purely on y-distance
+                xSIDE = (orgSIDE * orgSIDE) / SIDE;
                 v += encodeSixWide(dx, SIDE - 1 - dy, xSIDE, SIDE);
             }
             else {
@@ -1186,7 +1189,7 @@ static int decodeAutoHeader(decodeRec *dec, int m) {
         product = (W / 168) * (H / 176) * 961 * 31;
 
         if (recType(m) == 2) {
-            int GOODROUNDER = coDex(m) >= 23 ? (961 * 961 * 31) : (961 * 961);
+            int GOODROUNDER = codexm >= 23 ? (961 * 961 * 31) : (961 * 961);
             product = ((STORAGE_START + product + GOODROUNDER - 1) / GOODROUNDER) * GOODROUNDER - STORAGE_START;
         }
 
@@ -1243,7 +1246,7 @@ static void encodeAutoHeader(char *result, const encodeRec *enc, int m, int extr
 
     // search back to first of the group
     int firstindex = m;
-    int codexm = coDex(m);
+    const int codexm = coDex(m);
     while (recType(firstindex - 1) > 1 && coDex(firstindex - 1) == codexm) {
         firstindex--;
     }
@@ -1270,16 +1273,16 @@ static void encodeAutoHeader(char *result, const encodeRec *enc, int m, int extr
 
     {
         // encode
-        int dividerx = (b->maxx - b->minx + W - 1) / W;
-        int vx = (enc->coord32.lon - b->minx) / dividerx;
-        int extrax = (enc->coord32.lon - b->minx) % dividerx;
+        const int dividerx = (b->maxx - b->minx + W - 1) / W;
+        const int vx = (enc->coord32.lon - b->minx) / dividerx;
+        const int extrax = (enc->coord32.lon - b->minx) % dividerx;
 
-        int dividery = (b->maxy - b->miny + H - 1) / H;
-        int vy = (b->maxy - enc->coord32.lat) / dividery;
-        int extray = (b->maxy - enc->coord32.lat) % dividery;
+        const int dividery = (b->maxy - b->miny + H - 1) / H;
+        const int vy = (b->maxy - enc->coord32.lat) / dividery;
+        const int extray = (b->maxy - enc->coord32.lat) % dividery;
 
-        int codexlen = (codexm / 10) + (codexm % 10);
-        int value = (vx / 168) * (H / 176);
+        const int codexlen = (codexm / 10) + (codexm % 10);
+        const int value = (vx / 168) * (H / 176);
 
         if (extray == 0 && enc->fraclat > 0) {
             vy--;
@@ -1397,7 +1400,7 @@ static int decoderEngine(decodeRec *dec) {
         s = (char *) dec->orginput;
         while (*s <= 32 && *s > 0) { s++; }
         // remove trail and overhead
-        len = strlen(s);
+        len = (int) strlen(s);
         if (len > MAX_MAPCODE_RESULT_LEN - 1) { len = MAX_MAPCODE_RESULT_LEN - 1; }
         while (len > 0 && s[len - 1] <= 32 && s[len - 1] >= 0) { len--; }
         // copy into dec->minput;
@@ -1466,7 +1469,7 @@ static int decoderEngine(decodeRec *dec) {
             dec->extension = "";
         }
 
-        codex = prelen * 10 + strlen(dot) - 1;
+        codex = prelen * 10 + (int) strlen(dot) - 1;
 
         if (hasvowels) {
             if (unpack_if_alldigits(s) <= 0) {
@@ -1497,20 +1500,19 @@ static int decoderEngine(decodeRec *dec) {
 
         // try all ccode rectangles to decode s (pointing to first character of proper mapcode)
         for (i = from; i <= upto; i++) {
+            int codexi = coDex(i);
             int r = recType(i);
             if (r == 0) {
                 if (isNameless(i)) {
-                    int codexi = coDex(i);
-                    if ((codexi == 21 && codex == 22)
-                        || (codexi == 22 && codex == 32)
-                        || (codexi == 13 && codex == 23)) {
+                    if (((codexi == 21) && (codex == 22))
+                        || ((codexi == 22) && (codex == 32))
+                        || ((codexi == 13) && (codex == 23))) {
                         err = decodeNameless(dec, i);
                         break;
                     }
                 }
-                else {
-                    int codexi = coDex(i);
-                    if (codexi == codex || (codex == 22 && codexi == 21)) {
+                else {                    
+                    if (codexi == codex || ((codex == 22) && (codexi == 21))) {
                         err = decodeGrid(dec, i, 0);
 
                         // *** make sure decode fits somewhere ***
@@ -1575,16 +1577,14 @@ static int decoderEngine(decodeRec *dec) {
                     }
                 }
             }
-            else if (r == 1) {
-                int codexi = coDex(i);
+            else if (r == 1) {                
                 if (codex == codexi + 10 && headerLetter(i) == *s) {
                     err = decodeGrid(dec, i, 1);
                     break;
                 }
             }
-            else { //r>1
-                int codexi = coDex(i);
-                if (codex == 23 && codexi == 22 || codex == 33 && codexi == 23) {
+            else { //r>1                
+                if (((codex == 23) && (codexi == 22)) || ((codex == 33) && (codexi == 23))) {
                     err = decodeAutoHeader(dec, i);
                     break;
                 }
@@ -1642,7 +1642,7 @@ static int decoderEngine(decodeRec *dec) {
                     dec->result.lon =  (bmaxx - MICROMETER) / 1000000.0;
                 } // keep in encompassing territory
 
-                dec->coord32.lat = (int) floor(dec->result.lat * 1000000);
+                dec->coord32.lat = (int) floor(dec->result.lat * 1000000); // @@@ not needed
                 dec->coord32.lon = (int) floor(dec->result.lon * 1000000);
             } // FORCE_RECODE
 #endif
@@ -2040,10 +2040,11 @@ int binfindmatch(int parentcode, const char *str) {
         memcpy(tmp, str, 4);
     }
     tmp[4] = 0;
+    makeupper(tmp);
     { // binary-search the result
         const alphaRec *p;
         alphaRec t;
-        t.alphaCode = strupr(tmp);
+        t.alphaCode = tmp;
         t.ccode = parentcode;
 
         p = (const alphaRec *) bsearch(&t, alphaSearch, NRTERREC, sizeof(alphaRec), cmp_alphacode);

@@ -169,7 +169,7 @@ static const char *get_entity_iso3(char *entity_iso3_result, int ccode) {
 
 static void makeupper(char *s)
 {
-    for(;*s;*s++) { *s = toupper(*s); }
+    while(*s) { *s = toupper(*s); s++; }
 }
 
 static int disambiguate_str(const char *s, const int len) // returns disambiguation 1-8, or negative if error

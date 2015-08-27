@@ -98,30 +98,6 @@ static void alphabet_tests() {
     }
 }
 
-// Returns distance in meters between two coordinates (that are not more than a mile apart)
-static double distanceInMeters(double latDeg1, double lonDeg1, double latDeg2, double lonDeg2) {
-    double dx, dy, worstParallel = 0; // assume equator
-    if (latDeg1 > latDeg2) {
-        if (latDeg1 < 0) {
-            worstParallel = latDeg2;
-        } else if (latDeg2 > 0) {
-            worstParallel = latDeg1;
-        }
-    }
-    else {
-        if (latDeg2 < 0) {
-            worstParallel = latDeg1;
-        } else if (latDeg1 > 0) {
-            worstParallel = latDeg2;
-        }
-    }
-    dy = (latDeg2 - latDeg1);
-    if (lonDeg1 < 0 && lonDeg2 > 1) { lonDeg1 += 360; }
-    if (lonDeg2 < 0 && lonDeg1 > 1) { lonDeg2 += 360; }
-    dx = (lonDeg2 - lonDeg1) * cos((3.141592653589793238462643383279 / 180.0) * worstParallel);
-    return sqrt(dx * dx + dy * dy) * (1000000.0 / 9);
-}
-
 
 // 
 static void printGeneratedMapcodes(const Mapcodes *mapcodes) {
@@ -501,15 +477,56 @@ static void re_encode_tests() {
 }
 
 
+void distance_tests()
+{
+	if (strcmp(mapcode_cversion,"2.1.3") >=0) {
+        int i;
+        double coordpairs[] = {
+			// lat1, lon1, lat2, lon2, expected distance * 100000
+			1,1,1,1,0,
+			0,0,0,1,11131949079,
+			89,0,89,1,194279300,
+			3,0,3,1,11116693130,
+			-3,0,-3,1,11116693130,
+			-3,-179.5,-3,179.5,11116693130,
+			-3,179.5,-3,-179.5,11116693130,
+			3,8,3,9,11116693130,
+			3,-8,3,-9,11116693130,
+			3,-0.5,3,0.5,11116693130,
+			54,5,54.000001,5,11095,
+			54,5,54,5.000001,6543,
+			54,5,54.000001,5.000001,12880,
+			90,0,90,50,0,
+            0.11,0.22,0.12,0.2333,185011466,
+            -1
+        };
+		
+		for(i=0;coordpairs[i]!=-1;i+=5) {
+			const double distance = distanceInMeters( 
+				coordpairs[i],coordpairs[i+1],
+				coordpairs[i+2],coordpairs[i+3]);
+			nrTests++;
+			if ( floor(0.5+(100000.0 * distance)) != coordpairs[i+4] ) {
+				nrErrors++;
+				printf("*** ERROR *** distanceInMeters %d failed: %f\n",i,distance);;
+			}
+		}
+	}
+}
+
+
 void main() {
 #ifdef XSIDE3    
     const char *mapcode_dataversion = "undefined";
 #endif
-    printf("Mapcode C Library Unit test 2.1.2\n");
+    printf("Mapcode C Library Unit test 2.1.3\n");
     printf("Library version %s (Data version %s)\n", mapcode_cversion, mapcode_dataversion);
 
     printf("-----------------------------------------------------------\nAlphabet tests\n");
     alphabet_tests();
+
+    printf("-----------------------------------------------------------\nDistance tests\n");
+    distance_tests();
 
     printf("-----------------------------------------------------------\nTerritory tests\n");
     printf("%d territories\n", MAX_CCODE);

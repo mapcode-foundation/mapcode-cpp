@@ -59,6 +59,14 @@ decode Mapcodes.
 
 # Release Notes
 
+* 2.1.3
+
+    Added useful routine DistanceInMeters to API
+
+* 2.1.2
+
+    Rewrote fraction floating points to integer arithmetic
+
 * 2.1.1
 
     Added unittest\*.* which can be compiled and executed to check

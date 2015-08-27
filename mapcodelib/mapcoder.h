@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-#define mapcode_cversion "2.1.2"
+#define mapcode_cversion "2.1.3"
 
 #define UWORD                               unsigned short int  // 2-byte unsigned integer.
 
@@ -223,6 +223,12 @@ int getCountryOrParentCountry(int territoryCode);
  *      Territory code of the parent country; <0 if the territoryCode was not a state or it was invalid.
  */
 int getParentCountryOf(int territoryCode);
+
+/**
+ * Returns the distance in meters between two coordinates (latitude/longitude pairs)
+ * CAVEAT: only works for coordinates that are within a few miles from each other.
+ */
+double distanceInMeters(double latDeg1, double lonDeg1, double latDeg2, double lonDeg2);
 
 /**
  * Alphabets:

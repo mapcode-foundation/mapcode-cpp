@@ -169,7 +169,7 @@ static const char *get_entity_iso3(char *entity_iso3_result, int ccode) {
 
 static void makeupper(char *s)
 {
-    while(*s) { *s = toupper(*s); s++; }
+    while(*s) { *s = (char) toupper(*s); s++; }
 }
 
 static int disambiguate_str(const char *s, const int len) // returns disambiguation 1-8, or negative if error
@@ -829,7 +829,7 @@ static int decodeNameless(decodeRec *dec, int m) {
     {
         const int p = 31 / A;
         const int r = 31 % A;
-        int v;
+        int v = 0;
         int SIDE;
         int swapletters = 0;
         int xSIDE;
@@ -1250,7 +1250,8 @@ static void encodeAutoHeader(char *result, const encodeRec *enc, const int m, co
         firstindex--;
     }
 
-    for (i = firstindex; i <= m; i++) {
+    i = firstindex;
+    for(;;) {
         b = boundaries(i);
         // determine how many cells
         H = (b->maxy - b->miny + 89) / 90; // multiple of 10m
@@ -1265,37 +1266,36 @@ static void encodeAutoHeader(char *result, const encodeRec *enc, const int m, co
             const int GOODROUNDER = codexm >= 23 ? (961 * 961 * 31) : (961 * 961);
             product = ((STORAGE_START + product + GOODROUNDER - 1) / GOODROUNDER) * GOODROUNDER - STORAGE_START;
         }
-        if (i < m) {
-            STORAGE_START += product;
+        if (i == m) {
+            // encode
+            const int dividerx = (b->maxx - b->minx + W - 1) / W;
+            const int vx = (enc->coord32.lon - b->minx) / dividerx;
+            const int extrax = (enc->coord32.lon - b->minx) % dividerx;
+
+            const int dividery = (b->maxy - b->miny + H - 1) / H;
+            int vy = (b->maxy - enc->coord32.lat) / dividery;
+            int extray = (b->maxy - enc->coord32.lat) % dividery;
+
+            const int codexlen = (codexm / 10) + (codexm % 10);
+            int value = (vx / 168) * (H / 176);
+
+            if (extray == 0 && enc->fraclat > 0) {
+                vy--;
+                extray += dividery;
+            }
+
+            value += (vy / 176);
+
+            // PIPELETTER ENCODE
+            encodeBase31(result, (STORAGE_START / (961 * 31)) + value, codexlen - 2);
+            result[codexlen - 2] = '.';
+            encode_triple(result + codexlen - 1, vx % 168, vy % 176);
+
+            encodeExtension(result, extrax << 2, extray, dividerx << 2, dividery, extraDigits, -1, enc); // autoheader
+            return;
         }
-    }
-
-    {
-        // encode
-        const int dividerx = (b->maxx - b->minx + W - 1) / W;
-        const int vx = (enc->coord32.lon - b->minx) / dividerx;
-        const int extrax = (enc->coord32.lon - b->minx) % dividerx;
-
-        const int dividery = (b->maxy - b->miny + H - 1) / H;
-        int vy = (b->maxy - enc->coord32.lat) / dividery;
-        int extray = (b->maxy - enc->coord32.lat) % dividery;
-
-        const int codexlen = (codexm / 10) + (codexm % 10);
-        int value = (vx / 168) * (H / 176);
-
-        if (extray == 0 && enc->fraclat > 0) {
-            vy--;
-            extray += dividery;
-        }
-
-        value += (vy / 176);
-
-        // PIPELETTER ENCODE
-        encodeBase31(result, (STORAGE_START / (961 * 31)) + value, codexlen - 2);
-        result[codexlen - 2] = '.';
-        encode_triple(result + codexlen - 1, vx % 168, vy % 176);
-
-        encodeExtension(result, extrax << 2, extray, dividerx << 2, dividery, extraDigits, -1, enc); // autoheader
+        STORAGE_START += product;
+        i++;
     }
 }
 
@@ -1391,7 +1391,7 @@ static int decoderEngine(decodeRec *dec) {
         int hasvowels = 0;
         int hasletters = 0;
         const char *dot = NULL;
-        int prelen;
+        int prelen = 0;
         int len;
         char *w;
         // skip whitesace
@@ -2062,7 +2062,7 @@ int binfindmatch(int parentcode, const char *str) {
     char tmp[5];
     if (parentcode < 0) { return -1; }
     if (parentcode > 0) {
-        tmp[0] = '0' + parentcode;
+        tmp[0] = (char) ('0' + parentcode);
         memcpy(tmp + 1, str, 3);
     } else {
         memcpy(tmp, str, 4);

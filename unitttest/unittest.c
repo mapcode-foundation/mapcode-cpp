@@ -193,22 +193,22 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
             printf("*** ERROR *** encode(%0.8f , %0.8f,%d) does not deliver %d solutions\n", y, x, tc, localsolutions);
             printGeneratedMapcodes(&mapcodes);
         }
-    }
 
-    // test that EXPECTED solution is there (if requested)
-    if (str && localsolutions) {
-        nrTests++;
-        for (i = 0; i < nrresults; i++) {
-            const char *m = mapcodes.mapcode[i];
-            if (strstr(m, clean) == m) {
-                found = 1;
-                break;
+        // test that EXPECTED solution is there (if requested)
+        if (str) {
+            nrTests++;
+            for (i = 0; i < nrresults; i++) {
+                const char *m = mapcodes.mapcode[i];
+                if (strstr(m, clean) == m) {
+                    found = 1;
+                    break;
+                }
             }
-        }
-        if (!found) {
-            nrErrors++;
-            printf("*** ERROR *** encode(%0.8f , %0.8f) does not deliver \"%s\"\n", y, x, clean);
-            printGeneratedMapcodes(&mapcodes);
+            if (!found) {
+                nrErrors++;
+                printf("*** ERROR *** encode(%0.8f , %0.8f) does not deliver \"%s\"\n", y, x, clean);
+                printGeneratedMapcodes(&mapcodes);
+            }
         }
     }
 
@@ -398,6 +398,15 @@ void test_territory(const char *alphaCode, int tc, int isAlias, int needsParent,
         char alphacode[8];
         int tn;
         strcpy(alphacode, alphaCode);
+        if (!needsParent && i==0) {
+            tn = convertTerritoryIsoNameToCode(alphacode, 0);
+            nrTests++;
+            if (tn != tc) {
+                nrErrors++;
+                printf("*** ERROR *** convertTerritoryIsoNameToCode('%s')=%d but expected %d (%s)\n", 
+                        alphacode, tn, tc, convertTerritoryCodeToIsoName(tc,0) );
+            }
+        }
         alphacode[i] = (char) tolower(alphacode[i]);
         tn = convertTerritoryIsoNameToCode(alphacode, tcParent);
         nrTests++;
@@ -443,7 +452,6 @@ static void re_encode_tests() {
     int nrrecords = lastrec(ccode_earth) + 1;
     printf("%d records\n", nrrecords);
     for (ccode = 0; ccode <= ccode_earth; ccode++) {
-        int tc = (ccode + 1);
         for (m = firstrec(ccode); m <= lastrec(ccode); m++) {
             double y, x, midx, midy;
             const mminforec *b = boundaries(m);

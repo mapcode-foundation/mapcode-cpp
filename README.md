@@ -59,9 +59,11 @@ decode Mapcodes.
 
 # Release Notes
 
-* 2.1.4
+* 2.1.5
 
-    Added isInsideTerritory to API; 
+    Added stricter unit tests
+
+* 2.1.4
 
     Added maxErrorinMeters to API;
 	

@@ -59,6 +59,14 @@ decode Mapcodes.
 
 # Release Notes
 
+* 2.1.4
+
+    Added isInsideTerritory to API; 
+
+    Added maxErrorinMeters to API;
+	
+    Moved recode logic into decoder; adjusted unit test.
+
 * 2.1.3
 
     Added useful routine DistanceInMeters to API

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#define UNITTEST_VERSION "2.1.4"
+
 /**
  * This application performs a number of tests on the Mapcode C library.
  * It helps to establish that all routines work properly.
@@ -100,9 +102,9 @@ static void alphabet_tests() {
 
 
 // 
-static void printGeneratedMapcodes(const Mapcodes *mapcodes) {
+static void printGeneratedMapcodes(const char *title, const Mapcodes *mapcodes) {
     int i, nrresults = mapcodes->count;
-    printf(" Delivered %d results", nrresults);
+    printf(" %s: %d results", title, nrresults);
     for (i = 0; i < nrresults; i++) {
         const char *m = mapcodes->mapcode[i];
         printf(" (%s)", m);
@@ -120,19 +122,6 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
     Mapcodes mapcodes;
     double lat, lon;
     int precision = MAX_PRECISION_DIGITS;
-
-    // maximum error in meters for a certain nr of high-precision digits
-    static double maxErrorForPrecision[9] = {
-            7.49,
-            1.45,
-            0.2502,
-            0.0462,
-            0.00837,
-            0.00154,
-            0.00028,
-            0.000052,
-            0.0000093,
-    };
 
     if (y < -90) { y = -90; } else if (y > 90) { y = 90; }
 
@@ -190,8 +179,8 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
         nrTests++;
         if (nrresults != localsolutions) {
             nrErrors++;
-            printf("*** ERROR *** encode(%0.8f , %0.8f,%d) does not deliver %d solutions\n", y, x, tc, localsolutions);
-            printGeneratedMapcodes(&mapcodes);
+            printf("*** ERROR *** encode(%0.8f , %0.8f,%d) does not deliver %d local solutions\n", y, x, tc, localsolutions);
+            printGeneratedMapcodes("Delivered", &mapcodes);
         }
 
         // test that EXPECTED solution is there (if requested)
@@ -207,7 +196,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
             if (!found) {
                 nrErrors++;
                 printf("*** ERROR *** encode(%0.8f , %0.8f) does not deliver \"%s\"\n", y, x, clean);
-                printGeneratedMapcodes(&mapcodes);
+                printGeneratedMapcodes("Delivered", &mapcodes);
             }
         }
     }
@@ -219,8 +208,8 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
         nrresults = encodeLatLonToMapcodes(&mapcodes, y, x, 0, precision);
         if (nrresults != globalsolutions) {
             nrErrors++;
-            printf("*** ERROR *** encode(%0.8f , %0.8f) does not deliver %d solutions\n", y, x, globalsolutions);
-            printGeneratedMapcodes(&mapcodes);
+            printf("*** ERROR *** encode(%0.8f , %0.8f) does not deliver %d global solutions\n", y, x, globalsolutions);
+            printGeneratedMapcodes("Delivered", &mapcodes);
         }
     }
 
@@ -239,7 +228,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
             }
             else {
                 double dm = distanceInMeters(y, x, lat, lon);
-                double maxerror = maxErrorForPrecision[precision];
+                double maxerror = maxErrorInMeters(precision);
                 // check if decode is sufficiently close to the encoded coordinate
                 nrTests++;
                 if (dm > maxerror) {
@@ -248,9 +237,10 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
                            str, lat, lon,
                            dm * 100.0, maxerror * 100.0, y, x);
                 }
-                else if (nrWarnings < 16) {
-                    Mapcodes mapcodes2;
-                    int nr, tc2 = -1, tcParent = -1, j, found = 0;
+                else {
+                    Mapcodes mapcodesTerritory;
+                    Mapcodes mapcodesParent;
+                    int tc2 = -1, tcParent = -1, j, found = 0;                    
                     char *e = strchr(str, ' ');
                     if (e) {
                         *e = 0;
@@ -259,34 +249,38 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
                         *e = ' ';
                     }
 
-                    // see if decode encodes back to the same solution
-                    nr = encodeLatLonToMapcodes(&mapcodes2, lat, lon, tc2, precision);
-                    for (j = 0; j < nr; j++) {
-                        if (strcmp(mapcodes2.mapcode[j], str) == 0) {
-                            found = 1;
-                            break;
-                        }
-                    }
-                    // of, if inherited from parent country: the same parent solution
-                    if (!found && tcParent >= 0) {
-                        nr = encodeLatLonToMapcodes(&mapcodes2, lat, lon, tcParent, precision);
+                    nrTests++;
+
+                    // see if the original mapcode was generated
+                    {
+                        const int nr = encodeLatLonToMapcodes(&mapcodesTerritory, lat, lon, tc2, precision);
                         for (j = 0; j < nr; j++) {
-                            if (strcmp(strchr(mapcodes2.mapcode[j], ' '), strchr(str, ' ')) == 0) {
+                            if (strcmp(mapcodesTerritory.mapcode[j], str) == 0) {
                                 found = 1;
                                 break;
                             }
                         }
                     }
-                    // report if decode doesnt encode back to the same mapcode
-                    nrTests++;
-                    if (!found) {
-                        printf("*** WARNING *** %s does not re-encode (%0.15f,%0.15f) from (%0.15f,%0.15f)\n", str, lat, lon, y, x);
-                        printGeneratedMapcodes(&mapcodes2);
-                        printGeneratedMapcodes(&mapcodes);
-                        nrWarnings++;
-                        if (nrWarnings > 16) {
-                            printf("*** ERROR *** too many warnings...\n");
+                    // if not: see if the original mapcode was generated for the parent
+                    if (!found && (tcParent >= 0)) {
+                        const int nr = encodeLatLonToMapcodes(&mapcodesParent, lat, lon, tcParent, precision);
+                        for (j = 0; j < nr; j++) {
+                            if (strcmp(strchr(mapcodesParent.mapcode[j], ' '), strchr(str, ' ')) == 0) {
+                                found = 1;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!found) { // within 7.5 meters, but not reproduced!
+                        if ( isFullyInsideTerritory(lat, lon,  tc2) ) { // but SHOULD be reproduced!
                             nrErrors++;
+                            printf("*** ERROR *** %s does not re-encode (%0.15f,%0.15f) from (%0.15f,%0.15f)\n", str, lat, lon, y, x);
+                            printGeneratedMapcodes("Global   ", &mapcodes);
+                            printGeneratedMapcodes("Territory", &mapcodesTerritory);
+                            if (tcParent >= 0) {
+                                printGeneratedMapcodes("Parent   ", &mapcodesParent);
+                            }
                         }
                     }
                 }
@@ -357,6 +351,7 @@ static test_failing_decodes() {
             "NLD ZZ.ZZ",     // nameless out of range
             "NLD Q000.000",  // grid out of range
             "NLD ZZZ.ZZZ",   // grid out of range
+            "NLD SHH.HHH",   // grid out of encompassing
             "NLD L222.222",  // grid out of range (restricted)
             NULL
     };
@@ -453,13 +448,14 @@ static void re_encode_tests() {
     printf("%d records\n", nrrecords);
     for (ccode = 0; ccode <= ccode_earth; ccode++) {
         for (m = firstrec(ccode); m <= lastrec(ccode); m++) {
-            double y, x, midx, midy;
+            double y, x, midx, midy, thirdx;
             const mminforec *b = boundaries(m);
 
             fprintf(stderr, "%0.2f%%\r", m * 100.0 / nrrecords);
 
             midy = (b->miny + b->maxy) / 2000000.0;
             midx = (b->minx + b->maxx) / 2000000.0;
+            thirdx = (2 * b->minx + b->maxx) / 3000000.0;
             test_around(midy, midx);
 
             y = (b->miny) / 1000000.0;
@@ -467,6 +463,7 @@ static void re_encode_tests() {
             test_around(y, x);
             test_around(midy, x);
             test_around(y, midx);
+            test_around(y, thirdx);
 
             x = (b->maxx) / 1000000.0;
             test_around(y, x);
@@ -527,7 +524,7 @@ void main() {
 #ifdef XSIDE3    
     const char *mapcode_dataversion = "undefined";
 #endif
-    printf("Mapcode C Library Unit test 2.1.3\n");
+    printf("Mapcode C Library Unit test %s\n", UNITTEST_VERSION);
     printf("Library version %s (Data version %s)\n", mapcode_cversion, mapcode_dataversion);
 
     printf("-----------------------------------------------------------\nAlphabet tests\n");
@@ -540,33 +537,27 @@ void main() {
     printf("%d territories\n", MAX_CCODE);
     test_territories();
 
-    /*
-    printf("-----------------------------------------------------------\nTimer\n");
-    {
-      clock_t c_end;
-      time_t t_end;
-      time_t t_start = time(0);
-      clock_t c_start = clock();
-  
-      int i;
-      for(i=0;i<1000;i++) test_territories();
-  
-      c_end = clock();
-      t_end = time(0);
-      fprintf(stderr,"%ld time\n", (c_end - c_start));
-      fprintf(stderr,"%ld time\n", (t_end - t_start)*1000);
-    }
-    /**/
+    printf("-----------------------------------------------------------\nFailing decode tests\n");
+    test_failing_decodes();
+    
+    printf("-----------------------------------------------------------\nFailing decodes tests\n");
+    test_failing_decodes();
 
     printf("-----------------------------------------------------------\nEncode/Decode tests\n");
-    test_failing_decodes();
-    encode_decode_tests();
+    {
+        //clock_t c_start = clock();
+        encode_decode_tests();
+        //fprintf(stderr,"%ld time\n", (clock() - c_start));
+    }
 
     printf("-----------------------------------------------------------\nRe-encode tests\n");
     re_encode_tests();
 
     printf("-----------------------------------------------------------\n");
-    printf("Done.\nExecuted %ld tests, found %ld errors\n", nrTests, nrErrors);
+    printf("Done.\nExecuted %ld tests, found %ld errors", nrTests, nrErrors);
+    if (nrWarnings) {
+        printf(", %ld warnings\n", nrWarnings);
+    }
+    printf("\n");
     getchar();
 }
-

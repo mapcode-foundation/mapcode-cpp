@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-#define mapcode_cversion "2.1.3"
+#define mapcode_cversion "2.1.4"
 
 #define UWORD                               unsigned short int  // 2-byte unsigned integer.
 
@@ -229,6 +229,47 @@ int getParentCountryOf(int territoryCode);
  * CAVEAT: only works for coordinates that are within a few miles from each other.
  */
 double distanceInMeters(double latDeg1, double lonDeg1, double latDeg2, double lonDeg2);
+
+
+/**
+ * How far away, at worst, can a decoded mapcode be from the original encoded coordinate?
+ * (which can be 0 for all territories).
+ *
+ * Arguments:
+ *      extraDigits     - Number of extra "digits" in the mapcode. extra letters added to mapcodes
+ *                        make them represent coordinates more accurately.
+ *
+ * Returns:
+ *      the worst-case distance in meters between a decoded mapcode and the encoded coordinate
+ */
+double maxErrorInMeters(int extraDigits);
+
+/**
+ * Is coordinate within a given territory?
+ *
+ * Arguments:
+ *      lat             - Latitude, in degrees. Range: -90..90.
+ *      lon             - Longitude, in degrees. Range: -180..180.
+ *      territoryCode   - Territory code (obtained from convertTerritoryIsoNameToCode)
+ *
+ * isInsideTerritory returns nonzero if the coordinate is inside the specified territory.
+ *
+ * isFullyInsideTerritory  returns nonzero if the coordinate is inside the territory,
+ * and, IF the territory has a perent territory, inside the parent territory.
+ *
+ * Note that for the mapcode system, the following should hold: IF a point p has a 
+ * mapcode M, THEN decode(M) delivers a point q within maxErrorInMeters() of p.
+ * Furthermore, encode(q) must yield back M *unless* point q is not "fully inside"
+ * the mapcode territory.
+ */
+int isInsideTerritory(
+        double lat,
+        double lon,
+        int territoryCode);
+int isFullyInsideTerritory(
+        double lat,
+        double lon,
+        int territoryCode);
 
 /**
  * Alphabets:

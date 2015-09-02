@@ -182,9 +182,12 @@ static int isInRange(int x, const int minx, int const maxx) // returns nonzero i
     return 0;
 }
 
-static int fitsInside(const point32 *coord32, const int m) {
-    const mminforec *b = boundaries(m);
+static int fitsInsideBoundaries(const point32 *coord32, const mminforec *b) {
     return (b->miny <= coord32->lat && coord32->lat < b->maxy && isInRange(coord32->lon, b->minx, b->maxx));
+}
+
+static int fitsInside(const point32 *coord32, const int m) {
+    return fitsInsideBoundaries(coord32,boundaries(m));
 }
 
 static int xDivider4(const int miny, const int maxy) {
@@ -195,6 +198,22 @@ static int xDivider4(const int miny, const int maxy) {
         return xdivider19[0];
     }
     return xdivider19[(-maxy) >> 19]; // both negative, so maxy is closest to equator
+}
+
+static mminforec *getExtendedBoundaries(mminforec *target, const mminforec *source, int deltaLat, int deltaLon) {
+    target->miny = source->miny - deltaLat;
+    target->minx = source->minx - deltaLon;
+    target->maxy = source->maxy + deltaLat;
+    target->maxx = source->maxx + deltaLon;
+    return target;
+}
+
+static int isNearBorderOf(const point32 *coord32, int m) {
+    mminforec tmp;
+    const mminforec *b=boundaries(m);
+    int xdiv8 = xDivider4(b->miny, b->maxy) / 6; // should be /8 but there's some extra margin
+    return (fitsInsideBoundaries(coord32, getExtendedBoundaries(&tmp,boundaries(m),+60,+xdiv8)) &&
+         (! fitsInsideBoundaries(coord32, getExtendedBoundaries(&tmp,boundaries(m),-60,-xdiv8))));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1311,7 +1330,8 @@ static void encoderEngine(const int ccode, const encodeRec *enc, const int stop_
     from = firstrec(ccode);
     upto = lastrec(ccode);
 
-    if (ccode != ccode_earth) {
+    if (ccode != ccode_earth) // @@@ why?
+    {
         if (!fitsInside(&enc->coord32, upto)) {
             return;
         }
@@ -1334,9 +1354,7 @@ static void encoderEngine(const int ccode, const encodeRec *enc, const int stop_
                 else if (recType(i) > 1) {
                     encodeAutoHeader(result, enc, i, extraDigits);
                 }
-                else if (i == upto && isRestricted(i) &&
-                         isSubdivision(ccode)) // if the last item is a reference to a state's country
-                {
+                else if ((i == upto) && isSubdivision(ccode)) {
                     // *** do a recursive call for the parent ***
                     encoderEngine(ParentTerritoryOf(ccode), enc, stop_with_one_result, extraDigits, requiredEncoder, ccode);
                     return; /**/
@@ -2290,33 +2308,35 @@ double maxErrorInMeters(int extraDigits) {
     return maxErrorInMetersForDigits[extraDigits];
 }
 
-// returns nonzero if coordinate is inside territory
-int isInsideTerritory(double lat, double lon, int territoryCode) {
+// returns nonzero if coordinate is near more than one territory border
+int multipleBordersNearby(double lat, double lon, int territoryCode) {
     const int ccode = territoryCode - 1;
-    if ((lat < -90) || (lat > 90) || (ccode < 0) || (ccode > ccode_earth)) {
-        return 0; // invalid arguments!
-    }
-    else {
-        int m;
-        point32 coord32;
-        const int from = firstrec(ccode);
-        const int upto = lastrec(ccode);
-        convertCoordsToMicrosAndFractions(&coord32, NULL, NULL, lat, lon);
-        if (fitsInside(&coord32, upto)) {
+    if ((ccode >= 0) && (ccode < ccode_earth)) { // valid territory, not earth
+        const int parentTerritoryCode = getParentCountryOf(territoryCode);
+        if (parentTerritoryCode >= 0) {
+            // there is a parent! check its borders as well...
+            if (multipleBordersNearby(lat, lon, parentTerritoryCode)) {
+                return 1;
+            }
+        }
+        {
+            int m;
+            int nrFound = 0;
+            const int from = firstrec(ccode);
+            const int upto = lastrec(ccode);
+            point32 coord32;
+            convertCoordsToMicrosAndFractions(&coord32, NULL, NULL, lat, lon);
             for (m = upto; m >= from; m--) {
                 if (!isRestricted(m)) {
-                    if (fitsInside(&coord32, m)) {
-                        return 1;
+                    if (isNearBorderOf(&coord32, m)) {
+                        nrFound++;
+                        if (nrFound > 1) {
+                            return 1;
+                        }
                     }
                 }
             }
         }
     }
-    return 0;    
-}
-
-// Check if a point is inside a territory and (if it has a parent) also inside its parent territory
-int isFullyInsideTerritory(double lat, double lon, int territoryCode) {
-    return (isInsideTerritory(lat, lon, territoryCode) &&
-        ((getParentCountryOf(territoryCode) < 0) || isInsideTerritory(lat, lon, getParentCountryOf(territoryCode))));
+    return 0;
 }

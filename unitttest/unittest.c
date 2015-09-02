@@ -273,7 +273,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
                     }
 
                     if (!found) { // within 7.5 meters, but not reproduced!
-                        if ( isFullyInsideTerritory(lat, lon,  tc2) ) { // but SHOULD be reproduced!
+                        if ( ! multipleBordersNearby(lat, lon,  tc2) ) { // but SHOULD be reproduced!
                             nrErrors++;
                             printf("*** ERROR *** %s does not re-encode (%0.15f,%0.15f) from (%0.15f,%0.15f)\n", str, lat, lon, y, x);
                             printGeneratedMapcodes("Global   ", &mapcodes);
@@ -520,6 +520,67 @@ void distance_tests()
 }
 
 
+void test_territory_insides() {
+	if (strcmp(mapcode_cversion,"2.1.5") >=0) {
+        int i;
+        struct {
+            const char *territory;
+            double lat;
+            double lon;
+            int nearborders;
+        } iTestData[] = {
+			{"AAA", 0, 0,0},
+			{"AAA", 0, 999,0},
+			{"AAA", 90, 0,0},
+			{"AAA", -90, 0,0},
+			{"AAA", 0, 180,0},
+			{"AAA", 0, -180,0},
+			{"ATA", -90, 0,0},
+			{"ATA", -70, 0,0},
+
+			{"USA", 31, -70,0}, // interational waters (not in state)
+			{"MEX", 19,-115,0}, // interational waters (not in state)
+			{"MEX", 18.358525, -114.722672,0}, // Isla Clarion, not in a state
+			{"MX-ROO", 20, -87,0},  // just in ROO
+			{"MX-ROO", 20,-87.3,0}, // in ROO because in MEX
+			{"MEX", 20,-87.3,0}, // in ROO because in MEX
+
+			{"IND", 19, 87, 0},
+
+			{"NLD", 52.6, 4.8,0},
+			{"US-WV", 40.18, -80.87,0},
+			{"USA", 40.18, -80.87,0},
+			{"US-FL", 24.7, -82.7,0},
+			{"USA", 24.7, -82.7,0},
+			{"IN-TG", 16.13, 78.75,0},
+			{"IN-AP", 16.13, 78.75,0},
+			{"IN-MH", 16.13, 78.75,0},
+			{"IN-PY", 16.13, 78.75,0},
+			{"IND", 16.13, 78.75,0},
+			{"USA", 40.7, -74,0},
+
+			{"US-NY", 40.7, -74,1},
+			{"MEX", 20.252060, -89.779821,1},
+			{"NLD", 52.467314, 4.494037,1},
+			{"MEX",21.431778909671 , -89.779828861356,1},
+			{"MEX",21.431788272457 , -89.779820144176,1},
+
+            {NULL}
+        };
+
+		for (i = 0; iTestData[i].territory != NULL; i++) {
+            int territory = convertTerritoryIsoNameToCode(iTestData[i].territory,0);
+			nrTests++;
+			if (multipleBordersNearby(iTestData[i].lat, iTestData[i].lon, territory) != iTestData[i].nearborders) {
+				nrErrors++;
+                printf("*** ERROR *** multipleBordersNearby(%+18.13f,%+18.13f, \"%s\") not %d\n",
+                    iTestData[i].lat, iTestData[i].lon, iTestData[i].territory, iTestData[i].nearborders);
+			}
+		}
+	}
+}
+
+
 void main() {
 #ifdef XSIDE3    
     const char *mapcode_dataversion = "undefined";
@@ -536,6 +597,7 @@ void main() {
     printf("-----------------------------------------------------------\nTerritory tests\n");
     printf("%d territories\n", MAX_CCODE);
     test_territories();
+    test_territory_insides();
 
     printf("-----------------------------------------------------------\nFailing decode tests\n");
     test_failing_decodes();

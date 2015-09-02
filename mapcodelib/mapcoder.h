@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-#define mapcode_cversion "2.1.4"
+#define mapcode_cversion "2.1.5"
 
 #define UWORD                               unsigned short int  // 2-byte unsigned integer.
 

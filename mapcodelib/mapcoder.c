@@ -20,22 +20,77 @@
 #include <math.h>   // floor
 #include "mapcoder.h"
 #include "basics.h"
+#include "mapcode_fastalpha.h"
 
 #define FAST_ENCODE
 #ifdef FAST_ENCODE
 #include "mapcode_fast_encode.h"
 #endif
 
-#define FAST_ALPHA
-#ifdef FAST_ALPHA
-#include "mapcode_fastalpha.h"
-#endif
+///////////////////////////////////////////////////////////////////////////////////////////////
+//
+//  distanceInMeters
+//
+///////////////////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// PUBLIC - returns distance (in meters) between two coordinates (in degrees)
+double distanceInMeters(double latDeg1, double lonDeg1, double latDeg2, double lonDeg2) {
+    // Radius of Earth.
+    #define EARTH_RADIUS_X_METERS 6378137
+    #define EARTH_RADIUS_Y_METERS 6356752
+
+    // Circumference of Earth.
+    #define EARTH_CIRCUMFERENCE_X (EARTH_RADIUS_X_METERS * 2 * _PI)
+    #define EARTH_CIRCUMFERENCE_Y (EARTH_RADIUS_Y_METERS * 2 * _PI)
+
+    // Meters per degree latitude is fixed. For longitude: use factor * cos(midpoint of two degree latitudes).
+    #define METERS_PER_DEGREE_LAT (EARTH_CIRCUMFERENCE_Y / 360.0)
+    #define METERS_PER_DEGREE_LON (EARTH_CIRCUMFERENCE_X / 360.0)
+
+     // PI
+    #define _PI 3.14159265358979323846
+
+    if (lonDeg1 < 0 && lonDeg2 > 1) { lonDeg1 += 360; }
+    if (lonDeg2 < 0 && lonDeg1 > 1) { lonDeg2 += 360; }
+    {
+        const double dy = (latDeg2 - latDeg1) * METERS_PER_DEGREE_LAT;
+        const double dx = (lonDeg2 - lonDeg1) * METERS_PER_DEGREE_LON * cos((latDeg1 + latDeg2) * _PI / 360.0);
+        return sqrt(dx * dx + dy * dy);
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Structures
+//  maxErrorInMeters
 //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+// maximum error in meters for a certain nr of high-precision digits
+static const double maxErrorInMetersForDigits[MAX_PRECISION_DIGITS + 1] = {
+        7.49,
+        1.39,
+        0.251,
+        0.0462,
+        0.00837,
+        0.00154,
+        0.00028,
+        0.000052,
+        0.0000093
+};
+
+// PUBLIC - returns maximum error in meters for a certain nr of high-precision digits
+double maxErrorInMeters(int extraDigits) {
+    if ((extraDigits < 0) || (extraDigits > MAX_PRECISION_DIGITS)) {
+        return (double) 0;
+    }
+    return maxErrorInMetersForDigits[extraDigits];
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+//
+//  point / point32
+//
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 typedef struct {
     int lat; // latitude in microdegrees
@@ -43,28 +98,102 @@ typedef struct {
 } point32;
 
 typedef struct { // point
-    double lat;  // latitude in degrees
-    double lon;  // longitude in degrees
+    double lat;  // latitude (units depend on situation)
+    double lon;  // longitude (units depend on situation)
 } point;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+static point32 convertFractionsToCoord32(const point *p) {
+    point32 p32;
+    p32.lat = (int) floor(p->lat /  810000);
+    p32.lon = (int) floor(p->lon / 3240000);
+    return p32;
+}
+
+static point convertFractionsToDegrees(const point *p) {
+    point pd;
+    pd.lat = p->lat / ( 810000 * 1000000.0);
+    pd.lon = p->lon / (3240000 * 1000000.0);
+    return pd;
+}
+
+static void convertCoordsToMicrosAndFractions(point32 *coord32, int *fraclat, int *fraclon, double lat, double lon) {
+    double frac;
+    if (lat < -90) { lat = -90; } else if (lat > 90) { lat = 90; }
+    lat += 90; // lat now [0..180]
+    lat *= (double) 810000000000;
+    frac = floor(lat + 0.1);
+    coord32->lat = (int) (frac / (double) 810000);
+    if (fraclat) {
+        frac -= ((double) coord32->lat * (double) 810000);
+        *fraclat = (int) frac;
+    }
+    coord32->lat -= 90000000;
+
+    lon -= (360.0 * floor(lon / 360)); // lon now in [0..360>
+    lon *= (double) 3240000000000;
+    frac = floor(lon + 0.1);
+    coord32->lon = (int) (frac / (double) 3240000);
+    if (fraclon) {
+        frac -= (double) coord32->lon * (double) 3240000;
+        *fraclon = (int) frac;
+    }
+    if (coord32->lon >= 180000000) {
+        coord32->lon -= 360000000;
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+//
+//  Boundaries (specified in microDegrees)
+//
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+#define Boundaries mminforec
+
+// returns nonzero if x in the range minx...maxx
+static int isInRange(int x, const int minx, const int maxx) 
+{
+    if (minx <= x && x < maxx) { return 1; }
+    if (x < minx) { x += 360000000; } else { x -= 360000000; } // 1.32 fix FIJI edge case
+    if (minx <= x && x < maxx) { return 1; }
+    return 0;
+}
+
+// returns true iff given coordinate "coord32" fits inside given Boundaries
+static int fitsInsideBoundaries(const point32 *coord32, const Boundaries *b) {
+    return (b->miny <= coord32->lat && coord32->lat < b->maxy && isInRange(coord32->lon, b->minx, b->maxx));
+}
+
+// set target Boundaries to a source extended with deltalat, deltaLon (in microDegrees)
+static Boundaries *getExtendedBoundaries(Boundaries *target, const Boundaries *source, 
+                                         const int deltaLat, const int deltaLon) {
+    target->miny = source->miny - deltaLat;
+    target->minx = source->minx - deltaLon;
+    target->maxy = source->maxy + deltaLat;
+    target->maxx = source->maxx + deltaLon;
+    return target;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 //
 //  MapcodeZone
 //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 #define MICROLAT_TO_FRACTIONS_FACTOR ((double)MAX_PRECISION_FACTOR)
 #define MICROLON_TO_FRACTIONS_FACTOR (4.0 * MAX_PRECISION_FACTOR)
 typedef struct {
     // latitudes in "810 billionths", range [-729 E11 .. +720 E11), is well within (-2^47 ... +2^47)
-    double fminy; 
+    double fminy;
     double fmaxy;
     // latitudes in "3240 billionths", range [-2916 E13 .. +2916 E13), is well within (-2^49 ... +2^49)
     double fminx;
-    double fmaxx;    
+    double fmaxx;
 } MapcodeZone;
 
-void setFromFractions(MapcodeZone *z, double y, double x, double yDelta, double xDelta) {
+static void setFromFractions(MapcodeZone *z, 
+                             const double y, const double x, 
+                             const double yDelta, const double xDelta) {
     z->fminx = x;
     z->fmaxx = x + xDelta;
     if (yDelta < 0) {
@@ -77,105 +206,79 @@ void setFromFractions(MapcodeZone *z, double y, double x, double yDelta, double 
     }
 }
 
-int isEmpty(const MapcodeZone *z) {
+static int isEmpty(const MapcodeZone *z) {
     return ((z->fmaxx <= z->fminx) || (z->fmaxy <= z->fminy));
 }
 
-point getMidPointFractions(MapcodeZone *z) {
+static point getMidPointFractions(const MapcodeZone *z) {
     point p;
     p.lon = floor((z->fminx + z->fmaxx) / 2);
     p.lat = floor((z->fminy + z->fmaxy) / 2);
     return p;
 }
 
-point32 convertFractionsToCoord32(const point *p) {
-    point32 p32;
-    p32.lat = (int) floor(p->lat /  810000);
-    p32.lon = (int) floor(p->lon / 3240000);
-    return p32;
-}
-
-point convertFractionsToDegrees(const point *p) {
-    point pd;
-    pd.lat = p->lat / ( 810000 * 1000000.0);
-    pd.lon = p->lon / (3240000 * 1000000.0);
-    return pd;
-}
-
-void zoneCopyFrom(MapcodeZone *target, const MapcodeZone *source) {
-    target->fminy = source->fminy; 
+static void zoneCopyFrom(MapcodeZone *target, const MapcodeZone *source) {
+    target->fminy = source->fminy;
     target->fmaxy = source->fmaxy;
     target->fminx = source->fminx;
-    target->fmaxx = source->fmaxx;    
+    target->fmaxx = source->fmaxx;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//  Structures
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// determine the non-empty intersection zone z between a given zone and the boundaries of territory rectangle m.
+// returns nonzero in case such a zone exists
+static int restrictZoneTo(MapcodeZone *z, const MapcodeZone *zone, const Boundaries *b) {
+    z->fminy = zone->fminy;
+    z->fmaxy = zone->fmaxy;
+    if (z->fminy < b->miny * MICROLAT_TO_FRACTIONS_FACTOR) {
+        z->fminy = b->miny * MICROLAT_TO_FRACTIONS_FACTOR;
+    }
+    if (z->fmaxy > b->maxy * MICROLAT_TO_FRACTIONS_FACTOR) {
+        z->fmaxy = b->maxy * MICROLAT_TO_FRACTIONS_FACTOR;
+    }
+    if (z->fminy < z->fmaxy) {
+        double bminx = b->minx * MICROLON_TO_FRACTIONS_FACTOR;
+        double bmaxx = b->maxx * MICROLON_TO_FRACTIONS_FACTOR;
+        z->fminx = zone->fminx;
+        z->fmaxx = zone->fmaxx;
+        if (bmaxx < 0 && z->fminx > 0) {
+            bminx += (360000000 * MICROLON_TO_FRACTIONS_FACTOR);
+            bmaxx += (360000000 * MICROLON_TO_FRACTIONS_FACTOR);
+        }
+        else if (bminx > 0 && z->fmaxx < 0) {
+            bminx -= (360000000 * MICROLON_TO_FRACTIONS_FACTOR);
+            bmaxx -= (360000000 * MICROLON_TO_FRACTIONS_FACTOR);
+        }
+        if (z->fminx < bminx) {
+            z->fminx = bminx;
+        }
+        if (z->fmaxx > bmaxx) {
+            z->fmaxx = bmaxx;
+        }
+        return (z->fminx < z->fmaxx);
+    }
+    return 0;
+}
 
-typedef struct {
-    // input
-    point32 coord32;
-    int fraclat; // latitude fraction of microdegrees, expressed in 1 / 810,000ths
-    int fraclon; // longitude fraction of microdegrees, expressed in 1 / 3,240,000ths
-    // output
-    Mapcodes *mapcodes;
-} encodeRec;
-
-typedef struct {
-    // input
-    const char *orginput;   // original full input string
-    char minput[MAX_MAPCODE_RESULT_LEN]; // room to manipulate clean copy of input
-    const char *mapcode;    // input mapcode (first character of proper mapcode excluding territory code)
-    const char *extension;  // input extension (or empty)
-    int context;            // input territory context (or negative)
-    const char *iso;        // input territory alphacode (context)
-    // output
-    point result;           // result
-    point32 coord32;        // result in integer arithmetic (microdegrees)
-    MapcodeZone zone;       // result zone (in "DegreeFractions")
-} decodeRec;
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
 //
 //  Data access
 //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+/*** low-level data access ***/
 
 static int firstrec(const int ccode) { return data_start[ccode]; }
 
 static int lastrec(const int ccode) { return data_start[ccode + 1] - 1; }
 
-#ifdef FAST_ALPHA
 #define ParentLetter(ccode) ((int)parentletter[ccode])
-#else
 
-static int ParentLetter(const int ccode) // returns parent index (>0), or 0
-{
-    if (ccode >= usa_from && ccode <= usa_upto) { return 1; }
-    if (ccode >= ind_from && ccode <= ind_upto) { return 2; }
-    if (ccode >= can_from && ccode <= can_upto) { return 3; }
-    if (ccode >= aus_from && ccode <= aus_upto) { return 4; }
-    if (ccode >= mex_from && ccode <= mex_upto) { return 5; }
-    if (ccode >= bra_from && ccode <= bra_upto) { return 6; }
-    if (ccode >= rus_from && ccode <= rus_upto) { return 7; }
-    if (ccode >= chn_from && ccode <= chn_upto) { return 8; }
-    return 0;
-}
-
-#endif
-
-static int ParentTerritoryOf(const int ccode) // returns parent, or -1
-{
+// returns parent of ccode, or -1
+static int ParentTerritoryOf(const int ccode) {
     return parentnr[ParentLetter(ccode)];
 }
 
-static int isSubdivision(const int ccode) { return (ParentTerritoryOf(ccode) >= 0); }
-
-static int coDex(int m) {
+static int coDex(const int m) {
     int c = mminfo[m].flags & 31;
     return 10 * (c / 5) + ((c % 5) + 1);
 }
@@ -190,22 +293,6 @@ static int coDex(int m) {
 #define smartDiv(m)          (mminfo[m].flags>>16)
 #define boundaries(m)        (&mminfo[m])
 
-static int isInRange(int x, const int minx, int const maxx) // returns nonzero if x in the range minx...maxx
-{
-    if (minx <= x && x < maxx) { return 1; }
-    if (x < minx) { x += 360000000; } else { x -= 360000000; } // 1.32 fix FIJI edge case
-    if (minx <= x && x < maxx) { return 1; }
-    return 0;
-}
-
-static int fitsInsideBoundaries(const point32 *coord32, const mminforec *b) {
-    return (b->miny <= coord32->lat && coord32->lat < b->maxy && isInRange(coord32->lon, b->minx, b->maxx));
-}
-
-static int fitsInside(const point32 *coord32, const int m) {
-    return fitsInsideBoundaries(coord32,boundaries(m));
-}
-
 static int xDivider4(const int miny, const int maxy) {
     if (miny >= 0) { // both above equator? then miny is closest
         return xdivider19[(miny) >> 19];
@@ -216,41 +303,55 @@ static int xDivider4(const int miny, const int maxy) {
     return xdivider19[(-maxy) >> 19]; // both negative, so maxy is closest to equator
 }
 
-static mminforec *getExtendedBoundaries(mminforec *target, const mminforec *source, int deltaLat, int deltaLon) {
-    target->miny = source->miny - deltaLat;
-    target->minx = source->minx - deltaLon;
-    target->maxy = source->maxy + deltaLat;
-    target->maxx = source->maxx + deltaLon;
-    return target;
+// Legacy: NOT threadsafe
+static int debugStopAt = -1; // to externally test-restrict internal encoding, do not use!
+
+#define decodeChar(c) decode_chars[(unsigned char)c] // force c to be in range of the index, between 0 and 255
+
+/*** mid-level data access ***/
+
+// returns true iff ccode is a subdivision of some other country
+static int isSubdivision(const int ccode) {
+    return (ParentTerritoryOf(ccode) >= 0); 
 }
 
-static int isNearBorderOf(const point32 *coord32, int m) {
-    mminforec tmp;
-    const mminforec *b=boundaries(m);
+// find first territory rectangle of the same type as m
+static int firstNamelessRecord(const int m, const int firstcode) {
+    int i = m;
+    const int codexm = coDex(m);
+    while (i >= firstcode && coDex(i) == codexm && isNameless(i)) { i--; }
+    return (i + 1);
+}
+
+// count all territory rectangles of the same type as m
+static int countNamelessRecords(const int m, const int firstcode) {
+    const int first = firstNamelessRecord(m, firstcode);
+    const int codexm = coDex(m);
+    int last = m;
+    while (coDex(last) == codexm) { last++; }
+    return (last - first);
+}
+
+static int isNearBorderOf(const point32 *coord32, const Boundaries *b) {
     int xdiv8 = xDivider4(b->miny, b->maxy) / 4; // should be /8 but there's some extra margin
-    return (fitsInsideBoundaries(coord32, getExtendedBoundaries(&tmp,boundaries(m),+60,+xdiv8)) &&
-         (! fitsInsideBoundaries(coord32, getExtendedBoundaries(&tmp,boundaries(m),-60,-xdiv8))));
+    Boundaries tmp;
+    return (fitsInsideBoundaries(coord32, getExtendedBoundaries(&tmp, b, +60, +xdiv8)) &&
+          (!fitsInsideBoundaries(coord32, getExtendedBoundaries(&tmp, b, -60, -xdiv8))));
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//  Lowlevel ccode, iso, and disambiguation
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-static const char *get_entity_iso3(char *entity_iso3_result, int ccode) {
-    if (ccode < 0 || ccode >= MAX_MAPCODE_TERRITORY_CODE) { ccode = ccode_earth; } // solve bad args
+static const char *get_entity_iso3(char *entity_iso3_result, const int ccode) {
+    if (ccode < 0 || ccode >= MAX_MAPCODE_TERRITORY_CODE) { return "AAA"; } // solve bad args
     memcpy(entity_iso3_result, entity_iso + ccode * 4, 3);
     entity_iso3_result[3] = 0;
     return entity_iso3_result;
 }
 
-static void makeupper(char *s)
-{
-    while(*s) { *s = (char) toupper(*s); s++; }
+static void makeupper(char *s) {
+    while (*s) { *s++ = (char) toupper(*s); }
 }
 
-static int disambiguate_str(const char *s, const int len) // returns disambiguation 1-8, or negative if error
+// returns 1 - 8, or negative if error
+static int getParentcode(const char *s, const int len)
 {
     const char *p = (len == 2 ? parents2 : parents3);
     const char *f;
@@ -267,247 +368,167 @@ static int disambiguate_str(const char *s, const int len) // returns disambiguat
     return 1 + (int) ((f - p) / (len + 1));
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////
+//
+//  MAPCODE ALL-DIGIT PACKING/UNPACKING
+//
+///////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FAST_ALPHA
-// returns coode, or negative if invalid
-static int ccode_of_iso3(const char *in_iso, int parentcode) {
-    const char *aliases = ALIASES;
-    char iso[4];
-    const char *s;
-    int hyphenated = 0;
+static void repack_if_alldigits(char *input, const int aonly) {
+    char *s = input;
+    int alldigits = 1; // assume all digits
+    char *e;
+    char *dotpos = NULL;
 
-    if (in_iso && in_iso[0] && in_iso[1]) {
-        if (in_iso[2]) {
-            if (in_iso[2] == '-') {
-                parentcode = disambiguate_str(in_iso, 2);
-                if (parentcode < 0) { return parentcode; }
-                hyphenated = 1;
-                in_iso += 3;
-            }
-            else if (in_iso[3] == '-') {
-                parentcode = disambiguate_str(in_iso, 3);
-                if (parentcode < 0) { return parentcode; }
-                hyphenated = 1;
-                in_iso += 4;
+    for (e = s; *e != 0 && *e != '-'; e++) {
+        if (*e < '0' || *e > '9') {
+            if (*e == '.' && !dotpos) {
+                dotpos = e;
+            } else {
+                alldigits = 0;
+                break;
             }
         }
-    } else { return -23; } // solve bad args
-
-    // make (uppercased) copy of at most three characters
-    iso[0] = (char) toupper(in_iso[0]);
-    if (iso[0]) { iso[1] = (char) toupper(in_iso[1]); }
-    if (iso[1]) { iso[2] = (char) toupper(in_iso[2]); }
-    if (iso[2] && in_iso[3]!=0 && in_iso[3]!='-') { return -41; }
-    iso[3] = 0;
-
-    if (iso[2] == 0 || iso[2] == ' ') // 2-letter iso code?
+    }
+    e--;
+    s = e - 1;
+    if (alldigits && dotpos &&
+        s > dotpos) // e is last char, s is one before, both are beyond dot, all characters are digits
     {
-        static char disambiguate_iso3[4] = {'0', '?', '?', 0}; // cache for disambiguation
-        if (parentcode > 0) {
-            disambiguate_iso3[0] = (char) ('0' + parentcode);
+        if (aonly) // v1.50 - encode only using the letter A
+        {
+            const int v = ((*input) - '0') * 100 + ((*s) - '0') * 10 + ((*e) - '0');
+            *input = 'A';
+            *s = encode_chars[v / 32];
+            *e = encode_chars[v % 32];
         }
-        disambiguate_iso3[1] = iso[0];
-        disambiguate_iso3[2] = iso[1];
-
-        s = strstr(entity_iso, disambiguate_iso3); // search disambiguated 2-letter iso
-        if (s == NULL) {
-            s = strstr(aliases, disambiguate_iso3); // search in aliases
-            if (s == NULL || s[3] != '=') {
-                s = NULL;
-                if (disambiguate_iso3[0] <= '9' && !hyphenated) {
-                    disambiguate_iso3[0] = '0';
-                    s = strstr(aliases, disambiguate_iso3); // search in aliases
-                }
-            }
-            if (s && s[3] == '=') {
-                memcpy(iso, s + 4, 3);
-                s = strstr(entity_iso, iso); // search disambiguated 2-letter iso
-            }
-        }
-        if (s == NULL && !hyphenated) {
-            // find the FIRST disambiguation option, if any
-            for (s = entity_iso - 1; ;) {
-                s = strstr(s + 1, disambiguate_iso3 + 1);
-                if (s == NULL) {
-                    break;
-                }
-                if (s && s[-1] >= '1' && s[-1] <= '9') {
-                    s--;
-                    break;
-                }
-            }
-            if (s == NULL) {
-                // find first disambiguation option in aliases, if any
-                for (s = aliases - 1; ;) {
-                    s = strstr(s + 1, disambiguate_iso3 + 1);
-                    if (s == NULL) {
-                        break;
-                    }
-                    if (s && s[-1] >= '1' && s[-1] <= '9') {
-                        memcpy(iso, s + 3, 3);
-                        s = strstr(entity_iso, iso); // search disambiguated 2-letter iso
-                        break;
-                    }
-                }
-            }
-
-            if (s == NULL) {
-                return -26;
-            }
+        else // encode using A,E,U
+        {
+            const int v = ((*s) - '0') * 10 + ((*e) - '0');
+            *s = encode_chars[(v / 34) + 31];
+            *e = encode_chars[v % 34];
         }
     }
-    else {
-        s = strstr(entity_iso, iso); // search 3-letter iso
-        if (s == NULL || hyphenated) {
-            const char *a = aliases;
-            while (a) {
-                a = strstr(a, iso); // search in aliases
-                if (a && a[3] == '=' && (a[4] > '9' || a[4] == (char) (48 + parentcode) || parentcode < 0)) {
-                    memcpy(iso, a + 4, 3);
-                    a = NULL;
-                    s = strstr(entity_iso, iso);
-                } else {
-                    if (a) {
-                        a++;
-                    }
-                }
-            }
-        }
-        if (s == NULL) {
-            return -23;
-        }
-    }
-    // return result
-    return (int) ((s - entity_iso) / 4);
 }
-#endif
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//  HIGH-PRECISION EXTENSION (0-8 characters)
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// rewrite all-digit codes
+// returns 1 if unpacked, 0 if left unchanged, negative if unchanged and an error was detected
+static int unpack_if_alldigits(char *input) {
+    char *s = input;
+    char *dotpos = NULL;
+    const int aonly = ((*s == 'A') || (*s == 'a'));
+    if (aonly) { s++; } //*** v1.50
+    for (; *s != 0 && s[2] != 0 && s[2] != '-'; s++) {
+        if (*s == '-') {
+            break;
+        } else if (*s == '.' && !dotpos) {
+            dotpos = s;
+        } else if ((decodeChar(*s) < 0) || (decodeChar(*s) > 9)) {
+            return 0;
+        }  // nondigit, so stop
+    }
 
-static void encodeExtension(char *result, const int extrax4, const int extray, const int dividerx4, 
+    if (dotpos) {
+        if (aonly) // v1.50 encoded only with A's
+        {
+            const int v = (((s[0] == 'A') || (s[0] == 'a')) ? 31 : decodeChar(s[0])) * 32 +
+                          (((s[1] == 'A') || (s[1] == 'a')) ? 31 : decodeChar(s[1]));
+            *input = (char) ('0' + (v / 100));
+            s[0] = (char) ('0' + ((v / 10) % 10));
+            s[1] = (char) ('0' + (v % 10));
+            return 1;
+        } // v1.50
+
+        if ((*s == 'a') || (*s == 'e') || (*s == 'u') || 
+            (*s == 'A') || (*s == 'E') || (*s == 'U'))
+        {
+            char *e = s + 1;  // s is vowel, e is lastchar
+
+            int v = 0;
+            if (*s == 'e' || *s == 'E') {
+                v = 34;
+            } else if (*s == 'u' || *s == 'U') { v = 68; }
+
+            if ((*e == 'a') || (*e == 'A')) {
+                v += 31;
+            } else if ((*e == 'e') || (*e == 'E')) {
+                v += 32;
+            } else if ((*e == 'u') || (*e == 'U')) {
+                v += 33;
+            } else if (decodeChar(*e) < 0) {
+                return -9; // invalid last character!
+            } else { v += decodeChar(*e); }
+
+            if (v < 100) {
+                *s = encode_chars[(unsigned int) v / 10];
+                *e = encode_chars[(unsigned int) v % 10];
+            } else {
+                return -31; // overflow (ending in UE or UU)
+            }
+            return 1;
+        }
+    }
+    return 0; // no vowel just before end
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+//
+//  DECODING
+//
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+typedef struct {
+    // input
+    point32 coord32;
+    int fraclat; // latitude fraction of microdegrees, expressed in 1 / 810,000ths
+    int fraclon; // longitude fraction of microdegrees, expressed in 1 / 3,240,000ths
+    // output
+    Mapcodes *mapcodes;
+} encodeRec;
+
+// encode the high-precision extension (0-8 characters)
+static void encodeExtension(char *result, const int extrax4, const int extray, const int dividerx4,
                             const int dividery, int extraDigits, const int ydirection,
                             const encodeRec *enc) // append extra characters to result for more precision
 {
-  if (extraDigits > 0) { // anything to do?
-    char *s = result + strlen(result);
-    double factorx = (double) MAX_PRECISION_FACTOR * dividerx4; // perfect integer!
-    double factory = (double) MAX_PRECISION_FACTOR * dividery; // perfect integer!
-    double valx = ((double) MAX_PRECISION_FACTOR * extrax4) + enc->fraclon; // perfect integer!
-    double valy = ((double) MAX_PRECISION_FACTOR * extray ) + (ydirection * enc->fraclat); // perfect integer!
+    if (extraDigits > 0) { // anything to do?
+        char *s = result + strlen(result);
+        double factorx = (double) MAX_PRECISION_FACTOR * dividerx4; // perfect integer!
+        double factory = (double) MAX_PRECISION_FACTOR * dividery; // perfect integer!
+        double valx = ((double) MAX_PRECISION_FACTOR * extrax4) + enc->fraclon; // perfect integer!
+        double valy = ((double) MAX_PRECISION_FACTOR * extray ) + (ydirection * enc->fraclat); // perfect integer!
 
-    // protect against floating point errors
-    if (valx<0) { valx=0; } else if (valx>=factorx) { valx=factorx-1; }
-    if (valy<0) { valy=0; } else if (valy>=factory) { valy=factory-1; }
+        // protect against floating point errors
+        if (valx < 0) { valx = 0; } else if (valx >= factorx) { valx = factorx - 1; }
+        if (valy < 0) { valy = 0; } else if (valy >= factory) { valy = factory - 1; }
 
-    if (extraDigits > MAX_PRECISION_DIGITS) {
-        extraDigits = MAX_PRECISION_DIGITS;
+        if (extraDigits > MAX_PRECISION_DIGITS) {
+            extraDigits = MAX_PRECISION_DIGITS;
+        }
+
+        *s++ = '-';
+
+        for (; ;) {
+            int gx, gy;
+
+            factorx /= 30;
+            gx = (int) (valx / factorx);
+
+            factory /= 30;
+            gy = (int) (valy / factory);
+
+            *s++ = encode_chars[(gy / 5) * 5 + (gx / 6)];
+            if (--extraDigits == 0) { break; }
+
+            *s++ = encode_chars[(gy % 5) * 6 + (gx % 6)];
+            if (--extraDigits == 0) { break; }
+
+            valx -= factorx * gx; // for next iteration
+            valy -= factory * gy; // for next iteration
+        }
+        *s = 0; // terminate the result
     }
-
-    *s++ = '-';
-
-    for(;;) {
-        int gx, gy;
-
-        factorx /= 30;
-        gx = (int)(valx / factorx);
-
-        factory /= 30;
-        gy = (int)(valy / factory);
-
-        *s++ = encode_chars[(gy / 5) * 5 + (gx / 6)];
-        if (--extraDigits == 0) { break; }
-
-        *s++ = encode_chars[(gy % 5) * 6 + (gx % 6)];
-        if (--extraDigits == 0) { break; }
-
-        valx -= factorx * gx; // for next iteration
-        valy -= factory * gy; // for next iteration
-    }
-    *s = 0; // terminate the result
-  }
 }
-
-#define decodeChar(c) decode_chars[(unsigned char)c] // force c to be in range of the index, between 0 and 255
-
-// this routine takes the integer-arithmeteic decoding results (dec->coord32), adds precision, 
-// and determines result zone (dec->zone); returns negative in case of error.
-static int decodeExtension(decodeRec *dec, int dividerx4, int dividery, int lon_offset4, int extremeLat32, int maxLon32) {
-    double lat1,lon4;
-    const char *extrapostfix = dec->extension;
-    int lon32 = 0;
-    int lat32 = 0;
-    int processor = 1;
-    int odd = 0;
-    if (strlen(extrapostfix)>MAX_PRECISION_DIGITS) {
-        return -79; // too many digits
-    }
-    while (*extrapostfix) {
-        int column1, row1, column2, row2;
-        const int c1 = decodeChar(*extrapostfix++);
-        if (c1 < 0 || c1 == 30) { return -1; } // illegal extension character
-        row1 = (c1 / 5);
-        column1 = (c1 % 5);
-        if (*extrapostfix) {
-            const int c2 = decodeChar(*extrapostfix++);
-            if (c2 < 0 || c2 == 30) { return -1; } // illegal extension character
-            row2 = (c2 / 6);
-            column2 = (c2 % 6);
-        }
-        else {
-            odd = 1;
-            row2 = 0;
-            column2 = 0;
-        }
-
-        processor *= 30;        
-        lon32 = lon32 * 30 + column1 * 6 + column2;
-        lat32 = lat32 * 30 + row1 * 5 + row2;
-    }
-
-    while (processor < MAX_PRECISION_FACTOR) {
-        dividerx4 *= 30;
-        dividery *= 30;
-        processor *= 30;
-    }
-
-    lon4 = (dec->coord32.lon * 4 * (double)MAX_PRECISION_FACTOR) + ((lon32 * (double)dividerx4) ) + (lon_offset4 * (double)MAX_PRECISION_FACTOR);
-    lat1 = (dec->coord32.lat     * (double)MAX_PRECISION_FACTOR) + ((lat32 * (double)dividery ) );
-
-    // determine the range of coordinates that are encode to this mapcode
-    if (odd) {
-        setFromFractions(&dec->zone, lat1, lon4, 5 * dividery , 6 * dividerx4);
-    } else {
-        setFromFractions(&dec->zone, lat1, lon4, dividery , dividerx4);
-    }
-
-    // restrict the coordinate range to the extremes that were provided
-    if (dec->zone.fmaxx > maxLon32 * MICROLON_TO_FRACTIONS_FACTOR) {
-        dec->zone.fmaxx = maxLon32 * MICROLON_TO_FRACTIONS_FACTOR;
-    }
-    if (dividery >= 0 ) {
-        if (dec->zone.fmaxy > extremeLat32 * MICROLAT_TO_FRACTIONS_FACTOR) {
-            dec->zone.fmaxy = extremeLat32 * MICROLAT_TO_FRACTIONS_FACTOR;
-        }
-    }
-    else {
-        if (dec->zone.fminy < extremeLat32 * MICROLAT_TO_FRACTIONS_FACTOR) {
-            dec->zone.fminy = extremeLat32 * MICROLAT_TO_FRACTIONS_FACTOR;
-        }
-    }
-    return isEmpty(&dec->zone) ? -45 : 0;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//  LOWEST-LEVEL BASE31 ENCODING/DECODING
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // encode 'value' into result[nrchars]
 static void encodeBase31(char *result, int value, int nrchars) {
@@ -518,63 +539,18 @@ static void encodeBase31(char *result, int value, int nrchars) {
     }
 }
 
-// decode 'code' until either a dot or an end-of-string is encountered
-static int decodeBase31(const char *code) {
-    int value = 0;
-    while (*code != '.' && *code != 0) {
-        value = value * 31 + decodeChar(*code++);
-    }
-    return value;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//  SECOND-LEVEL ECCODING/DECODING : RELATIVE
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-static void encode_triple(char *result, int difx, int dify) {
+static void encode_triple(char *result, const int difx, const int dify) {
     if (dify < 4 * 34) // first 4(x34) rows of 6(x28) wide
     {
-        *result = encode_chars[ ((difx / 28) + 6 * (dify / 34)) ];
+        *result = encode_chars[((difx / 28) + 6 * (dify / 34))];
         encodeBase31(result + 1, ((difx % 28) * 34 + (dify % 34)), 2);
     }
     else // bottom row
     {
-        *result = encode_chars[ (difx / 24) + 24 ];
+        *result = encode_chars[(difx / 24) + 24];
         encodeBase31(result + 1, (difx % 24) * 40 + (dify - 136), 2);
     }
 } // encode_triple
-
-
-static void decode_triple(const char *result, int *difx, int *dify) {
-    // decode the first character
-    const int c1 = decodeChar(*result++);
-    if (c1 < 24) {
-        int m = decodeBase31(result);
-        *difx = (c1 % 6) * 28 + (m / 34);
-        *dify = (c1 / 6) * 34 + (m % 34);
-    }
-    else // bottom row
-    {
-        int x = decodeBase31(result);
-        *dify = (x % 40) + 136;
-        *difx = (x / 40) + 24 * (c1 - 24);
-    }
-} // decode_triple
-
-
-
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//  SECOND-LEVEL ECCODING/DECODING : GRID
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static int encodeSixWide(int x, int y, int width, int height) {
     int v;
@@ -589,147 +565,16 @@ static int encodeSixWide(int x, int y, int width, int height) {
     return v;
 }
 
-static void decodeSixWide(int v, int width, int height, int *x, int *y) {
-    int w;
-    int D = 6;
-    int col = v / (height * 6);
-    const int maxcol = (width - 4) / 6;
-    if (col >= maxcol) {
-        col = maxcol;
-        D = width - maxcol * 6;
-    }
-    w = v - (col * height * 6);
-
-    *x = col * 6 + (w % D);
-    *y = height - 1 - (w / D);
-}
-
-// decodes dec->mapcode in context of territory rectangle m; returns negative if error
-static int decodeGrid(decodeRec *dec, int m, int hasHeaderLetter) {
-    const char *input = (hasHeaderLetter ? dec->mapcode + 1 : dec->mapcode);
-    const int codexlen = (int) (strlen(input) - 1);
-    int prelen = (int) (strchr(input, '.') - input);
-    char result[MAX_PROPER_MAPCODE_LEN + 1];
-
-    if (codexlen > MAX_PROPER_MAPCODE_LEN) { return -109; }
-    if (prelen > 5) { return -119; }
-
-    strcpy(result, input);
-    if (prelen == 1 && codexlen == 5) {
-        result[1] = result[2];
-        result[2] = '.';
-        prelen++;
-    }
-
-    {
-        const int postlen = codexlen - prelen;
-
-        int divx, divy;
-
-        divy = smartDiv(m);
-        if (divy == 1) {
-            divx = xside[prelen];
-            divy = yside[prelen];
-        }
-        else {
-            divx = (nc[prelen] / divy);
-        }
-
-        if (prelen == 4 && divx == 961 && divy == 961) {
-            char t = result[1];
-            result[1] = result[2];
-            result[2] = t;
-        }
-
-        {
-            int relx, rely;
-            const int v = decodeBase31(result);
-
-            if (divx != divy && prelen > 2) {
-                // special grid, useful when prefix is 3 or more, and not a nice 961x961
-                decodeSixWide(v, divx, divy, &relx, &rely);
-            }
-            else {
-                relx = (v / divy);
-                rely = divy - 1 - (v % divy);
-            }
-
-            if (relx < 0 || rely < 0 || relx >= divx || rely >= divy) {
-                return -111; // EVER?
-            }
-
-
-            {
-                const mminforec *b = boundaries(m);
-                const int ygridsize = (b->maxy - b->miny + divy - 1) / divy; // microdegrees per cell
-                const int xgridsize = (b->maxx - b->minx + divx - 1) / divx; // microdegrees per cell
-
-                // encode relative to THE CORNER of this cell
-                rely = b->miny + (rely * ygridsize);
-                relx = b->minx + (relx * xgridsize);
-
-                {
-                    const int xp = xside[postlen];
-                    const int dividerx = ((xgridsize + xp - 1) / xp);
-                    const int yp = yside[postlen];
-                    const int dividery = ((ygridsize + yp - 1) / yp);
-                    // decoderelative
-
-                    {
-                        char *r = result + prelen + 1;
-                        int difx, dify;
-
-                        if (postlen == 3) // decode special
-                        {
-                            decode_triple(r, &difx, &dify);
-                        }
-                        else {
-                            int v;
-                            if (postlen == 4) {
-                                char t = r[1];
-                                r[1] = r[2];
-                                r[2] = t;
-                            } // swap
-                            v = decodeBase31(r);
-                            difx = (v / yp);
-                            dify = (v % yp);
-                            if (postlen == 4) {
-                                char t = r[1];
-                                r[1] = r[2];
-                                r[2] = t;
-                            } // swap back
-                        }
-
-                        // reverse y-direction
-                        dify = yp - 1 - dify;
-
-                        dec->coord32.lon = relx + (difx * dividerx);
-                        dec->coord32.lat = rely + (dify * dividery);
-                        if (!fitsInside(&dec->coord32,m)) { 
-                            return -912;
-                        } 
-
-                        {
-                            const int decodeMaxx = ((relx + xgridsize) < b->maxx) ? (relx + xgridsize) : b->maxx;
-                            const int decodeMaxy = ((rely + ygridsize) < b->maxy) ? (rely + ygridsize) : b->maxy;
-                            return decodeExtension(dec, dividerx << 2, dividery, 0, decodeMaxy, decodeMaxx); // grid
-                        }
-                    } // decoderelative
-                }
-            }
-        }
-    }
-}
-
+// *** mid-level encode routines ***
 
 // returns *result==0 in case of error
-static void encodeGrid(char *result, const encodeRec *enc, int const m, int extraDigits, char headerLetter) {
-    const mminforec *b = boundaries(m);
+static void encodeGrid(char *result, const encodeRec *enc, const int m, const int extraDigits, const char headerLetter) {
+    const Boundaries *b = boundaries(m);
 
     const int orgcodex = coDex(m);
     int codexm = orgcodex;
     if (codexm == 21) {
-        codexm = 22; 
+        codexm = 22;
     }
     else if (codexm == 14) {
         codexm = 23;
@@ -848,23 +693,574 @@ static void encodeGrid(char *result, const encodeRec *enc, int const m, int extr
     }  // encode
 }
 
+// *result==0 in case of error
+static void encodeNameless(char *result, const encodeRec *enc, const int input_ctry, 
+                           const int extraDigits, const int m) {
+    // determine how many nameless records there are (A), and which one is this (X)...
+    const int A = countNamelessRecords(m, firstrec(input_ctry));
+    const int X = m - firstNamelessRecord(m, firstrec(input_ctry));
 
-// find first territory rectangle of the same type as m
-static int firstNamelessRecord(int m, int firstcode) {
-    int i = m;
-    const int codexm = coDex(m);
-    while (i >= firstcode && coDex(i) == codexm && isNameless(i)) { i--; }
-    return (i + 1);
+    *result = 0;
+
+    {
+        const int p = 31 / A;
+        const int r = 31 % A; // the first r items are p+1
+        const int codexm = coDex(m);
+        const int codexlen = (codexm / 10) + (codexm % 10);
+        // determine side of square around centre
+        int SIDE;
+
+        int storage_offset;
+        const Boundaries *b;
+
+        int xSIDE, orgSIDE;
+
+        if (codexm != 21 && A <= 31) {
+            storage_offset = (X * p + (X < r ? X : r)) * (961 * 961);
+        }
+        else if (codexm != 21 && A < 62) {
+            if (X < (62 - A)) {
+                storage_offset = X * (961 * 961);
+            }
+            else {
+                storage_offset = (62 - A + ((X - 62 + A) / 2)) * (961 * 961);
+                if ((X + A) & 1) {
+                    storage_offset += (16 * 961 * 31);
+                }
+            }
+        }
+        else {
+            const int BASEPOWER = (codexm == 21) ? 961 * 961 : 961 * 961 * 31;
+            int BASEPOWERA = (BASEPOWER / A);
+            if (A == 62) {
+                BASEPOWERA++;
+            } else {
+                BASEPOWERA = (961) * (BASEPOWERA / 961);
+            }
+
+            storage_offset = X * BASEPOWERA;
+        }
+
+        SIDE = smartDiv(m);
+
+        b = boundaries(m);
+        orgSIDE = xSIDE = SIDE;
+
+        {
+            int v = storage_offset;
+
+            const int dividerx4 = xDivider4(b->miny, b->maxy); // *** note: dividerx4 is 4 times too large!
+            const int xFracture = (enc->fraclon / MAX_PRECISION_FACTOR);
+            const int dx = (4 * (enc->coord32.lon - b->minx) + xFracture) / dividerx4; // div with quarters
+            const int extrax4 = (enc->coord32.lon - b->minx) * 4 - (dx * dividerx4); // mod with quarters
+
+            const int dividery = 90;
+            int dy = (b->maxy - enc->coord32.lat) / dividery;
+            int extray = (b->maxy - enc->coord32.lat) % dividery;
+
+            if (extray == 0 && enc->fraclat > 0) {
+                dy--;
+                extray += dividery;
+            }
+
+            if (isSpecialShape22(m)) {
+                SIDE = 1 + ((b->maxy - b->miny) / 90); // new side, based purely on y-distance
+                xSIDE = (orgSIDE * orgSIDE) / SIDE;
+                v += encodeSixWide(dx, SIDE - 1 - dy, xSIDE, SIDE);
+            }
+            else {
+                v += (dx * SIDE + dy);
+            }
+
+            encodeBase31(result, v, codexlen + 1); // nameless
+            {
+                int dotp = codexlen;
+                if (codexm == 13) {
+                    dotp--;
+                }
+                memmove(result + dotp, result + dotp - 1, 4);
+                result[dotp - 1] = '.';
+            }
+
+            if (!isSpecialShape22(m)) {
+                if (codexm == 22 && A < 62 && orgSIDE == 961) {
+                    const char t = result[codexlen - 2];
+                    result[codexlen - 2] = result[codexlen];
+                    result[codexlen] = t;
+                }
+            }
+
+            encodeExtension(result, extrax4, extray, dividerx4, dividery, extraDigits, -1, enc); // nameless
+
+            return;
+
+        } // in range
+    }
 }
 
-// count all territory rectangles of the same type as m
-static int countNamelessRecords(int m, int firstcode) {
-    const int i = firstNamelessRecord(m, firstcode);
+// encode in m (known to fit)
+static void encodeAutoHeader(char *result, const encodeRec *enc, const int m, const int extraDigits) {
+    int i;
+    int STORAGE_START = 0;
+    int W, H, xdiv, product;
+    const Boundaries *b;
+
+    // search back to first of the group
+    int firstindex = m;
     const int codexm = coDex(m);
-    while (coDex(m) == codexm) { m++; }
-    return (m - i);
+    while (recType(firstindex - 1) > 1 && coDex(firstindex - 1) == codexm) {
+        firstindex--;
+    }
+
+    i = firstindex;
+    for (; ;) {
+        b = boundaries(i);
+        // determine how many cells
+        H = (b->maxy - b->miny + 89) / 90; // multiple of 10m
+        xdiv = xDivider4(b->miny, b->maxy);
+        W = ((b->maxx - b->minx) * 4 + (xdiv - 1)) / xdiv;
+
+        // round up to multiples of 176*168...
+        H = 176 * ((H + 176 - 1) / 176);
+        W = 168 * ((W + 168 - 1) / 168);
+        product = (W / 168) * (H / 176) * 961 * 31;
+        if (recType(i) == 2) { // plus pipe
+            const int GOODROUNDER = codexm >= 23 ? (961 * 961 * 31) : (961 * 961);
+            product = ((STORAGE_START + product + GOODROUNDER - 1) / GOODROUNDER) * GOODROUNDER - STORAGE_START;
+        }
+        if (i == m) {
+            // encode
+            const int dividerx = (b->maxx - b->minx + W - 1) / W;
+            const int vx = (enc->coord32.lon - b->minx) / dividerx;
+            const int extrax = (enc->coord32.lon - b->minx) % dividerx;
+
+            const int dividery = (b->maxy - b->miny + H - 1) / H;
+            int vy = (b->maxy - enc->coord32.lat) / dividery;
+            int extray = (b->maxy - enc->coord32.lat) % dividery;
+
+            const int codexlen = (codexm / 10) + (codexm % 10);
+            int value = (vx / 168) * (H / 176);
+
+            if (extray == 0 && enc->fraclat > 0) {
+                vy--;
+                extray += dividery;
+            }
+
+            value += (vy / 176);
+
+            // PIPELETTER ENCODE
+            encodeBase31(result, (STORAGE_START / (961 * 31)) + value, codexlen - 2);
+            result[codexlen - 2] = '.';
+            encode_triple(result + codexlen - 1, vx % 168, vy % 176);
+
+            encodeExtension(result, extrax << 2, extray, dividerx << 2, dividery, extraDigits, -1, enc); // autoheader
+            return;
+        }
+        STORAGE_START += product;
+        i++;
+    }
 }
 
+static void encoderEngine(const int ccode, const encodeRec *enc, const int stop_with_one_result,
+                          const int extraDigits, const int requiredEncoder, const int ccode_override) {
+    int from, upto;
+
+    if ((enc == NULL) || (ccode < 0) || (ccode > ccode_earth)) {
+        return;
+    } // bad arguments
+
+    from = firstrec(ccode);
+    upto = lastrec(ccode);
+
+    if (!fitsInsideBoundaries(&enc->coord32, boundaries(upto))) {
+        return;
+    }
+
+    ///////////////////////////////////////////////////////////
+    // look for encoding options
+    ///////////////////////////////////////////////////////////
+    {
+        int i;
+        char result[128];
+        int result_counter = 0;
+
+        *result = 0;
+        for (i = from; i <= upto; i++) {
+            if (fitsInsideBoundaries(&enc->coord32, boundaries(i))) {
+                if (isNameless(i)) {
+                    encodeNameless(result, enc, ccode, extraDigits, i);
+                }
+                else if (recType(i) > 1) {
+                    encodeAutoHeader(result, enc, i, extraDigits);
+                }
+                else if ((i == upto) && isSubdivision(ccode)) {
+                    // *** do a recursive call for the parent ***
+                    encoderEngine(ParentTerritoryOf(ccode), enc, stop_with_one_result, extraDigits, requiredEncoder,
+                                  ccode);
+                    return; /**/
+                }
+                else // must be grid
+                {
+                    // skip isRestricted records unless there already is a result
+                    if (result_counter || !isRestricted(i)) {
+                        if (coDex(i) < 54) {
+                            char headerletter = (char) ((recType(i) == 1) ? headerLetter(i) : 0);
+                            encodeGrid(result, enc, i, extraDigits, headerletter);
+                        }
+                    }
+                }
+
+                // =========== handle result (if any)
+                if (*result) {
+                    result_counter++;
+
+                    repack_if_alldigits(result, 0);
+
+                    if ((requiredEncoder < 0) || (requiredEncoder == i)) {
+                        const int cc = (ccode_override >= 0 ? ccode_override : ccode);
+                        if (*result && enc->mapcodes && (enc->mapcodes->count < MAX_NR_OF_MAPCODE_RESULTS)) {
+                            char *s = enc->mapcodes->mapcode[enc->mapcodes->count++];
+                            if (cc == ccode_earth) {
+                                strcpy(s, result);
+                            } else {
+                                getTerritoryIsoName(s, cc + 1, 0);
+                                strcat(s, " ");
+                                strcat(s, result);
+                            }
+                        }
+                        if (requiredEncoder == i) { return; }
+                    }
+                    if (stop_with_one_result) { return; }
+                    *result = 0; // clear for next iteration
+                }
+            }
+        } // for i
+    }
+}
+
+// pass point to an array of pointers (at least 42), will be made to point to result strings...
+// returns nr of results;
+static int encodeLatLonToMapcodes_internal(char **v, Mapcodes *mapcodes, 
+                                           const double lat, const double lon,
+                                           const int tc, const int stop_with_one_result,
+                                           const int requiredEncoder, const int extraDigits) {
+    encodeRec enc;
+    enc.mapcodes = mapcodes;
+    enc.mapcodes->count = 0;
+
+    convertCoordsToMicrosAndFractions(&enc.coord32, &enc.fraclat, &enc.fraclon, lat, lon);
+
+    if (tc <= 0) // ALL results?
+    {
+#ifdef FAST_ENCODE
+        const int sum = enc.coord32.lon + enc.coord32.lat;
+        int coord = enc.coord32.lon;
+        int i = 0; // pointer into redivar
+        for (; ;) {
+            const int r = redivar[i++];
+            if (r >= 0 && r < 1024) { // leaf?
+                int j;
+                for (j = 0; j <= r; j++) {
+                    const int ctry = (j == r ? ccode_earth : redivar[i + j]);
+                    encoderEngine(ctry, &enc, stop_with_one_result, extraDigits, requiredEncoder, -1);
+                    if ((stop_with_one_result || (requiredEncoder >= 0)) && (enc.mapcodes->count > 0)) { break; }
+                }
+                break;
+            }
+            else {
+                coord = sum - coord;
+                if (coord > r) {
+                    i = redivar[i];
+                }
+                else {
+                    i++;
+                }
+            }
+        }
+#else
+    int i;
+    for(i=0;i<MAX_MAPCODE_TERRITORY_CODE;i++) {
+      encoderEngine(i,&enc,stop_with_one_result,extraDigits, requiredEncoder, -1);
+      if ((stop_with_one_result || (requiredEncoder >= 0)) && (enc.mapcodes->count > 0)) { break; }
+    }
+#endif
+    }
+    else {
+        encoderEngine((tc - 1), &enc, stop_with_one_result, extraDigits, requiredEncoder, -1);
+    }
+
+    if (v) {
+        int i;
+        for (i = 0; i < enc.mapcodes->count; i++) {
+            char *s = &enc.mapcodes->mapcode[i][0];
+            char *p = strchr(s, ' ');
+            if (p == NULL) {
+                v[i * 2 + 1] = (char *) "AAA";
+                v[i * 2] = s;
+            }
+            else {
+                *p++ = 0;
+                v[i * 2 + 1] = s;
+                v[i * 2] = p;
+            }
+        }
+    }
+
+    return enc.mapcodes->count;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+//
+//  DECODING
+//
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+typedef struct {
+    // input
+    const char *orginput;   // original full input string
+    char minput[MAX_MAPCODE_RESULT_LEN]; // room to manipulate clean copy of input
+    const char *mapcode;    // input mapcode (first character of proper mapcode excluding territory code)
+    const char *extension;  // input extension (or empty)
+    int context;            // input territory context (or negative)
+    const char *iso;        // input territory alphacode (context)
+    // output
+    point result;           // result
+    point32 coord32;        // result in integer arithmetic (microdegrees)
+    MapcodeZone zone;       // result zone (in "DegreeFractions")
+} decodeRec;
+
+// decode the high-precision extension (0-8 characters)
+// this routine takes the integer-arithmeteic decoding results (dec->coord32), adds precision, 
+// and determines result zone (dec->zone); returns negative in case of error.
+static int decodeExtension(decodeRec *dec, 
+                           int dividerx4, int dividery, 
+                           const int lon_offset4, 
+                           const int extremeLat32, const int maxLon32) {
+    double lat1, lon4;
+    const char *extrapostfix = dec->extension;
+    int lon32 = 0;
+    int lat32 = 0;
+    int processor = 1;
+    int odd = 0;
+    if (strlen(extrapostfix) > MAX_PRECISION_DIGITS) {
+        return -79; // too many digits
+    }
+    while (*extrapostfix) {
+        int column1, row1, column2, row2;
+        const int c1 = decodeChar(*extrapostfix++);
+        if (c1 < 0 || c1 == 30) { return -1; } // illegal extension character
+        row1 = (c1 / 5);
+        column1 = (c1 % 5);
+        if (*extrapostfix) {
+            const int c2 = decodeChar(*extrapostfix++);
+            if (c2 < 0 || c2 == 30) { return -1; } // illegal extension character
+            row2 = (c2 / 6);
+            column2 = (c2 % 6);
+        }
+        else {
+            odd = 1;
+            row2 = 0;
+            column2 = 0;
+        }
+
+        processor *= 30;
+        lon32 = lon32 * 30 + column1 * 6 + column2;
+        lat32 = lat32 * 30 + row1 * 5 + row2;
+    }
+
+    while (processor < MAX_PRECISION_FACTOR) {
+        dividerx4 *= 30;
+        dividery *= 30;
+        processor *= 30;
+    }
+
+    lon4 = (dec->coord32.lon * 4 * (double) MAX_PRECISION_FACTOR) + ((lon32 * (double) dividerx4)) +
+           (lon_offset4 * (double) MAX_PRECISION_FACTOR);
+    lat1 = (dec->coord32.lat * (double) MAX_PRECISION_FACTOR) + ((lat32 * (double) dividery));
+
+    // determine the range of coordinates that are encoded to this mapcode
+    if (odd) {
+        setFromFractions(&dec->zone, lat1, lon4, 5 * dividery, 6 * dividerx4);
+    } else {
+        setFromFractions(&dec->zone, lat1, lon4, dividery, dividerx4);
+    }
+
+    // restrict the coordinate range to the extremes that were provided
+    if (dec->zone.fmaxx > maxLon32 * MICROLON_TO_FRACTIONS_FACTOR) {
+        dec->zone.fmaxx = maxLon32 * MICROLON_TO_FRACTIONS_FACTOR;
+    }
+    if (dividery >= 0) {
+        if (dec->zone.fmaxy > extremeLat32 * MICROLAT_TO_FRACTIONS_FACTOR) {
+            dec->zone.fmaxy = extremeLat32 * MICROLAT_TO_FRACTIONS_FACTOR;
+        }
+    }
+    else {
+        if (dec->zone.fminy < extremeLat32 * MICROLAT_TO_FRACTIONS_FACTOR) {
+            dec->zone.fminy = extremeLat32 * MICROLAT_TO_FRACTIONS_FACTOR;
+        }
+    }
+    return isEmpty(&dec->zone) ? -45 : 0;
+}
+
+// decode 'code' until either a dot or an end-of-string is encountered
+static int decodeBase31(const char *code) {
+    int value = 0;
+    while (*code != '.' && *code != 0) {
+        value = value * 31 + decodeChar(*code++);
+    }
+    return value;
+}
+
+static void decode_triple(const char *result, int *difx, int *dify) {
+    // decode the first character
+    const int c1 = decodeChar(*result++);
+    if (c1 < 24) {
+        int m = decodeBase31(result);
+        *difx = (c1 % 6) * 28 + (m / 34);
+        *dify = (c1 / 6) * 34 + (m % 34);
+    }
+    else // bottom row
+    {
+        int x = decodeBase31(result);
+        *dify = (x % 40) + 136;
+        *difx = (x / 40) + 24 * (c1 - 24);
+    }
+} // decode_triple
+
+static void decodeSixWide(const int v, const int width, const int height, 
+                          int *x, int *y) {
+    int w;
+    int D = 6;
+    int col = v / (height * 6);
+    const int maxcol = (width - 4) / 6;
+    if (col >= maxcol) {
+        col = maxcol;
+        D = width - maxcol * 6;
+    }
+    w = v - (col * height * 6);
+
+    *x = col * 6 + (w % D);
+    *y = height - 1 - (w / D);
+}
+
+// *** mid-level encode routines ***
+
+// decodes dec->mapcode in context of territory rectangle m; returns negative if error
+static int decodeGrid(decodeRec *dec, const int m, const int hasHeaderLetter) {
+    const char *input = (hasHeaderLetter ? dec->mapcode + 1 : dec->mapcode);
+    const int codexlen = (int) (strlen(input) - 1);
+    int prelen = (int) (strchr(input, '.') - input);
+    char result[MAX_PROPER_MAPCODE_LEN + 1];
+
+    if (codexlen > MAX_PROPER_MAPCODE_LEN) { return -109; }
+    if (prelen > 5) { return -119; }
+
+    strcpy(result, input);
+    if (prelen == 1 && codexlen == 5) {
+        result[1] = result[2];
+        result[2] = '.';
+        prelen++;
+    }
+
+    {
+        const int postlen = codexlen - prelen;
+
+        int divx, divy;
+
+        divy = smartDiv(m);
+        if (divy == 1) {
+            divx = xside[prelen];
+            divy = yside[prelen];
+        }
+        else {
+            divx = (nc[prelen] / divy);
+        }
+
+        if (prelen == 4 && divx == 961 && divy == 961) {
+            char t = result[1];
+            result[1] = result[2];
+            result[2] = t;
+        }
+
+        {
+            int relx, rely;
+            const int v = decodeBase31(result);
+
+            if (divx != divy && prelen > 2) {
+                // special grid, useful when prefix is 3 or more, and not a nice 961x961
+                decodeSixWide(v, divx, divy, &relx, &rely);
+            }
+            else {
+                relx = (v / divy);
+                rely = divy - 1 - (v % divy);
+            }
+
+            if (relx < 0 || rely < 0 || relx >= divx || rely >= divy) {
+                return -111; // EVER?
+            }
+
+
+            {
+                const Boundaries *b = boundaries(m);
+                const int ygridsize = (b->maxy - b->miny + divy - 1) / divy; // microdegrees per cell
+                const int xgridsize = (b->maxx - b->minx + divx - 1) / divx; // microdegrees per cell
+
+                // encode relative to THE CORNER of this cell
+                rely = b->miny + (rely * ygridsize);
+                relx = b->minx + (relx * xgridsize);
+
+                {
+                    const int xp = xside[postlen];
+                    const int dividerx = ((xgridsize + xp - 1) / xp);
+                    const int yp = yside[postlen];
+                    const int dividery = ((ygridsize + yp - 1) / yp);
+                    // decoderelative
+
+                    {
+                        char *r = result + prelen + 1;
+                        int difx, dify;
+
+                        if (postlen == 3) // decode special
+                        {
+                            decode_triple(r, &difx, &dify);
+                        }
+                        else {
+                            int v;
+                            if (postlen == 4) {
+                                char t = r[1];
+                                r[1] = r[2];
+                                r[2] = t;
+                            } // swap
+                            v = decodeBase31(r);
+                            difx = (v / yp);
+                            dify = (v % yp);
+                            if (postlen == 4) {
+                                char t = r[1];
+                                r[1] = r[2];
+                                r[2] = t;
+                            } // swap back
+                        }
+
+                        // reverse y-direction
+                        dify = yp - 1 - dify;
+
+                        dec->coord32.lon = relx + (difx * dividerx);
+                        dec->coord32.lat = rely + (dify * dividery);
+                        if (!fitsInsideBoundaries(&dec->coord32, boundaries(m))) {
+                            return -912;
+                        }
+
+                        {
+                            const int decodeMaxx = ((relx + xgridsize) < b->maxx) ? (relx + xgridsize) : b->maxx;
+                            const int decodeMaxy = ((rely + ygridsize) < b->maxy) ? (rely + ygridsize) : b->maxy;
+                            return decodeExtension(dec, dividerx << 2, dividery, 0, decodeMaxy, decodeMaxx); // grid
+                        }
+                    } // decoderelative
+                }
+            }
+        }
+    }
+}
 
 // decodes dec->mapcode in context of territory rectangle m, territory dec->context
 // Returns negative in case of error
@@ -895,7 +1291,7 @@ static int decodeNameless(decodeRec *dec, int m) {
         int swapletters = 0;
         int xSIDE;
         int X;
-        const mminforec *b;
+        const Boundaries *b;
 
         // make copy of input, so we can swap around letters during the decoding
         char result[32];
@@ -996,215 +1392,11 @@ static int decodeNameless(decodeRec *dec, int m) {
                 dec->coord32.lon = b->minx + ((dx * dividerx4) / 4);
                 dec->coord32.lat = b->maxy - (dy * dividery);
 
-                return decodeExtension(dec, dividerx4, -dividery, ((dx * dividerx4) % 4) , b->miny,b->maxx); // nameless
+                return decodeExtension(dec, dividerx4, -dividery, ((dx * dividerx4) % 4), b->miny, b->maxx); // nameless
             }
         }
     }
 }
-
-
-static void repack_if_alldigits(char *input, const int aonly) {
-    char *s = input;
-    int alldigits = 1; // assume all digits
-    char *e;
-    char *dotpos = NULL;
-
-    for (e = s; *e != 0 && *e != '-'; e++) {
-        if (*e < '0' || *e > '9') {
-            if (*e == '.' && !dotpos) {
-                dotpos = e;
-            } else {
-                alldigits = 0;
-                break;
-            }
-        }
-    }
-    e--;
-    s = e - 1;
-    if (alldigits && dotpos &&
-        s > dotpos) // e is last char, s is one before, both are beyond dot, all characters are digits
-    {
-        if (aonly) // v1.50 - encode only using the letter A
-        {
-            const int v = ((*input) - '0') * 100 + ((*s) - '0') * 10 + ((*e) - '0');
-            *input = 'A';
-            *s = encode_chars[v / 32];
-            *e = encode_chars[v % 32];
-        }
-        else // encode using A,E,U
-        {
-            const int v = ((*s) - '0') * 10 + ((*e) - '0');
-            *s = encode_chars[(v / 34) + 31];
-            *e = encode_chars[v % 34];
-        }
-    }
-}
-
-// returns 1 if unpacked, 0 if left unchanged, negative if unchanged and an error was detected
-static int unpack_if_alldigits(char *input) 
-{ // rewrite all-digit codes
-    char *s = input;
-    char *dotpos = NULL;
-    const int aonly = (*s == 'A' || *s == 'a');
-    if (aonly) { s++; } //*** v1.50
-    for (; *s != 0 && s[2] != 0 && s[2] != '-'; s++) {
-        if (*s == '-') {
-            break;
-        } else if (*s == '.' && !dotpos) {
-            dotpos = s;
-        } else if (decodeChar(*s) < 0 || decodeChar(*s) > 9) {
-            return 0;
-        }  // nondigit, so stop
-    }
-
-    if (dotpos) {
-        if (aonly) // v1.50 encoded only with A's
-        {
-            const int v = (s[0] == 'A' || s[0] == 'a' ? 31 : decodeChar(s[0])) * 32 +
-                    (s[1] == 'A' || s[1] == 'a' ? 31 : decodeChar(s[1]));
-            *input = (char) ('0' + (v / 100));
-            s[0] = (char) ('0' + ((v / 10) % 10));
-            s[1] = (char) ('0' + (v % 10));
-            return 1;
-        } // v1.50
-
-        if (*s == 'a' || *s == 'e' || *s == 'u' || *s == 'A' || *s == 'E' ||
-            *s == 'U') // thus, all digits, s[2]=0, after dot
-        {
-            char *e = s + 1;  // s is vowel, e is lastchar
-
-            int v = 0;
-            if (*s == 'e' || *s == 'E') {
-                v = 34;
-            } else if (*s == 'u' || *s == 'U') { v = 68; }
-
-            if (*e == 'a' || *e == 'A') {
-                v += 31;
-            } else if (*e == 'e' || *e == 'E') {
-                v += 32;
-            } else if (*e == 'u' || *e == 'U') {
-                v += 33;
-            } else if (decodeChar(*e) < 0) {
-                return -9; // invalid last character!
-            } else { v += decodeChar(*e); }
-
-            if (v < 100) {
-                *s = encode_chars[(unsigned int) v / 10];
-                *e = encode_chars[(unsigned int) v % 10];
-            } else {
-                return -31; // overflow (ending in UE or UU)
-            }
-            return 1;
-        }
-    }
-    return 0; // no vowel just before end
-}
-
-
-// *result==0 in case of error
-static void encodeNameless(char *result, const encodeRec *enc, int input_ctry, int extraDigits, int m) {
-    // determine how many nameless records there are (A), and which one is this (X)...
-    const int A = countNamelessRecords(m, firstrec(input_ctry));
-    const int X = m - firstNamelessRecord(m, firstrec(input_ctry));
-
-    *result = 0;
-
-    {
-        const int p = 31 / A;
-        const int r = 31 % A; // the first r items are p+1
-        const int codexm = coDex(m);
-        const int codexlen = (codexm / 10) + (codexm % 10);
-        // determine side of square around centre
-        int SIDE;
-
-        int storage_offset;
-        const mminforec *b;
-
-        int xSIDE, orgSIDE;
-
-        if (codexm != 21 && A <= 31) {
-            storage_offset = (X * p + (X < r ? X : r)) * (961 * 961);
-        }
-        else if (codexm != 21 && A < 62) {
-            if (X < (62 - A)) {
-                storage_offset = X * (961 * 961);
-            }
-            else {
-                storage_offset = (62 - A + ((X - 62 + A) / 2)) * (961 * 961);
-                if ((X + A) & 1) {
-                    storage_offset += (16 * 961 * 31);
-                }
-            }
-        }
-        else {
-            const int BASEPOWER = (codexm == 21) ? 961 * 961 : 961 * 961 * 31;
-            int BASEPOWERA = (BASEPOWER / A);
-            if (A == 62) {
-                BASEPOWERA++;
-            } else {
-                BASEPOWERA = (961) * (BASEPOWERA / 961);
-            }
-
-            storage_offset = X * BASEPOWERA;
-        }
-
-        SIDE = smartDiv(m);
-
-        b = boundaries(m);
-        orgSIDE = xSIDE = SIDE;
-
-        {
-            int v = storage_offset;
-
-            const int dividerx4 = xDivider4(b->miny, b->maxy); // *** note: dividerx4 is 4 times too large!
-            const int xFracture = (enc->fraclon / MAX_PRECISION_FACTOR);
-            const int dx = (4 * (enc->coord32.lon - b->minx) + xFracture) / dividerx4; // div with quarters
-            const int extrax4 = (enc->coord32.lon - b->minx) * 4 - (dx * dividerx4); // mod with quarters
-
-            const int dividery = 90;
-            int dy = (b->maxy - enc->coord32.lat) / dividery;
-            int extray = (b->maxy - enc->coord32.lat) % dividery;
-
-            if (extray == 0 && enc->fraclat > 0) {
-                dy--;
-                extray += dividery;
-            }
-
-            if (isSpecialShape22(m)) {
-                SIDE = 1 + ((b->maxy - b->miny) / 90); // new side, based purely on y-distance
-                xSIDE = (orgSIDE * orgSIDE) / SIDE;
-                v += encodeSixWide(dx, SIDE - 1 - dy, xSIDE, SIDE);
-            }
-            else {
-                v += (dx * SIDE + dy);
-            }
-
-            encodeBase31(result, v, codexlen + 1); // nameless
-            {
-                int dotp = codexlen;
-                if (codexm == 13) {
-                    dotp--;
-                }
-                memmove(result + dotp, result + dotp - 1, 4);
-                result[dotp - 1] = '.';
-            }
-
-            if (!isSpecialShape22(m)) {
-                if (codexm == 22 && A < 62 && orgSIDE == 961) {
-                    const char t = result[codexlen - 2];
-                    result[codexlen - 2] = result[codexlen];
-                    result[codexlen] = t;
-                }
-            }
-
-            encodeExtension(result, extrax4, extray, dividerx4, dividery, extraDigits, -1, enc); // nameless
-
-            return;
-
-        } // in range
-    }
-}
-
 
 // decodes dec->mapcode in context of territory rectangle m or one of its mates
 static int decodeAutoHeader(decodeRec *dec, int m) {
@@ -1223,7 +1415,7 @@ static int decodeAutoHeader(decodeRec *dec, int m) {
     value *= (961 * 31);
 
     for (; coDex(m) == codexm && recType(m) > 1; m++) {
-        const mminforec *b = boundaries(m);
+        const Boundaries *b = boundaries(m);
         // determine how many cells
         int H = (b->maxy - b->miny + 89) / 90; // multiple of 10m
         const int xdiv = xDivider4(b->miny, b->maxy);
@@ -1257,193 +1449,19 @@ static int decodeAutoHeader(decodeRec *dec, int m) {
                     dec->coord32.lat = b->maxy - vy * dividery;
                     dec->coord32.lon = b->minx + vx * dividerx;
 
-                    if (dec->coord32.lon < b->minx || dec->coord32.lon >= b->maxx || dec->coord32.lat < b->miny ||
-                        dec->coord32.lat > b->maxy) // *** CAREFUL! do this test BEFORE adding remainder...
+                    if ((dec->coord32.lon < b->minx) || (dec->coord32.lon >= b->maxx) || 
+                        (dec->coord32.lat < b->miny) || (dec->coord32.lat > b->maxy)) // *** CAREFUL! do this test BEFORE adding remainder...
                     {
                         return -122; // invalid code
-                    } 
+                    }
                 }
             }
 
-            return decodeExtension(dec, dividerx << 2, -dividery, 0, b->miny,b->maxx); // autoheader decode
+            return decodeExtension(dec, dividerx << 2, -dividery, 0, b->miny, b->maxx); // autoheader decode
         }
         STORAGE_START += product;
     } // for j
     return -1;
-}
-
-// encode in m (known to fit)
-static void encodeAutoHeader(char *result, const encodeRec *enc, const int m, const int extraDigits) {
-    int i;
-    int STORAGE_START = 0;
-    int W, H, xdiv, product;
-    const mminforec *b;
-
-    // search back to first of the group
-    int firstindex = m;
-    const int codexm = coDex(m);
-    while (recType(firstindex - 1) > 1 && coDex(firstindex - 1) == codexm) {
-        firstindex--;
-    }
-
-    i = firstindex;
-    for(;;) {
-        b = boundaries(i);
-        // determine how many cells
-        H = (b->maxy - b->miny + 89) / 90; // multiple of 10m
-        xdiv = xDivider4(b->miny, b->maxy);
-        W = ((b->maxx - b->minx) * 4 + (xdiv - 1)) / xdiv;
-
-        // round up to multiples of 176*168...
-        H = 176 * ((H + 176 - 1) / 176);
-        W = 168 * ((W + 168 - 1) / 168);
-        product = (W / 168) * (H / 176) * 961 * 31;
-        if (recType(i) == 2) { // plus pipe
-            const int GOODROUNDER = codexm >= 23 ? (961 * 961 * 31) : (961 * 961);
-            product = ((STORAGE_START + product + GOODROUNDER - 1) / GOODROUNDER) * GOODROUNDER - STORAGE_START;
-        }
-        if (i == m) {
-            // encode
-            const int dividerx = (b->maxx - b->minx + W - 1) / W;
-            const int vx = (enc->coord32.lon - b->minx) / dividerx;
-            const int extrax = (enc->coord32.lon - b->minx) % dividerx;
-
-            const int dividery = (b->maxy - b->miny + H - 1) / H;
-            int vy = (b->maxy - enc->coord32.lat) / dividery;
-            int extray = (b->maxy - enc->coord32.lat) % dividery;
-
-            const int codexlen = (codexm / 10) + (codexm % 10);
-            int value = (vx / 168) * (H / 176);
-
-            if (extray == 0 && enc->fraclat > 0) {
-                vy--;
-                extray += dividery;
-            }
-
-            value += (vy / 176);
-
-            // PIPELETTER ENCODE
-            encodeBase31(result, (STORAGE_START / (961 * 31)) + value, codexlen - 2);
-            result[codexlen - 2] = '.';
-            encode_triple(result + codexlen - 1, vx % 168, vy % 176);
-
-            encodeExtension(result, extrax << 2, extray, dividerx << 2, dividery, extraDigits, -1, enc); // autoheader
-            return;
-        }
-        STORAGE_START += product;
-        i++;
-    }
-}
-
-static void encoderEngine(const int ccode, const encodeRec *enc, const int stop_with_one_result, 
-                          const int extraDigits, const int requiredEncoder, const int ccode_override) {
-    int from, upto;
-
-    if (enc == NULL || ccode < 0 || ccode > ccode_earth) {
-        return;
-    } // bad arguments
-
-    from = firstrec(ccode);
-    upto = lastrec(ccode);
-
-    if (!fitsInside(&enc->coord32, upto)) {
-        return;
-    }
-
-    ///////////////////////////////////////////////////////////
-    // look for encoding options
-    ///////////////////////////////////////////////////////////
-    {
-        int i;
-        char result[128];
-        int result_counter = 0;
-
-        *result = 0;
-        for (i = from; i <= upto; i++) {
-            if (fitsInside(&enc->coord32, i)) {
-                if (isNameless(i)) {
-                    encodeNameless(result, enc, ccode, extraDigits, i);
-                }
-                else if (recType(i) > 1) {
-                    encodeAutoHeader(result, enc, i, extraDigits);
-                }
-                else if ((i == upto) && isSubdivision(ccode)) {
-                    // *** do a recursive call for the parent ***
-                    encoderEngine(ParentTerritoryOf(ccode), enc, stop_with_one_result, extraDigits, requiredEncoder, ccode);
-                    return; /**/
-                }
-                else // must be grid
-                {
-                    // skip isRestricted records unless there already is a result
-                    if (result_counter || !isRestricted(i)) {
-                        if (coDex(i) < 54) {
-                            char headerletter = (char) ((recType(i) == 1) ? headerLetter(i) : 0);
-                            encodeGrid(result, enc, i, extraDigits, headerletter);
-                        }
-                    }
-                }
-
-                // =========== handle result (if any)
-                if (*result) {
-                    result_counter++;
-
-                    repack_if_alldigits(result, 0);
-
-                    if (requiredEncoder < 0 || requiredEncoder == i) {
-                        const int cc = (ccode_override >= 0 ? ccode_override : ccode);
-                        if (*result && enc->mapcodes && (enc->mapcodes->count < MAX_NR_OF_MAPCODE_RESULTS)) {
-                            char *s = enc->mapcodes->mapcode[enc->mapcodes->count++];
-                            if (cc == ccode_earth) {
-                                strcpy(s, result);
-                            } else {
-                                getTerritoryIsoName(s, cc + 1, 0);
-                                strcat(s, " ");
-                                strcat(s, result);
-                            }
-                        }
-                        if (requiredEncoder == i) { return; }
-                    }
-                    if (stop_with_one_result) { return; }
-                    *result = 0; // clear for next iteration
-                }
-            }
-        } // for i
-    }
-}
-
-// determine the non-empty intersection zone z between a given zone and the boundaries of territory rectangle m.
-// returns nonzero in case such a zone exists
-int restrictZoneTo(MapcodeZone *z,const MapcodeZone *zone, const mminforec *b) {    
-    z->fminy = zone->fminy;
-    z->fmaxy = zone->fmaxy;
-    if (z->fminy < b->miny * MICROLAT_TO_FRACTIONS_FACTOR) {
-        z->fminy = b->miny * MICROLAT_TO_FRACTIONS_FACTOR;
-    }
-    if (z->fmaxy > b->maxy * MICROLAT_TO_FRACTIONS_FACTOR) {
-        z->fmaxy = b->maxy * MICROLAT_TO_FRACTIONS_FACTOR;
-    }
-    if (z->fminy < z->fmaxy) {
-        double bminx = b->minx * MICROLON_TO_FRACTIONS_FACTOR;
-        double bmaxx = b->maxx * MICROLON_TO_FRACTIONS_FACTOR;
-        z->fminx = zone->fminx;
-        z->fmaxx = zone->fmaxx;
-        if (bmaxx < 0 && z->fminx > 0) {
-            bminx += (360000000 * MICROLON_TO_FRACTIONS_FACTOR);
-            bmaxx += (360000000 * MICROLON_TO_FRACTIONS_FACTOR);
-        }
-        else if (bminx > 0 && z->fmaxx < 0) {
-            bminx -= (360000000 * MICROLON_TO_FRACTIONS_FACTOR);
-            bmaxx -= (360000000 * MICROLON_TO_FRACTIONS_FACTOR);
-        }
-        if (z->fminx < bminx) {
-            z->fminx = bminx; 
-        }
-        if (z->fmaxx > bmaxx) {
-            z->fmaxx = bmaxx;
-        }
-        return (z->fminx < z->fmaxx);
-    }
-    return 0;
 }
 
 // returns nonzero if error
@@ -1476,7 +1494,7 @@ static int decoderEngine(decodeRec *dec) {
         if (s) {
             *s++ = 0;
             while (*s > 0 && *s <= 32) { s++; }
-            ccode = convertTerritoryIsoNameToCode(w, dec->context-1) - 1;
+            ccode = convertTerritoryIsoNameToCode(w, dec->context - 1) - 1;
         }
         else {
             ccode = dec->context - 1;
@@ -1485,8 +1503,8 @@ static int decoderEngine(decodeRec *dec) {
         if (ccode == ccode_mex && len < 8) {
             ccode = convertTerritoryIsoNameToCode("5MX", -1) - 1;
         } // special case for mexico country vs state
-        if (*s=='u' || *s=='U') {
-            strcpy(s,s+1);
+        if ((*s == 'u') || (*s == 'U')) {
+            strcpy(s, s + 1);
             repack_if_alldigits(s, 1);
         }
         dec->context = ccode;
@@ -1504,7 +1522,7 @@ static int decoderEngine(decodeRec *dec) {
                     *w = '0';
                 } else if (*w == 'I') {
                     *w = '1';
-                } else if (*w == 'A' || *w == 'E' || *w == 'U') {
+                } else if ((*w == 'A') || (*w == 'E') || (*w == 'U')) {
                     hasvowels = 1;
                 } else if (dec->extension == NULL) {
                     hasletters = 1;
@@ -1519,7 +1537,7 @@ static int decoderEngine(decodeRec *dec) {
             else if (*w == '-') {
                 if (dec->extension != NULL) {
                     return -17; // already had a hyphen
-                } 
+                }
                 dec->extension = w + 1;
                 *w = 0;
             }
@@ -1530,7 +1548,7 @@ static int decoderEngine(decodeRec *dec) {
         if (!dot) {
             return -27;
         }
-        if (dec->extension == NULL) { 
+        if (dec->extension == NULL) {
             dec->extension = "";
         }
 
@@ -1552,7 +1570,7 @@ static int decoderEngine(decodeRec *dec) {
         else if (isSubdivision(ccode)) {
             // int mapcodes must be interpreted in the parent of a subdivision
             int parent = ParentTerritoryOf(ccode);
-            if (codex == 44 || ((codex == 34 || codex == 43) && (parent == ccode_ind || parent == ccode_mex))) {                
+            if ((codex == 44) || ((codex == 34 || codex == 43) && (parent == ccode_ind || parent == ccode_mex))) {
                 ccode = parent;
             }
         }
@@ -1570,15 +1588,15 @@ static int decoderEngine(decodeRec *dec) {
             const int r = recType(i);
             if (r == 0) {
                 if (isNameless(i)) {
-                    if (((codexi == 21) && (codex == 22))
-                        || ((codexi == 22) && (codex == 32))
-                        || ((codexi == 13) && (codex == 23))) {
+                    if (((codexi == 21) && (codex == 22)) || 
+                        ((codexi == 22) && (codex == 32)) || 
+                        ((codexi == 13) && (codex == 23))) {
                         err = decodeNameless(dec, i);
                         break;
                     }
                 }
-                else {                    
-                    if (codexi == codex || ((codex == 22) && (codexi == 21))) {
+                else {
+                    if ((codexi == codex) || ((codex == 22) && (codexi == 21))) {
                         err = decodeGrid(dec, i, 0);
 
                         // first of all, make sure the zone fits the country
@@ -1587,13 +1605,13 @@ static int decoderEngine(decodeRec *dec) {
                         if ((err == 0) && isRestricted(i)) {
                             int nrZoneOverlaps = 0;
                             int j;
-                            
+
                             // *** make sure decode fits somewhere ***
                             dec->result = getMidPointFractions(&dec->zone);
                             dec->coord32 = convertFractionsToCoord32(&dec->result);
                             for (j = i - 1; j >= from; j--) { // look in previous rects
                                 if (!isRestricted(j)) {
-                                    if (fitsInside(&dec->coord32, j)) {
+                                    if (fitsInsideBoundaries(&dec->coord32, boundaries(j))) {
                                         nrZoneOverlaps = 1;
                                         break;
                                     }
@@ -1602,31 +1620,31 @@ static int decoderEngine(decodeRec *dec) {
 
                             if (!nrZoneOverlaps) {
                                 MapcodeZone zfound;
-                                mminforec prevu;
+                                Boundaries prevu;
                                 int prevj = -1;
                                 for (j = from; j < i; j++) { // try all smaller rectangles j
-                                  if (!isRestricted(j)) {
-                                    MapcodeZone z;
-                                    if (restrictZoneTo(&z,&dec->zone,boundaries(j))) {
-                                        nrZoneOverlaps++;
-                                        if (nrZoneOverlaps == 1) {
-                                            // first fit! remember...
-                                            zoneCopyFrom(&zfound,&z);
-                                            prevj = j;
-                                            memcpy(&prevu,boundaries(j),sizeof(mminforec));
+                                    if (!isRestricted(j)) {
+                                        MapcodeZone z;
+                                        if (restrictZoneTo(&z, &dec->zone, boundaries(j))) {
+                                            nrZoneOverlaps++;
+                                            if (nrZoneOverlaps == 1) {
+                                                // first fit! remember...
+                                                zoneCopyFrom(&zfound, &z);
+                                                prevj = j;
+                                                memcpy(&prevu, boundaries(j), sizeof(Boundaries));
+                                            }
+                                            else { // nrZoneOverlaps >= 2
+                                                // more than one hit
+                                                break; // give up
+                                            }
                                         }
-                                        else { // nrZoneOverlaps >= 2                                            
-                                            // more than one hit
-                                            break; // give up
-                                        }
-                                    }
-                                  } // isRestricted
+                                    } // isRestricted
                                 } // for j
 
                                 // if several sub-areas intersect, just return the whole zone
                                 // (the center of which may NOT re-encode to the same mapcode!)
                                 if (nrZoneOverlaps == 1) { // found exactly ONE intersection?
-                                    zoneCopyFrom(&dec->zone,&zfound);
+                                    zoneCopyFrom(&dec->zone, &zfound);
                                 }
                             }
 
@@ -1638,14 +1656,15 @@ static int decoderEngine(decodeRec *dec) {
                     }
                 }
             }
-            else if (r == 1) {                
+            else if (r == 1) {
                 if (codex == codexi + 10 && headerLetter(i) == *s) {
                     err = decodeGrid(dec, i, 1);
                     break;
                 }
             }
             else { //r>1                
-                if (((codex == 23) && (codexi == 22)) || ((codex == 33) && (codexi == 23))) {
+                if (((codex == 23) && (codexi == 22)) || 
+                    ((codex == 33) && (codexi == 23))) {
                     err = decodeAutoHeader(dec, i);
                     break;
                 }
@@ -1668,42 +1687,19 @@ static int decoderEngine(decodeRec *dec) {
     dec->result = convertFractionsToDegrees(&dec->result);
 
     // normalise between =180 and 180
-    if (dec->result.lat <  -90.0) { dec->result.lat =  -90.0; }
-    if (dec->result.lat >   90.0) { dec->result.lat =   90.0; }
+    if (dec->result.lat < -90.0) { dec->result.lat = -90.0; }
+    if (dec->result.lat > 90.0) { dec->result.lat = 90.0; }
     if (dec->result.lon < -180.0) { dec->result.lon += 360.0; }
     if (dec->result.lon >= 180.0) { dec->result.lon -= 360.0; }
 
     return 0;
 }
 
-
-
-// PI
-#define _PI 3.14159265358979323846
-
-// Radius of Earth.
-#define EARTH_RADIUS_X_METERS 6378137
-#define EARTH_RADIUS_Y_METERS 6356752
-
-// Circumference of Earth.
-#define EARTH_CIRCUMFERENCE_X (EARTH_RADIUS_X_METERS * 2 * _PI)
-#define EARTH_CIRCUMFERENCE_Y (EARTH_RADIUS_Y_METERS * 2 * _PI)
-
-// Meters per degree latitude is fixed. For longitude: use factor * cos(midpoint of two degree latitudes).
-#define METERS_PER_DEGREE_LAT (EARTH_CIRCUMFERENCE_Y / 360.0)
-#define METERS_PER_DEGREE_LON (EARTH_CIRCUMFERENCE_X / 360.0)
-
-double distanceInMeters(double latDeg1, double lonDeg1, double latDeg2, double lonDeg2) {
-    if (lonDeg1 < 0 && lonDeg2 > 1) { lonDeg1 += 360; }
-    if (lonDeg2 < 0 && lonDeg1 > 1) { lonDeg2 += 360; }
-    {
-        const double dy = (latDeg2 - latDeg1) * METERS_PER_DEGREE_LAT;
-        const double dx = (lonDeg2 - lonDeg1) * METERS_PER_DEGREE_LON * cos((latDeg1 + latDeg2) * _PI / 360.0);
-        return sqrt(dx * dx + dy * dy);
-    }
-}
-
-
+///////////////////////////////////////////////////////////////////////////////////////////////
+//
+//  Alphabet support
+//
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef SUPPORT_FOREIGN_ALPHABETS
 
@@ -1758,7 +1754,7 @@ static struct {
                 {0x03B1, 0x03c9, "ABGDFZHQIKLMNCOJP?STYVXRW"}, // Greek lowercase
                 {0x10d0, 0x10ef, "AB?CE?D?UF?GHOJ?KLMINPQRSTVW?XYZ"}, // Georgisch lowercase
                 {0x0562, 0x0586, "BCDE??FGHI?J?KLM?N?U?PQ?R??STVWXYZ?OA"}, // Armenian lowercase
-                {0,      0, NULL}
+                {0,      0,      NULL}
         };
 
 
@@ -1808,8 +1804,8 @@ static UWORD *encode_utf16(UWORD *unibuf, const int maxlen, const char *mapcode,
     const char *r = mapcode;
     while (*r != 0 && w < e) {
         char c = *r++;
-        if (c >= 'a' && c <= 'z') { c += ('A' - 'a'); }
-        if (c < 0 || c > 'Z') { // not in any valid range?
+        if ((c >= 'a') && (c <= 'z')) { c += ('A' - 'a'); }
+        if ((c < 0) || (c > 'Z')) { // not in any valid range?
             *w++ = '?';
         } else if (c < 'A') { // valid but not a letter (e.g. a dot, a space...)
             *w++ = (UWORD) c; // leave untranslated
@@ -1821,9 +1817,62 @@ static UWORD *encode_utf16(UWORD *unibuf, const int maxlen, const char *mapcode,
     return unibuf;
 }
 
+// PUBLIC - convert as much as will fit of mapcode into unibuf
+UWORD *convertToAlphabet(UWORD *unibuf, int maxlength, const char *mapcode, int alphabet) // 0=roman, 2=cyrillic
+{
+    UWORD *startbuf = unibuf;
+    UWORD *lastspot = &unibuf[maxlength - 1];
+    if (maxlength > 0) {
+        char u[MAX_MAPCODE_RESULT_LEN];
+
+        // skip leading spaces
+        while (*mapcode > 0 && *mapcode <= 32) { mapcode++; }
+
+        // straight-copy everything up to and including first space
+        {
+            const char *e = strchr(mapcode, ' ');
+            if (e) {
+                while (mapcode <= e) {
+                    if (unibuf == lastspot) { // buffer fully filled?
+                        // zero-terminate and return
+                        *unibuf = 0;
+                        return startbuf;
+                    }
+                    *unibuf++ = *mapcode++;
+                }
+            }
+        }
+
+        // re-pack E/U-voweled mapcodes when necessary:
+        if (asc2lan[alphabet][4] == 0x003f) { // alphabet has no letter E
+            if (strchr(mapcode, 'E') || strchr(mapcode, 'U') ||
+                strchr(mapcode, 'e') || strchr(mapcode, 'u')) {
+                // copy trimmed mapcode into temporary buffer u
+                int len = (int) strlen(mapcode);
+                if (len > MAX_MAPCODE_RESULT_LEN - 1) {
+                    len = MAX_MAPCODE_RESULT_LEN - 1;
+                }
+                while (len > 0 && mapcode[len - 1] > 0 && mapcode[len - 1] <= 32) { len--; }
+                memcpy(u, mapcode, len);
+                u[len] = 0;
+                // re-pack into A-voweled mapcode
+                unpack_if_alldigits(u);
+                repack_if_alldigits(u, 1);
+                mapcode = u;
+            }
+        }
+        encode_utf16(unibuf, 1 + (int) (lastspot - unibuf), mapcode, alphabet);
+    }
+    return startbuf;
+}
 
 #endif
 
+///////////////////////////////////////////////////////////////////////////////////////////////
+//
+//  compareWithMapcodeFormat
+//
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 #define TOKENSEP   0
 #define TOKENDOT   1
@@ -1903,7 +1952,7 @@ int compareWithMapcodeFormat(const char *s, int fullcode) {
             token = TOKENHYPH;
         } else if (*s == 0) {
             token = TOKENZERO;
-        } else if (*s == ' ' || *s == '\t') {
+        } else if ((*s == ' ') || (*s == '\t')) {
             token = TOKENSEP;
         } else {
             const signed char c = decode_chars[(unsigned char) *s];
@@ -1935,115 +1984,18 @@ int compareWithMapcodeFormat(const char *s, int fullcode) {
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  Engine
+//  PUBLIC INTERFACE
 //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
 
-static void convertCoordsToMicrosAndFractions(point32 *coord32, int *fraclat, int *fraclon, double lat, double lon) {
-    double frac;
-    if (lat < -90) { lat = -90; } else if (lat > 90) { lat = 90; }
-    lat += 90; // lat now [0..180]
-    lat *= (double) 810000000000;
-    frac = floor(lat+0.1);
-    coord32->lat = (int) (frac  / (double) 810000);
-    if (fraclat) {
-        frac -= ((double)coord32->lat * (double) 810000);
-        *fraclat = (int) frac;
-    }
-    coord32->lat -= 90000000;
-
-    lon -= (360.0 * floor(lon / 360)); // lon now in [0..360>
-    lon *= (double)3240000000000;
-    frac = floor(lon+0.1);
-    coord32->lon = (int) (frac / (double)3240000);
-    if (fraclon) {
-        frac -= (double)coord32->lon * (double)3240000;
-        *fraclon = (int) frac;
-    }
-    if (coord32->lon >= 180000000)
-        coord32->lon -= 360000000;
-}
-
-// pass point to an array of pointers (at least 42), will be made to point to result strings...
-// returns nr of results;
-static int encodeLatLonToMapcodes_internal(char **v, Mapcodes *mapcodes, double lat, double lon, 
-                                           const int tc, const int stop_with_one_result, 
-                                           const int requiredEncoder, const int extraDigits)
+// PUBLIC - returns name of territoryCode in (sufficiently large!) result string. 
+// formats: 0=full 1=short
+// returns empty string in case of error
+char *getTerritoryIsoName(char *result, int territoryCode, int format)
 {
-    encodeRec enc;
-    enc.mapcodes = mapcodes;
-    enc.mapcodes->count = 0;
-
-    convertCoordsToMicrosAndFractions(&enc.coord32, &enc.fraclat, &enc.fraclon, lat, lon);
-
-    if (tc <= 0) // ALL results?
-    {
-#ifdef FAST_ENCODE
-        const int sum =  enc.coord32.lon + enc.coord32.lat;
-        int coord = enc.coord32.lon;
-        int i = 0; // pointer into redivar
-        for (; ;) {
-            const int r = redivar[i++];            
-            if (r >= 0 && r < 1024) { // leaf?
-                int j;
-                for (j = 0; j <= r; j++) {
-                    const int ctry = (j == r ? ccode_earth : redivar[i + j]);
-                    encoderEngine(ctry, &enc, stop_with_one_result, extraDigits, requiredEncoder, -1);
-                    if ((stop_with_one_result || requiredEncoder >= 0) && enc.mapcodes->count > 0) { break; }
-                }
-                break;
-            }
-            else {
-                coord = sum - coord;
-                if (coord > r) {
-                    i = redivar[i];
-                }
-                else {
-                    i++;
-                }
-            }
-        }
-#else
-    int i;
-    for(i=0;i<MAX_MAPCODE_TERRITORY_CODE;i++) {
-      encoderEngine(i,&enc,stop_with_one_result,extraDigits, requiredEncoder, -1);
-      if ((stop_with_one_result||requiredEncoder>=0) && enc.mapcodes->count > 0) break;
-    }
-#endif
-    }
-    else {
-        encoderEngine((tc - 1), &enc, stop_with_one_result, extraDigits, requiredEncoder, -1);
-    }
-
-    if (v) {
-        int i;
-        for (i = 0; i < enc.mapcodes->count; i++) {
-            char *s = &enc.mapcodes->mapcode[i][0];
-            char *p = strchr(s, ' ');
-            if (p == NULL) {
-                v[i * 2 + 1] = (char *) "AAA";
-                v[i * 2] = s;
-            }
-            else {
-                *p++ = 0;
-                v[i * 2 + 1] = s;
-                v[i * 2] = p;
-            }
-        }
-    }
-
-    return enc.mapcodes->count;
-}
-
-
-// threadsafe
-char *getTerritoryIsoName(char *result, int territoryCode,
-                          int format) // formats: 0=full 1=short (returns empty string in case of error)
-{
-    if (territoryCode < 1 || territoryCode > MAX_MAPCODE_TERRITORY_CODE) {
+    if ((territoryCode < 1) || (territoryCode > MAX_MAPCODE_TERRITORY_CODE)) {
         *result = 0;
     } else {
         const int p = ParentLetter(territoryCode - 1);
@@ -2062,14 +2014,15 @@ char *getTerritoryIsoName(char *result, int territoryCode,
     return result;
 }
 
-// returns negative if tc is not a code that has a parent country
+// PUBLIC - returns negative if territoryCode tc is not a code that has a parent country
 int getParentCountryOf(int tc) {
     const int parentccode = ParentTerritoryOf(tc - 1); // returns parent ccode or -1
     if (parentccode >= 0) { return parentccode + 1; }
     return -1;
 }
 
-// returns tc if tc is a country, parent country if tc is a state, -1 if tc is invalid
+// PUBLIC - returns tc if territoryCode tc is a country, or parent country if tc is a state.
+// returns megative if tc is invalid.
 int getCountryOrParentCountry(int tc) {
     if (tc > 0 && tc < MAX_MAPCODE_TERRITORY_CODE) {
         const int tp = getParentCountryOf(tc);
@@ -2079,15 +2032,46 @@ int getCountryOrParentCountry(int tc) {
     return -1;
 }
 
-#ifdef FAST_ALPHA
+// PUBLIC - returns nonzero if coordinate is near more than one territory border
+int multipleBordersNearby(double lat, double lon, int territoryCode) {
+    const int ccode = territoryCode - 1;
+    if ((ccode >= 0) && (ccode < ccode_earth)) { // valid territory, not earth
+        const int parentTerritoryCode = getParentCountryOf(territoryCode);
+        if (parentTerritoryCode >= 0) {
+            // there is a parent! check its borders as well...
+            if (multipleBordersNearby(lat, lon, parentTerritoryCode)) {
+                return 1;
+            }
+        }
+        {
+            int m;
+            int nrFound = 0;
+            const int from = firstrec(ccode);
+            const int upto = lastrec(ccode);
+            point32 coord32;
+            convertCoordsToMicrosAndFractions(&coord32, NULL, NULL, lat, lon);
+            for (m = upto; m >= from; m--) {
+                if (!isRestricted(m)) {
+                    if (isNearBorderOf(&coord32, boundaries(m))) {
+                        nrFound++;
+                        if (nrFound > 1) {
+                            return 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return 0;
+}
 
-int cmp_alphacode(const void *e1, const void *e2) {
+static int cmp_alphacode(const void *e1, const void *e2) {
     const alphaRec *a1 = (const alphaRec *) e1;
     const alphaRec *a2 = (const alphaRec *) e2;
     return strcmp(a1->alphaCode, a2->alphaCode);
 } // cmp
 
-int binfindmatch(int parentcode, const char *str) {
+static int binfindmatch(const int parentcode, const char *str) {
     // build a 4-letter uppercase search term
     char tmp[5];
     if (parentcode < 0) { return -1; }
@@ -2115,20 +2099,19 @@ int binfindmatch(int parentcode, const char *str) {
     return -1;
 }
 
-#endif
-
-int convertTerritoryIsoNameToCode(const char *string, int optional_tc) // optional_tc: pass 0 or negative if unknown
+// PUBLIC - returns territoryCode of string (or negative if not found).
+// optional_tc: context territoryCode to handle ambiguities (pass <=0 if unknown).
+int convertTerritoryIsoNameToCode(const char *string, int optional_tc) 
 {
     const int ccode = optional_tc - 1;
     if (string == NULL) { return -1; }
     while (*string > 0 && *string <= 32) { string++; } // skip leading whitespace
 
-#ifdef FAST_ALPHA
     if (string[0] && string[1]) {
         if (string[2] == '-') {
-            return binfindmatch(disambiguate_str(string, 2), string + 3);
+            return binfindmatch(getParentcode(string, 2), string + 3);
         } else if (string[2] && string[3] == '-') {
-            return binfindmatch(disambiguate_str(string, 3), string + 4);
+            return binfindmatch(getParentcode(string, 3), string + 4);
         } else if (optional_tc > 0) {
             int parentcode = parentnumber[ccode];
             int b = binfindmatch(parentcode, string);
@@ -2139,29 +2122,13 @@ int convertTerritoryIsoNameToCode(const char *string, int optional_tc) // option
         return binfindmatch(0, string);
     } // else, fail:
     return -1;
-#else
-    if (ccode < 0 || strchr(string, '-') || strlen(string) > 3) {
-        ccode = ccode_of_iso3(string, -1); // ignore optional_tc
-    }
-    else // there is a ccode, there is no hyphen in the string, and the string is as most 3 chars
-    {
-        char tmp[12];
-        const int tc = getCountryOrParentCountry(optional_tc);
-
-        strcpy(tmp, convertTerritoryCodeToIsoName(tc, 1)); // short parent country code
-        strcat(tmp, "-");
-        strcat(tmp, string);
-        ccode = ccode_of_iso3(tmp, -1);
-    }
-    if (ccode < 0) { return -1; } else { return ccode + 1; }
-#endif
 }
 
-// decode string into lat,lon; returns negative in case of error
+// PUBLIC - decode string into lat,lon; returns negative in case of error
 int decodeMapcodeToLatLon(double *lat, double *lon, const char *input,
                           int context_tc) // context_tc is used to disambiguate ambiguous short mapcode inputs; pass 0 or negative if not available
 {
-    if (lat == NULL || lon == NULL || input == NULL) {
+    if ((lat == NULL) || (lon == NULL) || (input == NULL)) {
         return -100;
     }
     else {
@@ -2177,78 +2144,7 @@ int decodeMapcodeToLatLon(double *lat, double *lon, const char *input,
     }
 }
 
-#ifdef SUPPORT_FOREIGN_ALPHABETS
-
-// convert as much as will fit of mapcode into unibuf
-UWORD *convertToAlphabet(UWORD *unibuf, int maxlength, const char *mapcode, int alphabet) // 0=roman, 2=cyrillic
-{
-    UWORD *startbuf = unibuf;
-    UWORD *lastspot = &unibuf[maxlength - 1];
-    if (maxlength>0) {
-        char u[MAX_MAPCODE_RESULT_LEN];
-
-        // skip leading spaces
-        while (*mapcode > 0 && *mapcode <= 32) { mapcode++; }
-
-        // straight-copy everything up to and including first space
-        { 
-          const char *e = strchr(mapcode, ' ');
-          if (e) { 
-            while (mapcode <= e) {
-              if (unibuf == lastspot) { // buffer fully filled?
-                  // zero-terminate and return
-                  *unibuf = 0;
-                  return startbuf;
-              }
-              *unibuf++ = *mapcode++;
-            }
-          }
-        } 
-
-        // re-pack E/U-voweled mapcodes when necessary:
-        if (asc2lan[alphabet][4] == 0x003f) { // alphabet has no letter E
-            if (strchr(mapcode, 'E') || strchr(mapcode, 'U') || 
-                strchr(mapcode, 'e') || strchr(mapcode, 'u'))
-            {
-                // copy trimmed mapcode into temporary buffer u
-                int len = (int) strlen(mapcode);
-                if (len > MAX_MAPCODE_RESULT_LEN - 1) {
-                    len = MAX_MAPCODE_RESULT_LEN - 1;
-                }
-                while (len>0 && mapcode[len-1]>0 && mapcode[len-1]<=32) { len--; }
-                memcpy(u, mapcode, len);
-                u[len] = 0;
-                // re-pack into A-voweled mapcode
-                unpack_if_alldigits(u);
-                repack_if_alldigits(u, 1);
-                mapcode = u;
-            }
-        }
-        encode_utf16(unibuf, 1 + (int)(lastspot - unibuf), mapcode, alphabet);
-    }
-    return startbuf;
-}
-
-// Legacy: NOT threadsafe
-static char asciibuf[MAX_MAPCODE_RESULT_LEN];
-
-const char *decodeToRoman(const UWORD *s) {
-    return convertToRoman(asciibuf, MAX_MAPCODE_RESULT_LEN, s);
-}
-
-// Legacy: NOT threadsafe
-static int debugStopAt = -1; // to externally test-restrict internal encoding, do not use!
-
-// Legacy: NOT threadsafe
-static UWORD unibuf[MAX_MAPCODE_RESULT_LEN];
-
-const UWORD *encodeToAlphabet(const char *mapcode, int alphabet) // 0=roman, 2=cyrillic
-{
-    return convertToAlphabet(unibuf, MAX_MAPCODE_RESULT_LEN, mapcode, alphabet);
-}
-
-#endif
-
+// PUBLIC - encode lat,lon for (optional) TerritoryCode tc to a mapcode with extraDigits accuracy
 int encodeLatLonToSingleMapcode(char *result, double lat, double lon, int tc, int extraDigits) {
     char *v[2];
     Mapcodes rlocal;
@@ -2266,10 +2162,16 @@ int encodeLatLonToSingleMapcode(char *result, double lat, double lon, int tc, in
     return 1;
 }
 
-// Threadsafe
+// PUBLIC - encode lat,lon for (optional) TerritoryCode tc to mapcodes with extraDigits accuracy
 int encodeLatLonToMapcodes(Mapcodes *results, double lat, double lon, int territoryCode, int extraDigits) {
     return encodeLatLonToMapcodes_internal(NULL, results, lat, lon, territoryCode, 0, debugStopAt, extraDigits);
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+//
+//  LEGACY ROUTINES (NOT THREADSAFE)
+//
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 // Legacy: NOT threadsafe
 Mapcodes rglobal;
@@ -2281,7 +2183,6 @@ int encodeLatLonToMapcodes_Deprecated(char **v, double lat, double lon, int terr
 // Legacy: NOT threadsafe
 static char makeiso_bufbytes[16];
 static char *makeiso_buf;
-
 const char *convertTerritoryCodeToIsoName(int tc, int format) {
     if (makeiso_buf == makeiso_bufbytes) {
         makeiso_buf = makeiso_bufbytes + 8;
@@ -2289,54 +2190,21 @@ const char *convertTerritoryCodeToIsoName(int tc, int format) {
     return (const char *) getTerritoryIsoName(makeiso_buf, tc, format);
 }
 
-// maximum error in meters for a certain nr of high-precision digits
-static const double maxErrorInMetersForDigits[MAX_PRECISION_DIGITS + 1] = {
-            7.49,
-            1.39,
-            0.251,
-            0.0462,
-            0.00837,
-            0.00154,
-            0.00028,
-            0.000052,
-            0.0000093
-};
+#ifdef SUPPORT_FOREIGN_ALPHABETS
 
-double maxErrorInMeters(int extraDigits) {
-    if ((extraDigits<0) || (extraDigits>MAX_PRECISION_DIGITS))
-        return (double)0;
-    return maxErrorInMetersForDigits[extraDigits];
+// Legacy: NOT threadsafe
+static char asciibuf[MAX_MAPCODE_RESULT_LEN];
+
+const char *decodeToRoman(const UWORD *s) {
+    return convertToRoman(asciibuf, MAX_MAPCODE_RESULT_LEN, s);
 }
 
-// returns nonzero if coordinate is near more than one territory border
-int multipleBordersNearby(double lat, double lon, int territoryCode) {
-    const int ccode = territoryCode - 1;
-    if ((ccode >= 0) && (ccode < ccode_earth)) { // valid territory, not earth
-        const int parentTerritoryCode = getParentCountryOf(territoryCode);
-        if (parentTerritoryCode >= 0) {
-            // there is a parent! check its borders as well...
-            if (multipleBordersNearby(lat, lon, parentTerritoryCode)) {
-                return 1;
-            }
-        }
-        {
-            int m;
-            int nrFound = 0;
-            const int from = firstrec(ccode);
-            const int upto = lastrec(ccode);
-            point32 coord32;
-            convertCoordsToMicrosAndFractions(&coord32, NULL, NULL, lat, lon);
-            for (m = upto; m >= from; m--) {
-                if (!isRestricted(m)) {
-                    if (isNearBorderOf(&coord32, m)) {
-                        nrFound++;
-                        if (nrFound > 1) {
-                            return 1;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return 0;
+// Legacy: NOT threadsafe
+static UWORD unibuf[MAX_MAPCODE_RESULT_LEN];
+
+const UWORD *encodeToAlphabet(const char *mapcode, int alphabet) // 0=roman, 2=cyrillic
+{
+    return convertToAlphabet(unibuf, MAX_MAPCODE_RESULT_LEN, mapcode, alphabet);
 }
+
+#endif

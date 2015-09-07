@@ -245,30 +245,22 @@ double distanceInMeters(double latDeg1, double lonDeg1, double latDeg2, double l
 double maxErrorInMeters(int extraDigits);
 
 /**
- * Is coordinate within a given territory?
+ * Is coordinate near more than one territory border?
  *
  * Arguments:
  *      lat             - Latitude, in degrees. Range: -90..90.
  *      lon             - Longitude, in degrees. Range: -180..180.
  *      territoryCode   - Territory code (obtained from convertTerritoryIsoNameToCode)
  *
- * isInsideTerritory returns nonzero if the coordinate is inside the specified territory.
- *
- * isFullyInsideTerritory  returns nonzero if the coordinate is inside the territory,
- * and, IF the territory has a perent territory, inside the parent territory.
+ * returns nonzero if coordinate is near more than one territory border
  *
  * Note that for the mapcode system, the following should hold: IF a point p has a 
  * mapcode M, THEN decode(M) delivers a point q within maxErrorInMeters() of p.
- * Furthermore, encode(q) must yield back M *unless* point q is not "fully inside"
- * the mapcode territory.
+ * Furthermore, encode(q) must yield back M *unless* point q is near multiple borders.
  */
-int isInsideTerritory(
-        double lat,
-        double lon,
-        int territoryCode);
-int isFullyInsideTerritory(
-        double lat,
-        double lon,
+int multipleBordersNearby(
+        double lat, 
+        double lon, 
         int territoryCode);
 
 /**

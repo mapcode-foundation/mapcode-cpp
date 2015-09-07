@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+// *** GENERATED FILE, DO NOT CHANGE OR PRETTIFY ***
 
 static const char parentletter[MAX_CCODE + 1] =
     {

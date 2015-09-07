@@ -81,9 +81,25 @@ int isEmpty(const MapcodeZone *z) {
     return ((z->fmaxx <= z->fminx) || (z->fmaxy <= z->fminy));
 }
 
-void getMidPoint(point *p, MapcodeZone *z) {
-    p->lon = (z->fminx + z->fmaxx) / (2 * MICROLON_TO_FRACTIONS_FACTOR);
-    p->lat = (z->fminy + z->fmaxy) / (2 * MICROLAT_TO_FRACTIONS_FACTOR);
+point getMidPointFractions(MapcodeZone *z) {
+    point p;
+    p.lon = floor((z->fminx + z->fmaxx) / 2);
+    p.lat = floor((z->fminy + z->fmaxy) / 2);
+    return p;
+}
+
+point32 convertFractionsToCoord32(const point *p) {
+    point32 p32;
+    p32.lat = (int) floor(p->lat /  810000);
+    p32.lon = (int) floor(p->lon / 3240000);
+    return p32;
+}
+
+point convertFractionsToDegrees(const point *p) {
+    point pd;
+    pd.lat = p->lat / ( 810000 * 1000000.0);
+    pd.lon = p->lon / (3240000 * 1000000.0);
+    return pd;
 }
 
 void zoneCopyFrom(MapcodeZone *target, const MapcodeZone *source) {
@@ -211,7 +227,7 @@ static mminforec *getExtendedBoundaries(mminforec *target, const mminforec *sour
 static int isNearBorderOf(const point32 *coord32, int m) {
     mminforec tmp;
     const mminforec *b=boundaries(m);
-    int xdiv8 = xDivider4(b->miny, b->maxy) / 6; // should be /8 but there's some extra margin
+    int xdiv8 = xDivider4(b->miny, b->maxy) / 4; // should be /8 but there's some extra margin
     return (fitsInsideBoundaries(coord32, getExtendedBoundaries(&tmp,boundaries(m),+60,+xdiv8)) &&
          (! fitsInsideBoundaries(coord32, getExtendedBoundaries(&tmp,boundaries(m),-60,-xdiv8))));
 }
@@ -1330,11 +1346,8 @@ static void encoderEngine(const int ccode, const encodeRec *enc, const int stop_
     from = firstrec(ccode);
     upto = lastrec(ccode);
 
-    if (ccode != ccode_earth) // @@@ why?
-    {
-        if (!fitsInside(&enc->coord32, upto)) {
-            return;
-        }
+    if (!fitsInside(&enc->coord32, upto)) {
+        return;
     }
 
     ///////////////////////////////////////////////////////////
@@ -1378,7 +1391,7 @@ static void encoderEngine(const int ccode, const encodeRec *enc, const int stop_
 
                     if (requiredEncoder < 0 || requiredEncoder == i) {
                         const int cc = (ccode_override >= 0 ? ccode_override : ccode);
-                        if (*result && enc->mapcodes && enc->mapcodes->count < MAX_NR_OF_MAPCODE_RESULTS) {
+                        if (*result && enc->mapcodes && (enc->mapcodes->count < MAX_NR_OF_MAPCODE_RESULTS)) {
                             char *s = enc->mapcodes->mapcode[enc->mapcodes->count++];
                             if (cc == ccode_earth) {
                                 strcpy(s, result);
@@ -1569,20 +1582,15 @@ static int decoderEngine(decodeRec *dec) {
                         err = decodeGrid(dec, i, 0);
 
                         // first of all, make sure the zone fits the country
-                        if (err==0) {
-                            if (!restrictZoneTo(&dec->zone, &dec->zone, boundaries(upto))) {
-                                err = -2999;
-                            }
-                        }
+                        restrictZoneTo(&dec->zone, &dec->zone, boundaries(upto));
 
-                        if (err==0 && isRestricted(i)) {
+                        if ((err == 0) && isRestricted(i)) {
                             int nrZoneOverlaps = 0;
                             int j;
                             
                             // *** make sure decode fits somewhere ***
-                            getMidPoint(&dec->result,&dec->zone);
-                            dec->coord32.lon = (int) floor(dec->result.lon);
-                            dec->coord32.lat = (int) floor(dec->result.lat);
+                            dec->result = getMidPointFractions(&dec->zone);
+                            dec->coord32 = convertFractionsToCoord32(&dec->result);
                             for (j = i - 1; j >= from; j--) { // look in previous rects
                                 if (!isRestricted(j)) {
                                     if (fitsInside(&dec->coord32, j)) {
@@ -1607,9 +1615,9 @@ static int decoderEngine(decodeRec *dec) {
                                             prevj = j;
                                             memcpy(&prevu,boundaries(j),sizeof(mminforec));
                                         }
-                                        else { // nrZoneOverlaps >= 2
+                                        else { // nrZoneOverlaps >= 2                                            
                                             // more than one hit
-                                            break; // GIVE UP!                                            
+                                            break; // give up
                                         }
                                     }
                                   } // isRestricted
@@ -1645,33 +1653,27 @@ static int decoderEngine(decodeRec *dec) {
         } // for
     }
 
+    restrictZoneTo(&dec->zone, &dec->zone, boundaries(lastrec(ccode)));
+
+    if (isEmpty(&dec->zone)) {
+        err = -2222;
+    }
+
     if (err) {
         dec->result.lat = dec->result.lon = 0;
-    }
-    else {
-
-        if (ccode == ccode_earth) {
-            getMidPoint(&dec->result,&dec->zone);
-        }
-        else {
-            if (!restrictZoneTo(&dec->zone, &dec->zone, boundaries(lastrec(ccode)))) {
-                return -2222;
-            }
-            getMidPoint(&dec->result,&dec->zone);
-        }
-
-        // normalise between =180 and 180
-        if (dec->result.lat <  -90000000.0) { dec->result.lat =  -90000000.0; }
-        if (dec->result.lat >   90000000.0) { dec->result.lat =   90000000.0; }
-        if (dec->result.lon < -180000000.0) { dec->result.lon += 360000000.0; }
-        if (dec->result.lon >= 180000000.0) { dec->result.lon -= 360000000.0; }
-
-        // convert from microdegrees to degrees
-        dec->result.lat /= (double) 1000000.0;
-        dec->result.lon /= (double) 1000000.0;
+        return err;
     }
 
-    return err;
+    dec->result = getMidPointFractions(&dec->zone);
+    dec->result = convertFractionsToDegrees(&dec->result);
+
+    // normalise between =180 and 180
+    if (dec->result.lat <  -90.0) { dec->result.lat =  -90.0; }
+    if (dec->result.lat >   90.0) { dec->result.lat =   90.0; }
+    if (dec->result.lon < -180.0) { dec->result.lon += 360.0; }
+    if (dec->result.lon >= 180.0) { dec->result.lon -= 360.0; }
+
+    return 0;
 }
 
 
@@ -1980,24 +1982,23 @@ static int encodeLatLonToMapcodes_internal(char **v, Mapcodes *mapcodes, double 
     if (tc <= 0) // ALL results?
     {
 #ifdef FAST_ENCODE
-        int HOR = 1;
+        const int sum =  enc.coord32.lon + enc.coord32.lat;
+        int coord = enc.coord32.lon;
         int i = 0; // pointer into redivar
         for (; ;) {
-            const int v2 = redivar[i++];
-            HOR = 1 - HOR;
-            if (v2 >= 0 && v2 < 1024) { // leaf?
+            const int r = redivar[i++];            
+            if (r >= 0 && r < 1024) { // leaf?
                 int j;
-                const int nr = v2;
-                for (j = 0; j <= nr; j++) {
-                    int ctry = (j == nr ? ccode_earth : redivar[i + j]);
+                for (j = 0; j <= r; j++) {
+                    const int ctry = (j == r ? ccode_earth : redivar[i + j]);
                     encoderEngine(ctry, &enc, stop_with_one_result, extraDigits, requiredEncoder, -1);
                     if ((stop_with_one_result || requiredEncoder >= 0) && enc.mapcodes->count > 0) { break; }
                 }
                 break;
             }
             else {
-                const int coord = (HOR ? enc.coord32.lon : enc.coord32.lat);
-                if (coord > v2) {
+                coord = sum - coord;
+                if (coord > r) {
                     i = redivar[i];
                 }
                 else {
@@ -2155,7 +2156,6 @@ int convertTerritoryIsoNameToCode(const char *string, int optional_tc) // option
     if (ccode < 0) { return -1; } else { return ccode + 1; }
 #endif
 }
-
 
 // decode string into lat,lon; returns negative in case of error
 int decodeMapcodeToLatLon(double *lat, double *lon, const char *input,

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+// *** GENERATED FILE, DO NOT CHANGE OR PRETTIFY ***
 static int redivar[2924] = {
         27984500, 1383,
         2537718, 676,
@@ -712,4 +713,4 @@ static int redivar[2924] = {
         125763055, 2914,
         7, 468, 469, 476, 478, 485, 494, 496,
         8, 393, 410, 486, 487, 488, 492, 494, 496,
-        0}; //2924
+        0}; // 2924 records, data version 2.2

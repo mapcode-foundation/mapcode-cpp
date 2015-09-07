@@ -317,10 +317,10 @@ static void generateAndOutputMapcodes(double lat, double lon, int iShowError, in
         double y;
         double z;
         convertLatLonToXYZ(lat, lon, &x, &y, &z);
-        printf("%d %.12g %.12g %.12g %.12g %.12g\n", nrResults, lat, lon, x, y, z);
+        printf("%d %.14g %.14g %.12g %.12g %.12g\n", nrResults, lat, lon, x, y, z);
     }
     else {
-        printf("%d %.12g %.12g\n", nrResults, lat, lon);
+        printf("%d %.14g %.14g\n", nrResults, lat, lon);
     }
     for (int j = 0; j < nrResults; ++j) {
         const char *foundMapcode = results[(j * 2)];

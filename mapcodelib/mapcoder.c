@@ -1346,10 +1346,8 @@ static void encoderEngine(const int ccode, const encodeRec *enc, const int stop_
     from = firstrec(ccode);
     upto = lastrec(ccode);
 
-    if (ccode != ccode_earth) {
-        if (!fitsInside(&enc->coord32, upto)) {
-            return;
-        }
+    if (!fitsInside(&enc->coord32, upto)) {
+        return;
     }
 
     ///////////////////////////////////////////////////////////
@@ -1393,7 +1391,7 @@ static void encoderEngine(const int ccode, const encodeRec *enc, const int stop_
 
                     if (requiredEncoder < 0 || requiredEncoder == i) {
                         const int cc = (ccode_override >= 0 ? ccode_override : ccode);
-                        if (*result && enc->mapcodes && enc->mapcodes->count < MAX_NR_OF_MAPCODE_RESULTS) {
+                        if (*result && enc->mapcodes && (enc->mapcodes->count < MAX_NR_OF_MAPCODE_RESULTS)) {
                             char *s = enc->mapcodes->mapcode[enc->mapcodes->count++];
                             if (cc == ccode_earth) {
                                 strcpy(s, result);
@@ -1584,11 +1582,7 @@ static int decoderEngine(decodeRec *dec) {
                         err = decodeGrid(dec, i, 0);
 
                         // first of all, make sure the zone fits the country
-                        if ((err == 0) && (ccode != ccode_earth)) {
-                            if (!restrictZoneTo(&dec->zone, &dec->zone, boundaries(upto))) {
-                                err = -2999;
-                            }
-                        }
+                        restrictZoneTo(&dec->zone, &dec->zone, boundaries(upto));
 
                         if ((err == 0) && isRestricted(i)) {
                             int nrZoneOverlaps = 0;
@@ -1659,9 +1653,7 @@ static int decoderEngine(decodeRec *dec) {
         } // for
     }
 
-    if (ccode != ccode_earth) {
-        restrictZoneTo(&dec->zone, &dec->zone, boundaries(lastrec(ccode)));
-    }
+    restrictZoneTo(&dec->zone, &dec->zone, boundaries(lastrec(ccode)));
 
     if (isEmpty(&dec->zone)) {
         err = -2222;
@@ -1990,24 +1982,23 @@ static int encodeLatLonToMapcodes_internal(char **v, Mapcodes *mapcodes, double 
     if (tc <= 0) // ALL results?
     {
 #ifdef FAST_ENCODE
-        int HOR = 1;
+        const int sum =  enc.coord32.lon + enc.coord32.lat;
+        int coord = enc.coord32.lon;
         int i = 0; // pointer into redivar
         for (; ;) {
-            const int v2 = redivar[i++];
-            HOR = 1 - HOR;
-            if (v2 >= 0 && v2 < 1024) { // leaf?
+            const int r = redivar[i++];            
+            if (r >= 0 && r < 1024) { // leaf?
                 int j;
-                const int nr = v2;
-                for (j = 0; j <= nr; j++) {
-                    int ctry = (j == nr ? ccode_earth : redivar[i + j]);
+                for (j = 0; j <= r; j++) {
+                    const int ctry = (j == r ? ccode_earth : redivar[i + j]);
                     encoderEngine(ctry, &enc, stop_with_one_result, extraDigits, requiredEncoder, -1);
                     if ((stop_with_one_result || requiredEncoder >= 0) && enc.mapcodes->count > 0) { break; }
                 }
                 break;
             }
             else {
-                const int coord = (HOR ? enc.coord32.lon : enc.coord32.lat);
-                if (coord > v2) {
+                coord = sum - coord;
+                if (coord > r) {
                     i = redivar[i];
                 }
                 else {

@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-#define mapcode_cversion "2.1.5"
+#define mapcode_cversion "2.2"
 
 #define UWORD                               unsigned short int  // 2-byte unsigned integer.
 
@@ -26,7 +26,7 @@ extern "C" {
 #define SUPPORT_HIGH_PRECISION              // Define to enable high-precision extension logic.
 #define FORCE_RECODE                        // Define to enforce that encode(decode(M)) generates M
 
-#define MAX_NR_OF_MAPCODE_RESULTS           21          // Max. number of results ever returned by encoder (e.g. for 26.904899, 95.138515).
+#define MAX_NR_OF_MAPCODE_RESULTS           22          // Max. number of results ever returned by encoder (e.g. for 26.904899, 95.138515).
 #define MAX_PROPER_MAPCODE_LEN              10          // Max. number of characters in a proper mapcode (including the dot).
 #define MAX_PRECISION_DIGITS                8           // Max. number of extension characters (excluding the hyphen). Must be even.
 #define MAX_PRECISION_FACTOR                810000      // 30 to the power (MAX_PRECISION_DIGITS/2)

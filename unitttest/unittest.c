@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#define UNITTEST_VERSION "2.1.4"
+#define UNITTEST_VERSION "2.2"
 
 /**
  * This application performs a number of tests on the Mapcode C library.
@@ -535,7 +535,7 @@ void test_territory_insides() {
 			{"AAA", -90, 0,0},
 			{"AAA", 0, 180,0},
 			{"AAA", 0, -180,0},
-			{"ATA", -90, 0,0},
+			{"ATA", -90, 0,1}, // ATA -90,0 has 2 borders as of data version 2.2
 			{"ATA", -70, 0,0},
 
 			{"USA", 31, -70,0}, // interational waters (not in state)

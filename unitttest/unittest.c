@@ -589,11 +589,6 @@ void territory_code_tests() {
         int context;
         const char *inputstring;
     } tcTestData[] = {
-        {319,  0, "AL"}, // 
-        {483,497, "AL"}, // 497=rus
-        {483,431, "AL"}, // 431=ru-tam
-        {365,411, "AL"}, // 411=usa
-        {365,392, "AL"}, // 392=us-ca
         { -1,  0, ""},
         { -1,  0, "R"},
         { -1,  0, "RX"},
@@ -611,6 +606,11 @@ void territory_code_tests() {
         {431,  0, "RUS-TAM"},
         { -1,  0, "RUS-TAMX"},
         {431,  0, "RUS-TAM X"},
+        {319,  0, "AL"}, // 
+        {483,497, "AL"}, // 497=rus
+        {483,431, "AL"}, // 431=ru-tam
+        {365,411, "AL"}, // 411=usa
+        {365,392, "AL"}, // 392=us-ca
         {0,0,NULL}
     };
 
@@ -619,8 +619,9 @@ void territory_code_tests() {
         nrTests++;
         if (tc != tcTestData[i].expectedresult) {
             nrErrors++;
-            printf("*** ERROR *** getTerritoryCode(%s)=%d, expected %d\n",
-                tcTestData[i].inputstring, tc, tcTestData[i].expectedresult);
+            printf("*** ERROR *** getTerritoryCode(\"%s\", %d)=%d, expected %d\n",
+                tcTestData[i].inputstring, tcTestData[i].context, 
+                tc, tcTestData[i].expectedresult);
         }
     }
 }

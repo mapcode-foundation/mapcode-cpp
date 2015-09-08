@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#define UNITTEST_VERSION "2.2"
+#define UNITTEST_VERSION "2.2.1"
 
 /**
  * This application performs a number of tests on the Mapcode C library.
@@ -179,7 +179,8 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
         nrTests++;
         if (nrresults != localsolutions) {
             nrErrors++;
-            printf("*** ERROR *** encode(%0.8f , %0.8f,%d) does not deliver %d local solutions\n", y, x, tc, localsolutions);
+            printf("*** ERROR *** encode(%0.8f , %0.8f,%d) does not deliver %d local solutions\n",
+                   y, x, tc, localsolutions);
             printGeneratedMapcodes("Delivered", &mapcodes);
         }
 
@@ -214,7 +215,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
     }
 
     // test all global solutions at all precisions...
-    for (precision = 0; precision <= 8; precision++) { 
+    for (precision = 0; precision <= 8; precision++) {
         nrresults = encodeLatLonToMapcodes(&mapcodes, y, x, 0, precision);
         for (i = 0; i < nrresults; i++) {
             const char *str = mapcodes.mapcode[i];
@@ -240,7 +241,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
                 else {
                     Mapcodes mapcodesTerritory;
                     Mapcodes mapcodesParent;
-                    int tc2 = -1, tcParent = -1, j, found = 0;                    
+                    int tc2 = -1, tcParent = -1, j, found = 0;
                     char *e = strchr(str, ' ');
                     if (e) {
                         *e = 0;
@@ -273,9 +274,10 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
                     }
 
                     if (!found) { // within 7.5 meters, but not reproduced!
-                        if ( ! multipleBordersNearby(lat, lon,  tc2) ) { // but SHOULD be reproduced!
+                        if (!multipleBordersNearby(lat, lon, tc2)) { // but SHOULD be reproduced!
                             nrErrors++;
-                            printf("*** ERROR *** %s does not re-encode (%0.15f,%0.15f) from (%0.15f,%0.15f)\n", str, lat, lon, y, x);
+                            printf("*** ERROR *** %s does not re-encode (%0.15f,%0.15f) from (%0.15f,%0.15f)\n",
+                                   str, lat, lon, y, x);
                             printGeneratedMapcodes("Global   ", &mapcodes);
                             printGeneratedMapcodes("Territory", &mapcodesTerritory);
                             if (tcParent >= 0) {
@@ -393,13 +395,13 @@ void test_territory(const char *alphaCode, int tc, int isAlias, int needsParent,
         char alphacode[8];
         int tn;
         strcpy(alphacode, alphaCode);
-        if (!needsParent && i==0) {
+        if (!needsParent && (i == 0)) {
             tn = convertTerritoryIsoNameToCode(alphacode, 0);
             nrTests++;
             if (tn != tc) {
                 nrErrors++;
-                printf("*** ERROR *** convertTerritoryIsoNameToCode('%s')=%d but expected %d (%s)\n", 
-                        alphacode, tn, tc, convertTerritoryCodeToIsoName(tc,0) );
+                printf("*** ERROR *** convertTerritoryIsoNameToCode('%s')=%d but expected %d (%s)\n",
+                       alphacode, tn, tc, convertTerritoryCodeToIsoName(tc, 0));
             }
         }
         alphacode[i] = (char) tolower(alphacode[i]);
@@ -482,46 +484,45 @@ static void re_encode_tests() {
 }
 
 
-void distance_tests()
-{
-	if (strcmp(mapcode_cversion,"2.1.3") >=0) {
+void distance_tests() {
+    if (strcmp(mapcode_cversion, "2.1.3") >= 0) {
         int i;
         double coordpairs[] = {
-			// lat1, lon1, lat2, lon2, expected distance * 100000
-			1,1,1,1,0,
-			0,0,0,1,11131949079,
-			89,0,89,1,194279300,
-			3,0,3,1,11116693130,
-			-3,0,-3,1,11116693130,
-			-3,-179.5,-3,179.5,11116693130,
-			-3,179.5,-3,-179.5,11116693130,
-			3,8,3,9,11116693130,
-			3,-8,3,-9,11116693130,
-			3,-0.5,3,0.5,11116693130,
-			54,5,54.000001,5,11095,
-			54,5,54,5.000001,6543,
-			54,5,54.000001,5.000001,12880,
-			90,0,90,50,0,
-            0.11,0.22,0.12,0.2333,185011466,
-            -1
+                // lat1, lon1, lat2, lon2, expected distance * 100000
+                1, 1, 1, 1, 0,
+                0, 0, 0, 1, 11131949079,
+                89, 0, 89, 1, 194279300,
+                3, 0, 3, 1, 11116693130,
+                -3, 0, -3, 1, 11116693130,
+                -3, -179.5, -3, 179.5, 11116693130,
+                -3, 179.5, -3, -179.5, 11116693130,
+                3, 8, 3, 9, 11116693130,
+                3, -8, 3, -9, 11116693130,
+                3, -0.5, 3, 0.5, 11116693130,
+                54, 5, 54.000001, 5, 11095,
+                54, 5, 54, 5.000001, 6543,
+                54, 5, 54.000001, 5.000001, 12880,
+                90, 0, 90, 50, 0,
+                0.11, 0.22, 0.12, 0.2333, 185011466,
+                -1
         };
-		
-		for(i=0;coordpairs[i]!=-1;i+=5) {
-			const double distance = distanceInMeters( 
-				coordpairs[i],coordpairs[i+1],
-				coordpairs[i+2],coordpairs[i+3]);
-			nrTests++;
-			if ( floor(0.5+(100000.0 * distance)) != coordpairs[i+4] ) {
-				nrErrors++;
-				printf("*** ERROR *** distanceInMeters %d failed: %f\n",i,distance);;
-			}
-		}
-	}
+
+        for (i = 0; coordpairs[i] != -1; i += 5) {
+            const double distance = distanceInMeters(
+                    coordpairs[i], coordpairs[i + 1],
+                    coordpairs[i + 2], coordpairs[i + 3]);
+            nrTests++;
+            if (floor(0.5 + (100000.0 * distance)) != coordpairs[i + 4]) {
+                nrErrors++;
+                printf("*** ERROR *** distanceInMeters %d failed: %f\n", i, distance);;
+            }
+        }
+    }
 }
 
 
 void test_territory_insides() {
-	if (strcmp(mapcode_cversion,"2.1.5") >=0) {
+    if (strcmp(mapcode_cversion, "2.1.5") >= 0) {
         int i;
         struct {
             const char *territory;
@@ -529,55 +530,100 @@ void test_territory_insides() {
             double lon;
             int nearborders;
         } iTestData[] = {
-			{"AAA", 0, 0,0},
-			{"AAA", 0, 999,0},
-			{"AAA", 90, 0,0},
-			{"AAA", -90, 0,0},
-			{"AAA", 0, 180,0},
-			{"AAA", 0, -180,0},
-			{"ATA", -90, 0,1}, // ATA -90,0 has 2 borders as of data version 2.2
-			{"ATA", -70, 0,0},
+                {"AAA",    0,               0,                0},
+                {"AAA",    0,               999,              0},
+                {"AAA",    90,              0,                0},
+                {"AAA",    -90,             0,                0},
+                {"AAA",    0,               180,              0},
+                {"AAA",    0,               -180,             0},
+                {"ATA",    -90,             0,                1}, // ATA -90,0 has 2 borders as of data version 2.2
+                {"ATA",    -70,             0,                0},
 
-			{"USA", 31, -70,0}, // interational waters (not in state)
-			{"MEX", 19,-115,0}, // interational waters (not in state)
-			{"MEX", 18.358525, -114.722672,0}, // Isla Clarion, not in a state
-			{"MX-ROO", 20, -87,0},  // just in ROO
-			{"MX-ROO", 20,-87.3,0}, // in ROO because in MEX
-			{"MEX", 20,-87.3,0}, // in ROO because in MEX
+                {"USA",    31,              -70,              0}, // interational waters (not in state)
+                {"MEX",    19,              -115,             0}, // interational waters (not in state)
+                {"MEX",    18.358525,       -114.722672,      0}, // Isla Clarion, not in a state
+                {"MX-ROO", 20,              -87,              0},  // just in ROO
+                {"MX-ROO", 20,              -87.3,            0}, // in ROO because in MEX
+                {"MEX",    20,              -87.3,            0}, // in ROO because in MEX
 
-			{"IND", 19, 87, 0},
+                {"IND",    19,              87,               0},
 
-			{"NLD", 52.6, 4.8,0},
-			{"US-WV", 40.18, -80.87,0},
-			{"USA", 40.18, -80.87,0},
-			{"US-FL", 24.7, -82.7,0},
-			{"USA", 24.7, -82.7,0},
-			{"IN-TG", 16.13, 78.75,0},
-			{"IN-AP", 16.13, 78.75,0},
-			{"IN-MH", 16.13, 78.75,0},
-			{"IN-PY", 16.13, 78.75,0},
-			{"IND", 16.13, 78.75,0},
-			{"USA", 40.7, -74,0},
+                {"NLD",    52.6,            4.8,              0},
+                {"US-WV",  40.18,           -80.87,           0},
+                {"USA",    40.18,           -80.87,           0},
+                {"US-FL",  24.7,            -82.7,            0},
+                {"USA",    24.7,            -82.7,            0},
+                {"IN-TG",  16.13,           78.75,            0},
+                {"IN-AP",  16.13,           78.75,            0},
+                {"IN-MH",  16.13,           78.75,            0},
+                {"IN-PY",  16.13,           78.75,            0},
+                {"IND",    16.13,           78.75,            0},
+                {"USA",    40.7,            -74,              0},
 
-			{"US-NY", 40.7, -74,1},
-			{"MEX", 20.252060, -89.779821,1},
-			{"NLD", 52.467314, 4.494037,1},
-			{"MEX",21.431778909671 , -89.779828861356,1},
-			{"MEX",21.431788272457 , -89.779820144176,1},
+                {"US-NY",  40.7,            -74,              1},
+                {"MEX",    20.252060,       -89.779821,       1},
+                {"NLD",    52.467314,       4.494037,         1},
+                {"MEX",    21.431778909671, -89.779828861356, 1},
+                {"MEX",    21.431788272457, -89.779820144176, 1},
 
-            {NULL}
+                {NULL}
         };
 
-		for (i = 0; iTestData[i].territory != NULL; i++) {
-            int territory = convertTerritoryIsoNameToCode(iTestData[i].territory,0);
-			nrTests++;
-			if (multipleBordersNearby(iTestData[i].lat, iTestData[i].lon, territory) != iTestData[i].nearborders) {
-				nrErrors++;
+        for (i = 0; iTestData[i].territory != NULL; i++) {
+            int territory = convertTerritoryIsoNameToCode(iTestData[i].territory, 0);
+            nrTests++;
+            if (multipleBordersNearby(iTestData[i].lat, iTestData[i].lon, territory) != iTestData[i].nearborders) {
+                nrErrors++;
                 printf("*** ERROR *** multipleBordersNearby(%+18.13f,%+18.13f, \"%s\") not %d\n",
-                    iTestData[i].lat, iTestData[i].lon, iTestData[i].territory, iTestData[i].nearborders);
-			}
-		}
-	}
+                       iTestData[i].lat, iTestData[i].lon, iTestData[i].territory, iTestData[i].nearborders);
+            }
+        }
+    }
+}
+
+void territory_code_tests() {
+    int i;
+
+    static const struct {
+        int expectedresult;
+        int context;
+        const char *inputstring;
+    } tcTestData[] = {
+        { -1,  0, ""},
+        { -1,  0, "R"},
+        { -1,  0, "RX"},
+        { -1,  0, "RXX"},
+        {497,  0, "RUS"},
+        { -1,  0, "RUSSIA"},
+        {411,  0, "US"},
+        {411,  0, "USA"},
+        {411,  0, "usa"},
+        { -1,  0, "US-TEST"},
+        {411,  0, "US TEST"},
+        {392,  0, "US-CA"},
+        {392,  0, "US-CA TEST"},
+        {392,  0, "USA-CA"},
+        {431,  0, "RUS-TAM"},
+        { -1,  0, "RUS-TAMX"},
+        {431,  0, "RUS-TAM X"},
+        {319,  0, "AL"}, // 
+        {483,497, "AL"}, // 497=rus
+        {483,431, "AL"}, // 431=ru-tam
+        {365,411, "AL"}, // 411=usa
+        {365,392, "AL"}, // 392=us-ca
+        {0,0,NULL}
+    };
+
+    for (i = 0; tcTestData[i].inputstring!=NULL; i++ ) {
+        int tc = getTerritoryCode(tcTestData[i].inputstring, tcTestData[i].context);
+        nrTests++;
+        if (tc != tcTestData[i].expectedresult) {
+            nrErrors++;
+            printf("*** ERROR *** getTerritoryCode(\"%s\", %d)=%d, expected %d\n",
+                tcTestData[i].inputstring, tcTestData[i].context, 
+                tc, tcTestData[i].expectedresult);
+        }
+    }
 }
 
 
@@ -597,11 +643,12 @@ void main() {
     printf("-----------------------------------------------------------\nTerritory tests\n");
     printf("%d territories\n", MAX_CCODE);
     test_territories();
+    territory_code_tests();
     test_territory_insides();
 
     printf("-----------------------------------------------------------\nFailing decode tests\n");
     test_failing_decodes();
-    
+
     printf("-----------------------------------------------------------\nFailing decodes tests\n");
     test_failing_decodes();
 

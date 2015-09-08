@@ -1494,14 +1494,14 @@ static int decoderEngine(decodeRec *dec) {
         if (s) {
             *s++ = 0;
             while (*s > 0 && *s <= 32) { s++; }
-            ccode = convertTerritoryIsoNameToCode(w, dec->context - 1) - 1;
+            ccode = getTerritoryCode(w, dec->context - 1) - 1;
         }
         else {
             ccode = dec->context - 1;
             s = w;
         }
         if (ccode == ccode_mex && len < 8) {
-            ccode = convertTerritoryIsoNameToCode("5MX", -1) - 1;
+            ccode = getTerritoryCode("5MX", -1) - 1;
         } // special case for mexico country vs state
         if ((*s == 'u') || (*s == 'U')) {
             strcpy(s, s + 1);
@@ -2074,14 +2074,20 @@ static int cmp_alphacode(const void *e1, const void *e2) {
 static int binfindmatch(const int parentcode, const char *str) {
     // build a 4-letter uppercase search term
     char tmp[5];
+    const char *r = str;
+    int len = 0;
+
     if (parentcode < 0) { return -1; }
     if (parentcode > 0) {
-        tmp[0] = (char) ('0' + parentcode);
-        memcpy(tmp + 1, str, 3);
-    } else {
-        memcpy(tmp, str, 4);
+        tmp[len++] = (char) ('0' + parentcode);
     }
-    tmp[4] = 0;
+    while ((len < 4) && (*r > 32)) {
+        tmp[len++] = *r++;
+    }
+    if (*r > 32) {
+        return -1;
+    }
+    tmp[len] = 0;
     makeupper(tmp);
     { // binary-search the result
         const alphaRec *p;
@@ -2101,20 +2107,20 @@ static int binfindmatch(const int parentcode, const char *str) {
 
 // PUBLIC - returns territoryCode of string (or negative if not found).
 // optional_tc: context territoryCode to handle ambiguities (pass <=0 if unknown).
-int convertTerritoryIsoNameToCode(const char *string, int optional_tc) 
+int getTerritoryCode(const char *string, int optional_tc) 
 {
-    const int ccode = optional_tc - 1;
     if (string == NULL) { return -1; }
     while (*string > 0 && *string <= 32) { string++; } // skip leading whitespace
 
     if (string[0] && string[1]) {
+        const int ccode = optional_tc - 1;
         if (string[2] == '-') {
             return binfindmatch(getParentcode(string, 2), string + 3);
         } else if (string[2] && string[3] == '-') {
             return binfindmatch(getParentcode(string, 3), string + 4);
-        } else if (optional_tc > 0) {
-            int parentcode = parentnumber[ccode];
-            int b = binfindmatch(parentcode, string);
+        } else {
+            const int parentcode = ccode<0 ? 0 : ((parentnumber[ccode] > 0) ? parentnumber[ccode] : parentnumber[ParentTerritoryOf(ccode)]);
+            const int b = binfindmatch(parentcode, string);
             if (b > 0) {
                 return b;
             } //
@@ -2144,11 +2150,15 @@ int decodeMapcodeToLatLon(double *lat, double *lon, const char *input,
     }
 }
 
-// PUBLIC - encode lat,lon for (optional) TerritoryCode tc to a mapcode with extraDigits accuracy
+// PUBLIC - encode lat,lon for TerritoryCode tc to a mapcode with extraDigits accuracy
 int encodeLatLonToSingleMapcode(char *result, double lat, double lon, int tc, int extraDigits) {
     char *v[2];
     Mapcodes rlocal;
-    const int ret = encodeLatLonToMapcodes_internal(v, &rlocal, lat, lon, tc, 1, debugStopAt, extraDigits);
+    int ret;
+    if (tc <= 0) {
+        return 0;
+    }
+    ret = encodeLatLonToMapcodes_internal(v, &rlocal, lat, lon, tc, 1, debugStopAt, extraDigits);
     *result = 0;
     if (ret <= 0) { // no solutions?
         return -1;

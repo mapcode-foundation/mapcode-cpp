@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-#define mapcode_cversion "2.2"
+#define mapcode_cversion "2.2.1"
 
 #define UWORD                               unsigned short int  // 2-byte unsigned integer.
 
@@ -52,7 +52,7 @@ typedef struct {
  *      mapcodes        - a pointer to an Mapcodes, allocated by the caller.
  *      lat             - Latitude, in degrees. Range: -90..90.
  *      lon             - Longitude, in degrees. Range: -180..180.
- *      territoryCode   - Territory code (obtained from convertTerritoryIsoNameToCode), used as encoding context.
+ *      territoryCode   - Territory code (obtained from getTerritoryCode), used as encoding context.
  *                        Pass 0 to get Mapcodes for all territories.
  *      extraDigits     - Number of extra "digits" to add to the generated mapcode. The preferred default is 0.
  *                        Other valid values are 1 and 2, which will add extra letters to the mapcodes to
@@ -84,7 +84,7 @@ int encodeLatLonToMapcodes(
  *                        by the next call to this method!
  *      lat             - Latitude, in degrees. Range: -90..90.
  *      lon             - Longitude, in degrees. Range: -180..180.
- *      territoryCode   - Territory code (obtained from convertTerritoryIsoNameToCode), used as encoding context.
+ *      territoryCode   - Territory code (obtained from getTerritoryCode), used as encoding context.
  *                        Pass 0 to get Mapcodes for all territories.
  *      extraDigits     - Number of extra "digits" to add to the generated mapcode. The preferred default is 0.
  *                        Other valid values are 1 and 2, which will add extra letters to the mapcodes to
@@ -113,8 +113,7 @@ int encodeLatLonToMapcodes_Deprecated(     // Warning: this method is deprecated
  *                        The caller should allocate at least MAX_MAPCODE_RESULT_LEN characters for the string.
  *      lat             - Latitude, in degrees. Range: -90..90.
  *      lon             - Longitude, in degrees. Range: -180..180.
- *      territoryCode   - Territory code (obtained from convertTerritoryIsoNameToCode), used as encoding context.
- *                        Pass 0 to get the shortest Mapcode for all territories.
+ *      territoryCode   - Territory code (obtained from getTerritoryCode), used as encoding context.
  *      extraDigits     - Number of extra "digits" to add to the generated mapcode. The preferred default is 0.
  *                        Other valid values are 1 and 2, which will add extra letters to the mapcodes to
  *                        make them represent the coordinate more accurately.
@@ -136,7 +135,7 @@ int encodeLatLonToSingleMapcode(
  *      lat             - Decoded latitude, in degrees. Range: -90..90.
  *      lon             - Decoded longitude, in degrees. Range: -180..180.
  *      mapcode         - Mapcode to decode.
- *      territoryCode   - Territory code (obtained from convertTerritoryIsoNameToCode), used as decoding context.
+ *      territoryCode   - Territory code (obtained from getTerritoryCode), used as decoding context.
  *                        Pass 0 if not available.
  *
  * Returns:
@@ -169,14 +168,14 @@ int compareWithMapcodeFormat(
  * Convert a territory name to a territory code.
  *
  * Arguments:
- *      isoNam               - Territory name to convert.
+ *      string               - String starting with ISO code of territory (e.g. "USA" or "US-CA").
  *      parentTerritoryCode  - Parent territory code, or 0 if not available.
  *
  * Returns:
  *      Territory code >0 if succeeded, or <0 if failed.
  */
-int convertTerritoryIsoNameToCode(
-        const char *isoName,
+int getTerritoryCode(
+        const char *string,
         int parentTerritoryCode);
 
 /**
@@ -250,7 +249,7 @@ double maxErrorInMeters(int extraDigits);
  * Arguments:
  *      lat             - Latitude, in degrees. Range: -90..90.
  *      lon             - Longitude, in degrees. Range: -180..180.
- *      territoryCode   - Territory code (obtained from convertTerritoryIsoNameToCode)
+ *      territoryCode   - Territory code (obtained from getTerritoryCode)
  *
  * returns nonzero if coordinate is near more than one territory border
  *
@@ -332,11 +331,12 @@ const UWORD *encodeToAlphabet(const char *string, int alphabet);
 /**
  * List of #defines to support legacy systems.
  */
+#define convertTerritoryIsoNameToCode getTerritoryCode
 #define coord2mc(results, lat, lon, territoryCode)  encodeLatLonToMapcodes_Deprecated(results, lat, lon,territoryCode, 0)
 #define coord2mc1(results, lat, lon, territoryCode) encodeLatLonToSingleMapcode(results, lat, lon, territoryCode, 0)
 #define mc2coord decodeMapcodeToLatLon
 #define lookslikemapcode compareWithMapcodeFormat
-#define text2tc convertTerritoryIsoNameToCode
+#define text2tc getTerritoryCode
 #define tc2text convertTerritoryCodeToIsoName
 #define tccontext getCountryOrParentCountry
 #define tcparent getParentCountryOf

@@ -581,6 +581,50 @@ void test_territory_insides() {
     }
 }
 
+void territory_code_tests() {
+    int i;
+
+    static const struct {
+        int expectedresult;
+        int context;
+        const char *inputstring;
+    } tcTestData[] = {
+        {319,  0, "AL"}, // 
+        {483,497, "AL"}, // 497=rus
+        {483,431, "AL"}, // 431=ru-tam
+        {365,411, "AL"}, // 411=usa
+        {365,392, "AL"}, // 392=us-ca
+        { -1,  0, ""},
+        { -1,  0, "R"},
+        { -1,  0, "RX"},
+        { -1,  0, "RXX"},
+        {497,  0, "RUS"},
+        { -1,  0, "RUSSIA"},
+        {411,  0, "US"},
+        {411,  0, "USA"},
+        {411,  0, "usa"},
+        { -1,  0, "US-TEST"},
+        {411,  0, "US TEST"},
+        {392,  0, "US-CA"},
+        {392,  0, "US-CA TEST"},
+        {392,  0, "USA-CA"},
+        {431,  0, "RUS-TAM"},
+        { -1,  0, "RUS-TAMX"},
+        {431,  0, "RUS-TAM X"},
+        {0,0,NULL}
+    };
+
+    for (i = 0; tcTestData[i].inputstring!=NULL; i++ ) {
+        int tc = getTerritoryCode(tcTestData[i].inputstring, tcTestData[i].context);
+        nrTests++;
+        if (tc != tcTestData[i].expectedresult) {
+            nrErrors++;
+            printf("*** ERROR *** getTerritoryCode(%s)=%d, expected %d\n",
+                tcTestData[i].inputstring, tc, tcTestData[i].expectedresult);
+        }
+    }
+}
+
 
 void main() {
 #ifdef XSIDE3    
@@ -598,6 +642,7 @@ void main() {
     printf("-----------------------------------------------------------\nTerritory tests\n");
     printf("%d territories\n", MAX_CCODE);
     test_territories();
+    territory_code_tests();
     test_territory_insides();
 
     printf("-----------------------------------------------------------\nFailing decode tests\n");

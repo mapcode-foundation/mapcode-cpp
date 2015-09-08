@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#define UNITTEST_VERSION "2.2"
+#define UNITTEST_VERSION "2.2.1"
 
 /**
  * This application performs a number of tests on the Mapcode C library.

@@ -26,6 +26,7 @@
 // #include <time.h>
 
 #include "../mapcodelib/mapcoder.c"
+#include "test_territories.c"
 #include "decode_test.h"
 
 extern void test_territories();
@@ -50,7 +51,7 @@ static void alphabet_tests() {
         convertToAlphabet(enc, 64, str, i);
         if (*enc) {
             nrErrors++;
-            printf("convertToAlphabet(\"%s\",%d) != \"\"\n", str, i, dec);
+            printf("convertToAlphabet(\"%s\",%d) = \"%s\"\n", str, i, dec);
         }
         else {
             // see if empty UTF16 converts to empty string
@@ -58,7 +59,7 @@ static void alphabet_tests() {
             convertToRoman(dec, 64, enc);
             if (*dec) {
                 nrErrors++;
-                printf("convertToRoman(empty)=\"%s\"\n", "", dec);
+                printf("convertToRoman(\"\") = \"%s\"\n", dec);
             }
         }
 
@@ -149,9 +150,9 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
         }
 
         // build normalised version of source string in "clean"
-        len = strlen(s);
+        len = (int) strlen(s);
         while (len > 0 && s[len - 1] > 0 && s[len - 1] <= 32) { len--; }
-        i = strlen(territory);
+        i = (int) strlen(territory);
         if (i) {
             strcpy(clean, territory);
             strcat(clean, " ");
@@ -165,7 +166,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
         // determine precision of the source string
         s = strchr(clean, '-');
         if (s) {
-            precision = strlen(s + 1);
+            precision = (int) strlen(s + 1);
         } else {
             precision = 0;
         }
@@ -292,7 +293,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
 }
 
 // test strings that are expected to FAIL a decode
-static test_failing_decodes() {
+static void test_failing_decodes() {
     static const char *badcodes[] = {
 
             "",              // empty
@@ -627,7 +628,7 @@ void territory_code_tests() {
 }
 
 
-void main() {
+int main(const int argc, const char **argv) {
 #ifdef XSIDE3    
     const char *mapcode_dataversion = "undefined";
 #endif
@@ -663,10 +664,10 @@ void main() {
     re_encode_tests();
 
     printf("-----------------------------------------------------------\n");
-    printf("Done.\nExecuted %ld tests, found %ld errors", nrTests, nrErrors);
+    printf("Done.\nExecuted %d tests, found %d errors", nrTests, nrErrors);
     if (nrWarnings) {
-        printf(", %ld warnings\n", nrWarnings);
+        printf(", %d warnings\n", nrWarnings);
     }
     printf("\n");
-    getchar();
+    return ((nrErrors + nrWarnings) == 0) ? 0 : -1;
 }

@@ -24,7 +24,6 @@ extern "C" {
 
 #define SUPPORT_FOREIGN_ALPHABETS           // Define to support additional alphabets.
 #define SUPPORT_HIGH_PRECISION              // Define to enable high-precision extension logic.
-#define FORCE_RECODE                        // Define to enforce that encode(decode(M)) generates M
 
 #define MAX_NR_OF_MAPCODE_RESULTS           22          // Max. number of results ever returned by encoder (e.g. for 26.904899, 95.138515).
 #define MAX_PROPER_MAPCODE_LEN              10          // Max. number of characters in a proper mapcode (including the dot).
@@ -258,8 +257,8 @@ double maxErrorInMeters(int extraDigits);
  * Furthermore, encode(q) must yield back M *unless* point q is near multiple borders.
  */
 int multipleBordersNearby(
-        double lat, 
-        double lon, 
+        double lat,
+        double lon,
         int territoryCode);
 
 /**

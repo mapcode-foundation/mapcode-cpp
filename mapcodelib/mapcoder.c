@@ -24,7 +24,9 @@
 
 #define FAST_ENCODE
 #ifdef FAST_ENCODE
+
 #include "mapcode_fast_encode.h"
+
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,19 +38,19 @@
 // PUBLIC - returns distance (in meters) between two coordinates (in degrees)
 double distanceInMeters(double latDeg1, double lonDeg1, double latDeg2, double lonDeg2) {
     // Radius of Earth.
-    #define EARTH_RADIUS_X_METERS 6378137
-    #define EARTH_RADIUS_Y_METERS 6356752
+#define EARTH_RADIUS_X_METERS 6378137
+#define EARTH_RADIUS_Y_METERS 6356752
 
     // Circumference of Earth.
-    #define EARTH_CIRCUMFERENCE_X (EARTH_RADIUS_X_METERS * 2 * _PI)
-    #define EARTH_CIRCUMFERENCE_Y (EARTH_RADIUS_Y_METERS * 2 * _PI)
+#define EARTH_CIRCUMFERENCE_X (EARTH_RADIUS_X_METERS * 2 * _PI)
+#define EARTH_CIRCUMFERENCE_Y (EARTH_RADIUS_Y_METERS * 2 * _PI)
 
     // Meters per degree latitude is fixed. For longitude: use factor * cos(midpoint of two degree latitudes).
-    #define METERS_PER_DEGREE_LAT (EARTH_CIRCUMFERENCE_Y / 360.0)
-    #define METERS_PER_DEGREE_LON (EARTH_CIRCUMFERENCE_X / 360.0)
+#define METERS_PER_DEGREE_LAT (EARTH_CIRCUMFERENCE_Y / 360.0)
+#define METERS_PER_DEGREE_LON (EARTH_CIRCUMFERENCE_X / 360.0)
 
-     // PI
-    #define _PI 3.14159265358979323846
+    // PI
+#define _PI 3.14159265358979323846
 
     if (lonDeg1 < 0 && lonDeg2 > 1) { lonDeg1 += 360; }
     if (lonDeg2 < 0 && lonDeg1 > 1) { lonDeg2 += 360; }
@@ -104,14 +106,14 @@ typedef struct { // point
 
 static point32 convertFractionsToCoord32(const point *p) {
     point32 p32;
-    p32.lat = (int) floor(p->lat /  810000);
+    p32.lat = (int) floor(p->lat / 810000);
     p32.lon = (int) floor(p->lon / 3240000);
     return p32;
 }
 
 static point convertFractionsToDegrees(const point *p) {
     point pd;
-    pd.lat = p->lat / ( 810000 * 1000000.0);
+    pd.lat = p->lat / (810000 * 1000000.0);
     pd.lon = p->lon / (3240000 * 1000000.0);
     return pd;
 }
@@ -151,8 +153,7 @@ static void convertCoordsToMicrosAndFractions(point32 *coord32, int *fraclat, in
 #define Boundaries mminforec
 
 // returns nonzero if x in the range minx...maxx
-static int isInRange(int x, const int minx, const int maxx) 
-{
+static int isInRange(int x, const int minx, const int maxx) {
     if (minx <= x && x < maxx) { return 1; }
     if (x < minx) { x += 360000000; } else { x -= 360000000; } // 1.32 fix FIJI edge case
     if (minx <= x && x < maxx) { return 1; }
@@ -165,7 +166,7 @@ static int fitsInsideBoundaries(const point32 *coord32, const Boundaries *b) {
 }
 
 // set target Boundaries to a source extended with deltalat, deltaLon (in microDegrees)
-static Boundaries *getExtendedBoundaries(Boundaries *target, const Boundaries *source, 
+static Boundaries *getExtendedBoundaries(Boundaries *target, const Boundaries *source,
                                          const int deltaLat, const int deltaLon) {
     target->miny = source->miny - deltaLat;
     target->minx = source->minx - deltaLon;
@@ -191,8 +192,8 @@ typedef struct {
     double fmaxx;
 } MapcodeZone;
 
-static void setFromFractions(MapcodeZone *z, 
-                             const double y, const double x, 
+static void setFromFractions(MapcodeZone *z,
+                             const double y, const double x,
                              const double yDelta, const double xDelta) {
     z->fminx = x;
     z->fmaxx = x + xDelta;
@@ -312,7 +313,7 @@ static int debugStopAt = -1; // to externally test-restrict internal encoding, d
 
 // returns true iff ccode is a subdivision of some other country
 static int isSubdivision(const int ccode) {
-    return (ParentTerritoryOf(ccode) >= 0); 
+    return (ParentTerritoryOf(ccode) >= 0);
 }
 
 // find first territory rectangle of the same type as m
@@ -336,7 +337,7 @@ static int isNearBorderOf(const point32 *coord32, const Boundaries *b) {
     int xdiv8 = xDivider4(b->miny, b->maxy) / 4; // should be /8 but there's some extra margin
     Boundaries tmp;
     return (fitsInsideBoundaries(coord32, getExtendedBoundaries(&tmp, b, +60, +xdiv8)) &&
-          (!fitsInsideBoundaries(coord32, getExtendedBoundaries(&tmp, b, -60, -xdiv8))));
+            (!fitsInsideBoundaries(coord32, getExtendedBoundaries(&tmp, b, -60, -xdiv8))));
 }
 
 static const char *get_entity_iso3(char *entity_iso3_result, const int ccode) {
@@ -347,12 +348,14 @@ static const char *get_entity_iso3(char *entity_iso3_result, const int ccode) {
 }
 
 static void makeupper(char *s) {
-    while (*s) { *s++ = (char) toupper(*s); }
+    while (*s) {
+        *s = (char) toupper(*s);
+        s++;
+    }
 }
 
 // returns 1 - 8, or negative if error
-static int getParentcode(const char *s, const int len)
-{
+static int getParentcode(const char *s, const int len) {
     const char *p = (len == 2 ? parents2 : parents3);
     const char *f;
     char country[4];
@@ -439,9 +442,8 @@ static int unpack_if_alldigits(char *input) {
             return 1;
         } // v1.50
 
-        if ((*s == 'a') || (*s == 'e') || (*s == 'u') || 
-            (*s == 'A') || (*s == 'E') || (*s == 'U'))
-        {
+        if ((*s == 'a') || (*s == 'e') || (*s == 'u') ||
+            (*s == 'A') || (*s == 'E') || (*s == 'U')) {
             char *e = s + 1;  // s is vowel, e is lastchar
 
             int v = 0;
@@ -496,7 +498,7 @@ static void encodeExtension(char *result, const int extrax4, const int extray, c
         double factorx = (double) MAX_PRECISION_FACTOR * dividerx4; // perfect integer!
         double factory = (double) MAX_PRECISION_FACTOR * dividery; // perfect integer!
         double valx = ((double) MAX_PRECISION_FACTOR * extrax4) + enc->fraclon; // perfect integer!
-        double valy = ((double) MAX_PRECISION_FACTOR * extray ) + (ydirection * enc->fraclat); // perfect integer!
+        double valy = ((double) MAX_PRECISION_FACTOR * extray) + (ydirection * enc->fraclat); // perfect integer!
 
         // protect against floating point errors
         if (valx < 0) { valx = 0; } else if (valx >= factorx) { valx = factorx - 1; }
@@ -568,7 +570,8 @@ static int encodeSixWide(int x, int y, int width, int height) {
 // *** mid-level encode routines ***
 
 // returns *result==0 in case of error
-static void encodeGrid(char *result, const encodeRec *enc, const int m, const int extraDigits, const char headerLetter) {
+static void encodeGrid(char *result, const encodeRec *enc, const int m, const int extraDigits,
+                       const char headerLetter) {
     const Boundaries *b = boundaries(m);
 
     const int orgcodex = coDex(m);
@@ -694,7 +697,7 @@ static void encodeGrid(char *result, const encodeRec *enc, const int m, const in
 }
 
 // *result==0 in case of error
-static void encodeNameless(char *result, const encodeRec *enc, const int input_ctry, 
+static void encodeNameless(char *result, const encodeRec *enc, const int input_ctry,
                            const int extraDigits, const int m) {
     // determine how many nameless records there are (A), and which one is this (X)...
     const int A = countNamelessRecords(m, firstrec(input_ctry));
@@ -940,7 +943,7 @@ static void encoderEngine(const int ccode, const encodeRec *enc, const int stop_
 
 // pass point to an array of pointers (at least 42), will be made to point to result strings...
 // returns nr of results;
-static int encodeLatLonToMapcodes_internal(char **v, Mapcodes *mapcodes, 
+static int encodeLatLonToMapcodes_internal(char **v, Mapcodes *mapcodes,
                                            const double lat, const double lon,
                                            const int tc, const int stop_with_one_result,
                                            const int requiredEncoder, const int extraDigits) {
@@ -978,11 +981,11 @@ static int encodeLatLonToMapcodes_internal(char **v, Mapcodes *mapcodes,
             }
         }
 #else
-    int i;
-    for(i=0;i<MAX_MAPCODE_TERRITORY_CODE;i++) {
-      encoderEngine(i,&enc,stop_with_one_result,extraDigits, requiredEncoder, -1);
-      if ((stop_with_one_result || (requiredEncoder >= 0)) && (enc.mapcodes->count > 0)) { break; }
-    }
+        int i;
+        for(i=0;i<MAX_MAPCODE_TERRITORY_CODE;i++) {
+          encoderEngine(i,&enc,stop_with_one_result,extraDigits, requiredEncoder, -1);
+          if ((stop_with_one_result || (requiredEncoder >= 0)) && (enc.mapcodes->count > 0)) { break; }
+        }
 #endif
     }
     else {
@@ -1032,9 +1035,9 @@ typedef struct {
 // decode the high-precision extension (0-8 characters)
 // this routine takes the integer-arithmeteic decoding results (dec->coord32), adds precision, 
 // and determines result zone (dec->zone); returns negative in case of error.
-static int decodeExtension(decodeRec *dec, 
-                           int dividerx4, int dividery, 
-                           const int lon_offset4, 
+static int decodeExtension(decodeRec *dec,
+                           int dividerx4, int dividery,
+                           const int lon_offset4,
                            const int extremeLat32, const int maxLon32) {
     double lat1, lon4;
     const char *extrapostfix = dec->extension;
@@ -1127,7 +1130,7 @@ static void decode_triple(const char *result, int *difx, int *dify) {
     }
 } // decode_triple
 
-static void decodeSixWide(const int v, const int width, const int height, 
+static void decodeSixWide(const int v, const int width, const int height,
                           int *x, int *y) {
     int w;
     int D = 6;
@@ -1449,8 +1452,9 @@ static int decodeAutoHeader(decodeRec *dec, int m) {
                     dec->coord32.lat = b->maxy - vy * dividery;
                     dec->coord32.lon = b->minx + vx * dividerx;
 
-                    if ((dec->coord32.lon < b->minx) || (dec->coord32.lon >= b->maxx) || 
-                        (dec->coord32.lat < b->miny) || (dec->coord32.lat > b->maxy)) // *** CAREFUL! do this test BEFORE adding remainder...
+                    if ((dec->coord32.lon < b->minx) || (dec->coord32.lon >= b->maxx) ||
+                        (dec->coord32.lat < b->miny) ||
+                        (dec->coord32.lat > b->maxy)) // *** CAREFUL! do this test BEFORE adding remainder...
                     {
                         return -122; // invalid code
                     }
@@ -1588,8 +1592,8 @@ static int decoderEngine(decodeRec *dec) {
             const int r = recType(i);
             if (r == 0) {
                 if (isNameless(i)) {
-                    if (((codexi == 21) && (codex == 22)) || 
-                        ((codexi == 22) && (codex == 32)) || 
+                    if (((codexi == 21) && (codex == 22)) ||
+                        ((codexi == 22) && (codex == 32)) ||
                         ((codexi == 13) && (codex == 23))) {
                         err = decodeNameless(dec, i);
                         break;
@@ -1663,7 +1667,7 @@ static int decoderEngine(decodeRec *dec) {
                 }
             }
             else { //r>1                
-                if (((codex == 23) && (codexi == 22)) || 
+                if (((codex == 23) && (codexi == 22)) ||
                     ((codex == 33) && (codexi == 23))) {
                     err = decodeAutoHeader(dec, i);
                     break;
@@ -1754,7 +1758,7 @@ static struct {
                 {0x03B1, 0x03c9, "ABGDFZHQIKLMNCOJP?STYVXRW"}, // Greek lowercase
                 {0x10d0, 0x10ef, "AB?CE?D?UF?GHOJ?KLMINPQRSTVW?XYZ"}, // Georgisch lowercase
                 {0x0562, 0x0586, "BCDE??FGHI?J?KLM?N?U?PQ?R??STVWXYZ?OA"}, // Armenian lowercase
-                {0,      0,      NULL}
+                {0,      0, NULL}
         };
 
 
@@ -1993,8 +1997,7 @@ int compareWithMapcodeFormat(const char *s, int fullcode) {
 // PUBLIC - returns name of territoryCode in (sufficiently large!) result string. 
 // formats: 0=full 1=short
 // returns empty string in case of error
-char *getTerritoryIsoName(char *result, int territoryCode, int format)
-{
+char *getTerritoryIsoName(char *result, int territoryCode, int format) {
     if ((territoryCode < 1) || (territoryCode > MAX_MAPCODE_TERRITORY_CODE)) {
         *result = 0;
     } else {
@@ -2107,8 +2110,7 @@ static int binfindmatch(const int parentcode, const char *str) {
 
 // PUBLIC - returns territoryCode of string (or negative if not found).
 // optional_tc: context territoryCode to handle ambiguities (pass <=0 if unknown).
-int getTerritoryCode(const char *string, int optional_tc) 
-{
+int getTerritoryCode(const char *string, int optional_tc) {
     if (string == NULL) { return -1; }
     while (*string > 0 && *string <= 32) { string++; } // skip leading whitespace
 
@@ -2119,7 +2121,9 @@ int getTerritoryCode(const char *string, int optional_tc)
         } else if (string[2] && string[3] == '-') {
             return binfindmatch(getParentcode(string, 3), string + 4);
         } else {
-            const int parentcode = ccode<0 ? 0 : ((parentnumber[ccode] > 0) ? parentnumber[ccode] : parentnumber[ParentTerritoryOf(ccode)]);
+            const int parentcode =
+                    ccode < 0 ? 0 : ((parentnumber[ccode] > 0) ? parentnumber[ccode] : parentnumber[ParentTerritoryOf(
+                            ccode)]);
             const int b = binfindmatch(parentcode, string);
             if (b > 0) {
                 return b;
@@ -2193,6 +2197,7 @@ int encodeLatLonToMapcodes_Deprecated(char **v, double lat, double lon, int terr
 // Legacy: NOT threadsafe
 static char makeiso_bufbytes[16];
 static char *makeiso_buf;
+
 const char *convertTerritoryCodeToIsoName(int tc, int format) {
     if (makeiso_buf == makeiso_bufbytes) {
         makeiso_buf = makeiso_bufbytes + 8;

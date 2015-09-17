@@ -34,7 +34,9 @@ Also see www.mapcode.com for background and reference materials.
 
 Note: this version may be restricted to a particular area of the Earth!
 In that case, basics.h will state a version number of the for:
+
     #define mapcode_cversion "1.2xxx"
+    
 where "xxx" states the geographical limitation.
 
 
@@ -59,60 +61,64 @@ decode Mapcodes.
 
 # Release Notes
 
-* 2.2
+* 2.2.1
 
-    Solved 1-microdegree gap in a few spots on Earth, noticable now extreme precision is possible
+    Solved 1-microdegree gap in a few spots on Earth, noticable now extreme precision is possible.
 
 * 2.1.5
 
-    Added stricter unit tests
+    Added stricter unit tests.
 
 * 2.1.4
 
-    Added maxErrorinMeters to API;
+    Added `maxErrorInMetersz` to API.
 	
-    Moved recode logic into decoder; adjusted unit test.
+    Moved recode logic into decoder.
+    
+    Adjusted unit test.
 
 * 2.1.3
 
-    Added useful routine DistanceInMeters to API
+    Added useful routine `DistanceInMeters` to API.
 
 * 2.1.2
 
-    Rewrote fraction floating points to integer arithmetic
+    Rewrote fraction floating points to integer arithmetic.
 
 * 2.1.1
 
-    Added unittest\*.* which can be compiled and executed to check
+    Added `unittest/` which can be compiled and executed to check
     if the mapcode library performs as expected.
 
 * 2.1.0
 
-    Fixes floating point inaccuracy (prevent encode(decode(M)) != M
+    Fixes floating point inaccuracy (prevent `encode(decode(M)) != M`).
 
 * 2.0.3
 
-    Added #define FAST_ALPHA for faster alphacode string recognition;
+    Added `#define FAST_ALPHA` for faster alphacode string recognition.
 
 * 2.0.2.4
 
-    Added point structs to source
+    Added point structs to source.
 
 * 2.0.2.3
 
-    Cleaned up source
+    Cleaned up source.
 
 * 2.0.2.2
 
-    Cleaned up source
+    Cleaned up source.
 
 * 2.0.2.1
 
-    Cleaned up source, removed legacy code; Renamed  dividemaps.h to mapcode_fast_encode.h;
+    Cleaned up source, removed legacy code.
+    
+    Renamed `dividemaps.h` to `mapcode_fast_encode.h`.
      
-    Improved convertToRoman and convertToAlphabet to trim and skip leading territory;
+    Improved `convertToRoman` and `convertToAlphabet` to trim and skip leading territory.
 
-    Rolled back 2.0.2 fix for letters "i" and "o" in Hindi, Bengali, Tibetan and Gurmukhi;
+    Rolled back 2.0.2 fix for letters "i" and "o" in Hindi, Bengali, Tibetan and Gurmukhi.
 
 * 2.0.2
 

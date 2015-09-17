@@ -16,6 +16,8 @@
 
 // *** GENERATED FILE, DO NOT CHANGE OR PRETTIFY ***
 
+// TODO: Missing multiple header inclusion prevention: #ifndef __FILE_H__ #define __FILE_H__ etc.
+
 #define mapcode_dataversion "2.2" // coords 2.0.2
 
 static const char *ALIASES =

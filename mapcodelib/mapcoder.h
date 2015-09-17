@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#ifndef __MAPCODER_H__
+#define __MAPCODER_H__
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -42,7 +45,6 @@ typedef struct {
     int count;                                                        // The number of mapcode results (length of array).
     char mapcode[MAX_NR_OF_MAPCODE_RESULTS][MAX_MAPCODE_RESULT_LEN];  // The mapcodes.
 } Mapcodes;
-
 
 /**
  * Encode a latitude, longitude pair (in degrees) to a set of Mapcodes.
@@ -362,4 +364,5 @@ const UWORD *encodeToAlphabet(const char *string, int alphabet);
 
 #ifdef __cplusplus
 }
+#endif
 #endif

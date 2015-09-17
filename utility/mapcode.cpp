@@ -42,6 +42,7 @@
 #include <math.h>
 #include <time.h>
 #include "../mapcodelib/mapcoder.c"
+#include "../mapcodelib/mapcoder.h"
 
 // Specific define to be able to limit output to microdegrees, for test files.
 #undef LIMIT_TO_MICRODEGREES
@@ -196,17 +197,17 @@ static void convertLatLonToXYZ(double latDeg, double lonDeg, double *x, double *
 /**
  * This methods provides a self check for encoding lat/lon to Mapcode.
  */
-static void selfCheckLatLonToMapcode(const double lat, double lon, const char *territory, const char *mapcode,
-                                     int extraDigits) {
-    int context = convertTerritoryIsoNameToCode(territory, 0);
-    char *results[2 * MAX_NR_OF_MAPCODE_RESULTS];
+static void selfCheckLatLonToMapcode(const double lat, double lon, const char *mapcode, int extraDigits) {
+    // TODO: Fix self check; read context.
+    // int context = convertTerritoryIsoNameToCode(territory, 0);
+    int context = 0;
+    Mapcodes mapcodes;
     const double limitLat = (lat < -90.0) ? -90.0 : ((lat > 90.0) ? 90.0 : lat);
     const double limitLon = (lon < -180.0) ? -180.0 : ((lon > 180.0) ? 180.0 : lon);
-    const int nrResults = encodeLatLonToMapcodes_Deprecated(results, limitLat, limitLon, context, extraDigits);
+    const int nrResults = encodeLatLonToMapcodes(&mapcodes, limitLat, limitLon, context, extraDigits);
     if (nrResults <= 0) {
         fprintf(stderr, "error: encoding lat/lon to mapcode failure; "
-                        "cannot encode lat=%.12g, lon=%.12g (default territory=%s)\n",
-                lat, lon, territory);
+                        "cannot encode lat=%.20g, lon=%.20g\n", lat, lon);
         if (selfCheckEnabled) {
             exit(INTERNAL_ERROR);
         }
@@ -218,22 +219,14 @@ static void selfCheckLatLonToMapcode(const double lat, double lon, const char *t
         /* Check if the territory and code were found in results. Note that the territory
          * may be a minimal code, like IN (which may indicate US-IN or RU-IN).
          */
-        const char *foundMapcode = results[(i * 2)];
-        const char *foundTerritory = results[(i * 2) + 1];
-        char *foundTerritoryMin = strstr(foundTerritory, "-");
-        if (foundTerritoryMin && (strlen(foundTerritoryMin) > 0)) {
-            ++foundTerritoryMin;
-        }
-
-        found = (((strcmp(territory, foundTerritory) == 0) ||
-                  (strcmp(territory, foundTerritoryMin) == 0)) &&
-                 (strcmp(mapcode, foundMapcode) == 0));
+        const char *foundMapcode = mapcodes.mapcode[i];
+        found = (strcmp(mapcode, foundMapcode) == 0);
     }
     if (!found) {
         fprintf(stderr, "error: encoding lat/lon to mapcode failure; "
-                        "mapcode '%s %s' decodes to lat=%.12g(%.12g), lon=%.12g(%.12g), "
-                        "which does not encode back to '%s %s'\n",
-                territory, mapcode, lat, limitLat, lon, limitLon, territory, mapcode);
+                        "mapcode '%s' decodes to lat=%.20g(%.20g), lon=%.20g(%.20g), "
+                        "which does not encode back to '%s'\n",
+                mapcode, lat, limitLat, lon, limitLon, mapcode);
         if (selfCheckEnabled) {
             exit(INTERNAL_ERROR);
         }
@@ -245,15 +238,17 @@ static void selfCheckLatLonToMapcode(const double lat, double lon, const char *t
 /**
  * This method provides a self-check for decoding a Mapcode to lat/lon.
  */
-static void selfCheckMapcodeToLatLon(const char *territory, const char *mapcode,
+static void selfCheckMapcodeToLatLon(const char *mapcode,
                                      const double lat, const double lon) {
     double foundLat;
     double foundLon;
-    int foundContext = convertTerritoryIsoNameToCode(territory, 0);
+    // TODO: Fix self-check.
+    // int foundContext = convertTerritoryIsoNameToCode(territory, 0);
+    int foundContext = 0;
     int err = decodeMapcodeToLatLon(&foundLat, &foundLon, mapcode, foundContext);
     if (err != 0) {
         fprintf(stderr, "error: decoding mapcode to lat/lon failure; "
-                "cannot decode '%s %s')\n", territory, mapcode);
+                "cannot decode '%s')\n", mapcode);
         if (selfCheckEnabled) {
             exit(INTERNAL_ERROR);
         }
@@ -266,9 +261,9 @@ static void selfCheckMapcodeToLatLon(const char *territory, const char *mapcode,
     }
     if ((deltaLat > DELTA) || (deltaLon > DELTA)) {
         fprintf(stderr, "error: decoding mapcode to lat/lon failure; "
-                        "lat=%.12g, lon=%.12g produces mapcode %s %s, "
-                        "which decodes to lat=%.12g (delta=%.12g), lon=%.12g (delta=%.12g)\n",
-                lat, lon, territory, mapcode, foundLat, deltaLat, foundLon, deltaLon);
+                        "lat=%.20g, lon=%.20g produces mapcode %s, "
+                        "which decodes to lat=%.20g (delta=%.20g), lon=%.20g (delta=%.20g)\n",
+                lat, lon, mapcode, foundLat, deltaLat, foundLon, deltaLon);
         if (selfCheckEnabled) {
             exit(INTERNAL_ERROR);
         }
@@ -278,7 +273,6 @@ static void selfCheckMapcodeToLatLon(const char *territory, const char *mapcode,
 
 static void generateAndOutputMapcodes(double lat, double lon, int iShowError, int extraDigits, int useXYZ) {
 
-    char *results[2 * MAX_NR_OF_MAPCODE_RESULTS];
     int context = 0;
 
     while (lon > 180.0) {
@@ -304,10 +298,11 @@ static void generateAndOutputMapcodes(double lat, double lon, int iShowError, in
     }
 #endif
 
-    const int nrResults = encodeLatLonToMapcodes_Deprecated(results, lat, lon, context, extraDigits);
+    Mapcodes mapcodes;
+    const int nrResults = encodeLatLonToMapcodes(&mapcodes, lat, lon, context, extraDigits);
     if (nrResults <= 0) {
         if (iShowError) {
-            fprintf(stderr, "error: cannot encode lat=%.12g, lon=%.12g)\n", lat, lon);
+            fprintf(stderr, "error: cannot encode lat=%.20g, lon=%.20g)\n", lat, lon);
             exit(NORMAL_ERROR);
         }
     }
@@ -317,22 +312,21 @@ static void generateAndOutputMapcodes(double lat, double lon, int iShowError, in
         double y;
         double z;
         convertLatLonToXYZ(lat, lon, &x, &y, &z);
-        printf("%d %.14g %.14g %.14g %.14g %.14g\n", nrResults, lat, lon, x, y, z);
+        printf("%d %.20g %.20g %.20g %.20g %.20g\n", nrResults, lat, lon, x, y, z);
     }
     else {
-        printf("%d %.14g %.14g\n", nrResults, lat, lon);
+        printf("%d %.20g %.20g\n", nrResults, lat, lon);
     }
     for (int j = 0; j < nrResults; ++j) {
-        const char *foundMapcode = results[(j * 2)];
-        const char *foundTerritory = results[(j * 2) + 1];
+        const char *foundMapcode = mapcodes.mapcode[j];
 
         // Output result line.
-        printf("%s %s\n", foundTerritory, foundMapcode);
+        printf("%s\n", foundMapcode);
 
         // Self-checking code to see if encoder produces this Mapcode for the lat/lon.
         if (selfCheckEnabled) {
-            selfCheckLatLonToMapcode(lat, lon, foundTerritory, foundMapcode, extraDigits);
-            selfCheckMapcodeToLatLon(foundTerritory, foundMapcode, lat, lon);
+            selfCheckLatLonToMapcode(lat, lon, foundMapcode, extraDigits);
+            selfCheckMapcodeToLatLon(foundMapcode, lat, lon);
         }
     }
 
@@ -366,9 +360,9 @@ static void outputStatistics() {
     fprintf(stderr, "\nStatistics:\n");
     fprintf(stderr, "Total number of 3D points generated     = %d\n", totalNrOfPoints);
     fprintf(stderr, "Total number of mapcodes generated      = %d\n", totalNrOfResults);
-    fprintf(stderr, "Average number of mapcodes per 3D point = %.12g\n",
+    fprintf(stderr, "Average number of mapcodes per 3D point = %.20g\n",
             ((float) totalNrOfResults) / ((float) totalNrOfPoints));
-    fprintf(stderr, "Largest number of results for 1 mapcode = %d at (%.12g, %.12g)\n",
+    fprintf(stderr, "Largest number of results for 1 mapcode = %d at (%.20g, %.20g)\n",
             largestNrOfResults, latLargestNrOfResults, lonLargestNrOfResults);
 }
 
@@ -437,7 +431,7 @@ int main(const int argc, const char **argv) {
             }
 
             // Output the decoded lat/lon.
-            printf("%.12g %.12g\n", lat, lon);
+            printf("%.20g %.20g\n", lat, lon);
 
             // Self-checking code to see if encoder produces this Mapcode for the lat/lon.
             if (selfCheckEnabled) {
@@ -446,7 +440,7 @@ int main(const int argc, const char **argv) {
                 if (suffix != 0) {
                     extraDigits = (int) (strlen(suffix) - 1);
                 }
-                selfCheckLatLonToMapcode(lat, lon, defaultTerritory, mapcode, extraDigits);
+                selfCheckLatLonToMapcode(lat, lon, mapcode, extraDigits);
             }
         }
     }
@@ -514,23 +508,22 @@ int main(const int argc, const char **argv) {
         }
 
         // Encode the lat/lon to a set of Mapcodes.
-        char *results[2 * MAX_NR_OF_MAPCODE_RESULTS];
-        const int nrResults = encodeLatLonToMapcodes_Deprecated(results, lat, lon, context, extraDigits);
+        Mapcodes mapcodes;
+        const int nrResults = encodeLatLonToMapcodes(&mapcodes, lat, lon, context, extraDigits);
         if (nrResults <= 0) {
-            fprintf(stderr, "error: cannot encode lat=%.12g, lon=%.12g (default territory=%s)\n",
+            fprintf(stderr, "error: cannot encode lat=%.20g, lon=%.20g (default territory=%s)\n",
                     lat, lon, defaultTerritory);
             return NORMAL_ERROR;
         }
 
         // Output the Mapcode.
         for (int i = 0; i < nrResults; ++i) {
-            const char *foundMapcode = results[(i * 2)];
-            const char *foundTerritory = results[(i * 2) + 1];
-            printf("%s %s\n", foundTerritory, foundMapcode);
+            const char *foundMapcode = mapcodes.mapcode[i];
+            printf("%s\n", foundMapcode);
 
             // Self-checking code to see if decoder produces the lat/lon for all of these Mapcodes.
             if (selfCheckEnabled) {
-                selfCheckMapcodeToLatLon(foundTerritory, foundMapcode, lat, lon);
+                selfCheckMapcodeToLatLon(foundMapcode, lat, lon);
             }
         }
     }

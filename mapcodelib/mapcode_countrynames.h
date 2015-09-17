@@ -14,6 +14,9 @@
  * limitations under the License.
  */ 
 // *** GENERATED FILE, DO NOT CHANGE OR PRETTIFY ***
+
+// TODO: Missing multiple header inclusion prevention: #ifndef __FILE_H__ #define __FILE_H__ etc.
+
 const char *isofullname[] = {
 "Vatican City State (Holy See)",
 "Monaco (Principality of _)",

@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-#define UNITTEST_VERSION "2.2.1"
-
 /**
  * This application performs a number of tests on the Mapcode C library.
  * It helps to establish that all routines work properly.
@@ -629,11 +627,8 @@ void territory_code_tests() {
 
 
 int main(const int argc, const char **argv) {
-#ifdef XSIDE3    
-    const char *mapcode_dataversion = "undefined";
-#endif
-    printf("Mapcode C Library Unit test %s\n", UNITTEST_VERSION);
-    printf("Library version %s (Data version %s)\n", mapcode_cversion, mapcode_dataversion);
+    printf("Mapcode C Library Unit Tests\n");
+    printf("Library version %s (data version %s)\n", mapcode_cversion, mapcode_dataversion);
 
     printf("-----------------------------------------------------------\nAlphabet tests\n");
     alphabet_tests();
@@ -647,27 +642,22 @@ int main(const int argc, const char **argv) {
     territory_code_tests();
     test_territory_insides();
 
-    printf("-----------------------------------------------------------\nFailing decode tests\n");
+    printf("-----------------------------------------------------------\nIncorrect format tests\n");
     test_failing_decodes();
 
-    printf("-----------------------------------------------------------\nFailing decodes tests\n");
-    test_failing_decodes();
-
-    printf("-----------------------------------------------------------\nEncode/Decode tests\n");
-    {
-        //clock_t c_start = clock();
-        encode_decode_tests();
-        //fprintf(stderr,"%ld time\n", (clock() - c_start));
-    }
+    printf("-----------------------------------------------------------\nEncode/decode tests\n");
+    encode_decode_tests();
 
     printf("-----------------------------------------------------------\nRe-encode tests\n");
     re_encode_tests();
 
     printf("-----------------------------------------------------------\n");
-    printf("Done.\nExecuted %d tests, found %d errors", nrTests, nrErrors);
-    if (nrWarnings) {
-        printf(", %d warnings\n", nrWarnings);
+    printf("Done.\nExecuted %d tests, found %d errors (and %d warnings)\n", nrTests, nrErrors, nrWarnings);
+    if ((nrWarnings > 0) || (nrErrors > 0)) {
+        printf("UNIT TESTS FAILED!\n");
     }
-    printf("\n");
+    else {
+        printf("Unit tests passed\n");
+    }
     return ((nrErrors + nrWarnings) == 0) ? 0 : -1;
 }

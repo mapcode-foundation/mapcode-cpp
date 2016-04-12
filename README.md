@@ -61,6 +61,10 @@ decode Mapcodes.
 
 # Release Notes
 
+* 2.2.2
+
+    Removed minor warnings from CLion inspections.
+    
 * 2.2.1
 
     Solved 1-microdegree gap in a few spots on Earth, noticable now extreme precision is possible.
@@ -72,7 +76,7 @@ decode Mapcodes.
 * 2.1.4
 
     Added `maxErrorInMetersz` to API.
-	
+    
     Moved recode logic into decoder.
     
     Adjusted unit test.

@@ -61,7 +61,7 @@ decode Mapcodes.
 
 # Release Notes
 
-* 2.2.2
+* 2.2.2 (NOT RELEASED YET)
 
     Removed minor warnings from CLion inspections.
     

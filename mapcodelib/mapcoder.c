@@ -284,8 +284,6 @@ static int coDex(const int m) {
     return 10 * (c / 5) + ((c % 5) + 1);
 }
 
-#define prefixLength(m)      (((mminfo[m].flags & 31)/5))
-#define postfixLength(m)     ((((mminfo[m].flags & 31)%5)+1))
 #define isNameless(m)        ((mminfo[m].flags & 64))
 #define recType(m)           ((mminfo[m].flags>>7) & 3)
 #define isRestricted(m)      (mminfo[m].flags & 512)
@@ -747,7 +745,7 @@ static void encodeNameless(char *result, const encodeRec *enc, const int input_c
         SIDE = smartDiv(m);
 
         b = boundaries(m);
-        orgSIDE = xSIDE = SIDE;
+        orgSIDE = SIDE;
 
         {
             int v = storage_offset;
@@ -1187,7 +1185,7 @@ static int decodeGrid(decodeRec *dec, const int m, const int hasHeaderLetter) {
 
         {
             int relx, rely;
-            const int v = decodeBase31(result);
+            int v = decodeBase31(result);
 
             if (divx != divy && prelen > 2) {
                 // special grid, useful when prefix is 3 or more, and not a nice 961x961
@@ -1228,7 +1226,6 @@ static int decodeGrid(decodeRec *dec, const int m, const int hasHeaderLetter) {
                             decode_triple(r, &difx, &dify);
                         }
                         else {
-                            int v;
                             if (postlen == 4) {
                                 char t = r[1];
                                 r[1] = r[2];
@@ -1625,7 +1622,6 @@ static int decoderEngine(decodeRec *dec) {
                             if (!nrZoneOverlaps) {
                                 MapcodeZone zfound;
                                 Boundaries prevu;
-                                int prevj = -1;
                                 for (j = from; j < i; j++) { // try all smaller rectangles j
                                     if (!isRestricted(j)) {
                                         MapcodeZone z;
@@ -1634,7 +1630,6 @@ static int decoderEngine(decodeRec *dec) {
                                             if (nrZoneOverlaps == 1) {
                                                 // first fit! remember...
                                                 zoneCopyFrom(&zfound, &z);
-                                                prevj = j;
                                                 memcpy(&prevu, boundaries(j), sizeof(Boundaries));
                                             }
                                             else { // nrZoneOverlaps >= 2

@@ -7,6 +7,8 @@
 *.exe
 *.o
 *.so
+unittest/unittest
+utility/mapcode
 
 # -----------------------------------------------------------------------------
 # Packages and archives

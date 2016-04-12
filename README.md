@@ -4,9 +4,9 @@ Copyright (C) 2014-2015 Stichting Mapcode Foundation (http://www.mapcode.com)
 
 ----
 
-**Online documentation can be found at: http://mapcode-foundation.github.io/mapcode-cpp/**
+**Online documentation: http://mapcode-foundation.github.io/mapcode-cpp/**
 
-**The latest stable released can be found at: https://github.com/mapcode-foundation/mapcode-cpp/releases**
+**Latest stable release: https://github.com/mapcode-foundation/mapcode-cpp/releases**
 
 # The C/C++ Library: `mapcodelib/`
 

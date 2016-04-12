@@ -184,20 +184,18 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
         }
 
         // test that EXPECTED solution is there (if requested)
-        if (str) {
-            nrTests++;
-            for (i = 0; i < nrresults; i++) {
-                const char *m = mapcodes.mapcode[i];
-                if (strstr(m, clean) == m) {
-                    found = 1;
-                    break;
-                }
+        nrTests++;
+        for (i = 0; i < nrresults; i++) {
+            const char *m = mapcodes.mapcode[i];
+            if (strstr(m, clean) == m) {
+                found = 1;
+                break;
             }
-            if (!found) {
-                nrErrors++;
-                printf("*** ERROR *** encode(%0.8f , %0.8f) does not deliver \"%s\"\n", y, x, clean);
-                printGeneratedMapcodes("Delivered", &mapcodes);
-            }
+        }
+        if (!found) {
+            nrErrors++;
+            printf("*** ERROR *** encode(%0.8f , %0.8f) does not deliver \"%s\"\n", y, x, clean);
+            printGeneratedMapcodes("Delivered", &mapcodes);
         }
     }
 
@@ -217,14 +215,14 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
     for (precision = 0; precision <= 8; precision++) {
         nrresults = encodeLatLonToMapcodes(&mapcodes, y, x, 0, precision);
         for (i = 0; i < nrresults; i++) {
-            const char *str = mapcodes.mapcode[i];
+            const char *strResult = mapcodes.mapcode[i];
 
             // check if every solution decodes
             nrTests++;
-            err = decodeMapcodeToLatLon(&lat, &lon, str, 0);
+            err = decodeMapcodeToLatLon(&lat, &lon, strResult, 0);
             if (err) {
                 nrErrors++;
-                printf("*** ERROR *** decode('%s') = no result, expected ~(%0.8f , %0.8f)\n", str, y, x);
+                printf("*** ERROR *** decode('%s') = no result, expected ~(%0.8f , %0.8f)\n", strResult, y, x);
             }
             else {
                 double dm = distanceInMeters(y, x, lat, lon);
@@ -234,17 +232,20 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
                 if (dm > maxerror) {
                     nrErrors++;
                     printf("*** ERROR *** decode('%s') = (%0.8f , %0.8f), which is %0.4f cm way (>%0.4f cm) from (%0.8f , %0.8f)\n",
-                           str, lat, lon,
+                           strResult, lat, lon,
                            dm * 100.0, maxerror * 100.0, y, x);
                 }
                 else {
                     Mapcodes mapcodesTerritory;
                     Mapcodes mapcodesParent;
-                    int tc2 = -1, tcParent = -1, j, found = 0;
-                    char *e = strchr(str, ' ');
+                    int tc2 = -1;
+                    int tcParent = -1;
+                    int j;
+                    found = 0;
+                    char *e = strchr(strResult, ' ');
                     if (e) {
                         *e = 0;
-                        tc2 = convertTerritoryIsoNameToCode(str, 0);
+                        tc2 = convertTerritoryIsoNameToCode(strResult, 0);
                         tcParent = getParentCountryOf(tc2);
                         *e = ' ';
                     }
@@ -255,7 +256,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
                     {
                         const int nr = encodeLatLonToMapcodes(&mapcodesTerritory, lat, lon, tc2, precision);
                         for (j = 0; j < nr; j++) {
-                            if (strcmp(mapcodesTerritory.mapcode[j], str) == 0) {
+                            if (strcmp(mapcodesTerritory.mapcode[j], strResult) == 0) {
                                 found = 1;
                                 break;
                             }
@@ -265,7 +266,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
                     if (!found && (tcParent >= 0)) {
                         const int nr = encodeLatLonToMapcodes(&mapcodesParent, lat, lon, tcParent, precision);
                         for (j = 0; j < nr; j++) {
-                            if (strcmp(strchr(mapcodesParent.mapcode[j], ' '), strchr(str, ' ')) == 0) {
+                            if (strcmp(strchr(mapcodesParent.mapcode[j], ' '), strchr(strResult, ' ')) == 0) {
                                 found = 1;
                                 break;
                             }
@@ -276,7 +277,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
                         if (!multipleBordersNearby(lat, lon, tc2)) { // but SHOULD be reproduced!
                             nrErrors++;
                             printf("*** ERROR *** %s does not re-encode (%0.15f,%0.15f) from (%0.15f,%0.15f)\n",
-                                   str, lat, lon, y, x);
+                                   strResult, lat, lon, y, x);
                             printGeneratedMapcodes("Global   ", &mapcodes);
                             printGeneratedMapcodes("Territory", &mapcodesTerritory);
                             if (tcParent >= 0) {
@@ -588,39 +589,39 @@ void territory_code_tests() {
         int context;
         const char *inputstring;
     } tcTestData[] = {
-        { -1,  0, ""},
-        { -1,  0, "R"},
-        { -1,  0, "RX"},
-        { -1,  0, "RXX"},
-        {497,  0, "RUS"},
-        { -1,  0, "RUSSIA"},
-        {411,  0, "US"},
-        {411,  0, "USA"},
-        {411,  0, "usa"},
-        { -1,  0, "US-TEST"},
-        {411,  0, "US TEST"},
-        {392,  0, "US-CA"},
-        {392,  0, "US-CA TEST"},
-        {392,  0, "USA-CA"},
-        {431,  0, "RUS-TAM"},
-        { -1,  0, "RUS-TAMX"},
-        {431,  0, "RUS-TAM X"},
-        {319,  0, "AL"}, // 
-        {483,497, "AL"}, // 497=rus
-        {483,431, "AL"}, // 431=ru-tam
-        {365,411, "AL"}, // 411=usa
-        {365,392, "AL"}, // 392=us-ca
-        {0,0,NULL}
+            {-1,  0,   ""},
+            {-1,  0,   "R"},
+            {-1,  0,   "RX"},
+            {-1,  0,   "RXX"},
+            {497, 0,   "RUS"},
+            {-1,  0,   "RUSSIA"},
+            {411, 0,   "US"},
+            {411, 0,   "USA"},
+            {411, 0,   "usa"},
+            {-1,  0,   "US-TEST"},
+            {411, 0,   "US TEST"},
+            {392, 0,   "US-CA"},
+            {392, 0,   "US-CA TEST"},
+            {392, 0,   "USA-CA"},
+            {431, 0,   "RUS-TAM"},
+            {-1,  0,   "RUS-TAMX"},
+            {431, 0,   "RUS-TAM X"},
+            {319, 0,   "AL"}, //
+            {483, 497, "AL"}, // 497=rus
+            {483, 431, "AL"}, // 431=ru-tam
+            {365, 411, "AL"}, // 411=usa
+            {365, 392, "AL"}, // 392=us-ca
+            {0,   0, NULL}
     };
 
-    for (i = 0; tcTestData[i].inputstring!=NULL; i++ ) {
+    for (i = 0; tcTestData[i].inputstring != NULL; i++) {
         int tc = getTerritoryCode(tcTestData[i].inputstring, tcTestData[i].context);
         nrTests++;
         if (tc != tcTestData[i].expectedresult) {
             nrErrors++;
             printf("*** ERROR *** getTerritoryCode(\"%s\", %d)=%d, expected %d\n",
-                tcTestData[i].inputstring, tcTestData[i].context, 
-                tc, tcTestData[i].expectedresult);
+                   tcTestData[i].inputstring, tcTestData[i].context,
+                   tc, tcTestData[i].expectedresult);
         }
     }
 }

@@ -417,7 +417,7 @@ int main(const int argc, const char **argv) {
         double lon;
 
         // Get the territory context.
-        int context = convertTerritoryIsoNameToCode(defaultTerritory, 0);
+        int context = getTerritoryCode(defaultTerritory, 0);
 
         // Decode every Mapcode.
         for (int i = 3; i < argc; ++i) {

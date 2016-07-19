@@ -2,7 +2,7 @@
 
 To build the unit tests, execute:
 
-  cd utility
+  cd unittest
   gcc -O unittest.c -o unittest
 
 (Or if you need to make sure there are no warnings:)

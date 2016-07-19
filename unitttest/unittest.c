@@ -122,14 +122,20 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
     double lat, lon;
     int precision = MAX_PRECISION_DIGITS;
 
-    if (y < -90) { y = -90; } else if (y > 90) { y = 90; }
+    if (y < -90) {
+        y = -90;
+    } else if (y > 90) {
+        y = 90;
+    }
 
     // if str: determine "precision", territory "tc", and a "clean" copy of str
     if (*str) {
         char territory[MAX_ISOCODE_LEN + 1];
         // find first territory letter in s
         s = str;
-        while (*s > 0 && *s <= 32) { s++; }
+        while (*s > 0 && *s <= 32) {
+            s++;
+        }
         // parse territory, if any
         p = strchr(s, ' ');
         len = p ? (int) (p - s) : 0;
@@ -140,7 +146,9 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
             tc = convertTerritoryIsoNameToCode(territory, 0);
             // make s skip to start of proper mapcode
             s = p;
-            while (*s > 0 && *s <= 32) { s++; }
+            while (*s > 0 && *s <= 32) {
+                s++;
+            }
         } else {
             // assume s is the start of the proper mapcode
             *territory = 0;
@@ -149,7 +157,9 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
 
         // build normalised version of source string in "clean"
         len = (int) strlen(s);
-        while (len > 0 && s[len - 1] > 0 && s[len - 1] <= 32) { len--; }
+        while (len > 0 && s[len - 1] > 0 && s[len - 1] <= 32) {
+            len--;
+        }
         i = (int) strlen(territory);
         if (i) {
             strcpy(clean, territory);
@@ -382,7 +392,9 @@ void encode_decode_tests() {
     printf("%d encodes\n", nr);
     for (i = 0; i < nr; i++) {
         const encode_test_record *t = &encode_test[i];
-        if ((i & 255) == 0) { fprintf(stderr, "%0.1f%%\r", i * 100.0 / nr); }
+        if ((i & 255) == 0) {
+            fprintf(stderr, "%0.1f%%\r", i * 100.0 / nr);
+        }
         testEncodeAndDecode(t->mapcode, t->latitude, t->longitude, t->nr_local_mapcodes, t->nr_global_mapcodes);
     }
 }

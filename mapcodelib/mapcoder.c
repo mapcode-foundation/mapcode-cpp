@@ -52,8 +52,12 @@ double distanceInMeters(double latDeg1, double lonDeg1, double latDeg2, double l
     // PI
 #define _PI 3.14159265358979323846
 
-    if (lonDeg1 < 0 && lonDeg2 > 1) { lonDeg1 += 360; }
-    if (lonDeg2 < 0 && lonDeg1 > 1) { lonDeg2 += 360; }
+    if (lonDeg1 < 0 && lonDeg2 > 1) {
+        lonDeg1 += 360;
+    }
+    if (lonDeg2 < 0 && lonDeg1 > 1) {
+        lonDeg2 += 360;
+    }
     {
         const double dy = (latDeg2 - latDeg1) * METERS_PER_DEGREE_LAT;
         const double dx = (lonDeg2 - lonDeg1) * METERS_PER_DEGREE_LON * cos((latDeg1 + latDeg2) * _PI / 360.0);
@@ -120,7 +124,11 @@ static point convertFractionsToDegrees(const point *p) {
 
 static void convertCoordsToMicrosAndFractions(point32 *coord32, int *fraclat, int *fraclon, double lat, double lon) {
     double frac;
-    if (lat < -90) { lat = -90; } else if (lat > 90) { lat = 90; }
+    if (lat < -90) {
+        lat = -90;
+    } else if (lat > 90) {
+        lat = 90;
+    }
     lat += 90; // lat now [0..180]
     lat *= (double) 810000000000;
     frac = floor(lat + 0.1);
@@ -154,9 +162,17 @@ static void convertCoordsToMicrosAndFractions(point32 *coord32, int *fraclat, in
 
 // returns nonzero if x in the range minx...maxx
 static int isInRange(int x, const int minx, const int maxx) {
-    if (minx <= x && x < maxx) { return 1; }
-    if (x < minx) { x += 360000000; } else { x -= 360000000; } // 1.32 fix FIJI edge case
-    if (minx <= x && x < maxx) { return 1; }
+    if (minx <= x && x < maxx) {
+        return 1;
+    }
+    if (x < minx) {
+        x += 360000000;
+    } else {
+        x -= 360000000;
+    } // 1.32 fix FIJI edge case
+    if (minx <= x && x < maxx) {
+        return 1;
+    }
     return 0;
 }
 
@@ -200,8 +216,7 @@ static void setFromFractions(MapcodeZone *z,
     if (yDelta < 0) {
         z->fminy = y + 1 + yDelta; // y+yDelta can NOT be represented
         z->fmaxy = y + 1;          // y CAN be represented
-    }
-    else {
+    } else {
         z->fminy = y;
         z->fmaxy = y + yDelta;
     }
@@ -244,8 +259,7 @@ static int restrictZoneTo(MapcodeZone *z, const MapcodeZone *zone, const Boundar
         if (bmaxx < 0 && z->fminx > 0) {
             bminx += (360000000 * MICROLON_TO_FRACTIONS_FACTOR);
             bmaxx += (360000000 * MICROLON_TO_FRACTIONS_FACTOR);
-        }
-        else if (bminx > 0 && z->fmaxx < 0) {
+        } else if (bminx > 0 && z->fmaxx < 0) {
             bminx -= (360000000 * MICROLON_TO_FRACTIONS_FACTOR);
             bmaxx -= (360000000 * MICROLON_TO_FRACTIONS_FACTOR);
         }
@@ -268,9 +282,13 @@ static int restrictZoneTo(MapcodeZone *z, const MapcodeZone *zone, const Boundar
 
 /*** low-level data access ***/
 
-static int firstrec(const int ccode) { return data_start[ccode]; }
+static int firstrec(const int ccode) {
+    return data_start[ccode];
+}
 
-static int lastrec(const int ccode) { return data_start[ccode + 1] - 1; }
+static int lastrec(const int ccode) {
+    return data_start[ccode + 1] - 1;
+}
 
 #define ParentLetter(ccode) ((int)parentletter[ccode])
 
@@ -318,7 +336,9 @@ static int isSubdivision(const int ccode) {
 static int firstNamelessRecord(const int m, const int firstcode) {
     int i = m;
     const int codexm = coDex(m);
-    while (i >= firstcode && coDex(i) == codexm && isNameless(i)) { i--; }
+    while (i >= firstcode && coDex(i) == codexm && isNameless(i)) {
+        i--;
+    }
     return (i + 1);
 }
 
@@ -327,7 +347,9 @@ static int countNamelessRecords(const int m, const int firstcode) {
     const int first = firstNamelessRecord(m, firstcode);
     const int codexm = coDex(m);
     int last = m;
-    while (coDex(last) == codexm) { last++; }
+    while (coDex(last) == codexm) {
+        last++;
+    }
     return (last - first);
 }
 
@@ -339,7 +361,9 @@ static int isNearBorderOf(const point32 *coord32, const Boundaries *b) {
 }
 
 static const char *get_entity_iso3(char *entity_iso3_result, const int ccode) {
-    if (ccode < 0 || ccode >= MAX_MAPCODE_TERRITORY_CODE) { return "AAA"; } // solve bad args
+    if (ccode < 0 || ccode >= MAX_MAPCODE_TERRITORY_CODE) {
+        return "AAA";
+    } // solve bad args
     memcpy(entity_iso3_result, entity_iso + ccode * 4, 3);
     entity_iso3_result[3] = 0;
     return entity_iso3_result;
@@ -357,8 +381,12 @@ static int getParentcode(const char *s, const int len) {
     const char *p = (len == 2 ? parents2 : parents3);
     const char *f;
     char country[4];
-    if (s[0] == 0 || s[1] == 0) { return -27; } // solve bad args
-    if (len != 2 && len != 3) { return -923; } // solve bad args
+    if (s[0] == 0 || s[1] == 0) {
+        return -27;
+    } // solve bad args
+    if (len != 2 && len != 3) {
+        return -923;
+    } // solve bad args
     memcpy(country, s, len);
     country[len] = 0;
     makeupper(country);
@@ -402,8 +430,7 @@ static void repack_if_alldigits(char *input, const int aonly) {
             *input = 'A';
             *s = encode_chars[v / 32];
             *e = encode_chars[v % 32];
-        }
-        else // encode using A,E,U
+        } else // encode using A,E,U
         {
             const int v = ((*s) - '0') * 10 + ((*e) - '0');
             *s = encode_chars[(v / 34) + 31];
@@ -418,7 +445,9 @@ static int unpack_if_alldigits(char *input) {
     char *s = input;
     char *dotpos = NULL;
     const int aonly = ((*s == 'A') || (*s == 'a'));
-    if (aonly) { s++; } //*** v1.50
+    if (aonly) {
+        s++;
+    } //*** v1.50
     for (; *s != 0 && s[2] != 0 && s[2] != '-'; s++) {
         if (*s == '-') {
             break;
@@ -447,7 +476,9 @@ static int unpack_if_alldigits(char *input) {
             int v = 0;
             if (*s == 'e' || *s == 'E') {
                 v = 34;
-            } else if (*s == 'u' || *s == 'U') { v = 68; }
+            } else if (*s == 'u' || *s == 'U') {
+                v = 68;
+            }
 
             if ((*e == 'a') || (*e == 'A')) {
                 v += 31;
@@ -457,7 +488,9 @@ static int unpack_if_alldigits(char *input) {
                 v += 33;
             } else if (decodeChar(*e) < 0) {
                 return -9; // invalid last character!
-            } else { v += decodeChar(*e); }
+            } else {
+                v += decodeChar(*e);
+            }
 
             if (v < 100) {
                 *s = encode_chars[(unsigned int) v / 10];
@@ -499,8 +532,16 @@ static void encodeExtension(char *result, const int extrax4, const int extray, c
         double valy = ((double) MAX_PRECISION_FACTOR * extray) + (ydirection * enc->fraclat); // perfect integer!
 
         // protect against floating point errors
-        if (valx < 0) { valx = 0; } else if (valx >= factorx) { valx = factorx - 1; }
-        if (valy < 0) { valy = 0; } else if (valy >= factory) { valy = factory - 1; }
+        if (valx < 0) {
+            valx = 0;
+        } else if (valx >= factorx) {
+            valx = factorx - 1;
+        }
+        if (valy < 0) {
+            valy = 0;
+        } else if (valy >= factory) {
+            valy = factory - 1;
+        }
 
         if (extraDigits > MAX_PRECISION_DIGITS) {
             extraDigits = MAX_PRECISION_DIGITS;
@@ -508,7 +549,7 @@ static void encodeExtension(char *result, const int extrax4, const int extray, c
 
         *s++ = '-';
 
-        for (; ;) {
+        for (;;) {
             int gx, gy;
 
             factorx /= 30;
@@ -518,10 +559,14 @@ static void encodeExtension(char *result, const int extrax4, const int extray, c
             gy = (int) (valy / factory);
 
             *s++ = encode_chars[(gy / 5) * 5 + (gx / 6)];
-            if (--extraDigits == 0) { break; }
+            if (--extraDigits == 0) {
+                break;
+            }
 
             *s++ = encode_chars[(gy % 5) * 6 + (gx % 6)];
-            if (--extraDigits == 0) { break; }
+            if (--extraDigits == 0) {
+                break;
+            }
 
             valx -= factorx * gx; // for next iteration
             valy -= factory * gy; // for next iteration
@@ -544,8 +589,7 @@ static void encode_triple(char *result, const int difx, const int dify) {
     {
         *result = encode_chars[((difx / 28) + 6 * (dify / 34))];
         encodeBase31(result + 1, ((difx % 28) * 34 + (dify % 34)), 2);
-    }
-    else // bottom row
+    } else // bottom row
     {
         *result = encode_chars[(difx / 24) + 24];
         encodeBase31(result + 1, (difx % 24) * 40 + (dify - 136), 2);
@@ -576,13 +620,14 @@ static void encodeGrid(char *result, const encodeRec *enc, const int m, const in
     int codexm = orgcodex;
     if (codexm == 21) {
         codexm = 22;
-    }
-    else if (codexm == 14) {
+    } else if (codexm == 14) {
         codexm = 23;
     }
 
     *result = 0;
-    if (headerLetter) { result++; }
+    if (headerLetter) {
+        result++;
+    }
 
     { // encode
         int divx, divy;
@@ -593,8 +638,7 @@ static void encodeGrid(char *result, const encodeRec *enc, const int m, const in
         if (divy == 1) {
             divx = xside[prelen];
             divy = yside[prelen];
-        }
-        else {
+        } else {
             divx = (nc[prelen] / divy);
         }
 
@@ -608,8 +652,7 @@ static void encodeGrid(char *result, const encodeRec *enc, const int m, const in
             if (relx < 0) {
                 relx += 360000000;
                 x += 360000000;
-            }
-            else if (relx >= 360000000) // 1.32 fix FIJI edge case
+            } else if (relx >= 360000000) // 1.32 fix FIJI edge case
             {
                 relx -= 360000000;
                 x -= 360000000;
@@ -667,8 +710,7 @@ static void encodeGrid(char *result, const encodeRec *enc, const int m, const in
                     if (postlen == 3) // encode special
                     {
                         encode_triple(resultptr, difx, dify);
-                    }
-                    else {
+                    } else {
                         encodeBase31(resultptr, (difx) * yside[postlen] + dify, postlen);
                         // swap 4-int codes for readability
                         if (postlen == 4) {
@@ -718,19 +760,16 @@ static void encodeNameless(char *result, const encodeRec *enc, const int input_c
 
         if (codexm != 21 && A <= 31) {
             storage_offset = (X * p + (X < r ? X : r)) * (961 * 961);
-        }
-        else if (codexm != 21 && A < 62) {
+        } else if (codexm != 21 && A < 62) {
             if (X < (62 - A)) {
                 storage_offset = X * (961 * 961);
-            }
-            else {
+            } else {
                 storage_offset = (62 - A + ((X - 62 + A) / 2)) * (961 * 961);
                 if ((X + A) & 1) {
                     storage_offset += (16 * 961 * 31);
                 }
             }
-        }
-        else {
+        } else {
             const int BASEPOWER = (codexm == 21) ? 961 * 961 : 961 * 961 * 31;
             int BASEPOWERA = (BASEPOWER / A);
             if (A == 62) {
@@ -768,8 +807,7 @@ static void encodeNameless(char *result, const encodeRec *enc, const int input_c
                 SIDE = 1 + ((b->maxy - b->miny) / 90); // new side, based purely on y-distance
                 xSIDE = (orgSIDE * orgSIDE) / SIDE;
                 v += encodeSixWide(dx, SIDE - 1 - dy, xSIDE, SIDE);
-            }
-            else {
+            } else {
                 v += (dx * SIDE + dy);
             }
 
@@ -814,7 +852,7 @@ static void encodeAutoHeader(char *result, const encodeRec *enc, const int m, co
     }
 
     i = firstindex;
-    for (; ;) {
+    for (;;) {
         b = boundaries(i);
         // determine how many cells
         H = (b->maxy - b->miny + 89) / 90; // multiple of 10m
@@ -890,17 +928,14 @@ static void encoderEngine(const int ccode, const encodeRec *enc, const int stop_
             if (fitsInsideBoundaries(&enc->coord32, boundaries(i))) {
                 if (isNameless(i)) {
                     encodeNameless(result, enc, ccode, extraDigits, i);
-                }
-                else if (recType(i) > 1) {
+                } else if (recType(i) > 1) {
                     encodeAutoHeader(result, enc, i, extraDigits);
-                }
-                else if ((i == upto) && isSubdivision(ccode)) {
+                } else if ((i == upto) && isSubdivision(ccode)) {
                     // *** do a recursive call for the parent ***
                     encoderEngine(ParentTerritoryOf(ccode), enc, stop_with_one_result, extraDigits, requiredEncoder,
                                   ccode);
                     return; /**/
-                }
-                else // must be grid
+                } else // must be grid
                 {
                     // skip isRestricted records unless there already is a result
                     if (result_counter || !isRestricted(i)) {
@@ -929,9 +964,13 @@ static void encoderEngine(const int ccode, const encodeRec *enc, const int stop_
                                 strcat(s, result);
                             }
                         }
-                        if (requiredEncoder == i) { return; }
+                        if (requiredEncoder == i) {
+                            return;
+                        }
                     }
-                    if (stop_with_one_result) { return; }
+                    if (stop_with_one_result) {
+                        return;
+                    }
                     *result = 0; // clear for next iteration
                 }
             }
@@ -957,23 +996,23 @@ static int encodeLatLonToMapcodes_internal(char **v, Mapcodes *mapcodes,
         const int sum = enc.coord32.lon + enc.coord32.lat;
         int coord = enc.coord32.lon;
         int i = 0; // pointer into redivar
-        for (; ;) {
+        for (;;) {
             const int r = redivar[i++];
             if (r >= 0 && r < 1024) { // leaf?
                 int j;
                 for (j = 0; j <= r; j++) {
                     const int ctry = (j == r ? ccode_earth : redivar[i + j]);
                     encoderEngine(ctry, &enc, stop_with_one_result, extraDigits, requiredEncoder, -1);
-                    if ((stop_with_one_result || (requiredEncoder >= 0)) && (enc.mapcodes->count > 0)) { break; }
+                    if ((stop_with_one_result || (requiredEncoder >= 0)) && (enc.mapcodes->count > 0)) {
+                        break;
+                    }
                 }
                 break;
-            }
-            else {
+            } else {
                 coord = sum - coord;
                 if (coord > r) {
                     i = redivar[i];
-                }
-                else {
+                } else {
                     i++;
                 }
             }
@@ -985,8 +1024,7 @@ static int encodeLatLonToMapcodes_internal(char **v, Mapcodes *mapcodes,
           if ((stop_with_one_result || (requiredEncoder >= 0)) && (enc.mapcodes->count > 0)) { break; }
         }
 #endif
-    }
-    else {
+    } else {
         encoderEngine((tc - 1), &enc, stop_with_one_result, extraDigits, requiredEncoder, -1);
     }
 
@@ -998,8 +1036,7 @@ static int encodeLatLonToMapcodes_internal(char **v, Mapcodes *mapcodes,
             if (p == NULL) {
                 v[i * 2 + 1] = (char *) "AAA";
                 v[i * 2] = s;
-            }
-            else {
+            } else {
                 *p++ = 0;
                 v[i * 2 + 1] = s;
                 v[i * 2] = p;
@@ -1049,16 +1086,19 @@ static int decodeExtension(decodeRec *dec,
     while (*extrapostfix) {
         int column1, row1, column2, row2;
         const int c1 = decodeChar(*extrapostfix++);
-        if (c1 < 0 || c1 == 30) { return -1; } // illegal extension character
+        if (c1 < 0 || c1 == 30) {
+            return -1;
+        } // illegal extension character
         row1 = (c1 / 5);
         column1 = (c1 % 5);
         if (*extrapostfix) {
             const int c2 = decodeChar(*extrapostfix++);
-            if (c2 < 0 || c2 == 30) { return -1; } // illegal extension character
+            if (c2 < 0 || c2 == 30) {
+                return -1;
+            } // illegal extension character
             row2 = (c2 / 6);
             column2 = (c2 % 6);
-        }
-        else {
+        } else {
             odd = 1;
             row2 = 0;
             column2 = 0;
@@ -1094,8 +1134,7 @@ static int decodeExtension(decodeRec *dec,
         if (dec->zone.fmaxy > extremeLat32 * MICROLAT_TO_FRACTIONS_FACTOR) {
             dec->zone.fmaxy = extremeLat32 * MICROLAT_TO_FRACTIONS_FACTOR;
         }
-    }
-    else {
+    } else {
         if (dec->zone.fminy < extremeLat32 * MICROLAT_TO_FRACTIONS_FACTOR) {
             dec->zone.fminy = extremeLat32 * MICROLAT_TO_FRACTIONS_FACTOR;
         }
@@ -1119,8 +1158,7 @@ static void decode_triple(const char *result, int *difx, int *dify) {
         int m = decodeBase31(result);
         *difx = (c1 % 6) * 28 + (m / 34);
         *dify = (c1 / 6) * 34 + (m % 34);
-    }
-    else // bottom row
+    } else // bottom row
     {
         int x = decodeBase31(result);
         *dify = (x % 40) + 136;
@@ -1153,8 +1191,12 @@ static int decodeGrid(decodeRec *dec, const int m, const int hasHeaderLetter) {
     int prelen = (int) (strchr(input, '.') - input);
     char result[MAX_PROPER_MAPCODE_LEN + 1];
 
-    if (codexlen > MAX_PROPER_MAPCODE_LEN) { return -109; }
-    if (prelen > 5) { return -119; }
+    if (codexlen > MAX_PROPER_MAPCODE_LEN) {
+        return -109;
+    }
+    if (prelen > 5) {
+        return -119;
+    }
 
     strcpy(result, input);
     if (prelen == 1 && codexlen == 5) {
@@ -1172,8 +1214,7 @@ static int decodeGrid(decodeRec *dec, const int m, const int hasHeaderLetter) {
         if (divy == 1) {
             divx = xside[prelen];
             divy = yside[prelen];
-        }
-        else {
+        } else {
             divx = (nc[prelen] / divy);
         }
 
@@ -1190,8 +1231,7 @@ static int decodeGrid(decodeRec *dec, const int m, const int hasHeaderLetter) {
             if (divx != divy && prelen > 2) {
                 // special grid, useful when prefix is 3 or more, and not a nice 961x961
                 decodeSixWide(v, divx, divy, &relx, &rely);
-            }
-            else {
+            } else {
                 relx = (v / divy);
                 rely = divy - 1 - (v % divy);
             }
@@ -1224,8 +1264,7 @@ static int decodeGrid(decodeRec *dec, const int m, const int hasHeaderLetter) {
                         if (postlen == 3) // decode special
                         {
                             decode_triple(r, &difx, &dify);
-                        }
-                        else {
+                        } else {
                             if (postlen == 4) {
                                 char t = r[1];
                                 r[1] = r[2];
@@ -1303,28 +1342,28 @@ static int decodeNameless(decodeRec *dec, int m) {
 
             if (offset < r * (p + 1)) {
                 X = offset / (p + 1);
-            }
-            else {
+            } else {
                 swapletters = ((p == 1) && (codexm == 22));
                 X = r + (offset - (r * (p + 1))) / p;
             }
-        }
-        else if (codexm != 21 && A < 62) {
+        } else if (codexm != 21 && A < 62) {
 
             X = decodeChar(*result);
             if (X < (62 - A)) {
                 swapletters = (codexm == 22);
-            }
-            else {
+            } else {
                 X = X + (X - (62 - A));
             }
-        }
-        else // code==21 || A>=62
+        } else // code==21 || A>=62
         {
             const int BASEPOWER = (codexm == 21) ? 961 * 961 : 961 * 961 * 31;
             int BASEPOWERA = (BASEPOWER / A);
 
-            if (A == 62) { BASEPOWERA++; } else { BASEPOWERA = 961 * (BASEPOWERA / 961); }
+            if (A == 62) {
+                BASEPOWERA++;
+            } else {
+                BASEPOWERA = 961 * (BASEPOWERA / 961);
+            }
 
             v = decodeBase31(result);
             X = (v / BASEPOWERA);
@@ -1345,8 +1384,7 @@ static int decodeNameless(decodeRec *dec, int m) {
             if (X > 0) {
                 v -= (X * p + (X < r ? X : r)) * (961 * 961);
             }
-        }
-        else if (codexm != 21 && A < 62) {
+        } else if (codexm != 21 && A < 62) {
             v = decodeBase31(result + 1);
             if (X >= (62 - A)) {
                 if (v >= (16 * 961 * 31)) {
@@ -1373,8 +1411,7 @@ static int decodeNameless(decodeRec *dec, int m) {
 
                 decodeSixWide(v, xSIDE, SIDE, &dx, &dy);
                 dy = SIDE - 1 - dy;
-            }
-            else {
+            } else {
                 dy = v % SIDE;
                 dx = v / SIDE;
             }
@@ -1482,11 +1519,17 @@ static int decoderEngine(decodeRec *dec) {
         char *w;
         // skip whitesace
         s = (char *) dec->orginput;
-        while (*s <= 32 && *s > 0) { s++; }
+        while (*s <= 32 && *s > 0) {
+            s++;
+        }
         // remove trail and overhead
         len = (int) strlen(s);
-        if (len > MAX_MAPCODE_RESULT_LEN - 1) { len = MAX_MAPCODE_RESULT_LEN - 1; }
-        while (len > 0 && s[len - 1] <= 32 && s[len - 1] >= 0) { len--; }
+        if (len > MAX_MAPCODE_RESULT_LEN - 1) {
+            len = MAX_MAPCODE_RESULT_LEN - 1;
+        }
+        while (len > 0 && s[len - 1] <= 32 && s[len - 1] >= 0) {
+            len--;
+        }
         // copy into dec->minput;
         memcpy(w = dec->minput, s, len);
         w[len] = 0;
@@ -1494,10 +1537,11 @@ static int decoderEngine(decodeRec *dec) {
         s = strchr(w, ' ');
         if (s) {
             *s++ = 0;
-            while (*s > 0 && *s <= 32) { s++; }
+            while (*s > 0 && *s <= 32) {
+                s++;
+            }
             ccode = getTerritoryCode(w, dec->context - 1) - 1;
-        }
-        else {
+        } else {
             ccode = dec->context - 1;
             s = w;
         }
@@ -1528,21 +1572,18 @@ static int decoderEngine(decodeRec *dec) {
                 } else if (dec->extension == NULL) {
                     hasletters = 1;
                 }
-            }
-            else if (*w == '.') {
+            } else if (*w == '.') {
                 if (dot) {
                     return -18;
                 } // already had a dot
                 prelen = (int) ((dot = w) - s);
-            }
-            else if (*w == '-') {
+            } else if (*w == '-') {
                 if (dec->extension != NULL) {
                     return -17; // already had a hyphen
                 }
                 dec->extension = w + 1;
                 *w = 0;
-            }
-            else if (decodeChar(*w) < 0) { // invalid char?
+            } else if (decodeChar(*w) < 0) { // invalid char?
                 return -4;
             }
         }
@@ -1559,16 +1600,14 @@ static int decoderEngine(decodeRec *dec) {
             if (unpack_if_alldigits(s) <= 0) {
                 return -77;
             }
-        }
-        else if (!hasletters) {
+        } else if (!hasletters) {
             return -78;
         }
 
         if (codex == 54) {
             // international mapcodes must be in international context
             ccode = ccode_earth;
-        }
-        else if (isSubdivision(ccode)) {
+        } else if (isSubdivision(ccode)) {
             // int mapcodes must be interpreted in the parent of a subdivision
             int parent = ParentTerritoryOf(ccode);
             if ((codex == 44) || ((codex == 34 || codex == 43) && (parent == ccode_ind || parent == ccode_mex))) {
@@ -1595,8 +1634,7 @@ static int decoderEngine(decodeRec *dec) {
                         err = decodeNameless(dec, i);
                         break;
                     }
-                }
-                else {
+                } else {
                     if ((codexi == codex) || ((codex == 22) && (codexi == 21))) {
                         err = decodeGrid(dec, i, 0);
 
@@ -1631,8 +1669,7 @@ static int decoderEngine(decodeRec *dec) {
                                                 // first fit! remember...
                                                 zoneCopyFrom(&zfound, &z);
                                                 memcpy(&prevu, boundaries(j), sizeof(Boundaries));
-                                            }
-                                            else { // nrZoneOverlaps >= 2
+                                            } else { // nrZoneOverlaps >= 2
                                                 // more than one hit
                                                 break; // give up
                                             }
@@ -1654,14 +1691,12 @@ static int decoderEngine(decodeRec *dec) {
                         break;
                     }
                 }
-            }
-            else if (r == 1) {
+            } else if (r == 1) {
                 if (codex == codexi + 10 && headerLetter(i) == *s) {
                     err = decodeGrid(dec, i, 1);
                     break;
                 }
-            }
-            else { //r>1                
+            } else { //r>1
                 if (((codex == 23) && (codexi == 22)) ||
                     ((codex == 33) && (codexi == 23))) {
                     err = decodeAutoHeader(dec, i);
@@ -1686,10 +1721,18 @@ static int decoderEngine(decodeRec *dec) {
     dec->result = convertFractionsToDegrees(&dec->result);
 
     // normalise between =180 and 180
-    if (dec->result.lat < -90.0) { dec->result.lat = -90.0; }
-    if (dec->result.lat > 90.0) { dec->result.lat = 90.0; }
-    if (dec->result.lon < -180.0) { dec->result.lon += 360.0; }
-    if (dec->result.lon >= 180.0) { dec->result.lon -= 360.0; }
+    if (dec->result.lat < -90.0) {
+        dec->result.lat = -90.0;
+    }
+    if (dec->result.lat > 90.0) {
+        dec->result.lat = 90.0;
+    }
+    if (dec->result.lon < -180.0) {
+        dec->result.lon += 360.0;
+    }
+    if (dec->result.lon >= 180.0) {
+        dec->result.lon -= 360.0;
+    }
 
     return 0;
 }
@@ -1706,7 +1749,7 @@ static int decoderEngine(decodeRec *dec) {
 static UWORD asc2lan[MAPCODE_ALPHABETS_TOTAL][36] = // A-Z equivalents for ascii characters A to Z, 0-9
         {
                 {0x0041, 0x0042, 0x0043, 0x0044, 0x0045, 0x0046, 0x0047, 0x0048, 0x0049, 0x004a, 0x004b, 0x004c, 0x004d, 0x004e, 0x004f, 0x0050, 0x0051, 0x0052, 0x0053, 0x0054, 0x0055, 0x0056, 0x0057, 0x0058, 0x0059, 0x005a, 0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0x0037, 0x0038, 0x0039}, // roman
-                {0x0391, 0x0392, 0x039e, 0x0394, 0x003f, 0x0395, 0x0393, 0x0397, 0x0399, 0x03a0, 0x039a, 0x039b, 0x039c, 0x039d, 0x039f, 0x03a1, 0x0398, 0x03a8, 0x03a3, 0x03a4, 0x003f, 0x03a6, 0x03a9, 0x03a7, 0x03a5, 0x0396, 0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0x0037, 0x0038, 0x0039}, // greek
+                {0x0391, 0x0392, 0x039e, 0x0394, 0x0388, 0x0395, 0x0393, 0x0397, 0x0399, 0x03a0, 0x039a, 0x039b, 0x039c, 0x039d, 0x039f, 0x03a1, 0x0398, 0x03a8, 0x03a3, 0x03a4, 0x0389, 0x03a6, 0x03a9, 0x03a7, 0x03a5, 0x0396, 0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0x0037, 0x0038, 0x0039}, // greek
                 {0x0410, 0x0412, 0x0421, 0x0414, 0x0415, 0x0416, 0x0413, 0x041d, 0x0418, 0x041f, 0x041a, 0x041b, 0x041c, 0x0417, 0x041e, 0x0420, 0x0424, 0x042f, 0x0426, 0x0422, 0x042d, 0x0427, 0x0428, 0x0425, 0x0423, 0x0411, 0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0x0037, 0x0038, 0x0039}, // cyrillic
                 {0x05d0, 0x05d1, 0x05d2, 0x05d3, 0x05e3, 0x05d4, 0x05d6, 0x05d7, 0x05d5, 0x05d8, 0x05d9, 0x05da, 0x05db, 0x05dc, 0x05e1, 0x05dd, 0x05de, 0x05e0, 0x05e2, 0x05e4, 0x05e5, 0x05e6, 0x05e7, 0x05e8, 0x05e9, 0x05ea, 0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0x0037, 0x0038, 0x0039}, // hebrew
                 {0x0905, 0x0915, 0x0917, 0x0918, 0x090f, 0x091a, 0x091c, 0x091f, 0x0049, 0x0920, 0x0923, 0x0924, 0x0926, 0x0927, 0x004f, 0x0928, 0x092a, 0x092d, 0x092e, 0x0930, 0x092b, 0x0932, 0x0935, 0x0938, 0x0939, 0x0921, 0x0966, 0x0967, 0x0968, 0x0969, 0x096a, 0x096b, 0x096c, 0x096d, 0x096e, 0x096f}, // hindi
@@ -1718,7 +1761,8 @@ static UWORD asc2lan[MAPCODE_ALPHABETS_TOTAL][36] = // A-Z equivalents for ascii
                 {0x0556, 0x0532, 0x0533, 0x0534, 0x0535, 0x0538, 0x0539, 0x053a, 0x053b, 0x053d, 0x053f, 0x0540, 0x0541, 0x0543, 0x0555, 0x0547, 0x0548, 0x054a, 0x054d, 0x054e, 0x0545, 0x054f, 0x0550, 0x0551, 0x0552, 0x0553, 0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0x0037, 0x0038, 0x0039}, // armenian
                 {0x0985, 0x098c, 0x0995, 0x0996, 0x098f, 0x0997, 0x0999, 0x099a, 0x0049, 0x099d, 0x09a0, 0x09a1, 0x09a2, 0x09a3, 0x004f, 0x09a4, 0x09a5, 0x09a6, 0x09a8, 0x09aa, 0x0993, 0x09ac, 0x09ad, 0x09af, 0x09b2, 0x09b9, 0x09e6, 0x09e7, 0x09e8, 0x09e9, 0x09ea, 0x09eb, 0x09ec, 0x09ed, 0x09ee, 0x09ef}, // Bengali
                 {0x0a05, 0x0a15, 0x0a17, 0x0a18, 0x0a0f, 0x0a1a, 0x0a1c, 0x0a1f, 0x0049, 0x0a20, 0x0a23, 0x0a24, 0x0a26, 0x0a27, 0x004f, 0x0a28, 0x0a2a, 0x0a2d, 0x0a2e, 0x0a30, 0x0a2b, 0x0a32, 0x0a35, 0x0a38, 0x0a39, 0x0a21, 0x0a66, 0x0a67, 0x0a68, 0x0a69, 0x0a6a, 0x0a6b, 0x0a6c, 0x0a6d, 0x0a6e, 0x0a6f}, // Gurmukhi
-                {0x0f58, 0x0f40, 0x0f41, 0x0f42, 0x0f64, 0x0f44, 0x0f45, 0x0f46, 0x0049, 0x0f47, 0x0f4a, 0x0f4c, 0x0f4e, 0x0f4f, 0x004f, 0x0f51, 0x0f53, 0x0f54, 0x0f56, 0x0f5e, 0x0f65, 0x0f5f, 0x0f61, 0x0f62, 0x0f63, 0x0f66, 0x0f20, 0x0f21, 0x0f22, 0x0f23, 0x0f24, 0x0f25, 0x0f26, 0x0f27, 0x0f28, 0x0f29}, // Tibetan
+                {0x0f58, 0x0f40, 0x0f41, 0x0f42, 0x0f64, 0x0f44, 0x0f45, 0x0f46, 0x0049, 0x0f47, 0x0f49, 0x0f55, 0x0f50, 0x0f4f, 0x004f, 0x0f51, 0x0f53, 0x0f54, 0x0f56, 0x0f5e, 0x0f60, 0x0f5f, 0x0f61, 0x0f62, 0x0f63, 0x0f66, 0x0f20, 0x0f21, 0x0f22, 0x0f23, 0x0f24, 0x0f25, 0x0f26, 0x0f27, 0x0f28, 0x0f29}, // Tibetan
+                {0x0628, 0x062a, 0x062d, 0x062e, 0x0649, 0x062f, 0x0630, 0x0631, 0x0049, 0x0632, 0x0633, 0x0634, 0x0635, 0x0636, 0x004f, 0x0637, 0x0638, 0x0639, 0x063a, 0x0641, 0x0642, 0x0643, 0x0644, 0x0645, 0x0646, 0x0648, 0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0x0037, 0x0038, 0x0039}, // Arabic
         };
 
 static struct {
@@ -1728,7 +1772,7 @@ static struct {
 } unicode2asc[] =
         {
                 {0x0041, 0x005a, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"}, // Roman
-                {0x0391, 0x03a9, "ABGDFZHQIKLMNCOJP?STYVXRW"}, // Greek
+                {0x0388, 0x03a9, "EU???????ABGDFZHQIKLMNCOJP?STYVXRW"}, // Greek                                  
                 {0x0410, 0x042f, "AZBGDEFNI?KLMHOJPCTYQXSVW????U?R"}, // Cyrillic
                 {0x05d0, 0x05ea, "ABCDFIGHJKLMNPQ?ROSETUVWXYZ"}, // Hebrew
                 {0x0905, 0x0939, "A?????????E?????B?CD?F?G??HJZ?KL?MNP?QU?RS?T?V??W??XY"}, // Hindi
@@ -1740,7 +1784,8 @@ static struct {
                 {0x0532, 0x0556, "BCDE??FGHI?J?KLM?N?U?PQ?R??STVWXYZ?OA"}, // Armenian
                 {0x0985, 0x09b9, "A??????B??E???U?CDF?GH??J??KLMNPQR?S?T?VW?X??Y??????Z"}, // Bengali
                 {0x0a05, 0x0a39, "A?????????E?????B?CD?F?G??HJZ?KL?MNP?QU?RS?T?V??W??XY"}, // Gurmukhi
-                {0x0f40, 0x0f66, "BCD?FGHJ??K?L?MN?P?QR?S?A?????TV?WXYEUZ"}, // Tibetan
+                {0x0f40, 0x0f66, "BCD?FGHJ?K?????NMP?QRLS?A?????TVUWXYE?Z"}, // Tibetan
+                {0x0628, 0x0649, "A?B??CDFGHJKLMNPQRS??????TUVWXY?ZE"}, // Arabic
 
                 {0x0966, 0x096f, ""}, // Hindi
                 {0x0d66, 0x0d6f, ""}, // Malai
@@ -1750,17 +1795,26 @@ static struct {
                 {0x0f20, 0x0f29, ""}, // Tibetan
 
                 // lowercase variants: greek, georgisch
-                {0x03B1, 0x03c9, "ABGDFZHQIKLMNCOJP?STYVXRW"}, // Greek lowercase
+                {0x03AD, 0x03c9, "EU??ABGDFZHQIKLMNCOJP?STYVXRW"}, // Greek lowercase
                 {0x10d0, 0x10ef, "AB?CE?D?UF?GHOJ?KLMINPQRSTVW?XYZ"}, // Georgisch lowercase
                 {0x0562, 0x0586, "BCDE??FGHI?J?KLM?N?U?PQ?R??STVWXYZ?OA"}, // Armenian lowercase
-                {0,      0, NULL}
+                {0,      0,      NULL}
         };
 
+// Abjad forward declarations
+static int isAbjadScript(const UWORD *s);
+
+static char *convertToAbjad(char *str, const char *source, int maxlen);
+
+static void convertFromAbjad(char *s);
 
 char *convertToRoman(char *asciibuf, int maxlen, const UWORD *s) {
     char *w = asciibuf;
     const char *e = w + maxlen - 1;
-    while (*s > 0 && *s <= 32) { s++; } // skip lead
+    int is_abjad = isAbjadScript(s);
+    while (*s > 0 && *s <= 32) {
+        s++;
+    } // skip lead
     for (; *s != 0 && w < e; s++) {
         if (*s >= 1 && *s <= 'z') { // normal ascii
             *w++ = (char) (*s);
@@ -1769,7 +1823,9 @@ char *convertToRoman(char *asciibuf, int maxlen, const UWORD *s) {
             for (i = 0; unicode2asc[i].min != 0; i++) {
                 if (*s >= unicode2asc[i].min && *s <= unicode2asc[i].max) {
                     const char *cv = unicode2asc[i].convert;
-                    if (*cv == 0) { cv = "0123456789"; }
+                    if (*cv == 0) {
+                        cv = "0123456789";
+                    }
                     *w++ = cv[*s - unicode2asc[i].min];
                     found = 1;
                     break;
@@ -1782,14 +1838,23 @@ char *convertToRoman(char *asciibuf, int maxlen, const UWORD *s) {
         }
     }
     // trim
-    while (w > asciibuf && w[-1] > 0 && w[-1] <= 32) { w--; }
+    while (w > asciibuf && w[-1] > 0 && w[-1] <= 32) {
+        w--;
+    }
     *w = 0;
     // skip past last space (if any)
     w = strrchr(asciibuf, ' ');
-    if (w) { w++; } else { w = asciibuf; }
+    if (w) {
+        w++;
+    } else {
+        w = asciibuf;
+    }
     if (*w == 'A') {
         unpack_if_alldigits(w);
         repack_if_alldigits(w, 0);
+    }
+    if (is_abjad) {
+        convertFromAbjad(w);
     }
     return asciibuf;
 }
@@ -1803,7 +1868,9 @@ static UWORD *encode_utf16(UWORD *unibuf, const int maxlen, const char *mapcode,
     const char *r = mapcode;
     while (*r != 0 && w < e) {
         char c = *r++;
-        if ((c >= 'a') && (c <= 'z')) { c += ('A' - 'a'); }
+        if ((c >= 'a') && (c <= 'z')) {
+            c += ('A' - 'a');
+        }
         if ((c < 0) || (c > 'Z')) { // not in any valid range?
             *w++ = '?';
         } else if (c < 'A') { // valid but not a letter (e.g. a dot, a space...)
@@ -1822,10 +1889,13 @@ UWORD *convertToAlphabet(UWORD *unibuf, int maxlength, const char *mapcode, int 
     UWORD *startbuf = unibuf;
     UWORD *lastspot = &unibuf[maxlength - 1];
     if (maxlength > 0) {
-        char u[MAX_MAPCODE_RESULT_LEN];
+#define USIZE 256
+        char u[USIZE];
 
         // skip leading spaces
-        while (*mapcode > 0 && *mapcode <= 32) { mapcode++; }
+        while (*mapcode > 0 && *mapcode <= 32) {
+            mapcode++;
+        }
 
         // straight-copy everything up to and including first space
         {
@@ -1842,24 +1912,10 @@ UWORD *convertToAlphabet(UWORD *unibuf, int maxlength, const char *mapcode, int 
             }
         }
 
-        // re-pack E/U-voweled mapcodes when necessary:
-        if (asc2lan[alphabet][4] == 0x003f) { // alphabet has no letter E
-            if (strchr(mapcode, 'E') || strchr(mapcode, 'U') ||
-                strchr(mapcode, 'e') || strchr(mapcode, 'u')) {
-                // copy trimmed mapcode into temporary buffer u
-                int len = (int) strlen(mapcode);
-                if (len > MAX_MAPCODE_RESULT_LEN - 1) {
-                    len = MAX_MAPCODE_RESULT_LEN - 1;
-                }
-                while (len > 0 && mapcode[len - 1] > 0 && mapcode[len - 1] <= 32) { len--; }
-                memcpy(u, mapcode, len);
-                u[len] = 0;
-                // re-pack into A-voweled mapcode
-                unpack_if_alldigits(u);
-                repack_if_alldigits(u, 1);
-                mapcode = u;
-            }
+        if (alphabet == 1 || alphabet == 3 || alphabet == 14) {
+            mapcode = convertToAbjad(u, mapcode, USIZE);
         }
+
         encode_utf16(unibuf, 1 + (int) (lastspot - unibuf), mapcode, alphabet);
     }
     return startbuf;
@@ -1942,7 +1998,7 @@ static signed char fullmc_statemachine[23][6] = {
 int compareWithMapcodeFormat(const char *s, int fullcode) {
     int nondigits = 0, vowels = 0;
     int state = (fullcode ? 0 : 18); // initial state
-    for (; ; s++) {
+    for (;; s++) {
         int newstate, token;
         // recognise token: decode returns -2=a -3=e -4=0, 0..9 for digit or "o" or "i", 10..31 for char, -1 for illegal char
         if (*s == '.') {
@@ -1965,7 +2021,9 @@ int compareWithMapcodeFormat(const char *s, int fullcode) {
                 token = TOKENCHR; // digit
             } else { // charcter B-Z
                 token = TOKENCHR;
-                if (state != 11 && state != 12 && state != 13) { nondigits++; }
+                if (state != 11 && state != 12 && state != 13) {
+                    nondigits++;
+                }
             }
         }
         newstate = fullmc_statemachine[state][token];
@@ -1999,13 +2057,14 @@ char *getTerritoryIsoName(char *result, int territoryCode, int format) {
         const int p = ParentLetter(territoryCode - 1);
         char iso3[4];
         const char *ei = get_entity_iso3(iso3, territoryCode - 1);
-        if (*ei >= '0' && *ei <= '9') { ei++; }
+        if (*ei >= '0' && *ei <= '9') {
+            ei++;
+        }
         if (format == 0 && p) {
             memcpy(result, &parents2[p * 3 - 3], 2);
             result[2] = '-';
             strcpy(result + 3, ei);
-        }
-        else {
+        } else {
             strcpy(result, ei);
         }
     }
@@ -2015,7 +2074,9 @@ char *getTerritoryIsoName(char *result, int territoryCode, int format) {
 // PUBLIC - returns negative if territoryCode tc is not a code that has a parent country
 int getParentCountryOf(int tc) {
     const int parentccode = ParentTerritoryOf(tc - 1); // returns parent ccode or -1
-    if (parentccode >= 0) { return parentccode + 1; }
+    if (parentccode >= 0) {
+        return parentccode + 1;
+    }
     return -1;
 }
 
@@ -2024,7 +2085,9 @@ int getParentCountryOf(int tc) {
 int getCountryOrParentCountry(int tc) {
     if (tc > 0 && tc < MAX_MAPCODE_TERRITORY_CODE) {
         const int tp = getParentCountryOf(tc);
-        if (tp > 0) { return tp; }
+        if (tp > 0) {
+            return tp;
+        }
         return tc;
     }
     return -1;
@@ -2075,7 +2138,9 @@ static int binfindmatch(const int parentcode, const char *str) {
     const char *r = str;
     int len = 0;
 
-    if (parentcode < 0) { return -1; }
+    if (parentcode < 0) {
+        return -1;
+    }
     if (parentcode > 0) {
         tmp[len++] = (char) ('0' + parentcode);
     }
@@ -2106,8 +2171,12 @@ static int binfindmatch(const int parentcode, const char *str) {
 // PUBLIC - returns territoryCode of string (or negative if not found).
 // optional_tc: context territoryCode to handle ambiguities (pass <=0 if unknown).
 int getTerritoryCode(const char *string, int optional_tc) {
-    if (string == NULL) { return -1; }
-    while (*string > 0 && *string <= 32) { string++; } // skip leading whitespace
+    if (string == NULL) {
+        return -1;
+    }
+    while (*string > 0 && *string <= 32) {
+        string++;
+    } // skip leading whitespace
 
     if (string[0] && string[1]) {
         const int ccode = optional_tc - 1;
@@ -2135,8 +2204,7 @@ int decodeMapcodeToLatLon(double *lat, double *lon, const char *input,
 {
     if ((lat == NULL) || (lon == NULL) || (input == NULL)) {
         return -100;
-    }
-    else {
+    } else {
         int ret;
         decodeRec dec;
         dec.orginput = input;
@@ -2196,7 +2264,9 @@ static char *makeiso_buf;
 const char *convertTerritoryCodeToIsoName(int tc, int format) {
     if (makeiso_buf == makeiso_bufbytes) {
         makeiso_buf = makeiso_bufbytes + 8;
-    } else { makeiso_buf = makeiso_bufbytes; }
+    } else {
+        makeiso_buf = makeiso_bufbytes;
+    }
     return (const char *) getTerritoryIsoName(makeiso_buf, tc, format);
 }
 
@@ -2218,3 +2288,299 @@ const UWORD *encodeToAlphabet(const char *mapcode, int alphabet) // 0=roman, 2=c
 }
 
 #endif
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+//
+//  ABJAD ROUTINES
+//
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+static int isAbjadScript(const UWORD *s) {
+    for (; *s != 0; s++) {
+        UWORD c = *s;
+        if (c >= 1576 && c <= 1609) {
+            return 1;
+        } // arabic
+        if (c >= 1488 && c <= 1514) {
+            return 1;
+        } // hebrew
+        if (c >= 904 && c <= 937) {
+            return 1;
+        } // greek
+    }
+    return 0;
+}
+
+/// PRIVATE convert a mapcode to an ABJAD-format (never more than 2 non-digits in a row)
+static char *convertToAbjad(char *str, const char *source, int maxlen) {
+    int form, i, dot, inarow;
+    int len = (int) strlen(source);
+    const char *rest = strchr(source, '-');
+    if (rest != NULL) {
+        len = ((int) (rest - source)) - 1;
+    }
+    if (len >= maxlen) {
+        len = maxlen - 1;
+    }
+    while (len > 0 && source[len - 1] == ' ') {
+        len--;
+    }
+
+    // copy source into str
+    memcpy(str, source, len);
+    str[len] = 0;
+    unpack_if_alldigits(str);
+
+    len = (int) strlen(str);
+    dot = (int) (strchr(str, '.') - str);
+    form = dot * 10 + (len - dot - 1);
+
+    // see if >2 non-digits in a row
+    inarow = 0;
+    for (i = 0; i < len; i++) {
+        int c = (int) str[i];
+        if (c != 46) {
+            inarow++;
+            if (decodeChar(c) <= 9) {
+                inarow = 0;
+            } else if (inarow > 2) {
+                break;
+            }
+        }
+    }
+    if (inarow < 3 &&
+        (form == 22 || form == 32 || form == 33 || form == 42 || form == 43 || form == 44 || form == 54)) {
+        // no need to do anything
+    } else if (form >= 22 && form <= 54) {
+        char c1, c2, c3 = '?';
+        int c = decodeChar(str[2]);
+        if (c < 0) {
+            c = decodeChar(str[3]);
+        }
+
+        if (form >= 44) {
+            c = (c * 31) + (decodeChar(str[len - 1]) + 39);
+            c1 = encode_chars[c / 100];
+            c2 = encode_chars[(c % 100) / 10];
+            c3 = encode_chars[c % 10];
+        } else if (len == 7) {
+            if (form == 24) {
+                c += 7;
+            } else if (form == 33) {
+                c += 38;
+            } else if (form == 42) {
+                c += 69;
+            }
+            c1 = encode_chars[c / 10];
+            c2 = encode_chars[c % 10];
+        } else {
+            c1 = encode_chars[2 + (c / 8)];
+            c2 = encode_chars[2 + (c % 8)];
+        }
+
+        if (form == 22) // s0 s1 . s3 s4 -> s0 s1 . C1 C2 s4
+        {
+            str[6] = 0;
+            str[5] = str[4];
+            str[4] = c2;
+            str[3] = c1;
+//      str[2] = '.';
+//      str[1] = str[1];
+//      str[0] = str[0];
+        } else if (form == 23) { // s0 s1 . s3 s4 s5 -> s0 s1 . C1 C2 s4 s5
+            str[7] = 0;
+            str[6] = str[5];
+            str[5] = str[4];
+            str[4] = c2;
+            str[3] = c1;
+//      str[2] = '.';
+//      str[1] = str[1];
+//      str[0] = str[0];
+        } else if (form == 32) { // s0 s1 s2 . s4 s5 -> s0 s1 . C* C2 s4 s5
+            str[7] = 0;
+            str[6] = str[5];
+            str[5] = str[4];
+            str[4] = c2;
+            str[3] = (char) (c1 + 4);
+            str[2] = '.';
+//      str[1] = str[1];
+//      str[0] = str[0];
+        } else if (form == 24 || form == 33 || form == 42) {
+            // s0 s1 . s3 s4 s5 s6 -> s0 s1 C1 . s4 C2 s5 s6
+            // s0 s1 s2 . s4 s5 s6 -> s0 s1 C1 . s4 C2 s5 s6
+            // s0 s1 s2 s3 . s5 s6 -> s0 s1 C1 . s3 C2 s5 s6
+            str[8] = 0;
+            str[7] = str[6];
+            str[6] = str[5];
+            str[5] = c2;
+            str[4] = str[(form == 42 ? 3 : 4)];
+            str[3] = '.';
+            str[2] = c1;
+//      str[1] = str[1];
+//      str[0] = str[0];
+        } else if (form == 34) {  // s0 s1 s2 . s4 s5 s6 s7 -> s0 s1 C1 . s4 s5 C2 S6 S7
+            str[9] = 0;
+            str[8] = str[7];
+            str[7] = str[6];
+            str[6] = c2;
+//      str[5] = str[5];
+//      str[4] = str[4];
+//      str[3] = '.';
+            str[2] = c1;
+//      str[1] = str[1];
+//      str[0] = str[0];
+        } else if (form == 43) { // s0 s1 s2 s3 . s5 s6 s7 -> s0 s1 C* . s3 s5 C2 S6 S7
+            str[9] = 0;
+            str[8] = str[7];
+            str[7] = str[6];
+            str[6] = c2;
+//      str[5] = str[5];
+            str[4] = str[3];
+            str[3] = '.';
+            str[2] = (char) (c1 + 4);
+//      str[1] = str[1];
+//      str[0] = str[0];
+        } else if (form == 44) {
+            str[10] = 0;
+            str[9] = str[7];
+            str[8] = c3;
+            str[7] = str[6];
+            str[6] = str[5];
+            str[5] = c2;
+//      str[4] = '.';
+//      str[3] = str[3];
+            str[2] = c1;
+//      str[1] = str[1];
+//      str[0] = str[0];
+        } else if (form == 54) {
+            str[11] = 0;
+            str[10] = str[8];
+            str[9] = c3;
+            str[8] = str[7];
+            str[7] = str[6];
+            str[6] = c2;
+//      str[5] = '.';
+//      str[4] = str[4];
+//      str[3] = str[3];
+            str[2] = c1;
+//      str[1] = str[1];
+//      str[0] = str[0];        
+        }
+    }
+    repack_if_alldigits(str, 0);
+    if (rest) {
+        int len = (int) strlen(str);
+        int tocopy = maxlen - len - 1;
+        if (tocopy > 0) {
+            memcpy(str + len, rest, tocopy);
+            str[len + tocopy] = 0;
+        }
+    }
+    return str;
+}
+
+
+static void convertFromAbjad(char *s) {
+    int len, dot, form, c;
+    char *postfix = strchr(s, '-');
+    if (postfix) {
+        *postfix = 0;
+        postfix++;
+    }
+
+    unpack_if_alldigits(s);
+
+    len = (int) strlen(s);
+    dot = (int) (strchr(s, '.') - s);
+    form = dot * 10 + (len - dot - 1);
+
+    if (form == 23) {
+        c = decodeChar(s[3]) * 8 + (decodeChar(s[4]) - 18);
+//  s[0] = s[0];
+//  s[1] = s[1];
+//  s[2] = '.';
+        s[3] = encode_chars[c];
+        s[4] = s[5];
+        s[5] = 0;
+    } else if (form == 24) {
+        c = decodeChar(s[3]) * 8 + (decodeChar(s[4]) - 18);
+//  s[0] = s[0];
+//  s[1] = s[1];
+//	s[2] = '.';
+        s[3] = '.';
+        s[4] = s[5];
+        s[5] = s[6];
+        s[6] = 0;
+        if (c >= 32) {
+            s[2] = encode_chars[c - 32];
+        } else {
+            s[3] = encode_chars[c];
+        }
+    } else if (form == 34) {
+        c = (decodeChar(s[2]) * 10) + (decodeChar(s[5]) - 7);
+//  s[0] = s[0];
+//  s[1] = s[1];
+        s[2] = '.';
+//	s[3] = '.';
+//	s[4] = s[4];
+        s[5] = s[6];
+        s[6] = s[7];
+        s[7] = 0;
+
+        if (c < 31) {
+            s[3] = encode_chars[c];
+        } else if (c < 62) {
+            s[2] = encode_chars[c - 31];
+        } else {
+            s[2] = encode_chars[c - 62];
+            s[3] = s[4];
+            s[4] = '.';
+        }
+    } else if (form == 35) {
+        c = (decodeChar(s[2]) * 8) + (decodeChar(s[6]) - 18);
+//  s[0] = s[0];
+//  s[1] = s[1];
+//	s[3] = '.';
+//	s[4] = s[4];
+//	s[5] = s[5];
+        s[6] = s[7];
+        s[7] = s[8];
+        s[8] = 0;
+        if (c >= 32) {
+            s[2] = encode_chars[c - 32];
+            s[3] = s[4];
+            s[4] = '.';
+        } else {
+            s[2] = encode_chars[c];
+        }
+    } else if (form == 45) {
+        c = (decodeChar(s[2]) * 100) + (decodeChar(s[5]) * 10) + (decodeChar(s[8]) - 39);
+//  s[0] = s[0];
+//  s[1] = s[1];
+        s[2] = encode_chars[c / 31];
+//	s[3] = s[3];
+//	s[4] = '.';
+        s[5] = s[6];
+        s[6] = s[7];
+        s[7] = s[9];
+        s[8] = encode_chars[c % 31];
+        s[9] = 0;
+    } else if (form == 55) {
+        c = (decodeChar(s[2]) * 100) + (decodeChar(s[6]) * 10) + (decodeChar(s[9]) - 39);
+//  s[0] = s[0];
+//  s[1] = s[1];
+        s[2] = encode_chars[c / 31];
+//	s[3] = s[3];
+//	s[4] = s[4];
+//  s[5] = '.';
+        s[6] = s[7];
+        s[7] = s[8];
+        s[8] = s[10];
+        s[9] = encode_chars[c % 31];
+        s[10] = 0;
+    }
+    repack_if_alldigits(s, 0);
+    if (postfix) {
+        memmove(s + strlen(s), postfix, strlen(postfix) + 1);
+    }
+}

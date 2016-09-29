@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-#define mapcode_cversion "2.2.2"
+#define mapcode_cversion "2.3.0"
 
 #define UWORD                               unsigned short int  // 2-byte unsigned integer.
 
@@ -266,7 +266,7 @@ int multipleBordersNearby(
 /**
  * Alphabets:
  */
-#define MAPCODE_ALPHABETS_TOTAL        14
+#define MAPCODE_ALPHABETS_TOTAL        15
 
 #define MAPCODE_ALPHABET_ROMAN         0
 #define MAPCODE_ALPHABET_GREEK         1
@@ -282,6 +282,7 @@ int multipleBordersNearby(
 #define MAPCODE_ALPHABET_BENGALI       11
 #define MAPCODE_ALPHABET_GURMUKHI      12
 #define MAPCODE_ALPHABET_TIBETAN       13
+#define MAPCODE_ALPHABET_ARABIC        14
 
 
 /**

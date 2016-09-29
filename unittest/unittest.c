@@ -49,7 +49,7 @@ static void alphabet_tests() {
         convertToAlphabet(enc, 64, str, i);
         if (*enc) {
             nrErrors++;
-            printf("convertToAlphabet(\"%s\",%d) = \"%s\"\n", str, i, dec);
+            printf("*** ERROR *** convertToAlphabet(\"%s\",%d) = \"%s\"\n", str, i, dec);
         }
         else {
             // see if empty UTF16 converts to empty string
@@ -57,7 +57,7 @@ static void alphabet_tests() {
             convertToRoman(dec, 64, enc);
             if (*dec) {
                 nrErrors++;
-                printf("convertToRoman(\"\") = \"%s\"\n", dec);
+                printf("*** ERROR *** convertToRoman(\"\") = \"%s\"\n", dec);
             }
         }
 
@@ -69,7 +69,7 @@ static void alphabet_tests() {
         nrTests++;
         if (strlen(dec) != 59 || strcmp(dec, expect)) {
             nrErrors++;
-            printf("convertToRoman(convertToAlphabet(\"%s\",%d))=\"%s\"\n", str, i, dec);
+            printf("*** ERROR *** convertToRoman(convertToAlphabet(\"%s\",%d))=\"%s\"\n", str, i, dec);
         }
 
         // see if E/U voweled mapcodes (re)convert as expected
@@ -79,7 +79,7 @@ static void alphabet_tests() {
         nrTests++;
         if (strcmp(dec, str) != 0) {
             nrErrors++;
-            printf("convertToRoman(convertToAlphabet(\"%s\",%d))=\"%s\"\n", str, i, dec);
+            printf("*** ERROR *** convertToRoman(convertToAlphabet(\"%s\",%d))=\"%s\"\n", str, i, dec);
         }
         else {
             nrTests++;
@@ -90,7 +90,7 @@ static void alphabet_tests() {
                 nrTests++;
                 if (strcmp(dec, "Oio 112.3AU") != 0) {
                     nrErrors++;
-                    printf("convertToRoman(convertToAlphabet(\"%s\",%d))=\"%s\"\n", str, i, dec);
+                    printf("*** ERROR *** convertToRoman(convertToAlphabet(\"%s\",%d))=\"%s\"\n", str, i, dec);
                 }
             }
         }

@@ -1798,7 +1798,7 @@ static struct {
                 {0x03AD, 0x03c9, "EU??ABGDFZHQIKLMNCOJP?STYVXRW"}, // Greek lowercase
                 {0x10d0, 0x10ef, "AB?CE?D?UF?GHOJ?KLMINPQRSTVW?XYZ"}, // Georgisch lowercase
                 {0x0562, 0x0586, "BCDE??FGHI?J?KLM?N?U?PQ?R??STVWXYZ?OA"}, // Armenian lowercase
-                {0,      0,      NULL}
+                {0,      0, NULL}
         };
 
 // Abjad forward declarations
@@ -2317,7 +2317,7 @@ static char *convertToAbjad(char *str, const char *source, int maxlen) {
     int len = (int) strlen(source);
     const char *rest = strchr(source, '-');
     if (rest != NULL) {
-        len = ((int) (rest - source)) - 1;
+        len = ((int) (rest - source));
     }
     if (len >= maxlen) {
         len = maxlen - 1;
@@ -2333,6 +2333,7 @@ static char *convertToAbjad(char *str, const char *source, int maxlen) {
 
     len = (int) strlen(str);
     dot = (int) (strchr(str, '.') - str);
+
     form = dot * 10 + (len - dot - 1);
 
     // see if >2 non-digits in a row
@@ -2348,9 +2349,17 @@ static char *convertToAbjad(char *str, const char *source, int maxlen) {
             }
         }
     }
-    if (inarow < 3 &&
-        (form == 22 || form == 32 || form == 33 || form == 42 || form == 43 || form == 44 || form == 54)) {
-        // no need to do anything
+    if (dot < 2 || dot > 5 || (inarow < 3 &&
+                               (form == 22 || form == 32 || form == 33 || form == 42 || form == 43 || form == 44 ||
+                                form == 54))) {
+        // no need to do anything, return input unchanged
+        len = (int) strlen(source);
+        if (len >= maxlen) {
+            len = maxlen - 1;
+        }
+        memcpy(str, source, len);
+        str[len] = 0;
+        return str;
     } else if (form >= 22 && form <= 54) {
         char c1, c2, c3 = '?';
         int c = decodeChar(str[2]);
@@ -2469,8 +2478,12 @@ static char *convertToAbjad(char *str, const char *source, int maxlen) {
     }
     repack_if_alldigits(str, 0);
     if (rest) {
-        int len = (int) strlen(str);
+        len = (int) strlen(str);
+        int needed = (int) strlen(rest);
         int tocopy = maxlen - len - 1;
+        if (tocopy > needed) {
+            tocopy = needed;
+        }
         if (tocopy > 0) {
             memcpy(str + len, rest, tocopy);
             str[len + tocopy] = 0;
@@ -2485,102 +2498,115 @@ static void convertFromAbjad(char *s) {
     char *postfix = strchr(s, '-');
     if (postfix) {
         *postfix = 0;
-        postfix++;
     }
 
     unpack_if_alldigits(s);
 
     len = (int) strlen(s);
     dot = (int) (strchr(s, '.') - s);
-    form = dot * 10 + (len - dot - 1);
+    form = (dot >= 2 && dot <= 5 ? dot * 10 + (len - dot - 1) : 0);
 
     if (form == 23) {
         c = decodeChar(s[3]) * 8 + (decodeChar(s[4]) - 18);
-//  s[0] = s[0];
-//  s[1] = s[1];
-//  s[2] = '.';
-        s[3] = encode_chars[c];
-        s[4] = s[5];
-        s[5] = 0;
+        if (c >= 0 && c < 31) {
+//          s[0] = s[0];
+//          s[1] = s[1];
+//          s[2] = '.';
+            s[3] = encode_chars[c];
+            s[4] = s[5];
+            s[5] = 0;
+        }
     } else if (form == 24) {
         c = decodeChar(s[3]) * 8 + (decodeChar(s[4]) - 18);
-//  s[0] = s[0];
-//  s[1] = s[1];
-//	s[2] = '.';
-        s[3] = '.';
-        s[4] = s[5];
-        s[5] = s[6];
-        s[6] = 0;
-        if (c >= 32) {
-            s[2] = encode_chars[c - 32];
-        } else {
-            s[3] = encode_chars[c];
+        if (c >= 0 && c < 63) {
+//          s[0] = s[0];
+//          s[1] = s[1];
+//        	s[2] = '.';
+            s[3] = '.';
+            s[4] = s[5];
+            s[5] = s[6];
+            s[6] = 0;
+            if (c >= 32) {
+                s[2] = encode_chars[c - 32];
+            } else {
+                s[3] = encode_chars[c];
+            }
         }
     } else if (form == 34) {
         c = (decodeChar(s[2]) * 10) + (decodeChar(s[5]) - 7);
-//  s[0] = s[0];
-//  s[1] = s[1];
-        s[2] = '.';
-//	s[3] = '.';
-//	s[4] = s[4];
-        s[5] = s[6];
-        s[6] = s[7];
-        s[7] = 0;
+        if (c >= 0 && c < 93) {
+//          s[0] = s[0];
+//          s[1] = s[1];
+            s[2] = '.';
+//        	s[3] = '.';
+//        	s[4] = s[4];
+            s[5] = s[6];
+            s[6] = s[7];
+            s[7] = 0;
 
-        if (c < 31) {
-            s[3] = encode_chars[c];
-        } else if (c < 62) {
-            s[2] = encode_chars[c - 31];
-        } else {
-            s[2] = encode_chars[c - 62];
-            s[3] = s[4];
-            s[4] = '.';
+            if (c < 31) {
+                s[3] = encode_chars[c];
+            } else if (c < 62) {
+                s[2] = encode_chars[c - 31];
+            } else {
+                s[2] = encode_chars[c - 62];
+                s[3] = s[4];
+                s[4] = '.';
+            }
         }
     } else if (form == 35) {
         c = (decodeChar(s[2]) * 8) + (decodeChar(s[6]) - 18);
-//  s[0] = s[0];
-//  s[1] = s[1];
-//	s[3] = '.';
-//	s[4] = s[4];
-//	s[5] = s[5];
-        s[6] = s[7];
-        s[7] = s[8];
-        s[8] = 0;
-        if (c >= 32) {
-            s[2] = encode_chars[c - 32];
-            s[3] = s[4];
-            s[4] = '.';
-        } else {
-            s[2] = encode_chars[c];
+        if (c >= 0 && c < 63) {
+//          s[0] = s[0];
+//          s[1] = s[1];
+//        	s[3] = '.';
+//        	s[4] = s[4];
+//        	s[5] = s[5];
+            s[6] = s[7];
+            s[7] = s[8];
+            s[8] = 0;
+            if (c >= 32) {
+                s[2] = encode_chars[c - 32];
+                s[3] = s[4];
+                s[4] = '.';
+            } else {
+                s[2] = encode_chars[c];
+            }
         }
     } else if (form == 45) {
         c = (decodeChar(s[2]) * 100) + (decodeChar(s[5]) * 10) + (decodeChar(s[8]) - 39);
-//  s[0] = s[0];
-//  s[1] = s[1];
-        s[2] = encode_chars[c / 31];
-//	s[3] = s[3];
-//	s[4] = '.';
-        s[5] = s[6];
-        s[6] = s[7];
-        s[7] = s[9];
-        s[8] = encode_chars[c % 31];
-        s[9] = 0;
+        if (c >= 0 && c < 961) {
+//          s[0] = s[0];
+//          s[1] = s[1];
+            s[2] = encode_chars[c / 31];
+//        	s[3] = s[3];
+//        	s[4] = '.';
+            s[5] = s[6];
+            s[6] = s[7];
+            s[7] = s[9];
+            s[8] = encode_chars[c % 31];
+            s[9] = 0;
+        }
     } else if (form == 55) {
         c = (decodeChar(s[2]) * 100) + (decodeChar(s[6]) * 10) + (decodeChar(s[9]) - 39);
-//  s[0] = s[0];
-//  s[1] = s[1];
-        s[2] = encode_chars[c / 31];
-//	s[3] = s[3];
-//	s[4] = s[4];
-//  s[5] = '.';
-        s[6] = s[7];
-        s[7] = s[8];
-        s[8] = s[10];
-        s[9] = encode_chars[c % 31];
-        s[10] = 0;
+        if (c >= 0 && c < 961) {
+//          s[0] = s[0];
+//          s[1] = s[1];
+            s[2] = encode_chars[c / 31];
+//        	s[3] = s[3];
+//        	s[4] = s[4];
+//          s[5] = '.';
+            s[6] = s[7];
+            s[7] = s[8];
+            s[8] = s[10];
+            s[9] = encode_chars[c % 31];
+            s[10] = 0;
+        }
     }
     repack_if_alldigits(s, 0);
     if (postfix) {
-        memmove(s + strlen(s), postfix, strlen(postfix) + 1);
+        int len = (int) strlen(s);
+        *postfix = '-';
+        memmove(s + len, postfix, strlen(postfix) + 1);
     }
 }

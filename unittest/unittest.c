@@ -40,8 +40,8 @@ static void alphabet_tests() {
     printf("%d alphabets\n", MAPCODE_ALPHABETS_TOTAL);
 
     for (i = 0; i < MAPCODE_ALPHABETS_TOTAL; i++) {
-        UWORD enc[64];
-        char dec[64];
+        UWORD enc[69];
+        char dec[69];
 
         // see if convertToAlphabet survives empty string
         nrTests++;
@@ -49,7 +49,7 @@ static void alphabet_tests() {
         convertToAlphabet(enc, 64, str, i);
         if (*enc) {
             nrErrors++;
-            printf("*** ERROR *** convertToAlphabet(\"%s\",%d) = \"%s\"\n", str, i, dec);
+            printf("*** ERROR *** empty string: convertToAlphabet(\"%s\",%d) = \"%s\"\n", str, i, dec);
         }
         else {
             // see if empty UTF16 converts to empty string
@@ -62,40 +62,38 @@ static void alphabet_tests() {
         }
 
         // see if alphabets (re)convert as expected
-        str = "OEUoi OIoi#%?-.abcdfghjklmnpqrstvwxyz0123456789ABCDFGHJKLMNPQRSTVWXYZ";
-        expect = "OEUoi OIOI#%?-.ABCDFGHJKLMNPQRSTVWXYZ0123456789ABCDFGHJKLMN";
-        convertToAlphabet(enc, 64, str, i);
-        convertToRoman(dec, 60, enc);
+        str    = "OEUoi OIoi#%?-.abcdfghjklmnpqrstvwxyz0123456789ABCDFGHJKLMNPQRSTVWXYZ";
+        expect = "OEUoi OIOI#%?-.ABCDFGHJKLMNPQRSTVWXYZ0123456789ABCDFGHJKLMNPQRSTVWXYZ";
+        convertToAlphabet(enc, sizeof(enc), str, i);
+        convertToRoman(dec, sizeof(dec), enc);
         nrTests++;
         if (strlen(dec) != 59 || strcmp(dec, expect)) {
             nrErrors++;
-            printf("*** ERROR *** convertToRoman(convertToAlphabet(\"%s\",%d))=\"%s\"\n", str, i, dec);
+            printf("*** ERROR *** all chars: convertToRoman(convertToAlphabet(\"%s\",%d))=\"%s\", expected=\"%s\"\n", str, i, dec, expect);
         }
 
         // see if E/U voweled mapcodes (re)convert as expected
         str = "OMN 112.3EU";
-        convertToAlphabet(enc, 64, str, i);
-        convertToRoman(dec, 64, enc);
+        convertToAlphabet(enc, sizeof(enc), str, i);
+        convertToRoman(dec, sizeof(dec), enc);
         nrTests++;
         if (strcmp(dec, str) != 0) {
             nrErrors++;
-            printf("*** ERROR *** convertToRoman(convertToAlphabet(\"%s\",%d))=\"%s\"\n", str, i, dec);
+            printf("*** ERROR *** vowels EU: convertToRoman(convertToAlphabet(\"%s\",%d))=\"%s\", expected=\"%s\"\n", str, i, dec, expect);
         }
         else {
             nrTests++;
             {
                 str = "  Oio 112.3AU  ";
-                convertToAlphabet(enc, 64, str, i);
-                convertToRoman(dec, 64, enc);
+                convertToAlphabet(enc, sizeof(enc), str, i);
+                convertToRoman(dec, sizeof(dec), enc);
                 nrTests++;
                 if (strcmp(dec, "Oio 112.3AU") != 0) {
                     nrErrors++;
-                    printf("*** ERROR *** convertToRoman(convertToAlphabet(\"%s\",%d))=\"%s\"\n", str, i, dec);
+                    printf("*** ERROR *** vowels AU: convertToRoman(convertToAlphabet(\"%s\",%d))=\"%s\"\n", str, i, dec);
                 }
             }
         }
-
-
     }
 }
 

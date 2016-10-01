@@ -34,82 +34,84 @@ int nrTests = 0, nrErrors = 0, nrWarnings = 0;
 
 // test the alphabet conversion routines 
 static void alphabet_tests() {
-    int i,j;
+    int i, j;
     const char *str, *expect;
     static const char *testpairs[] = {
-        ".123",".123",
-        "","",
-        "-","-",
-        ".",".",
-        "-123","-123",
-        "-xyz","-XYZ",
-        ".xyz",".XYZ",
-        "12.34","12.34",
-        "OEUoi OIoi#%?-.abcdfghjklmnpqrstvwxyz0123456789euEUABCDFGHJKLMNPQRSTVWXYZ" , "OEUoi OIOI#%?-.ABCDFGHJKLMNPQRSTVWXYZ0123456789EUEUABCDFGHJ",
-        "OEUoi OIoi#%?abcdfghjklmnpqrstvwxyz0123456789euEUABCDFGHJKLMNPQRSTVWXYZ" , "OEUoi OIOI#%?ABCDFGHJKLMNPQRSTVWXYZ0123456789EUEUABCDFGHJKL",
-        "  Oio 12.AU  ","Oio 12.AU",
-        "OMN 112.3EU","OMN 112.3EU",
-        "49.4V","49.4V",
-        "NLD 49.4V-xx123","NLD 49.4V-XX123",
-        "xx.xx","XX.XX",
-        "xx.xxx","XX.XXX",
-        "xxx.xx","XXX.XX",
-        "xx.xxxx","XX.XXXX",
-        "xxx.xxx","XXX.XXX",
-        "xxxx.xx","XXXX.XX",
-        "xxx.xxxx","XXX.XXXX",
-        "xxxx.xxx","XXXX.XXX",
-        "xxxx.xxxx","XXXX.XXXX",
-        "xxxxx.xxxx","XXXXX.XXXX",
-        "pq.rs","PQ.RS",
-        "bc.123","BC.123",
-        "123.xy","123.XY",
-        " nld 12.34E0","nld 12.34E0",
-        "VVX.xxx","VVX.XXX",
-        "x123.xx","X123.XX",
-        "xxx.xxxx","XXX.XXXX",
-        "12xx.xxx","12XX.XXX",
-        "xxxx.xx12","XXXX.XX12",
-        "99zxx.xxxx","99ZXX.XXXX",
-        "xx.xx-P","XX.XX-P",
-        "xx.xxx-pq","XX.XXX-PQ",
-        "xxx.xx-123","XXX.XX-123",
-        "xx.xxxx-pqRS","XX.XXXX-PQRS",
-        "xxx.xxx-PQRSTUVW","XXX.XXX-PQRSTUVW",
-        "xxxx.xx-pqrstuvw","XXXX.XX-PQRSTUVW",
-        "xxx.xxxx-PQrsTU","XXX.XXXX-PQRSTU",
-        "xxxx.xxx-09876543","XXXX.XXX-09876543",
-        "xxxx.xxxx-PQRSTUVW","XXXX.XXXX-PQRSTUVW",
-        "xxxxx.xxxx-PQRSTUVW","XXXXX.XXXX-PQRSTUVW",
-        "pq.rs-PQRSTUVW","PQ.RS-PQRSTUVW",
-        "bc.123-PQRSTUVW","BC.123-PQRSTUVW",
-        "123.xy-PQRSTUVW","123.XY-PQRSTUVW",
-        "12.34E0-PQRSTUVW","12.34E0-PQRSTUVW",
-        "VVX.xxx-PQRSTUVW","VVX.XXX-PQRSTUVW",
-        "x123.xx-PQRSTUVW","X123.XX-PQRSTUVW",
-        "xxx.xxxx-PQRSTUVW","XXX.XXXX-PQRSTUVW",
-        "12xx.xxx-PQRSTUVW","12XX.XXX-PQRSTUVW",
-        "xxxx.xx12-PQRSTUVW","XXXX.XX12-PQRSTUVW",
-        "99zxx.xxxx-PQRSTUVW","99ZXX.XXXX-PQRSTUVW",
-        NULL
+            ".123", ".123",
+            "", "",
+            "-", "-",
+            ".", ".",
+            "-123", "-123",
+            "-xyz", "-XYZ",
+            ".xyz", ".XYZ",
+            "12.34", "12.34",
+            "OEUoi OIoi#%?-.abcdfghjklmnpqrstvwxyz0123456789euEUABCDFGHJKLMNPQRSTVWXYZ",
+            "OEUoi OIOI#%?-.ABCDFGHJKLMNPQRSTVWXYZ0123456789EUEUABCDFGHJ",
+            "OEUoi OIoi#%?abcdfghjklmnpqrstvwxyz0123456789euEUABCDFGHJKLMNPQRSTVWXYZ",
+            "OEUoi OIOI#%?ABCDFGHJKLMNPQRSTVWXYZ0123456789EUEUABCDFGHJKL",
+            "  Oio 12.AU  ", "Oio 12.AU",
+            "OMN 112.3EU", "OMN 112.3EU",
+            "49.4V", "49.4V",
+            "NLD 49.4V-xx123", "NLD 49.4V-XX123",
+            "xx.xx", "XX.XX",
+            "xx.xxx", "XX.XXX",
+            "xxx.xx", "XXX.XX",
+            "xx.xxxx", "XX.XXXX",
+            "xxx.xxx", "XXX.XXX",
+            "xxxx.xx", "XXXX.XX",
+            "xxx.xxxx", "XXX.XXXX",
+            "xxxx.xxx", "XXXX.XXX",
+            "xxxx.xxxx", "XXXX.XXXX",
+            "xxxxx.xxxx", "XXXXX.XXXX",
+            "pq.rs", "PQ.RS",
+            "bc.123", "BC.123",
+            "123.xy", "123.XY",
+            " nld 12.34E0", "nld 12.34E0",
+            "VVX.xxx", "VVX.XXX",
+            "x123.xx", "X123.XX",
+            "xxx.xxxx", "XXX.XXXX",
+            "12xx.xxx", "12XX.XXX",
+            "xxxx.xx12", "XXXX.XX12",
+            "99zxx.xxxx", "99ZXX.XXXX",
+            "xx.xx-P", "XX.XX-P",
+            "xx.xxx-pq", "XX.XXX-PQ",
+            "xxx.xx-123", "XXX.XX-123",
+            "xx.xxxx-pqRS", "XX.XXXX-PQRS",
+            "xxx.xxx-PQRSTUVW", "XXX.XXX-PQRSTUVW",
+            "xxxx.xx-pqrstuvw", "XXXX.XX-PQRSTUVW",
+            "xxx.xxxx-PQrsTU", "XXX.XXXX-PQRSTU",
+            "xxxx.xxx-09876543", "XXXX.XXX-09876543",
+            "xxxx.xxxx-PQRSTUVW", "XXXX.XXXX-PQRSTUVW",
+            "xxxxx.xxxx-PQRSTUVW", "XXXXX.XXXX-PQRSTUVW",
+            "pq.rs-PQRSTUVW", "PQ.RS-PQRSTUVW",
+            "bc.123-PQRSTUVW", "BC.123-PQRSTUVW",
+            "123.xy-PQRSTUVW", "123.XY-PQRSTUVW",
+            "12.34E0-PQRSTUVW", "12.34E0-PQRSTUVW",
+            "VVX.xxx-PQRSTUVW", "VVX.XXX-PQRSTUVW",
+            "x123.xx-PQRSTUVW", "X123.XX-PQRSTUVW",
+            "xxx.xxxx-PQRSTUVW", "XXX.XXXX-PQRSTUVW",
+            "12xx.xxx-PQRSTUVW", "12XX.XXX-PQRSTUVW",
+            "xxxx.xx12-PQRSTUVW", "XXXX.XX12-PQRSTUVW",
+            "99zxx.xxxx-PQRSTUVW", "99ZXX.XXXX-PQRSTUVW",
+            NULL
     };
 
     printf("%d alphabets\n", MAPCODE_ALPHABETS_TOTAL);
 
-    for(j=0;testpairs[j]!=NULL;j+=2)
-    {
+    for (j = 0; testpairs[j] != NULL; j += 2) {
         for (i = 0; i < MAPCODE_ALPHABETS_TOTAL; i++) {
             UWORD enc[64];
             char dec[64];
             // see if alphabets (re)convert as expected
-            str    = testpairs[j];
-            expect = testpairs[j+1];
+            str = testpairs[j];
+            expect = testpairs[j + 1];
             convertToAlphabet(enc, 64, str, i);
             convertToRoman(dec, 60, enc);
             nrTests++;
             if (strcmp(dec, expect)) {
                 nrErrors++;
-                printf("convertToRoman(convertToAlphabet(\"%s\",%d))=\"%s\"\n", str, i, dec);
+                printf("*** ERROR *** convertToRoman(convertToAlphabet(\"%s\",%d))=\"%s\", expect=\"%s\"\n", str, i,
+                       dec, expect);
             }
         }
     }
@@ -249,8 +251,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
             if (err) {
                 nrErrors++;
                 printf("*** ERROR *** decode('%s') = no result, expected ~(%0.8f , %0.8f)\n", strResult, y, x);
-            }
-            else {
+            } else {
                 double dm = distanceInMeters(y, x, lat, lon);
                 double maxerror = maxErrorInMeters(precision);
                 // check if decode is sufficiently close to the encoded coordinate
@@ -260,8 +261,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
                     printf("*** ERROR *** decode('%s') = (%0.8f , %0.8f), which is %0.4f cm way (>%0.4f cm) from (%0.8f , %0.8f)\n",
                            strResult, lat, lon,
                            dm * 100.0, maxerror * 100.0, y, x);
-                }
-                else {
+                } else {
                     Mapcodes mapcodesTerritory;
                     Mapcodes mapcodesParent;
                     int tc2 = -1;
@@ -684,8 +684,7 @@ int main(const int argc, const char **argv) {
     printf("Done.\nExecuted %d tests, found %d errors (and %d warnings)\n", nrTests, nrErrors, nrWarnings);
     if ((nrWarnings > 0) || (nrErrors > 0)) {
         printf("UNIT TESTS FAILED!\n");
-    }
-    else {
+    } else {
         printf("Unit tests passed\n");
     }
     return ((nrErrors + nrWarnings) == 0) ? 0 : -1;

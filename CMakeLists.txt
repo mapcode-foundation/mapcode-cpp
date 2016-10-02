@@ -11,9 +11,19 @@ set(SOURCE_FILES
     mapcodelib/mapcode_fastalpha.h
     mapcodelib/mapcoder.c
     mapcodelib/mapcoder.h
-    unitttest/decode_test.h
-    unitttest/test_territories.c
-    unitttest/unittest.c
+    unittest/decode_test.h
+    unittest/test_territories.c
+    unittest/unittest.c
     utility/mapcode.cpp)
 
-add_executable(mapcode_cpp ${SOURCE_FILES})
+set(SOURCE_FILES_UNITTEST
+        unittest/unittest.c)
+
+set(SOURCE_FILES_UTILITY
+        utility/mapcode.cpp)
+
+add_executable(fullset ${SOURCE_FILES})
+
+add_executable(unittest ${SOURCE_FILES_UNITTEST})
+
+add_executable(mapcode ${SOURCE_FILES_UTILITY})

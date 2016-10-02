@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-#define mapcode_cversion "2.2.2"
+#define mapcode_cversion "2.3.0"
 
 #define UWORD                               unsigned short int  // 2-byte unsigned integer.
 
@@ -183,7 +183,7 @@ int getTerritoryCode(
  * Convert a territory name to a territory code.
  *
  * Arguments:
- *      result          - String to store result
+ *      result          - String to store result.
  *      territoryCode   - Territory code.
  *      format          - Pass 0 for full name, 1 for short name (state codes may be ambiguous).
  *
@@ -250,7 +250,7 @@ double maxErrorInMeters(int extraDigits);
  * Arguments:
  *      lat             - Latitude, in degrees. Range: -90..90.
  *      lon             - Longitude, in degrees. Range: -180..180.
- *      territoryCode   - Territory code (obtained from getTerritoryCode)
+ *      territoryCode   - Territory code (obtained from getTerritoryCode).
  *
  * returns nonzero if coordinate is near more than one territory border
  *
@@ -266,7 +266,7 @@ int multipleBordersNearby(
 /**
  * Alphabets:
  */
-#define MAPCODE_ALPHABETS_TOTAL        14
+#define MAPCODE_ALPHABETS_TOTAL        15
 
 #define MAPCODE_ALPHABET_ROMAN         0
 #define MAPCODE_ALPHABET_GREEK         1
@@ -282,6 +282,7 @@ int multipleBordersNearby(
 #define MAPCODE_ALPHABET_BENGALI       11
 #define MAPCODE_ALPHABET_GURMUKHI      12
 #define MAPCODE_ALPHABET_TIBETAN       13
+#define MAPCODE_ALPHABET_ARABIC        14
 
 
 /**
@@ -293,7 +294,7 @@ int multipleBordersNearby(
  *      maxlen   - Size of asciibuf
  *
  * Returns:
- *      pointer to asciibuf, which holds the result
+ *      Pointer to asciibuf, which holds the result.
  */
 char *convertToRoman(char *asciibuf, int maxlen, const UWORD *string);
 
@@ -309,10 +310,9 @@ const char *decodeToRoman(const UWORD *string);
  *
  * Arguments:
  *      string     - String to encode.
- *      alphabet   - Alphabet to use. Currently supported are:
- *                      0 = roman, 2 = cyrillic, 4 = hindi, 12 = gurmukhi.
- *      unibuf     - Buffer to be filled with the result
- *      maxlen     - Size of unibuf
+ *      alphabet   - Alphabet to use.
+ *      unibuf     - Buffer to be filled with the result.
+ *      maxlen     - Size of unibuf.
  *
  *
  * Returns:
@@ -361,6 +361,7 @@ const UWORD *encodeToAlphabet(const char *string, int alphabet);
 #define MAPCODE_LANGUAGE_BENGALI       MAPCODE_ALPHABET_BENGALI
 #define MAPCODE_LANGUAGE_GURMUKHI      MAPCODE_ALPHABET_GURMUKHI
 #define MAPCODE_LANGUAGE_TIBETAN       MAPCODE_ALPHABET_TIBETAN
+#define MAPCODE_LANGUAGE_ARABIC        MAPCODE_ALPHABET_ARABIC
 
 #ifdef __cplusplus
 }

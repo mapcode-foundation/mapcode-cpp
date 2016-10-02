@@ -37,6 +37,7 @@ static void alphabet_tests() {
     int i, j;
     const char *str, *expect;
     static const char *testpairs[] = {
+            "00.E0", "00.E0",
             ".123", ".123",
             "", "",
             "-", "-",
@@ -53,6 +54,7 @@ static void alphabet_tests() {
             "OMN 112.3EU", "OMN 112.3EU",
             "49.4V", "49.4V",
             "NLD 49.4V-xx123", "NLD 49.4V-XX123",
+            "A12.345", "112.3AU",
             "xx.xx", "XX.XX",
             "xx.xxx", "XX.XXX",
             "xxx.xx", "XXX.XX",
@@ -77,22 +79,22 @@ static void alphabet_tests() {
             "xx.xxx-pq", "XX.XXX-PQ",
             "xxx.xx-123", "XXX.XX-123",
             "xx.xxxx-pqRS", "XX.XXXX-PQRS",
-            "xxx.xxx-PQRSTUVW", "XXX.XXX-PQRSTUVW",
-            "xxxx.xx-pqrstuvw", "XXXX.XX-PQRSTUVW",
-            "xxx.xxxx-PQrsTU", "XXX.XXXX-PQRSTU",
+            "xxx.xxx-PQRSTZVW", "XXX.XXX-PQRSTZVW",
+            "xxxx.xx-pqrstZvw", "XXXX.XX-PQRSTZVW",
+            "xxx.xxxx-PQrsTZ", "XXX.XXXX-PQRSTZ",
             "xxxx.xxx-09876543", "XXXX.XXX-09876543",
-            "xxxx.xxxx-PQRSTUVW", "XXXX.XXXX-PQRSTUVW",
-            "xxxxx.xxxx-PQRSTUVW", "XXXXX.XXXX-PQRSTUVW",
-            "pq.rs-PQRSTUVW", "PQ.RS-PQRSTUVW",
-            "bc.123-PQRSTUVW", "BC.123-PQRSTUVW",
-            "123.xy-PQRSTUVW", "123.XY-PQRSTUVW",
-            "12.34E0-PQRSTUVW", "12.34E0-PQRSTUVW",
-            "VVX.xxx-PQRSTUVW", "VVX.XXX-PQRSTUVW",
-            "x123.xx-PQRSTUVW", "X123.XX-PQRSTUVW",
-            "xxx.xxxx-PQRSTUVW", "XXX.XXXX-PQRSTUVW",
-            "12xx.xxx-PQRSTUVW", "12XX.XXX-PQRSTUVW",
-            "xxxx.xx12-PQRSTUVW", "XXXX.XX12-PQRSTUVW",
-            "99zxx.xxxx-PQRSTUVW", "99ZXX.XXXX-PQRSTUVW",
+            "xxxx.xxxx-PQRSTZVW", "XXXX.XXXX-PQRSTZVW",
+            "xxxxx.xxxx-PQRSTZVW", "XXXXX.XXXX-PQRSTZVW",
+            "pq.rs-PQRSTZVW", "PQ.RS-PQRSTZVW",
+            "bc.123-PQRSTZVW", "BC.123-PQRSTZVW",
+            "123.xy-PQRSTZVW", "123.XY-PQRSTZVW",
+            "12.34E0-PQRSTZVW", "12.34E0-PQRSTZVW",
+            "VVX.xxx-PQRSTZVW", "VVX.XXX-PQRSTZVW",
+            "x123.xx-PQRSTZVW", "X123.XX-PQRSTZVW",
+            "xxx.xxxx-PQRSTZVW", "XXX.XXXX-PQRSTZVW",
+            "12xx.xxx-PQRSTZVW", "12XX.XXX-PQRSTZVW",
+            "xxxx.xx12-PQRSTZVW", "XXXX.XX12-PQRSTZVW",
+            "99zxx.xxxx-PQRSTZVW", "99ZXX.XXXX-PQRSTZVW",
             NULL
     };
 
@@ -110,8 +112,7 @@ static void alphabet_tests() {
             nrTests++;
             if (strcmp(dec, expect)) {
                 nrErrors++;
-                printf("*** ERROR *** convertToRoman(convertToAlphabet(\"%s\",%d))=\"%s\", expect=\"%s\"\n", str, i,
-                       dec, expect);
+                printf("convertToRoman(convertToAlphabet(\"%s\",%d))=\"%s\"\n", str, i, dec);
             }
         }
     }

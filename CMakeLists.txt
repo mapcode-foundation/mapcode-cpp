@@ -22,7 +22,7 @@ set(SOURCE_FILES_UNITTEST
 set(SOURCE_FILES_UTILITY
         utility/mapcode.cpp)
 
-add_executable(all ${SOURCE_FILES})
+add_executable(fullset ${SOURCE_FILES})
 
 add_executable(unittest ${SOURCE_FILES_UNITTEST})
 

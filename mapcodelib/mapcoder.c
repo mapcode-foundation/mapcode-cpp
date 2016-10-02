@@ -1748,6 +1748,7 @@ static int decoderEngine(decodeRec *dec) {
 // WARNING - these alphabets have NOT yet been released as standard! use at your own risk! check www.mapcode.com for details.
 static UWORD asc2lan[MAPCODE_ALPHABETS_TOTAL][36] = // A-Z equivalents for ascii characters A to Z, 0-9
         {
+                // Character:   A       B       C       D       E       F       G       H       I       J       K       L       M       N       O       P       Q       R       S       T       U       V       W       X       Y       Z       0       1       2       3       4       5       6       7       8       9
                 {0x0041, 0x0042, 0x0043, 0x0044, 0x0045, 0x0046, 0x0047, 0x0048, 0x0049, 0x004a, 0x004b, 0x004c, 0x004d, 0x004e, 0x004f, 0x0050, 0x0051, 0x0052, 0x0053, 0x0054, 0x0055, 0x0056, 0x0057, 0x0058, 0x0059, 0x005a, 0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0x0037, 0x0038, 0x0039}, // roman
                 {0x0391, 0x0392, 0x039e, 0x0394, 0x0388, 0x0395, 0x0393, 0x0397, 0x0399, 0x03a0, 0x039a, 0x039b, 0x039c, 0x039d, 0x039f, 0x03a1, 0x0398, 0x03a8, 0x03a3, 0x03a4, 0x0389, 0x03a6, 0x03a9, 0x03a7, 0x03a5, 0x0396, 0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0x0037, 0x0038, 0x0039}, // greek
                 {0x0410, 0x0412, 0x0421, 0x0414, 0x0415, 0x0416, 0x0413, 0x041d, 0x0418, 0x041f, 0x041a, 0x041b, 0x041c, 0x0417, 0x041e, 0x0420, 0x0424, 0x042f, 0x0426, 0x0422, 0x042d, 0x0427, 0x0428, 0x0425, 0x0423, 0x0411, 0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0x0037, 0x0038, 0x0039}, // cyrillic
@@ -1907,13 +1908,33 @@ UWORD *convertToAlphabet(UWORD *unibuf, int maxlength, const char *mapcode, int 
                         *unibuf = 0;
                         return startbuf;
                     }
-                    *unibuf++ = *mapcode++;
+                    *unibuf++ = (UWORD) *mapcode++;
                 }
             }
         }
 
-        if (alphabet == 1 || alphabet == 3 || alphabet == 14) {
+        if (alphabet == 1 || alphabet == 3 || alphabet == 14) { // greek hebrew arabic
             mapcode = convertToAbjad(u, mapcode, USIZE);
+        }
+
+        // re-pack E/U-voweled mapcodes when necessary:
+        if (alphabet == 1) { // alphabet has no letter E (greek!)
+            if (strchr(mapcode, 'E') || strchr(mapcode, 'U') ||
+                strchr(mapcode, 'e') || strchr(mapcode, 'u')) {
+                // copy trimmed mapcode into temporary buffer u
+                int len = (int) strlen(mapcode);
+                if (len < MAX_MAPCODE_RESULT_LEN) {
+                    while (len > 0 && mapcode[len - 1] > 0 && mapcode[len - 1] <= 32) {
+                        len--;
+                    }
+                    memcpy(u, mapcode, len);
+                    u[len] = 0;
+                    // re-pack into A-voweled mapcode
+                    unpack_if_alldigits(u);
+                    repack_if_alldigits(u, 1);
+                    mapcode = u;
+                }
+            }
         }
 
         encode_utf16(unibuf, 1 + (int) (lastspot - unibuf), mapcode, alphabet);
@@ -2134,7 +2155,7 @@ static int cmp_alphacode(const void *e1, const void *e2) {
 
 static int binfindmatch(const int parentcode, const char *str) {
     // build a 4-letter uppercase search term
-    char tmp[5];
+    char alphaCode[5];
     const char *r = str;
     int len = 0;
 
@@ -2142,21 +2163,19 @@ static int binfindmatch(const int parentcode, const char *str) {
         return -1;
     }
     if (parentcode > 0) {
-        tmp[len++] = (char) ('0' + parentcode);
+        alphaCode[len++] = (char) ('0' + parentcode);
     }
     while ((len < 4) && (*r > 32)) {
-        tmp[len++] = *r++;
+        alphaCode[len++] = *r++;
     }
     if (*r > 32) {
         return -1;
     }
-    tmp[len] = 0;
-    makeupper(tmp);
+    alphaCode[len] = 0;
+    makeupper(alphaCode);
     { // binary-search the result
         const alphaRec *p;
-        alphaRec t;
-        t.alphaCode = tmp;
-        t.ccode = parentcode;
+        alphaRec t = {alphaCode, parentcode};
 
         p = (const alphaRec *) bsearch(&t, alphaSearch, NRTERREC, sizeof(alphaRec), cmp_alphacode);
         if (p) {
@@ -2605,7 +2624,7 @@ static void convertFromAbjad(char *s) {
     }
     repack_if_alldigits(s, 0);
     if (postfix) {
-        int len = (int) strlen(s);
+        len = (int) strlen(s);
         *postfix = '-';
         memmove(s + len, postfix, strlen(postfix) + 1);
     }

@@ -95,12 +95,12 @@ static void alphabet_tests() {
             "12xx.xxx-PQRSTZVW", "12XX.XXX-PQRSTZVW",
             "xxxx.xx12-PQRSTZVW", "XXXX.XX12-PQRSTZVW",
             "99zxx.xxxx-PQRSTZVW", "99ZXX.XXXX-PQRSTZVW",
-            NULL
+            0
     };
 
     printf("%d alphabets\n", MAPCODE_ALPHABETS_TOTAL);
 
-    for (j = 0; testpairs[j] != NULL; j += 2) {
+    for (j = 0; testpairs[j] != 0; j += 2) {
         for (i = 0; i < MAPCODE_ALPHABETS_TOTAL; i++) {
             UWORD enc[64];
             char dec[64];
@@ -162,7 +162,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
             // copy and recognise territory
             memcpy(territory, s, len);
             territory[len] = 0;
-            tc = convertTerritoryIsoNameToCode(territory, 0);
+            tc = getTerritoryCode(territory, 0);
             // make s skip to start of proper mapcode
             s = p;
             while (*s > 0 && *s <= 32) {
@@ -171,7 +171,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
         } else {
             // assume s is the start of the proper mapcode
             *territory = 0;
-            tc = convertTerritoryIsoNameToCode("AAA", 0);
+            tc = getTerritoryCode("AAA", 0);
         }
 
         // build normalised version of source string in "clean"
@@ -272,7 +272,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
                     found = 0;
                     if (e) {
                         *e = 0;
-                        tc2 = convertTerritoryIsoNameToCode(strResult, 0);
+                        tc2 = getTerritoryCode(strResult, 0);
                         tcParent = getParentCountryOf(tc2);
                         *e = ' ';
                     }
@@ -382,10 +382,10 @@ static void test_failing_decodes() {
             "NLD ZZZ.ZZZ",   // grid out of range
             "NLD SHH.HHH",   // grid out of encompassing
             "NLD L222.222",  // grid out of range (restricted)
-            NULL
+            0
     };
     int i;
-    for (i = 0; badcodes[i] != NULL; i++) {
+    for (i = 0; badcodes[i] != 0; i++) {
         double lat, lon;
         const char *str = badcodes[i];
         int err;
@@ -403,7 +403,7 @@ static void test_failing_decodes() {
 // perform testEncodeAndDecode for all elements of encode_test[] (from decode_test.h)
 void encode_decode_tests() {
     int i, nr = 0;
-    for (i = 0; encode_test[i].mapcode != NULL; i++) {
+    for (i = 0; encode_test[i].mapcode != 0; i++) {
         nr++;
     }
     printf("%d encodes\n", nr);
@@ -425,20 +425,20 @@ void test_territory(const char *alphaCode, int tc, int isAlias, int needsParent,
         int tn;
         strcpy(alphacode, alphaCode);
         if (!needsParent && (i == 0)) {
-            tn = convertTerritoryIsoNameToCode(alphacode, 0);
+            tn = getTerritoryCode(alphacode, 0);
             nrTests++;
             if (tn != tc) {
                 nrErrors++;
-                printf("*** ERROR *** convertTerritoryIsoNameToCode('%s')=%d but expected %d (%s)\n",
+                printf("*** ERROR *** getTerritoryCode('%s')=%d but expected %d (%s)\n",
                        alphacode, tn, tc, convertTerritoryCodeToIsoName(tc, 0));
             }
         }
         alphacode[i] = (char) tolower(alphacode[i]);
-        tn = convertTerritoryIsoNameToCode(alphacode, tcParent);
+        tn = getTerritoryCode(alphacode, tcParent);
         nrTests++;
         if (tn != tc) {
             nrErrors++;
-            printf("*** ERROR *** convertTerritoryIsoNameToCode('%s',%s)=%d but expected %d\n", alphacode,
+            printf("*** ERROR *** getTerritoryCode('%s',%s)=%d but expected %d\n", alphacode,
                    tcParent ? convertTerritoryCodeToIsoName(tcParent, 0) : "", tn, tc);
         }
     }
@@ -595,11 +595,11 @@ void test_territory_insides() {
                 {"MEX",    21.431778909671, -89.779828861356, 1},
                 {"MEX",    21.431788272457, -89.779820144176, 1},
 
-                {NULL}
+                {0}
         };
 
-        for (i = 0; iTestData[i].territory != NULL; i++) {
-            int territory = convertTerritoryIsoNameToCode(iTestData[i].territory, 0);
+        for (i = 0; iTestData[i].territory != 0; i++) {
+            int territory = getTerritoryCode(iTestData[i].territory, 0);
             nrTests++;
             if (multipleBordersNearby(iTestData[i].lat, iTestData[i].lon, territory) != iTestData[i].nearborders) {
                 nrErrors++;
@@ -640,10 +640,10 @@ void territory_code_tests() {
             {483, 431, "AL"}, // 431=ru-tam
             {365, 411, "AL"}, // 411=usa
             {365, 392, "AL"}, // 392=us-ca
-            {0,   0, NULL}
+            {0,   0,   0}
     };
 
-    for (i = 0; tcTestData[i].inputstring != NULL; i++) {
+    for (i = 0; tcTestData[i].inputstring != 0; i++) {
         int tc = getTerritoryCode(tcTestData[i].inputstring, tcTestData[i].context);
         nrTests++;
         if (tc != tcTestData[i].expectedresult) {
@@ -656,9 +656,249 @@ void territory_code_tests() {
 }
 
 
+void check_incorrect_get_territory_code_test(char *tcAlpha) {
+    int tc = getTerritoryCode(tcAlpha, 0);
+    if (tc >= 0) {
+        nrErrors++;
+        printf("*** ERROR *** getTerritoryCode returns '%d' (should be < 0) for territory code '%s'\n", tc, tcAlpha);
+    }
+}
+
+
+void get_territory_robustness_tests() {
+    int i;
+    char s1[1];
+    char s10k[10000];
+
+    check_incorrect_get_territory_code_test("UNKNOWN");
+    check_incorrect_get_territory_code_test("A");
+    check_incorrect_get_territory_code_test(" A");
+    check_incorrect_get_territory_code_test("A ");
+    check_incorrect_get_territory_code_test(" A ");
+    check_incorrect_get_territory_code_test("AA");
+    check_incorrect_get_territory_code_test(" AA");
+    check_incorrect_get_territory_code_test("AA ");
+    check_incorrect_get_territory_code_test(" AA ");
+    check_incorrect_get_territory_code_test("US-");
+    check_incorrect_get_territory_code_test(" US-");
+    check_incorrect_get_territory_code_test("US- ");
+    check_incorrect_get_territory_code_test(" US- ");
+    check_incorrect_get_territory_code_test(" ");
+
+    s1[0] = 0;
+    check_incorrect_get_territory_code_test(s1);
+
+    for (i = 0; i < sizeof(s10k); ++i) {
+        s10k[i] = (char) ((i % 223) + 32);
+    }
+    check_incorrect_get_territory_code_test(s10k);
+}
+
+
+void check_incorrect_encode_test(double lat, double lon) {
+    Mapcodes mapcodes;
+    int nrResults = encodeLatLonToMapcodes(&mapcodes, lat, lon, 0, 0);
+    if (nrResults > 0) {
+        nrErrors++;
+        printf("*** ERROR *** encodeLatLonToMapcodes returns '%d' (should be <= 0) for lat=%f, lon=%f\n", nrResults,
+               lat, lon);
+    }
+}
+
+
+void check_correct_encode_test(double lat, double lon) {
+    Mapcodes mapcodes;
+    int nrResults = encodeLatLonToMapcodes(&mapcodes, lat, lon, 0, 0);
+    if (nrResults <= 0) {
+        nrErrors++;
+        printf("*** ERROR *** encodeLatLonToMapcodes returns '%d' (should be > 0) for lat=%f, lon=%f\n", nrResults, lat,
+               lon);
+    }
+}
+
+
+void encode_robustness_tests() {
+    double d;
+    unsigned char *b = (unsigned char *) &d;
+
+    check_correct_encode_test(-90.0, 0.0);
+    check_correct_encode_test(90.0, 0.0);
+    check_correct_encode_test(-91.0, 0.0);
+    check_correct_encode_test(91.0, 0.0);
+
+    check_correct_encode_test(0.0, -180.0);
+    check_correct_encode_test(0.0, 180.0);
+    check_correct_encode_test(1.0, -181.0);
+    check_correct_encode_test(0.0, 181.0);
+
+    // NAN - See: https://en.wikipedia.org/wiki/Double-precision_floating-point_format
+    b[7] = 0x7f;
+    b[6] = 0xff;
+    b[5] = 0xff;
+    b[4] = 0xff;
+    b[3] = 0xff;
+    b[2] = 0xff;
+    b[1] = 0xff;
+    b[0] = 0xff;
+    check_incorrect_encode_test(0.0, d);
+    check_incorrect_encode_test(d, 0.0);
+    check_incorrect_encode_test(d, d);
+
+    // Infinity.
+    b[7] = 0x7f;
+    b[6] = 0xf0;
+    b[5] = 0x00;
+    b[4] = 0x00;
+    b[3] = 0x00;
+    b[2] = 0x00;
+    b[1] = 0x00;
+    b[0] = 0x00;
+    check_correct_encode_test(d, 0.0);      // Lat may be Inf.
+    check_incorrect_encode_test(0.0, d);
+    check_incorrect_encode_test(d, d);
+
+    // -Infinity.
+    b[7] = 0xff;
+    b[6] = 0xf0;
+    b[5] = 0x00;
+    b[4] = 0x00;
+    b[3] = 0x00;
+    b[2] = 0x00;
+    b[1] = 0x00;
+    b[0] = 0x00;
+    check_correct_encode_test(d, 0.0);      // Lat may be -Inf.
+    check_incorrect_encode_test(0.0, d);
+    check_incorrect_encode_test(d, d);
+
+    // Max double
+    b[7] = 0x7f;
+    b[6] = 0xef;
+    b[5] = 0xff;
+    b[4] = 0xff;
+    b[3] = 0xff;
+    b[2] = 0xff;
+    b[1] = 0xff;
+    b[0] = 0xff;
+    check_correct_encode_test(d, 0.0);
+    check_correct_encode_test(0.0, d);
+    check_correct_encode_test(d, d);
+
+    d = -d;
+    check_correct_encode_test(d, 0.0);
+    check_correct_encode_test(0.0, d);
+    check_correct_encode_test(d, d);
+}
+
+
+void check_incorrect_decode_test(char *mc, int tc) {
+    double lat;
+    double lon;
+    int rc = decodeMapcodeToLatLon(&lat, &lon, mc, tc);
+    if (rc >= 0) {
+        nrErrors++;
+        printf("*** ERROR *** decodeMapcodeToLatLon returns '%d' (should be non-0) for mapcode='%s'\n", rc, mc);
+    }
+}
+
+
+void check_correct_decode_test(char *mc, int tc) {
+    double lat;
+    double lon;
+    int rc = decodeMapcodeToLatLon(&lat, &lon, mc, tc);
+    if (rc < 0) {
+        nrErrors++;
+        printf("*** ERROR *** decodeMapcodeToLatLon returns '%d' (should be 0) for mapcode='%s'\n", rc, mc);
+    }
+}
+
+
+void decode_robustness_tests() {
+    int i;
+    char s1[1];
+    char s10k[10000];
+
+    int tc = getTerritoryCode("NLD", 0);
+    check_incorrect_decode_test("", 0);
+    check_incorrect_decode_test(" ", 0);
+    check_incorrect_decode_test("AA", 0);
+    check_incorrect_decode_test("", tc);
+    check_incorrect_decode_test(" ", tc);
+    check_incorrect_decode_test("AA", tc);
+    check_incorrect_decode_test("XX.XX", 0);
+    check_correct_decode_test("NLD XX.XX", tc);
+    check_correct_decode_test("NLD XX.XX", 0);
+
+    s1[0] = 0;
+    check_incorrect_decode_test(s1, 0);
+    check_incorrect_decode_test(s1, tc);
+
+    for (i = 0; i < sizeof(s10k); ++i) {
+        s10k[i] = (char) ((i % 223) + 32);
+    }
+    check_incorrect_decode_test(s1, 0);
+    check_incorrect_decode_test(s1, tc);
+}
+
+
+void check_alphabet_assertion(char *msg, int condition, char* format, int a) {
+    if (condition == 0) {
+        nrErrors++;
+        printf("*** ERROR *** %s, ", msg);
+        printf(format, a);
+        printf("\n");
+    }
+}
+
+
+void alphabet_robustness_tests() {
+    int i;
+    int a;
+    char s1[1];
+    char s10k[10000];
+    char *ps;
+    UWORD u1[1];
+    UWORD u10k[10000];
+    UWORD *pu;
+
+    s1[0] = 0;
+    for (i = 0; i < sizeof(s10k); ++i) {
+        s10k[i] = (char) ((i % 223) + 32);
+    }
+
+    for (a = 0; a < MAPCODE_ALPHABETS_TOTAL; a++) {
+
+        pu = convertToAlphabet(u1, sizeof(u1), "", a);
+        check_alphabet_assertion("convertToAlphabet cannot return 0", pu != 0, "alphabet=%d", a);
+        check_alphabet_assertion("convertToAlphabet must return empty string", pu[0] == 0, "alphabet=%d", a);
+
+        ps = convertToRoman(s1, sizeof(s1), u1);
+        check_alphabet_assertion("convertToRoman cannot return 0", ps != 0, "alphabet=%d", a);
+        check_alphabet_assertion("convertToRoman must return empty string", ps[0] == 0, "alphabet=%d", a);
+
+        pu = convertToAlphabet(u10k, sizeof(u10k), s10k, 0);
+        check_alphabet_assertion("convertToAlphabet cannot return 0", pu != 0, "alphabet=%d", a);
+
+        ps = convertToRoman(s10k, sizeof(s10k), pu);
+        check_alphabet_assertion("convertToRoman cannot return 0", ps != 0, "alphabet=%d", a);
+        check_alphabet_assertion("convertToRoman must return size", strlen(ps) < sizeof(s10k), "alphabet=%d", a);
+    }
+}
+
+
+void robustness_tests() {
+    get_territory_robustness_tests();
+    encode_robustness_tests();
+    decode_robustness_tests();
+    alphabet_robustness_tests();
+}
+
+
 int main(const int argc, const char **argv) {
     printf("Mapcode C Library Unit Tests\n");
     printf("Library version %s (data version %s)\n", mapcode_cversion, mapcode_dataversion);
+
+    printf("-----------------------------------------------------------\nRobustness tests\n");
+    robustness_tests();
 
     printf("-----------------------------------------------------------\nAlphabet tests\n");
     alphabet_tests();

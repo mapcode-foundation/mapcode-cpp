@@ -2175,7 +2175,9 @@ static int binfindmatch(const int parentcode, const char *str) {
     makeupper(alphaCode);
     { // binary-search the result
         const alphaRec *p;
-        alphaRec t = {alphaCode, parentcode};
+        alphaRec t;
+        t.alphaCode = alphaCode;
+        t.ccode = parentcode;
 
         p = (const alphaRec *) bsearch(&t, alphaSearch, NRTERREC, sizeof(alphaRec), cmp_alphacode);
         if (p) {
@@ -2497,15 +2499,15 @@ static char *convertToAbjad(char *str, const char *source, int maxlen) {
     }
     repack_if_alldigits(str, 0);
     if (rest) {
-        len = (int) strlen(str);
+        int totalLen = (int) strlen(str);
         int needed = (int) strlen(rest);
-        int tocopy = maxlen - len - 1;
+        int tocopy = maxlen - totalLen - 1;
         if (tocopy > needed) {
             tocopy = needed;
         }
         if (tocopy > 0) {
-            memcpy(str + len, rest, tocopy);
-            str[len + tocopy] = 0;
+            memcpy(str + totalLen, rest, tocopy);
+            str[totalLen + tocopy] = 0;
         }
     }
     return str;

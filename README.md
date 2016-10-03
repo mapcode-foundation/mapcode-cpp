@@ -122,12 +122,10 @@ This produces the following help text:
 ### 2.3.0
 
 * Arabic script added. 
-    
-* Greek script extended to be AEU-capable.
 
 * Tibetan script changed so all characters can be easily typed on a computer keyboard.
 
-* Greek, Hebrew and Arab, the languages that have (implied) vowels in mapcode sequences,
+* Greek, Hebrew and Arabic, the scripts that have (implied) vowels in mapcode sequences,
 have been extended with ABJAD conversion, to prevent more than two consecutive non-digits 
 from occurring. (As a result, mapcodes in Greek, Arab and Hebrew scripts are now often 
 one character longer than in the roman script.)

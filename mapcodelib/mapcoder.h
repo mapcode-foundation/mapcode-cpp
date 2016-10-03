@@ -29,9 +29,9 @@ extern "C" {
 #define SUPPORT_HIGH_PRECISION              // Define to enable high-precision extension logic.
 
 #define MAX_NR_OF_MAPCODE_RESULTS           22          // Max. number of results ever returned by encoder (e.g. for 26.904899, 95.138515).
-#define MAX_PROPER_MAPCODE_LEN              10          // Max. number of characters in a proper mapcode (including the dot).
+#define MAX_PROPER_MAPCODE_LEN              11          // Max. number of characters in a proper mapcode (including the dot).
 #define MAX_PRECISION_DIGITS                8           // Max. number of extension characters (excluding the hyphen). Must be even.
-#define MAX_PRECISION_FACTOR                810000      // 30 to the power (MAX_PRECISION_DIGITS/2)
+#define MAX_PRECISION_FACTOR                810000      // 30 to the power (MAX_PRECISION_DIGITS/2).
 #define MAX_ISOCODE_LEN                     7           // Max. number of characters of a valid territory code; although nothing longer than SIX characters is ever generated (RU-KAM), users can input SEVEN characters (RUS-KAM).
 #define MAX_CLEAN_MAPCODE_LEN               (MAX_PROPER_MAPCODE_LEN + 1 + MAX_PRECISION_DIGITS)  // Max. number of characters in a clean mapcode (excluding zero-terminator).
 #define MAX_MAPCODE_RESULT_LEN              (MAX_ISOCODE_LEN + 1 + MAX_CLEAN_MAPCODE_LEN + 1)    // Max. number of characters to store a single result (including zero-terminator).
@@ -140,7 +140,7 @@ int encodeLatLonToSingleMapcode(
  *                        Pass 0 if not available.
  *
  * Returns:
- *      0 if encoding succeeded, nonzero in case of error
+ *      0 if encoding succeeded, nonzero in case of error.
  */
 int decodeMapcodeToLatLon(
         double *lat,
@@ -289,42 +289,44 @@ int multipleBordersNearby(
  * Decode a string to Roman characters.
  *
  * Arguments:
- *      string   - String to decode.
+ *      string   - String to decode, allocated by caller.
  *      asciibuf - Buffer to be filled with the result
  *      maxlen   - Size of asciibuf
  *
  * Returns:
- *      Pointer to asciibuf, which holds the result.
+ *      Pointer to same buffers as asciibuf (allocated by caller), which holds the result.
  */
 char *convertToRoman(char *asciibuf, int maxlen, const UWORD *string);
-
-/**
- * old variant, not thread-safe: uses a pre-allocated static buffer, overwritten by the next call
- *      Returns converted string. allocated by the library. String must NOT be
- *      de-allocated by the caller. It will be overwritten by a subsequent call to this method!
- */
-const char *decodeToRoman(const UWORD *string);
 
 /**
  * Encode a string to Alphabet characters for a language.
  *
  * Arguments:
- *      string     - String to encode.
+ *      string     - String to encode, allocated by caller.
  *      alphabet   - Alphabet to use.
  *      unibuf     - Buffer to be filled with the result.
  *      maxlen     - Size of unibuf.
  *
- *
  * Returns:
- *      Encoded string. The string is allocated by the library and must NOT be
- *      de-allocated by the caller. It will be overwritten by a subsequent call to this method!
+ *      Encoded string, points at buffer from 'unibuf', allocated by caller.
  */
 UWORD *convertToAlphabet(UWORD *unibuf, int maxlength, const char *string, int alphabet);
 
+
+/* DEPRECATED METHODS AND CONSTANT - WILL BE DROPPED IN FUTURE RELEASES. */
+
 /**
- * old variant, not thread-safe: uses a pre-allocated static buffer, overwritten by the next call
- *      Returns converted string. allocated by the library. String must NOT be
- *      de-allocated by the caller. It will be overwritten by a subsequent call to this method!
+ * DEPRECATED ODL VARIANT, NOT THREAD-SAFE:
+ * Uses a pre-allocated static buffer, overwritten by the next call
+ * Returns converted string. allocated by the library. String must NOT be
+ * de-allocated by the caller. It will be overwritten by a subsequent call to this method!
+ */
+const char *decodeToRoman(const UWORD *string);
+
+/**
+ * DEPRECATED ODL VARIANT, NOT THREAD-SAFE:
+ * Returns converted string. allocated by the library. String must NOT be
+ * de-allocated by the caller. It will be overwritten by a subsequent call to this method!
  */
 const UWORD *encodeToAlphabet(const char *string, int alphabet);
 

@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */ 
-// *** GENERATED FILE, DO NOT CHANGE OR PRETTIFY ***
+#ifndef __MAPCODE_COUNTRYNAMES_H__
+#define __MAPCODE_COUNTRYNAMES_H__
 
-// TODO: Missing multiple header inclusion prevention: #ifndef __FILE_H__ #define __FILE_H__ etc.
-
+// *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
 const char *isofullname[] = {
 "Vatican City State (Holy See)",
 "Monaco",
@@ -553,3 +553,4 @@ const char *isofullname[] = {
 "International (Worldwide) (Earth)",
 "?"};
 
+#endif

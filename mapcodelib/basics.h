@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */ 
+#ifndef __BASICS_H__
+#define __BASICS_H__
 
-// *** GENERATED FILE, DO NOT CHANGE OR PRETTIFY ***
 
-// TODO: Missing multiple header inclusion prevention: #ifndef __FILE_H__ #define __FILE_H__ etc.
+// *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
 
-#define mapcode_dataversion "2.2" // coords 2.0.2
+#define mapcode_dataversion "2.3.0" // coords 2.0.2
 
 static const char *ALIASES =
   "2UK=2UT,2CG=2CT,1GU=GUM,1UM=UMI,1VI=VIR,1AS=ASM,1MP=MNP,4CX=CXR,4CC=CCK,4NF=NFK,4HM=HMD,COL=5CL,"
@@ -16449,7 +16450,7 @@ static const mminforec mminfo[NR_RECS+1] = {
   {  99663928, 37426995, 103030311, 40108185, 0x001000d},
   {  96267754, 38767590,  99663928, 41448780, 0x0010015},
   {  89350000, 31535000, 108740000, 42800000, 0x3060016},
-  {  92750000, 32560000, 108740000, 42800000, 0x0020217},
+  {  92290000, 32560000, 108740000, 42800000, 0x0020217},
   { 101693766, 36588138, 101816182, 36666629, 0x01b000a}, // 8QH
   { 101463360, 36352880, 102041448, 36843920, 0x001000c},
   { 102040000, 36411010, 102338819, 36535000, 0x782044b},
@@ -16592,4 +16593,6 @@ static const mminforec mminfo[NR_RECS+1] = {
   {-180000000,-90000000, 180000000, 90000001, 0x000001d},
 };
 #endif // MAKE_SOURCE_DIGITAL
+
+#endif // __BASICS_H__
 

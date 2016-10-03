@@ -119,6 +119,14 @@ This produces the following help text:
 
 # Release Notes
 
+### 2.3.1
+
+* Minor fixes to prevent compiler warnings.
+
+* Minor fixes to prevent multiple inclusion of `.h` files.
+
+* Minor data fix for Gansu Province, China (mountain range extending further west).
+
 ### 2.3.0
 
 * Arabic script added. 

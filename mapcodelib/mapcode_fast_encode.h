@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-// *** GENERATED FILE, DO NOT CHANGE OR PRETTIFY ***
+#ifndef __MAPCODE_FAST_ENCODE_H__
+#define __MAPCODE_FAST_ENCODE_H__
 
-// TODO: Missing multiple header inclusion prevention: #ifndef __FILE_H__ #define __FILE_H__ etc.
+// *** GENERATED FILE (dividemaps.cpp), DO NOT CHANGE OR PRETTIFY ***
 
-static int redivar[2924] = {
+#define REDIVAR_SIZE 2924
+static int redivar[REDIVAR_SIZE] = {
         27984500, 1383,
         2537718, 676,
         12842450, 332,
@@ -717,3 +719,4 @@ static int redivar[2924] = {
         7, 468, 469, 476, 478, 485, 494, 496,
         8, 393, 410, 486, 487, 488, 492, 494, 496,
         0}; // 2924 records, data version 2.2
+#endif // __MAPCODE_FAST_ENCODE_H__

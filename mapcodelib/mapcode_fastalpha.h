@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-// TODO: Missing multiple header inclusion prevention: #ifndef __FILE_H__ #define __FILE_H__ etc.
-
+#ifndef __MAPCODE_FASTALPHA_H__
+#define __MAPCODE_FASTALPHA_H__
 // *** GENERATED FILE, DO NOT CHANGE OR PRETTIFY ***
 
 static const char parentletter[MAX_CCODE + 1] =
@@ -985,4 +985,5 @@ static const alphaRec alphaSearch[NRTERREC] = {
         {"ZWE",  185}
 };
 
-// produced by fast_territories.cpp
+// produced by dividemaps.cpp : fast_territories.cpp
+#endif // __MAPCODE_FASTALPHA_H__

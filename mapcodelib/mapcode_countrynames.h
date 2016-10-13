@@ -17,7 +17,7 @@
 #define __MAPCODE_COUNTRYNAMES_H__
 
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
-const char *isofullname[] = {
+static const char *isofullname[] = {
 "Vatican City State (Holy See)",
 "Monaco (Principality of _)",
 "Gibraltar",

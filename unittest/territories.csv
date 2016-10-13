@@ -1,5 +1,5 @@
 ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separated)
-0,VAT,0,Vatican|Holy See
+0,VAT,0,Vatican City State|Holy See
 1,MCO,0,Monaco
 2,GIB,0,Gibraltar
 3,TKL,0,Tokelau
@@ -11,7 +11,7 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 9,SXM,0,Sint Maarten
 10,MAF,0,Saint Martin
 11,NFK|AU-NF|NF,0,Norfolk and Philip Island|Philip Island
-12,PCN,0,Pitcairn Islands
+12,PCN,0,Pitcairn Group of Islands
 13,BVT,0,Bouvet Island
 14,BMU,0,Bermuda|Somers Isles
 15,IOT|DGA,0,British Indian Ocean Territory

@@ -104,7 +104,7 @@ static void usage(const char *appName) {
     printf("\n");
     printf("    %s [-t | --territories]\n", appName);
     printf("\n");
-    printf("       Create a test set for territories in CSV format\n");
+    printf("       Create a full set of territories in CSV format.\n");
     printf("\n");
     printf("    %s [-b[XYZ] | --boundaries[XYZ]] [<extraDigits>]\n", appName);
     printf("    %s [-g[XYZ] | --grid[XYZ]]   <nrOfPoints> [<extraDigits>]\n", appName);
@@ -212,7 +212,7 @@ static void selfCheckLatLonToMapcode(const double lat, double lon, const char *m
     const int nrResults = encodeLatLonToMapcodes(&mapcodes, limitLat, limitLon, context, extraDigits);
     if (nrResults <= 0) {
         fprintf(stderr, "error: encoding lat/lon to mapcode failure; "
-                        "cannot encode lat=%.20g, lon=%.20g\n", lat, lon);
+                "cannot encode lat=%.20g, lon=%.20g\n", lat, lon);
         if (selfCheckEnabled) {
             exit(INTERNAL_ERROR);
         }
@@ -318,8 +318,7 @@ static void generateAndOutputMapcodes(double lat, double lon, int iShowError, in
         double z;
         convertLatLonToXYZ(lat, lon, &x, &y, &z);
         printf("%d %.20g %.20g %.20g %.20g %.20g\n", nrResults, lat, lon, x, y, z);
-    }
-    else {
+    } else {
         printf("%d %.20g %.20g\n", nrResults, lat, lon);
     }
     for (int j = 0; j < nrResults; ++j) {
@@ -448,17 +447,16 @@ int main(const int argc, const char **argv) {
                 selfCheckLatLonToMapcode(lat, lon, mapcode, extraDigits);
             }
         }
-    }
-    else if ((strcmp(cmd, "-e") == 0) || (strcmp(cmd, "-e0") == 0) ||
-             (strcmp(cmd, "-e1") == 0) || (strcmp(cmd, "-e2") == 0) ||
-             (strcmp(cmd, "-e3") == 0) || (strcmp(cmd, "-e4") == 0) ||
-             (strcmp(cmd, "-e5") == 0) || (strcmp(cmd, "-e6") == 0) ||
-             (strcmp(cmd, "-e7") == 0) || (strcmp(cmd, "-e8") == 0) ||
-             (strcmp(cmd, "--encode") == 0) || (strcmp(cmd, "--encode0") == 0) ||
-             (strcmp(cmd, "--encode1") == 0) || (strcmp(cmd, "--encode2") == 0) ||
-             (strcmp(cmd, "--encode3") == 0) || (strcmp(cmd, "--encode4") == 0) ||
-             (strcmp(cmd, "--encode5") == 0) || (strcmp(cmd, "--encode5") == 0) ||
-             (strcmp(cmd, "--encode7") == 0) || (strcmp(cmd, "--encode8") == 0)) {
+    } else if ((strcmp(cmd, "-e") == 0) || (strcmp(cmd, "-e0") == 0) ||
+               (strcmp(cmd, "-e1") == 0) || (strcmp(cmd, "-e2") == 0) ||
+               (strcmp(cmd, "-e3") == 0) || (strcmp(cmd, "-e4") == 0) ||
+               (strcmp(cmd, "-e5") == 0) || (strcmp(cmd, "-e6") == 0) ||
+               (strcmp(cmd, "-e7") == 0) || (strcmp(cmd, "-e8") == 0) ||
+               (strcmp(cmd, "--encode") == 0) || (strcmp(cmd, "--encode0") == 0) ||
+               (strcmp(cmd, "--encode1") == 0) || (strcmp(cmd, "--encode2") == 0) ||
+               (strcmp(cmd, "--encode3") == 0) || (strcmp(cmd, "--encode4") == 0) ||
+               (strcmp(cmd, "--encode5") == 0) || (strcmp(cmd, "--encode5") == 0) ||
+               (strcmp(cmd, "--encode7") == 0) || (strcmp(cmd, "--encode8") == 0)) {
 
         // ------------------------------------------------------------------
         // Encode: [-e[0-8] | --encode[0-8]] <lat:-90..90> <lon:-180..180> [territory]>
@@ -478,29 +476,21 @@ int main(const int argc, const char **argv) {
 
         if (strstr(cmd, "-e1") || strstr(cmd, "--encode1")) {
             extraDigits = 1;
-        }
-        else if (strstr(cmd, "-e2") || strstr(cmd, "--encode2")) {
+        } else if (strstr(cmd, "-e2") || strstr(cmd, "--encode2")) {
             extraDigits = 2;
-        }
-        else if (strstr(cmd, "-e3") || strstr(cmd, "--encode3")) {
+        } else if (strstr(cmd, "-e3") || strstr(cmd, "--encode3")) {
             extraDigits = 3;
-        }
-        else if (strstr(cmd, "-e4") || strstr(cmd, "--encode4")) {
+        } else if (strstr(cmd, "-e4") || strstr(cmd, "--encode4")) {
             extraDigits = 4;
-        }
-        else if (strstr(cmd, "-e5") || strstr(cmd, "--encode5")) {
+        } else if (strstr(cmd, "-e5") || strstr(cmd, "--encode5")) {
             extraDigits = 5;
-        }
-        else if (strstr(cmd, "-e6") || strstr(cmd, "--encode6")) {
+        } else if (strstr(cmd, "-e6") || strstr(cmd, "--encode6")) {
             extraDigits = 6;
-        }
-        else if (strstr(cmd, "-e7") || strstr(cmd, "--encode7")) {
+        } else if (strstr(cmd, "-e7") || strstr(cmd, "--encode7")) {
             extraDigits = 7;
-        }
-        else if (strstr(cmd, "-e8") || strstr(cmd, "--encode8")) {
+        } else if (strstr(cmd, "-e8") || strstr(cmd, "--encode8")) {
             extraDigits = 8;
-        }
-        else {
+        } else {
             extraDigits = 0;
         }
 
@@ -531,9 +521,8 @@ int main(const int argc, const char **argv) {
                 selfCheckMapcodeToLatLon(foundMapcode, lat, lon);
             }
         }
-    }
-    else if ((strcmp(cmd, "-t") == 0) ||
-             (strcmp(cmd, "--boundaries") == 0)) {
+    } else if ((strcmp(cmd, "-t") == 0) ||
+               (strcmp(cmd, "--boundaries") == 0)) {
 
         // ------------------------------------------------------------------
         // Generate a test set based on the Mapcode territories
@@ -545,67 +534,67 @@ int main(const int argc, const char **argv) {
         }
         printf("ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separated)\n");
         for (int i = 1; i <= MAX_MAPCODE_TERRITORY_CODE; ++i) {
-            int ccode = i-1;
+            int ccode = i - 1;
             char territoryName[MAX_MAPCODE_RESULT_LEN];
-            printf("%d,",ccode);
-            // use internal knowledge of alphaSearch to show aliases of territoryName
-            printf("%s", getTerritoryIsoName(territoryName,i,0));
-            for (int a = 0; a < NRTERREC; a++ ) {
-                if ( alphaSearch[a].ccode == ccode ) {
+            printf("%d,", ccode);
+
+            // Use internal knowledge of alphaSearch to show aliases of territoryName.
+            printf("%s", getTerritoryIsoName(territoryName, i, 0));
+            for (int a = 0; a < NRTERREC; a++) {
+                if (alphaSearch[a].ccode == ccode) {
                     char fullcode[16];
-                    strcpy(fullcode,alphaSearch[a].alphaCode);
-                    if ( fullcode[0]>='0' && fullcode[0]<='9' ) {
+                    strcpy(fullcode, alphaSearch[a].alphaCode);
+                    if (fullcode[0] >= '0' && fullcode[0] <= '9') {
                         int p = (fullcode[0] - '0');
                         memcpy(fullcode, &parents2[p * 3 - 3], 2);
                         fullcode[2] = '-';
-                        strcpy(fullcode+ 3, alphaSearch[a].alphaCode+1);
+                        strcpy(fullcode + 3, alphaSearch[a].alphaCode + 1);
                     }
-                    if (strcmp(fullcode,territoryName)!=0) {
-                        printf("|%s",fullcode);
+                    if (strcmp(fullcode, territoryName) != 0) {
+                        printf("|%s", fullcode);
                     }
                 }
             }
             printf(",");
-            // print alphabets
+
+            // Print alphabets.
             const TerritoryAlphabets *territoryAlphabets = getAlphabetsForTerritory(i);
             for (int j = 0; j < territoryAlphabets->count; j++) {
-                if (j>0) {
+                if (j > 0) {
                     printf("|");
                 }
-                printf("%d",territoryAlphabets->alphabet[j]);
+                printf("%d", territoryAlphabets->alphabet[j]);
             }
             printf(",");
-            // use internal knowledge of isofullname to show aliases of full territory name
+
+            // Use internal knowledge of isofullname to show aliases of full territory name.
             char *names = strdup(isofullname[ccode]);
             char *s = names;
             while (s) {
                 if (s != names) {
                     printf("|");
                 }
-                char *e = strstr(s," (");
+                char *e = strstr(s, " (");
                 if (e) {
                     *e = 0;
-                    if (e[-1]==')') {
-                        e[-1]=0;
+                    if (e[-1] == ')') {
+                        e[-1] = 0;
                     }
-                    printf("%s",s);
+                    printf("%s", s);
                     s = e + 2;
-                }
-                else {
+                } else {
                     e = s + strlen(s);
-                    if (e[-1]==')') {
-                        e[-1]=0;
+                    if (e[-1] == ')') {
+                        e[-1] = 0;
                     }
-                    printf("%s",s);
+                    printf("%s", s);
                     s = NULL;
-                }                                
+                }
             }
-            // end of line
             printf("\n");
         }
-    }
-    else if ((strcmp(cmd, "-b") == 0) || (strcmp(cmd, "-bXYZ") == 0) ||
-             (strcmp(cmd, "--boundaries") == 0) || (strcmp(cmd, "--boundariesXYZ") == 0)) {
+    } else if ((strcmp(cmd, "-b") == 0) || (strcmp(cmd, "-bXYZ") == 0) ||
+               (strcmp(cmd, "--boundaries") == 0) || (strcmp(cmd, "--boundariesXYZ") == 0)) {
 
         // ------------------------------------------------------------------
         // Generate a test set based on the Mapcode boundaries.
@@ -669,11 +658,10 @@ int main(const int argc, const char **argv) {
             }
         }
         outputStatistics();
-    }
-    else if ((strcmp(cmd, "-g") == 0) || (strcmp(cmd, "-gXYZ") == 0) ||
-             (strcmp(cmd, "--grid") == 0) || (strcmp(cmd, "--gridXYZ") == 0) ||
-             (strcmp(cmd, "-r") == 0) || (strcmp(cmd, "-rXYZ") == 0) ||
-             (strcmp(cmd, "--random") == 0) || (strcmp(cmd, "--randomXYZ") == 0)) {
+    } else if ((strcmp(cmd, "-g") == 0) || (strcmp(cmd, "-gXYZ") == 0) ||
+               (strcmp(cmd, "--grid") == 0) || (strcmp(cmd, "--gridXYZ") == 0) ||
+               (strcmp(cmd, "-r") == 0) || (strcmp(cmd, "-rXYZ") == 0) ||
+               (strcmp(cmd, "--random") == 0) || (strcmp(cmd, "--randomXYZ") == 0)) {
 
         // ------------------------------------------------------------------
         // Generate grid test set:    [-g | --grid]   <nrOfPoints> [<extradigits>]
@@ -703,8 +691,7 @@ int main(const int argc, const char **argv) {
             if (argc == 5) {
                 const int seed = atoi(argv[4]);
                 srand((unsigned int) seed);
-            }
-            else {
+            } else {
                 srand((unsigned int) time(0));
             }
         }
@@ -725,15 +712,13 @@ int main(const int argc, const char **argv) {
             if (random) {
                 unit1 = ((double) rand()) / RAND_MAX;
                 unit2 = ((double) rand()) / RAND_MAX;
-            }
-            else {
+            } else {
                 unit1 = ((double) gridX) / line;
                 unit2 = ((double) gridY) / line;
 
                 if (gridX < line) {
                     ++gridX;
-                }
-                else {
+                } else {
                     gridX = 0;
                     ++gridY;
                 }
@@ -747,8 +732,7 @@ int main(const int argc, const char **argv) {
             }
         }
         outputStatistics();
-    }
-    else {
+    } else {
 
         // ------------------------------------------------------------------
         // Usage.

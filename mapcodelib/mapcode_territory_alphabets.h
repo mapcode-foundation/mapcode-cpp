@@ -24,10 +24,9 @@ extern "C" {
 #endif
 
 #include "basics.h"
+#include "mapcode_alphabets.h"
 
-#include "mapcoder.h"
-
-TerritoryAlphabets alphabetsForTerritory[MAX_CCODE] = {
+static const TerritoryAlphabets alphabetsForTerritory[MAX_CCODE] = {
     {1, {MAPCODE_ALPHABET_ROMAN}}, // 0 VAT Vatican City State
     {1, {MAPCODE_ALPHABET_ROMAN}}, // 1 MCO Monaco
     {1, {MAPCODE_ALPHABET_ROMAN}}, // 2 GIB Gibraltar

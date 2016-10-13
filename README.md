@@ -124,11 +124,13 @@ This produces the following help text:
 * Added scripts for Korean (Choson'gul / Hangul), Burmese, Khmer, Sinhalese, Thaana (Maldivan), 
 Chinese (Zhuyin, Bopomofo), Tifinagh (Berber), Tamil, Amharic, Telugu, Odia, Kannada, Gujarati.
 
-* Renamed constants to more correct terms (Malay to Malayalam; Hindi to Devanagari). 
+* Renamed constants to more correct terms (Malay to Malayalam, Hindi to Devanagari). 
 
-* Added getAlphabetsForTerritory(t), returning the most commonly used alphabets for territory t.
+* Added `getAlphabetsForTerritory(t)`, returning the most commonly used alphabets for territory `t`.
 
-* Improved some characters for Arabic and Devanagari; Fixed Bengali to also support Assamese.
+* Improved some characters for Arabic and Devanagari.
+
+* Fixed Bengali to also support Assamese.
 
 ### 2.3.1
 

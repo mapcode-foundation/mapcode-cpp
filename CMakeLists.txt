@@ -9,6 +9,7 @@ set(SOURCE_FILES
     mapcodelib/mapcode_countrynames_short.h
     mapcodelib/mapcode_fast_encode.h
     mapcodelib/mapcode_fastalpha.h
+    mapcodelib/mapcode_territory_alphabets.h
     mapcodelib/mapcoder.c
     mapcodelib/mapcoder.h
     unittest/decode_test.h

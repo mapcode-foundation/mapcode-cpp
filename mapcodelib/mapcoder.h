@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+#include "mapcode_alphabets.h"
+#include "mapcode_territory_alphabets.h"
+
 #define mapcode_cversion "2.4.0"
 
 #define UWORD                               unsigned short int  // 2-byte unsigned integer.
@@ -35,6 +38,7 @@ extern "C" {
 #define MAX_ISOCODE_LEN                     7           // Max. number of characters of a valid territory code; although nothing longer than SIX characters is ever generated (RU-KAM), users can input SEVEN characters (RUS-KAM).
 #define MAX_CLEAN_MAPCODE_LEN               (MAX_PROPER_MAPCODE_LEN + 1 + MAX_PRECISION_DIGITS)  // Max. number of characters in a clean mapcode (excluding zero-terminator).
 #define MAX_MAPCODE_RESULT_LEN              (MAX_ISOCODE_LEN + 1 + MAX_CLEAN_MAPCODE_LEN + 1)    // Max. number of characters to store a single result (including zero-terminator).
+
 
 /**
  * The type Mapcodes hold a number of mapcodes, for example from an encoding call.
@@ -262,48 +266,6 @@ int multipleBordersNearby(
         double lat,
         double lon,
         int territoryCode);
-
-/**
- * Alphabets:
- */
-#define MAPCODE_ALPHABETS_TOTAL        28
-
-#define MAPCODE_ALPHABET_ROMAN         0
-#define MAPCODE_ALPHABET_GREEK         1
-#define MAPCODE_ALPHABET_CYRILLIC      2
-#define MAPCODE_ALPHABET_HEBREW        3
-#define MAPCODE_ALPHABET_DEVANAGARI    4
-#define MAPCODE_ALPHABET_MALAYALAM     5
-#define MAPCODE_ALPHABET_GEORGIAN      6
-#define MAPCODE_ALPHABET_KATAKANA      7
-#define MAPCODE_ALPHABET_THAI          8
-#define MAPCODE_ALPHABET_LAO           9
-#define MAPCODE_ALPHABET_ARMENIAN      10
-#define MAPCODE_ALPHABET_BENGALI       11
-#define MAPCODE_ALPHABET_GURMUKHI      12
-#define MAPCODE_ALPHABET_TIBETAN       13
-#define MAPCODE_ALPHABET_ARABIC        14
-#define MAPCODE_ALPHABET_KOREAN        15
-#define MAPCODE_ALPHABET_BURMESE       16
-#define MAPCODE_ALPHABET_KHMER         17
-#define MAPCODE_ALPHABET_SINHALESE     18
-#define MAPCODE_ALPHABET_THAANA        19
-#define MAPCODE_ALPHABET_CHINESE       20
-#define MAPCODE_ALPHABET_TIFINAGH      21
-#define MAPCODE_ALPHABET_TAMIL         22
-#define MAPCODE_ALPHABET_AMHARIC       23
-#define MAPCODE_ALPHABET_TELUGU        24
-#define MAPCODE_ALPHABET_ODIA          25
-#define MAPCODE_ALPHABET_KANNADA       26
-#define MAPCODE_ALPHABET_GUJARATI      27
-
-#define MAX_ALPHABETS_PER_TERRITORY 3
-typedef struct {
-  int count;
-  int alphabet[MAX_ALPHABETS_PER_TERRITORY];
-} TerritoryAlphabets;
-
-#include "mapcode_territory_alphabets.h"
 
 /**
  * Given a territory code, returns a structure defining which alphabets (in order of importance) are in common use in the territory

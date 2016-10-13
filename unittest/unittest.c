@@ -38,11 +38,11 @@ static void alphabet_tests() {
     int i, j;
     const char *str, *expect;
     static const char *testpairs[] = {
-            ".123",".123",
+            ".123", ".123",
             "49.4V", "49.4V",
             "00.E0", "00.E0",
-            "X123.P456","X123.P456",
-            "z789.b012","Z789.B012",
+            "X123.P456", "X123.P456",
+            "z789.b012", "Z789.B012",
             "", "",
             "-", "-",
             ".", ".",
@@ -846,7 +846,7 @@ void decode_robustness_tests() {
 }
 
 
-void check_alphabet_assertion(char *msg, int condition, char* format, int a) {
+void check_alphabet_assertion(char *msg, int condition, char *format, int a) {
     if (condition == 0) {
         nrErrors++;
         printf("*** ERROR *** %s, ", msg);
@@ -899,16 +899,18 @@ void robustness_tests() {
 }
 
 void alphabet_per_territory_tests() {
-    int i,j;
-    for (i=0;i<MAX_CCODE;i++) {
-        if (alphabetsForTerritory[i].count<1 || alphabetsForTerritory[i].count>MAX_ALPHABETS_PER_TERRITORY) {
+    int i, j;
+    for (i = 0; i < MAX_CCODE; i++) {
+        if (alphabetsForTerritory[i].count < 1 || alphabetsForTerritory[i].count > MAX_ALPHABETS_PER_TERRITORY) {
             nrErrors++;
             printf("*** ERROR *** Bad alphabetsForTerritory[%d].count: %d\n", i, alphabetsForTerritory[i].count);
         }
-        for (j=0;j<alphabetsForTerritory[i].count;j++) {
-            if (alphabetsForTerritory[i].alphabet[j]<0 || alphabetsForTerritory[i].alphabet[j]>=MAPCODE_ALPHABETS_TOTAL) {
+        for (j = 0; j < alphabetsForTerritory[i].count; j++) {
+            if (alphabetsForTerritory[i].alphabet[j] < 0 ||
+                alphabetsForTerritory[i].alphabet[j] >= MAPCODE_ALPHABETS_TOTAL) {
                 nrErrors++;
-                printf("*** ERROR *** Bad alphabetsForTerritory[%d].alphabet[%d]: %d\n", i,j, alphabetsForTerritory[i].alphabet[j]);
+                printf("*** ERROR *** Bad alphabetsForTerritory[%d].alphabet[%d]: %d\n", i, j,
+                       alphabetsForTerritory[i].alphabet[j]);
             }
         }
     }
@@ -920,94 +922,95 @@ void test_territories_csv() {
     FILE *fp = fopen(csvName, "r");
     if (fp == NULL) {
         nrErrors++;
-        printf("*** ERROR *** Can't read file %s\n", csvName );
-    }
-    else {
-        #define MAXLINESIZE 1024
-        char line[MAXLINESIZE];        
+        printf("*** ERROR *** Can't read file %s\n", csvName);
+    } else {
+#define MAXLINESIZE 1024
+        char line[MAXLINESIZE];
         if (fgets(line, MAXLINESIZE, fp) != NULL) { // skip header line
             while (fgets(line, MAXLINESIZE, fp) != NULL) {
-                long csvTerritoryCode;                
+                int csvTerritoryCode;
                 char *s = line;
-                char *e = strchr(s,',');
+                char *e = strchr(s, ',');
                 if (e) {
                     linesTested++;
-                    *e=0;
-                    csvTerritoryCode = atol(s) + 1;
-                    s = e+1;
+                    *e = 0;
+                    csvTerritoryCode = atoi(s) + 1;
+                    s = e + 1;
                     // parse and check aliases
-                    e = strchr(s,',');
+                    e = strchr(s, ',');
                     if (e) {
                         *e = 0;
                         while (*s) {
                             int territoryCode;
-                            char* sep = strchr(s,'|');
+                            char *sep = strchr(s, '|');
                             if (sep) {
                                 *sep = 0;
                             }
                             territoryCode = getTerritoryCode(s, 0);
                             if (territoryCode != csvTerritoryCode) {
                                 nrErrors++;
-                                printf("*** ERROR *** Territory string %s returns code %d, expected %d\n", s, territoryCode, csvTerritoryCode);
+                                printf("*** ERROR *** Territory string %s returns code %d, expected %d\n", s,
+                                       territoryCode, csvTerritoryCode);
                             }
                             if (sep) {
                                 s = sep + 1;
-                            }
-                            else {
+                            } else {
                                 s = e;
                             }
                         }
                         s++;
                     }
                     // parse and check alphabets
-                    e = strchr(s,',');
+                    e = strchr(s, ',');
                     if (e) {
                         int csvNrAlphabets = 0;
                         const TerritoryAlphabets *territoryAlphabet = getAlphabetsForTerritory(csvTerritoryCode);
                         *e = 0;
                         while (*s) {
-                            char* sep = strchr(s,'|');
+                            char *sep = strchr(s, '|');
                             if (sep) {
                                 *sep = 0;
                             }
                             csvNrAlphabets++;
-                            if ((csvNrAlphabets > territoryAlphabet->count) || (atol(s) != territoryAlphabet->alphabet[csvNrAlphabets-1])) {
+                            if ((csvNrAlphabets > territoryAlphabet->count) ||
+                                (atoi(s) != territoryAlphabet->alphabet[csvNrAlphabets - 1])) {
                                 nrErrors++;
-                                printf("*** ERROR *** Mismatch: alphabet %d of territory should be %d\n", csvNrAlphabets, atol(s));
+                                printf("*** ERROR *** Mismatch: alphabet %d of territory %d should be %d\n",
+                                       csvNrAlphabets, csvTerritoryCode, atoi(s));
                             }
                             if (sep) {
                                 s = sep + 1;
-                            }
-                            else {
+                            } else {
                                 s = e;
                             }
                         }
                         if (csvNrAlphabets != territoryAlphabet->count) {
                             nrErrors++;
-                            printf("*** ERROR *** %d alphabets for territory %d, expected %d\n", territoryAlphabet->count, csvNrAlphabets);
+                            printf("*** ERROR *** %d alphabets for territory %d, expected %d\n",
+                                   territoryAlphabet->count, csvTerritoryCode, csvNrAlphabets);
                         }
                         s++;
                     }
                     // parse and check names
-                    e = strchr(s,10);
+                    e = strchr(s, 10);
                     if (e) {
-                        const char *territoryNames = isofullname[csvTerritoryCode-1];
+                        const char *territoryNames = isofullname[csvTerritoryCode - 1];
                         *e = 0;
                         while (*s) {
                             char *match;
-                            char* sep = strchr(s,'|');
+                            char *sep = strchr(s, '|');
                             if (sep) {
                                 *sep = 0;
                             }
-                            match = strstr(territoryNames,s);
-                            if (match == NULL || (match[strlen(s)] != ' ' && match[strlen(s)] != 0 && match[strlen(s)] != ')')) {
+                            match = strstr(territoryNames, s);
+                            if (match == NULL ||
+                                (match[strlen(s)] != ' ' && match[strlen(s)] != 0 && match[strlen(s)] != ')')) {
                                 nrErrors++;
                                 printf("*** ERROR *** Name \"%s\" not found in \"%s\"\n", s, territoryNames);
                             }
                             if (sep) {
                                 s = sep + 1;
-                            }
-                            else {
+                            } else {
                                 s = e;
                             }
                         }

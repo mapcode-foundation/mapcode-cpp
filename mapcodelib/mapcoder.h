@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-#define mapcode_cversion "2.3.1"
+#define mapcode_cversion "2.4.0"
 
 #define UWORD                               unsigned short int  // 2-byte unsigned integer.
 
@@ -266,14 +266,14 @@ int multipleBordersNearby(
 /**
  * Alphabets:
  */
-#define MAPCODE_ALPHABETS_TOTAL        15
+#define MAPCODE_ALPHABETS_TOTAL        28
 
 #define MAPCODE_ALPHABET_ROMAN         0
 #define MAPCODE_ALPHABET_GREEK         1
 #define MAPCODE_ALPHABET_CYRILLIC      2
 #define MAPCODE_ALPHABET_HEBREW        3
-#define MAPCODE_ALPHABET_HINDI         4
-#define MAPCODE_ALPHABET_MALAY         5
+#define MAPCODE_ALPHABET_DEVANAGARI    4
+#define MAPCODE_ALPHABET_MALAYALAM     5
 #define MAPCODE_ALPHABET_GEORGIAN      6
 #define MAPCODE_ALPHABET_KATAKANA      7
 #define MAPCODE_ALPHABET_THAI          8
@@ -283,7 +283,38 @@ int multipleBordersNearby(
 #define MAPCODE_ALPHABET_GURMUKHI      12
 #define MAPCODE_ALPHABET_TIBETAN       13
 #define MAPCODE_ALPHABET_ARABIC        14
+#define MAPCODE_ALPHABET_KOREAN        15
+#define MAPCODE_ALPHABET_BURMESE       16
+#define MAPCODE_ALPHABET_KHMER         17
+#define MAPCODE_ALPHABET_SINHALESE     18
+#define MAPCODE_ALPHABET_THAANA        19
+#define MAPCODE_ALPHABET_CHINESE       20
+#define MAPCODE_ALPHABET_TIFINAGH      21
+#define MAPCODE_ALPHABET_TAMIL         22
+#define MAPCODE_ALPHABET_AMHARIC       23
+#define MAPCODE_ALPHABET_TELUGU        24
+#define MAPCODE_ALPHABET_ODIA          25
+#define MAPCODE_ALPHABET_KANNADA       26
+#define MAPCODE_ALPHABET_GUJARATI      27
 
+#define MAX_ALPHABETS_PER_TERRITORY 3
+typedef struct {
+  int count;
+  int alphabet[MAX_ALPHABETS_PER_TERRITORY];
+} TerritoryAlphabets;
+
+#include "mapcode_territory_alphabets.h"
+
+/**
+ * Given a territory code, returns a structure defining which alphabets (in order of importance) are in common use in the territory
+ *
+ * Arguments:
+ *      territoryCode   - territory code.
+ *
+ * Returns:
+ *      a pointer to a TerritoryAlphabets structure (or NULL if territoryCode is invalid)
+ */
+const TerritoryAlphabets *getAlphabetsForTerritory(int territoryCode);
 
 /**
  * Decode a string to Roman characters.
@@ -353,8 +384,9 @@ const UWORD *encodeToAlphabet(const char *string, int alphabet);
 #define MAPCODE_LANGUAGE_GREEK         MAPCODE_ALPHABET_GREEK
 #define MAPCODE_LANGUAGE_CYRILLIC      MAPCODE_ALPHABET_CYRILLIC
 #define MAPCODE_LANGUAGE_HEBREW        MAPCODE_ALPHABET_HEBREW
-#define MAPCODE_LANGUAGE_HINDI         MAPCODE_ALPHABET_HINDI
-#define MAPCODE_LANGUAGE_MALAY         MAPCODE_ALPHABET_MALAY
+#define MAPCODE_LANGUAGE_HINDI         MAPCODE_ALPHABET_DEVANAGARI
+#define MAPCODE_ALPHABET_HINDI         MAPCODE_ALPHABET_DEVANAGARI
+#define MAPCODE_LANGUAGE_MALAYALAM     MAPCODE_ALPHABET_MALAYALAM
 #define MAPCODE_LANGUAGE_GEORGIAN      MAPCODE_ALPHABET_GEORGIAN
 #define MAPCODE_LANGUAGE_KATAKANA      MAPCODE_ALPHABET_KATAKANA
 #define MAPCODE_LANGUAGE_THAI          MAPCODE_ALPHABET_THAI

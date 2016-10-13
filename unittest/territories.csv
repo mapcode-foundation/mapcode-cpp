@@ -1,0 +1,534 @@
+ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separated)
+0,VAT,0,Vatican|Holy See
+1,MCO,0,Monaco
+2,GIB,0,Gibraltar
+3,TKL,0,Tokelau
+4,CCK|AU-CC|CC,0|14,Cocos Islands|Keeling Islands
+5,BLM,0,Saint-Barthelemy
+6,NRU,0,Nauru
+7,TUV,0,Tuvalu
+8,MAC|CN-92|CN-MC|MC,20|0,Macau|Aomen
+9,SXM,0,Sint Maarten
+10,MAF,0,Saint Martin
+11,NFK|AU-NF|NF,0,Norfolk and Philip Island|Philip Island
+12,PCN,0,Pitcairn Islands
+13,BVT,0,Bouvet Island
+14,BMU,0,Bermuda|Somers Isles
+15,IOT|DGA,0,British Indian Ocean Territory
+16,SMR,0,San Marino
+17,GGY,0,Guernsey
+18,AIA,0,Anguilla
+19,MSR,0,Montserrat
+20,JEY,0,Jersey
+21,CXR|AU-CX|CX,20|14|0,Christmas Island
+22,WLF,0,Wallis and Futuna|Futuna
+23,VGB,0,British Virgin Islands|Virgin Islands, British
+24,LIE,0,Liechtenstein
+25,ABW,0,Aruba
+26,MHL|WAK,0,Marshall Islands
+27,ASM|US-AS,0,American Samoa|Samoa, American
+28,COK,0,Cook Islands
+29,SPM,0,Saint Pierre and Miquelon|Miquelon
+30,NIU,0,Niue
+31,KNA,0,Saint Kitts and Nevis|Nevis
+32,CYM,0,Cayman islands
+33,BES,0,Bonaire, St Eustasuis and Saba|Saba|St Eustasius
+34,MDV,19|0,Maldives
+35,SHN|ASC|TAA,0,Saint Helena, Ascension and Tristan da Cunha|Ascension|Tristan da Cunha
+36,MLT,0,Malta
+37,GRD,0,Grenada
+38,VIR|US-VI|VI,0,Virgin Islands of the United States|US Virgin Islands|American Virgin Islands
+39,MYT,0|14,Mayotte|Maore
+40,SJM,0|2,Svalbard and Jan Mayen|Jan Mayen|Spitsbergen
+41,VCT,0,Saint Vincent and the Grenadines|Grenadines
+42,HMD|AU-HM|HM,0,Heard Island and McDonald Islands|McDonald Islands
+43,BRB,0,Barbados
+44,ATG,0,Antigua and Barbuda|Barbuda
+45,CUW,0,Curacao
+46,SYC,0,Seychelles
+47,PLW,0,Palau
+48,MNP|US-MP,0,Northern Mariana Islands
+49,AND,0,Andorra
+50,GUM|US-GU|GU,0,Guam
+51,IMN,0,Isle of Mann|Mann
+52,LCA,0,Saint Lucia
+53,FSM,0,Micronesia|Federated States of Micronesia
+54,SGP,20|14|0,Singapore
+55,TON,0,Tonga
+56,DMA,0,Dominica
+57,BHR,14|0,Bahrain
+58,KIR,0,Kiribati
+59,TCA,0,Turks and Caicos Islands|Caicos Islands
+60,STP,0,Sao Tome and Principe|Principe
+61,HKG|CN-91|CN-HK|HK,20|0,Hong Kong|Xianggang
+62,MTQ,0,Martinique
+63,FRO,0,Faroe Islands
+64,GLP,0,Guadeloupe
+65,COM,14|0,Comoros
+66,MUS,0,Mauritius
+67,REU,0,Reunion
+68,LUX,0,Luxembourg
+69,WSM,0,Samoa
+70,SGS,0,South Georgia and the South Sandwich Islands|South Sandwich Islands
+71,PYF,0,French Polynesia
+72,CPV,0,Cape Verde|Cabo Verde|Republic of Cabo Verde
+73,TTO,0,Trinidad and Tobago|Tobago
+74,BRN,14|0,Brunei
+75,ATF,0,French Southern and Antarctic Lands
+76,PRI|US-PR,0,Puerto Rico
+77,CYP,1|0,Cyprus
+78,LBN,14|0,Lebanon|Lebanese Republic
+79,JAM,0,Jamaica
+80,GMB,0,Gambia|The Gambia
+81,QAT,14|0,Qatar
+82,FLK,0,Falkland Islands
+83,VUT,0,Vanuatu
+84,MNE,2|0,Montenegro
+85,BHS,0,Bahamas
+86,TLS,0|14,Timor-Leste|East Timor
+87,SWZ,0,Swaziland
+88,KWT,14|0,Kuwait
+89,FJI,0|4,Fiji
+90,NCL,0,New Caledonia
+91,SVN,0,Slovenia
+92,ISR,3|14|0,Israel
+93,PSE,3|14|0,Palestinian territories|State of Palestine
+94,SLV,0,El Salvador
+95,BLZ,0,Belize
+96,DJI,14|0,Djibouti
+97,MKD,2|0,Macedonia|FYROM|Former Yugoslav Republic of Macedonia
+98,RWA,0,Rwanda
+99,HTI,0,Haiti
+100,BDI,0,Burundi
+101,GNQ,0,Equatorial Guinea
+102,ALB,0,Albania
+103,SLB,0,Solomon Islands
+104,ARM,10|0,Armenia
+105,LSO,0,Lesotho
+106,BEL,0,Belgium
+107,MDA,2|0,Moldova
+108,GNB,0,Guinea-Bissau
+109,TWN|CN-71|CN-TW|TW,20|0,Taiwan|Republic of China
+110,BTN,13|0,Bhutan
+111,CHE,0,Switzerland|Swiss Confederation
+112,NLD,0,Netherlands|The Netherlands
+113,DNK,0,Denmark
+114,EST,2|0,Estonia
+115,DOM,0,Dominican Republic
+116,SVK,0,Slovakia|Slovak Republic
+117,CRI,0,Costa Rica
+118,BIH,0|2,Bosnia and Herzegovina
+119,HRV,0|2,Croatia
+120,TGO,0,Togo|Togolese Republic
+121,LVA,2|0,Latvia
+122,LTU,2|0,Lithuania
+123,LKA,18|22|0,Sri Lanka
+124,GEO,6|2|0,Georgia
+125,IRL,0,Ireland
+126,SLE,0,Sierra Leone
+127,PAN,0,Panama
+128,CZE,0,Czech Republic
+129,GUF,0,French Guiana|Guiana
+130,ARE,14|0,United Arab Emirates|Emirates
+131,AUT,0,Austria
+132,AZE,0|2|14,Azerbaijan
+133,SRB,2|0,Serbia
+134,JOR,14|0,Jordan
+135,PRT,0,Portugal|Portuguese Republic
+136,HUN,0,Hungary
+137,KOR,15|0,South Korea|Republic of Korea
+138,ISL,0,Iceland
+139,GTM,0,Guatemala
+140,CUB,0,Cuba
+141,BGR,2|0,Bulgaria
+142,LBR,0,Liberia
+143,HND,0,Honduras
+144,BEN,0,Benin
+145,ERI,23|14|0,Eritrea
+146,MWI,0,Malawi
+147,PRK,15|0,North Korea|Democratic People's Republic of Korea
+148,NIC,0,Nicaragua
+149,GRC,1|0,Greece|Hellenic Republic
+150,TJK,2|0,Tajikistan
+151,BGD,11|0,Bangladesh
+152,NPL,4|0,Nepal
+153,TUN,14|0|21,Tunisia|Tunisian Republic
+154,SUR,0,Suriname
+155,URY,0,Uruguay
+156,KHM,17|0,Cambodia
+157,SYR,14|0,Syria|Syrian Arab Republic
+158,SEN,0,Senegal
+159,KGZ,2|0,Kyrgyzstan|Kyrgyz Republic
+160,BLR,2|0,Belarus
+161,GUY,0,Guyana
+162,LAO,9|0,Laos|Lao People's Democratic Republic
+163,ROU,2|0,Romania
+164,GHA,0,Ghana
+165,UGA,0,Uganda
+166,GBR,0,United Kingdom|Scotland|Great Britain|Northern Ireland|Ireland, Northern|Britain|United Kingdom of Great Britain and Northern Ireland
+167,GIN,0,Guinea|Guinea-Conakry
+168,ECU,0,Ecuador
+169,ESH,14|0,Western Sahara|Sahrawi Arab Democratic Republic
+170,GAB,0,Gabon|Gabonese Republic
+171,NZL,0,New Zealand
+172,BFA,0,Burkina Faso
+173,PHL,0,Philippines
+174,ITA,0,Italy|Italian Republic
+175,OMN,14|0,Oman
+176,POL,0,Poland
+177,CIV,0,Ivory Coast|Cote d'Ivoire|Republic of Cote d'Ivoire
+178,NOR,0,Norway
+179,MYS,0|14|20,Malaysia
+180,VNM,0,Vietnam
+181,FIN,0,Finland
+182,COG,0,Congo-Brazzaville|West Congo|Republic of the Congo
+183,DEU,0,Germany
+184,JPN,7|0,Japan
+185,ZWE,0,Zimbabwe
+186,PRY,0,Paraguay
+187,IRQ,14|0,Iraq
+188,MAR,14|0|21,Morocco
+189,UZB,2|0,Uzbekistan
+190,SWE,0,Sweden
+191,PNG,0,Papua New Guinea
+192,CMR,0,Cameroon
+193,TKM,2|0,Turkmenistan
+194,ESP,0,Spain
+195,THA,8|0,Thailand
+196,YEM,14|0,Yemen
+197,FRA,0,France|French Republic
+198,ALA,0,Aaland Islands
+199,KEN,0,Kenya
+200,BWA,0,Botswana
+201,MDG,0,Madagascar
+202,UKR,2|0,Ukraine
+203,SSD,0|14,South Sudan
+204,CAF,0,Central African Republic
+205,SOM,14|0,Somalia
+206,AFG,14|0,Afghanistan
+207,MMR,16|0,Myanmar|Burma
+208,ZMB,0,Zambia
+209,CHL,0,Chile
+210,TUR,0,Turkey
+211,PAK,12|14|0,Pakistan
+212,MOZ,0,Mozambique
+213,NAM,0,Namibia
+214,VEN,0,Venezuela
+215,NGA,0|14,Nigeria
+216,TZA,0,Tanzania
+217,EGY,14|0,Egypt
+218,MRT,14|0,Mauritania
+219,BOL,0,Bolivia
+220,ETH,0|23|14,Ethiopia
+221,COL,0,Colombia
+222,ZAF,0,South Africa
+223,MLI,0,Mali
+224,AGO,0,Angola
+225,NER,0,Niger
+226,TCD,14|0,Chad
+227,PER,0,Peru
+228,MNG,2|0,Mongolia
+229,IRN,14|0,Iran|Persia
+230,LBY,14|0|21,Libya
+231,SDN,14|0,Sudan
+232,IDN,0,Indonesia
+233,MX-DIF|MX-DF|DIF,0,Federal District
+234,MX-TLA|MX-TL|TL|TLA,0,Tlaxcala
+235,MX-MOR|MX-MO|MOR,0,Morelos
+236,MX-AGU|MX-AG|AG|AGU,0,Aguascalientes
+237,MX-CL|MX-COL|CL,0,Colima
+238,MX-QUE|MX-QE|QE|QUE,0,Queretaro
+239,MX-HID|MX-HG|HG|HID,0,Hidalgo
+240,MX-MX|MX-ME|MX-MEX|MX,0,Mexico State
+241,MX-TAB|MX-TB|TAB|TB,0,Tabasco
+242,MX-NAY|MX-NA|NA|NAY,0,Nayarit
+243,MX-GUA|MX-GT|GT|GUA,0,Guanajuato
+244,MX-PUE|MX-PB|PUE,0,Puebla
+245,MX-YUC|MX-YU|YU|YUC,0,Yucatan
+246,MX-ROO|MX-QR|QR|ROO,0,Quintana Roo
+247,MX-SIN|MX-SI|SI|SIN,0,Sinaloa
+248,MX-CAM|MX-CM|CAM|CM,0,Campeche
+249,MX-MIC|MX-MI|MIC,0,Michoacan
+250,MX-SLP|MX-SL|SL|SLP,0,San Luis Potosi
+251,MX-GRO|MX-GR|GR|GRO,0,Guerrero
+252,MX-NLE|MX-NL|NLE,0,Nuevo Leon|New Leon
+253,MX-BCN|MX-BC|BCN,0,Baja California
+254,MX-VER|MX-VE|VE|VER,0,Veracruz
+255,MX-CHP|MX-CS|CHP|CS,0,Chiapas
+256,MX-BCS|MX-BS|BCS|BS,0,Baja California Sur
+257,MX-ZAC|MX-ZA|ZA|ZAC,0,Zacatecas
+258,MX-JAL|MX-JA|JA|JAL,0,Jalisco
+259,MX-TAM|MX-TM|TAM|TM,0,Tamaulipas
+260,MX-OAX|MX-OA|OA|OAX,0,Oaxaca
+261,MX-DUR|MX-DG|DG|DUR,0,Durango
+262,MX-COA|MX-CO|COA,0,Coahuila
+263,MX-SON|MX-SO|SO|SON,0,Sonora
+264,MX-CHH|MX-CH|CHH,0,Chihuahua
+265,GRL,0,Greenland
+266,SAU,14|0,Saudi Arabia
+267,COD,0,Congo-Kinshasa|Democratic Republic of the Congo|East Congo
+268,DZA,14|0|21,Algeria
+269,KAZ,2|0,Kazakhstan
+270,ARG,0,Argentina|Argentine Republic
+271,IN-DD|DD,4|27|0,Daman and Diu
+272,IN-DN|DN,4|27|0,Dadra and Nagar Haveli
+273,IN-CH|CH,4|0|12,Chandigarh
+274,IN-AN|AN,4|0|11,Andaman and Nicobar
+275,IN-LD|LD,5|0|4,Lakshadweep
+276,IN-DL|DL,4|12|0,Delhi
+277,IN-ML|ML,0|4,Meghalaya
+278,IN-NL|NL,0|4,Nagaland
+279,IN-MN|MN,11|4|0,Manipur
+280,IN-TR|TR,11|4|0,Tripura
+281,IN-MZ|MZ,4|0,Mizoram
+282,IN-SK|SK,4|0,Sikkim
+283,IN-PB|PB,12|4|0,Punjab
+284,IN-HR|HR,4|12|0,Haryana
+285,IN-AR|AR,0|4,Arunachal Pradesh
+286,IN-AS|AS,11|0|4,Assam
+287,IN-BR|BR,4|0,Bihar
+288,IN-UT|IN-UK|UK|UT,4|0,Uttarakhand
+289,IN-GA|GA,4|0,Goa
+290,IN-KL|KL,5|0|4,Kerala
+291,IN-TN|TN,22|4|0,Tamil Nadu
+292,IN-HP|HP,4|0,Himachal Pradesh
+293,IN-JK|JK,4|12|0,Jammu and Kashmir
+294,IN-CT|IN-CG|CG|CT,4|0,Chhattisgarh
+295,IN-JH|JH,4|11|0,Jharkhand
+296,IN-KA|KA,26|4|0,Karnataka
+297,IN-RJ|RJ,4|0,Rajasthan
+298,IN-OR|IN-OD|OD|OR,25|0|4,Odisha|Orissa
+299,IN-GJ|GJ,27|0|4,Gujarat
+300,IN-WB|WB,11|0|4,West Bengal
+301,IN-MP|MP,4|0,Madhya Pradesh
+302,IN-TG|TG,24|4|0,Telangana
+303,IN-AP|AP,24|0|4,Andhra Pradesh
+304,IN-MH|MH,4|0,Maharashtra
+305,IN-UP|UP,4|0,Uttar Pradesh
+306,IN-PY|PY,5|24|4,Puducherry
+307,AU-NSW|NSW,0,New South Wales
+308,AU-ACT|ACT,0,Australian Capital Territory
+309,AU-JBT|JBT,0,Jervis Bay Territory
+310,AU-NT|NT,0,Northern Territory
+311,AU-SA|SA,0,South Australia
+312,AU-TAS|TAS,0,Tasmania
+313,AU-VIC|VIC,0,Victoria
+314,AU-WA|WA,0,Western Australia
+315,AU-QLD|QLD,0,Queensland
+316,BR-DF|DF,0,Distrito Federal
+317,BR-SE|SE,0,Sergipe
+318,BR-AL|AL,0,Alagoas
+319,BR-RJ,0,Rio de Janeiro
+320,BR-ES|ES,0,Espirito Santo
+321,BR-RN|RN,0,Rio Grande do Norte
+322,BR-PB,0,Paraiba
+323,BR-SC|SC,0,Santa Catarina
+324,BR-PE|PE,0,Pernambuco
+325,BR-AP,0,Amapa
+326,BR-CE|CE,0,Ceara
+327,BR-AC|AC,0,Acre
+328,BR-PR|PR,0,Parana
+329,BR-RR|RR,0,Roraima
+330,BR-RO|RO,0,Rondonia
+331,BR-SP|SP,0,Sao Paulo
+332,BR-PI|PI,0,Piaui
+333,BR-TO|TO,0,Tocantins
+334,BR-RS|RS,0,Rio Grande do Sul
+335,BR-MA|MA,0,Maranhao
+336,BR-GO|GO,0,Goias
+337,BR-MS|MS,0,Mato Grosso do Sul
+338,BR-BA|BA,0,Bahia
+339,BR-MG|MG,0,Minas Gerais
+340,BR-MT|MT,0,Mato Grosso
+341,BR-PA|PA,0,Para
+342,BR-AM|AM,0,Amazonas
+343,US-DC|DC,0,District of Columbia|Washington, D.C.
+344,US-RI|RI,0,Rhode Island
+345,US-DE|DE,0,Delaware
+346,US-CT,0,Connecticut
+347,US-NJ|NJ,0,New Jersey
+348,US-NH|NH,0,New Hampshire
+349,US-VT|VT,0,Vermont
+350,US-MA,0,Massachusetts
+351,US-HI|US-MID|HI|MID,0,Hawaii
+352,US-MD|MD,0,Maryland
+353,US-WV|WV,0,West Virginia
+354,US-SC,0,South Carolina
+355,US-ME|ME,0,Maine
+356,US-IN|IN,0,Indiana
+357,US-KY|KY,0,Kentucky
+358,US-TN,0,Tennessee
+359,US-VA|VA,0,Virginia
+360,US-OH|OH,0,Ohio
+361,US-PA,0,Pennsylvania
+362,US-MS,0,Mississippi
+363,US-LA|LA,0,Louisiana
+364,US-AL,0,Alabama
+365,US-AR,0,Arkansas
+366,US-NC|NC,0,North Carolina
+367,US-NY|NY,0,New York
+368,US-IA|IA,0,Iowa
+369,US-IL|IL,0,Illinois
+370,US-GA,0,Georgia
+371,US-WI|WI,0,Wisconsin
+372,US-FL|FL,0,Florida
+373,US-MO|MO,0,Missouri
+374,US-OK|OK,0,Oklahoma
+375,US-ND|ND,0,North Dakota
+376,US-WA,0,Washington
+377,US-SD|SD,0,South Dakota
+378,US-NE|NE,0,Nebraska
+379,US-KS|KS,0,Kansas
+380,US-ID|ID,0,Idaho
+381,US-UT,0,Utah
+382,US-MN,0,Minnesota
+383,US-MI|MI,0,Michigan
+384,US-WY|WY,0,Wyoming
+385,US-OR,0,Oregon
+386,US-CO|CO,0,Colorado
+387,US-NV|NV,0,Nevada
+388,US-AZ|AZ,0,Arizona
+389,US-NM|NM,0,New Mexico
+390,US-MT,0,Montana
+391,US-CA|CA,0,California
+392,US-TX|TX,0,Texas
+393,US-AK|AK,0,Alaska
+394,CA-BC|BC,0,British Columbia
+395,CA-AB|AB,0,Alberta
+396,CA-ON|ON,0,Ontario
+397,CA-QC|QC,0,Quebec
+398,CA-SK,0,Saskatchewan
+399,CA-MB|MB,0,Manitoba
+400,CA-NL,0,Newfoundland and Labrador|Labrador
+401,CA-NB|NB,0,New Brunswick
+402,CA-NS|NS,0,Nova Scotia
+403,CA-PE,0,Prince Edward Island
+404,CA-YT|YT,0,Yukon
+405,CA-NT,0,Northwest Territories
+406,CA-NU|NU,0,Nunavut
+407,IND,4|11|0,India
+408,AUS|AU,0,Australia
+409,BRA,0,Brazil
+410,USA|US,0,USA|United States of America|America
+411,MEX,0,Mexico|United Mexican States
+412,RU-MOW|MOW,2|0,Moscow
+413,RU-SPE|SPE,2|0,Saint Petersburg
+414,RU-KGD|KGD,2|0,Kaliningrad Oblast
+415,RU-IN,2|0,Ingushetia
+416,RU-AD|AD,2|0,Adygea Republic
+417,RU-SE,2|0,North Ossetia-Alania Republic
+418,RU-KB|KB,2|0,Kabardino-Balkar Republic
+419,RU-KC|KC,2|0,Karachay-Cherkess Republic
+420,RU-CE,2|0,Chechen Republic|Chechnya|Ichkeria
+421,RU-CU|CU,2|0,Chuvash Republic
+422,RU-IVA|IVA,2|0,Ivanovo Oblast
+423,RU-LIP|LIP,2|0,Lipetsk Oblast
+424,RU-ORL|ORL,2|0,Oryol Oblast
+425,RU-TUL|TUL,2|0,Tula Oblast
+426,RU-BE|RU-BEL|BE,2|0,Belgorod Oblast
+427,RU-VLA|VLA,2|0,Vladimir Oblast
+428,RU-KRS|KRS,2|0,Kursk Oblast
+429,RU-KLU|KLU,2|0,Kaluga Oblast
+430,RU-TT|RU-TAM|TT,2|0,Tambov Oblast
+431,RU-BRY|BRY,2|0,Bryansk Oblast
+432,RU-YAR|YAR,2|0,Yaroslavl Oblast
+433,RU-RYA|RYA,2|0,Ryazan Oblast
+434,RU-AST|AST,2|0,Astrakhan Oblast
+435,RU-MOS|MOS,2|0,Moscow Oblast
+436,RU-SMO|SMO,2|0,Smolensk Oblast
+437,RU-DA|DA,2|0,Dagestan Republic
+438,RU-VOR|VOR,2|0,Voronezh Oblast
+439,RU-NGR|NGR,2|0,Novgorod Oblast
+440,RU-PSK|PSK,2|0,Pskov Oblast
+441,RU-KOS|KOS,2|0,Kostroma Oblast
+442,RU-STA|STA,2|0,Stavropol Krai
+443,RU-KDA|KDA,2|0,Krasnodar Krai
+444,RU-KL,2|0,Kalmykia Republic
+445,RU-TVE|TVE,2|0,Tver Oblast
+446,RU-LEN|LEN,2|0,Leningrad Oblast
+447,RU-ROS|ROS,2|0,Rostov Oblast
+448,RU-VGG|VGG,2|0,Volgograd Oblast
+449,RU-VLG|VLG,2|0,Vologda Oblast
+450,RU-MUR|MUR,2|0,Murmansk Oblast
+451,RU-KR|KR,2|0,Karelia Republic
+452,RU-NEN|NEN,2|0,Nenets Autonomous Okrug
+453,RU-KO|KO,2|0,Komi Republic
+454,RU-ARK|ARK,2|0,Arkhangelsk Oblast
+455,RU-MO,2|0,Mordovia Republic
+456,RU-NIZ|NIZ,2|0,Nizhny Novgorod Oblast
+457,RU-PNZ|PNZ,2|0,Penza Oblast
+458,RU-KI|RU-KIR|KI,2|0,Kirov Oblast
+459,RU-ME,2|0,Mari El Republic
+460,RU-ORE|ORE,2|0,Orenburg Oblast
+461,RU-ULY|ULY,2|0,Ulyanovsk Oblast
+462,RU-PM|RU-PER|PM,2|0,Perm Krai
+463,RU-BA,2|0,Bashkortostan Republic
+464,RU-UD|UD,2|0,Udmurt Republic
+465,RU-TA|TA,2|0,Tatarstan Republic
+466,RU-SAM|SAM,2|0,Samara Oblast
+467,RU-SAR|SAR,2|0,Saratov Oblast
+468,RU-YAN|YAN,2|0,Yamalo-Nenets
+469,RU-KM|RU-KHM|KM,2|0,Khanty-Mansi
+470,RU-SVE|SVE,2|0,Sverdlovsk Oblast
+471,RU-TYU|TYU,2|0,Tyumen Oblast
+472,RU-KGN|KGN,2|0,Kurgan Oblast
+473,RU-CH|RU-CHE,2|0,Chelyabinsk Oblast
+474,RU-BU|BU,2|0,Buryatia Republic
+475,RU-ZAB|ZAB,2|0,Zabaykalsky Krai
+476,RU-IRK|IRK,2|0,Irkutsk Oblast
+477,RU-NVS|NVS,2|0,Novosibirsk Oblast
+478,RU-TOM|TOM,2|0,Tomsk Oblast
+479,RU-OMS|OMS,2|0,Omsk Oblast
+480,RU-KK|KK,2|0,Khakassia Republic
+481,RU-KEM|KEM,2|0,Kemerovo Oblast
+482,RU-AL,2|0,Altai Republic
+483,RU-ALT|ALT,2|0,Altai Krai
+484,RU-TY|TY,2|0,Tuva Republic
+485,RU-KYA|KYA,2|0,Krasnoyarsk Krai
+486,RU-MAG|MAG,2|0,Magadan Oblast
+487,RU-CHU|CHU,2|0,Chukotka Okrug
+488,RU-KAM|KAM,2|0,Kamchatka Krai
+489,RU-SAK|SAK,2|0,Sakhalin Oblast
+490,RU-PO|RU-PRI|PO,2|0,Primorsky Krai
+491,RU-YEV|YEV,2|0,Jewish Autonomous Oblast
+492,RU-KHA|KHA,2|0,Khabarovsk Krai
+493,RU-AMU|AMU,2|0,Amur Oblast
+494,RU-SA,2|0,Sakha Republic|Yakutia Republic
+495,CAN,0,Canada
+496,RUS|RU,2|0,Russia|Russian Federation
+497,CN-SH|CN-31|SH,20|0,Shanghai
+498,CN-TJ|CN-12|TJ,20|0,Tianjin
+499,CN-BJ|CN-11|BJ,20|0,Beijing
+500,CN-HI|CN-46,20|0,Hainan
+501,CN-NX|CN-64|NX,20|0,Ningxia Hui
+502,CN-CQ|CN-50|CQ,20|0,Chongqing
+503,CN-ZJ|CN-33|ZJ,20|0,Zhejiang
+504,CN-JS|CN-32|JS,20|0,Jiangsu
+505,CN-FJ|CN-35|FJ,20|0,Fujian
+506,CN-AH|CN-34|AH,20|0,Anhui
+507,CN-LN|CN-21|LN,20|0,Liaoning
+508,CN-SD|CN-37,20|0,Shandong
+509,CN-SX|CN-14|SX,20|0,Shanxi
+510,CN-JX|CN-36|JX,20|0,Jiangxi
+511,CN-HA|CN-41|HA,20|0,Henan
+512,CN-GZ|CN-52|GZ,20|0,Guizhou
+513,CN-GD|CN-44|GD,20|0,Guangdong
+514,CN-HB|CN-42|HB,20|0,Hubei
+515,CN-JL|CN-22|JL,20|0,Jilin
+516,CN-HE|CN-13|HE,20|0,Hebei|Yanzhao
+517,CN-SN|CN-61|SN,20|0,Shaanxi
+518,CN-NM|CN-15,20|0,Nei Mongol|Inner Mongolia
+519,CN-HL|CN-23|HL,20|0,Heilongjiang
+520,CN-HN|CN-43|HN,20|0,Hunan
+521,CN-GX|CN-45|GX,20|0,Guangxi Zhuang
+522,CN-SC|CN-51,20|0,Sichuan
+523,CN-YN|CN-53|YN,20|0,Yunnan
+524,CN-XZ|CN-54|XZ,13|20|0,Xizang|Tibet
+525,CN-GS|CN-62|GS,20|0,Gansu
+526,CN-QH|CN-63|QH,20|0,Qinghai|Tsinghai
+527,CN-XJ|CN-65|XJ,20|0,Xinjiang Uyghur
+528,CHN|CN,20|0,China
+529,UMI|US-UM|JTN|UM,0,United States Minor Outlying Islands
+530,CPT,0,Clipperton Island
+531,ATA,0,Antarctica
+532,AAA,0,International|Worldwide|Earth

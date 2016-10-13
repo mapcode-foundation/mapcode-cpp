@@ -43,6 +43,7 @@
 #include <time.h>
 #include "../mapcodelib/mapcoder.c"
 #include "../mapcodelib/mapcoder.h"
+#include "../mapcodelib/mapcode_countrynames_short.h"
 
 // Specific define to be able to limit output to microdegrees, for test files.
 #undef LIMIT_TO_MICRODEGREES
@@ -100,6 +101,10 @@ static void usage(const char *appName) {
     printf("       encoding will only succeeed if the lat/lon is located in the territory.\n");
     printf("       You can specify the number of additional digits, 0, 1 or 2 (default 0)\n");
     printf("       for high-precision mapcodes.\n");
+    printf("\n");
+    printf("    %s [-t | --territories]\n", appName);
+    printf("\n");
+    printf("       Create a test set for territories in CSV format\n");
     printf("\n");
     printf("    %s [-b[XYZ] | --boundaries[XYZ]] [<extraDigits>]\n", appName);
     printf("    %s [-g[XYZ] | --grid[XYZ]]   <nrOfPoints> [<extraDigits>]\n", appName);
@@ -525,6 +530,78 @@ int main(const int argc, const char **argv) {
             if (selfCheckEnabled) {
                 selfCheckMapcodeToLatLon(foundMapcode, lat, lon);
             }
+        }
+    }
+    else if ((strcmp(cmd, "-t") == 0) ||
+             (strcmp(cmd, "--boundaries") == 0)) {
+
+        // ------------------------------------------------------------------
+        // Generate a test set based on the Mapcode territories
+        // ------------------------------------------------------------------
+        if ((argc < 2) || (argc > 2)) {
+            fprintf(stderr, "error: incorrect number of arguments\n\n");
+            usage(appName);
+            return NORMAL_ERROR;
+        }
+        printf("ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separated)\n");
+        for (int i = 1; i <= MAX_MAPCODE_TERRITORY_CODE; ++i) {
+            int ccode = i-1;
+            char territoryName[MAX_MAPCODE_RESULT_LEN];
+            printf("%d,",ccode);
+            // use internal knowledge of alphaSearch to show aliases of territoryName
+            printf("%s", getTerritoryIsoName(territoryName,i,0));
+            for (int a = 0; a < NRTERREC; a++ ) {
+                if ( alphaSearch[a].ccode == ccode ) {
+                    char fullcode[16];
+                    strcpy(fullcode,alphaSearch[a].alphaCode);
+                    if ( fullcode[0]>='0' && fullcode[0]<='9' ) {
+                        int p = (fullcode[0] - '0');
+                        memcpy(fullcode, &parents2[p * 3 - 3], 2);
+                        fullcode[2] = '-';
+                        strcpy(fullcode+ 3, alphaSearch[a].alphaCode+1);
+                    }
+                    if (strcmp(fullcode,territoryName)!=0) {
+                        printf("|%s",fullcode);
+                    }
+                }
+            }
+            printf(",");
+            // print alphabets
+            const TerritoryAlphabets *territoryAlphabets = getAlphabetsForTerritory(i);
+            for (int j = 0; j < territoryAlphabets->count; j++) {
+                if (j>0) {
+                    printf("|");
+                }
+                printf("%d",territoryAlphabets->alphabet[j]);
+            }
+            printf(",");
+            // use internal knowledge of isofullname to show aliases of full territory name
+            char *names = strdup(isofullname[ccode]);
+            char *s = names;
+            while (s) {
+                if (s != names) {
+                    printf("|");
+                }
+                char *e = strstr(s," (");
+                if (e) {
+                    *e = 0;
+                    if (e[-1]==')') {
+                        e[-1]=0;
+                    }
+                    printf("%s",s);
+                    s = e + 2;
+                }
+                else {
+                    e = s + strlen(s);
+                    if (e[-1]==')') {
+                        e[-1]=0;
+                    }
+                    printf("%s",s);
+                    s = NULL;
+                }                                
+            }
+            // end of line
+            printf("\n");
         }
     }
     else if ((strcmp(cmd, "-b") == 0) || (strcmp(cmd, "-bXYZ") == 0) ||

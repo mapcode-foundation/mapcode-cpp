@@ -24,6 +24,7 @@
 // #include <time.h>
 
 #include "../mapcodelib/mapcoder.c"
+#include "../mapcodelib/mapcode_countrynames_short.h"
 #include "test_territories.c"
 #include "decode_test.h"
 
@@ -37,8 +38,11 @@ static void alphabet_tests() {
     int i, j;
     const char *str, *expect;
     static const char *testpairs[] = {
+            ".123",".123",
+            "49.4V", "49.4V",
             "00.E0", "00.E0",
-            ".123", ".123",
+            "X123.P456","X123.P456",
+            "z789.b012","Z789.B012",
             "", "",
             "-", "-",
             ".", ".",
@@ -46,6 +50,8 @@ static void alphabet_tests() {
             "-xyz", "-XYZ",
             ".xyz", ".XYZ",
             "12.34", "12.34",
+            "56.78", "56.78",
+            "90.01", "90.01",
             "OEUoi OIoi#%?-.abcdfghjklmnpqrstvwxyz0123456789euEUABCDFGHJKLMNPQRSTVWXYZ",
             "OEUoi OIOI#%?-.ABCDFGHJKLMNPQRSTVWXYZ0123456789EUEUABCDFGHJ",
             "OEUoi OIoi#%?abcdfghjklmnpqrstvwxyz0123456789euEUABCDFGHJKLMNPQRSTVWXYZ",
@@ -892,6 +898,129 @@ void robustness_tests() {
     alphabet_robustness_tests();
 }
 
+void alphabet_per_territory_tests() {
+    int i,j;
+    for (i=0;i<MAX_CCODE;i++) {
+        if (alphabetsForTerritory[i].count<1 || alphabetsForTerritory[i].count>MAX_ALPHABETS_PER_TERRITORY) {
+            nrErrors++;
+            printf("*** ERROR *** Bad alphabetsForTerritory[%d].count: %d\n", i, alphabetsForTerritory[i].count);
+        }
+        for (j=0;j<alphabetsForTerritory[i].count;j++) {
+            if (alphabetsForTerritory[i].alphabet[j]<0 || alphabetsForTerritory[i].alphabet[j]>=MAPCODE_ALPHABETS_TOTAL) {
+                nrErrors++;
+                printf("*** ERROR *** Bad alphabetsForTerritory[%d].alphabet[%d]: %d\n", i,j, alphabetsForTerritory[i].alphabet[j]);
+            }
+        }
+    }
+}
+
+void test_territories_csv() {
+    int linesTested = 0;
+    const char *csvName = "territories.csv";
+    FILE *fp = fopen(csvName, "r");
+    if (fp == NULL) {
+        nrErrors++;
+        printf("*** ERROR *** Can't read file %s\n", csvName );
+    }
+    else {
+        #define MAXLINESIZE 1024
+        char line[MAXLINESIZE];        
+        if (fgets(line, MAXLINESIZE, fp) != NULL) { // skip header line
+            while (fgets(line, MAXLINESIZE, fp) != NULL) {
+                long csvTerritoryCode;                
+                char *s = line;
+                char *e = strchr(s,',');
+                if (e) {
+                    linesTested++;
+                    *e=0;
+                    csvTerritoryCode = atol(s) + 1;
+                    s = e+1;
+                    // parse and check aliases
+                    e = strchr(s,',');
+                    if (e) {
+                        *e = 0;
+                        while (*s) {
+                            int territoryCode;
+                            char* sep = strchr(s,'|');
+                            if (sep) {
+                                *sep = 0;
+                            }
+                            territoryCode = getTerritoryCode(s, 0);
+                            if (territoryCode != csvTerritoryCode) {
+                                nrErrors++;
+                                printf("*** ERROR *** Territory string %s returns code %d, expected %d\n", s, territoryCode, csvTerritoryCode);
+                            }
+                            if (sep) {
+                                s = sep + 1;
+                            }
+                            else {
+                                s = e;
+                            }
+                        }
+                        s++;
+                    }
+                    // parse and check alphabets
+                    e = strchr(s,',');
+                    if (e) {
+                        int csvNrAlphabets = 0;
+                        const TerritoryAlphabets *territoryAlphabet = getAlphabetsForTerritory(csvTerritoryCode);
+                        *e = 0;
+                        while (*s) {
+                            char* sep = strchr(s,'|');
+                            if (sep) {
+                                *sep = 0;
+                            }
+                            csvNrAlphabets++;
+                            if ((csvNrAlphabets > territoryAlphabet->count) || (atol(s) != territoryAlphabet->alphabet[csvNrAlphabets-1])) {
+                                nrErrors++;
+                                printf("*** ERROR *** Mismatch: alphabet %d of territory should be %d\n", csvNrAlphabets, atol(s));
+                            }
+                            if (sep) {
+                                s = sep + 1;
+                            }
+                            else {
+                                s = e;
+                            }
+                        }
+                        if (csvNrAlphabets != territoryAlphabet->count) {
+                            nrErrors++;
+                            printf("*** ERROR *** %d alphabets for territory %d, expected %d\n", territoryAlphabet->count, csvNrAlphabets);
+                        }
+                        s++;
+                    }
+                    // parse and check names
+                    e = strchr(s,10);
+                    if (e) {
+                        const char *territoryNames = isofullname[csvTerritoryCode-1];
+                        *e = 0;
+                        while (*s) {
+                            char *match;
+                            char* sep = strchr(s,'|');
+                            if (sep) {
+                                *sep = 0;
+                            }
+                            match = strstr(territoryNames,s);
+                            if (match == NULL || (match[strlen(s)] != ' ' && match[strlen(s)] != 0 && match[strlen(s)] != ')')) {
+                                nrErrors++;
+                                printf("*** ERROR *** Name \"%s\" not found in \"%s\"\n", s, territoryNames);
+                            }
+                            if (sep) {
+                                s = sep + 1;
+                            }
+                            else {
+                                s = e;
+                            }
+                        }
+                        s++;
+                    }
+                }
+            }
+        }
+
+        fclose(fp);
+    }
+    printf("%d lines tested from %s\n", linesTested, csvName);
+}
 
 int main(const int argc, const char **argv) {
     printf("Mapcode C Library Unit Tests\n");
@@ -903,16 +1032,20 @@ int main(const int argc, const char **argv) {
     printf("-----------------------------------------------------------\nAlphabet tests\n");
     alphabet_tests();
 
+    printf("-----------------------------------------------------------\nAlphabet per territory tests\n");
+    alphabet_per_territory_tests();
+
     printf("-----------------------------------------------------------\nDistance tests\n");
     distance_tests();
 
     printf("-----------------------------------------------------------\nTerritory tests\n");
     printf("%d territories\n", MAX_CCODE);
+    test_territories_csv();
     test_territories();
     territory_code_tests();
     test_territory_insides();
 
-    printf("-----------------------------------------------------------\nIncorrect format tests\n");
+    printf("-----------------------------------------------------------\nFormat tests\n");
     test_failing_decodes();
 
     printf("-----------------------------------------------------------\nEncode/decode tests\n");

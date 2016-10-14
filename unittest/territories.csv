@@ -1,5 +1,5 @@
 ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separated)
-0,VAT,0,Vatican City State|Holy See
+0,VAT,0,Vatican|Holy See
 1,MCO,0,Monaco
 2,GIB,0,Gibraltar
 3,TKL,0,Tokelau
@@ -10,8 +10,8 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 8,MAC|CN-92|CN-MC|MC,20|0,Macau|Aomen
 9,SXM,0,Sint Maarten
 10,MAF,0,Saint Martin
-11,NFK|AU-NF|NF,0,Norfolk and Philip Island|Philip Island
-12,PCN,0,Pitcairn Group of Islands
+11,NFK|AU-NF|NF,0,Norfolk and Philip Island|Philip Island|Norfolk Island
+12,PCN,0,Pitcairn Islands|Pitcairn, Henderson, Ducie and Oeno Islands
 13,BVT,0,Bouvet Island
 14,BMU,0,Bermuda|Somers Isles
 15,IOT|DGA,0,British Indian Ocean Territory
@@ -21,29 +21,29 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 19,MSR,0,Montserrat
 20,JEY,0,Jersey
 21,CXR|AU-CX|CX,20|14|0,Christmas Island
-22,WLF,0,Wallis and Futuna|Futuna
+22,WLF,0,Wallis and Futuna|Futuna|Wallis
 23,VGB,0,British Virgin Islands|Virgin Islands, British
 24,LIE,0,Liechtenstein
 25,ABW,0,Aruba
 26,MHL|WAK,0,Marshall Islands
 27,ASM|US-AS,0,American Samoa|Samoa, American
 28,COK,0,Cook Islands
-29,SPM,0,Saint Pierre and Miquelon|Miquelon
+29,SPM,0,Saint Pierre and Miquelon|Miquelon|Saint Pierre
 30,NIU,0,Niue
-31,KNA,0,Saint Kitts and Nevis|Nevis
+31,KNA,0,Saint Kitts and Nevis|Nevis|Saint Kitts
 32,CYM,0,Cayman islands
-33,BES,0,Bonaire, St Eustasuis and Saba|Saba|St Eustasius
+33,BES,0,Bonaire, St Eustasuis and Saba|Bonaire|Saba|St Eustasius
 34,MDV,19|0,Maldives
-35,SHN|ASC|TAA,0,Saint Helena, Ascension and Tristan da Cunha|Ascension|Tristan da Cunha
+35,SHN|ASC|TAA,0,Saint Helena, Ascension and Tristan da Cunha|Saint Helena|Ascension|Tristan da Cunha
 36,MLT,0,Malta
 37,GRD,0,Grenada
 38,VIR|US-VI|VI,0,Virgin Islands of the United States|US Virgin Islands|American Virgin Islands
 39,MYT,0|14,Mayotte|Maore
-40,SJM,0|2,Svalbard and Jan Mayen|Jan Mayen|Spitsbergen
-41,VCT,0,Saint Vincent and the Grenadines|Grenadines
-42,HMD|AU-HM|HM,0,Heard Island and McDonald Islands|McDonald Islands
+40,SJM,0|2,Svalbard and Jan Mayen|Svalbard|Jan Mayen|Spitsbergen
+41,VCT,0,Saint Vincent and the Grenadines|Saint Vincent|Grenadines
+42,HMD|AU-HM|HM,0,Heard Island and McDonald Islands|Heard Island|McDonald Islands
 43,BRB,0,Barbados
-44,ATG,0,Antigua and Barbuda|Barbuda
+44,ATG,0,Antigua and Barbuda|Antigua|Barbuda
 45,CUW,0,Curacao
 46,SYC,0,Seychelles
 47,PLW,0,Palau
@@ -58,8 +58,8 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 56,DMA,0,Dominica
 57,BHR,14|0,Bahrain
 58,KIR,0,Kiribati
-59,TCA,0,Turks and Caicos Islands|Caicos Islands
-60,STP,0,Sao Tome and Principe|Principe
+59,TCA,0,Turks and Caicos Islands|Turks Islands|Caicos Islands
+60,STP,0,Sao Tome and Principe|Sao Tome|Principe
 61,HKG|CN-91|CN-HK|HK,20|0,Hong Kong|Xianggang
 62,MTQ,0,Martinique
 63,FRO,0,Faroe Islands
@@ -69,10 +69,10 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 67,REU,0,Reunion
 68,LUX,0,Luxembourg
 69,WSM,0,Samoa
-70,SGS,0,South Georgia and the South Sandwich Islands|South Sandwich Islands
+70,SGS,0,South Georgia and the South Sandwich Islands|South Georgia|South Sandwich Islands
 71,PYF,0,French Polynesia
 72,CPV,0,Cape Verde|Cabo Verde|Republic of Cabo Verde
-73,TTO,0,Trinidad and Tobago|Tobago
+73,TTO,0,Trinidad and Tobago|Trinidad|Tobago
 74,BRN,14|0,Brunei
 75,ATF,0,French Southern and Antarctic Lands
 76,PRI|US-PR,0,Puerto Rico
@@ -81,7 +81,7 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 79,JAM,0,Jamaica
 80,GMB,0,Gambia|The Gambia
 81,QAT,14|0,Qatar
-82,FLK,0,Falkland Islands
+82,FLK,0,Falkland Islands|The Falklands
 83,VUT,0,Vanuatu
 84,MNE,2|0,Montenegro
 85,BHS,0,Bahamas
@@ -136,7 +136,7 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 134,JOR,14|0,Jordan
 135,PRT,0,Portugal|Portuguese Republic
 136,HUN,0,Hungary
-137,KOR,15|0,South Korea|Republic of Korea
+137,KOR,15|0,South Korea|Republic of Korea|Korea, South
 138,ISL,0,Iceland
 139,GTM,0,Guatemala
 140,CUB,0,Cuba
@@ -146,9 +146,9 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 144,BEN,0,Benin
 145,ERI,23|14|0,Eritrea
 146,MWI,0,Malawi
-147,PRK,15|0,North Korea|Democratic People's Republic of Korea
+147,PRK,15|0,North Korea|Democratic People's Republic of Korea|Korea, North
 148,NIC,0,Nicaragua
-149,GRC,1|0,Greece|Hellenic Republic
+149,GRC,1|0,Greece|Hellenic Republic|Hellas
 150,TJK,2|0,Tajikistan
 151,BGD,11|0,Bangladesh
 152,NPL,4|0,Nepal
@@ -165,7 +165,7 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 163,ROU,2|0,Romania
 164,GHA,0,Ghana
 165,UGA,0,Uganda
-166,GBR,0,United Kingdom|Scotland|Great Britain|Northern Ireland|Ireland, Northern|Britain|United Kingdom of Great Britain and Northern Ireland
+166,GBR,0,United Kingdom|Scotland|Great Britain|England|Northern Ireland|Ireland, Northern|Britain|United Kingdom of Great Britain and Northern Ireland
 167,GIN,0,Guinea|Guinea-Conakry
 168,ECU,0,Ecuador
 169,ESH,14|0,Western Sahara|Sahrawi Arab Democratic Republic
@@ -271,9 +271,9 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 269,KAZ,2|0,Kazakhstan
 270,ARG,0,Argentina|Argentine Republic
 271,IN-DD|DD,4|27|0,Daman and Diu
-272,IN-DN|DN,4|27|0,Dadra and Nagar Haveli
+272,IN-DN|DN,4|27|0,Dadra and Nagar Haveli|Dadra|Nagar Haveli
 273,IN-CH|CH,4|0|12,Chandigarh
-274,IN-AN|AN,4|0|11,Andaman and Nicobar
+274,IN-AN|AN,4|0|11,Andaman and Nicobar|Andaman|Nicobar
 275,IN-LD|LD,5|0|4,Lakshadweep
 276,IN-DL|DL,4|12|0,Delhi
 277,IN-ML|ML,0|4,Meghalaya
@@ -292,7 +292,7 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 290,IN-KL|KL,5|0|4,Kerala
 291,IN-TN|TN,22|4|0,Tamil Nadu
 292,IN-HP|HP,4|0,Himachal Pradesh
-293,IN-JK|JK,4|12|0,Jammu and Kashmir
+293,IN-JK|JK,4|12|0,Jammu and Kashmir|Jammu|Kashmir
 294,IN-CT|IN-CG|CG|CT,4|0,Chhattisgarh
 295,IN-JH|JH,4|11|0,Jharkhand
 296,IN-KA|KA,26|4|0,Karnataka
@@ -399,7 +399,7 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 397,CA-QC|QC,0,Quebec
 398,CA-SK,0,Saskatchewan
 399,CA-MB|MB,0,Manitoba
-400,CA-NL,0,Newfoundland and Labrador|Labrador
+400,CA-NL,0,Newfoundland and Labrador|Newfoundland|Labrador
 401,CA-NB|NB,0,New Brunswick
 402,CA-NS|NS,0,Nova Scotia
 403,CA-PE,0,Prince Edward Island

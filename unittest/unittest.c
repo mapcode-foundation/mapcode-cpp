@@ -1148,6 +1148,7 @@ int main(const int argc, const char **argv) {
     int nrTests = 0;
     printf("Mapcode C Library Unit Tests\n");
     printf("Library version %s (data version %s)\n", mapcode_cversion, mapcode_dataversion);
+    printf("Using up to %d threads to test in parallel...\n", MAX_THREADS);
 
     printf("-----------------------------------------------------------\nRobustness tests\n");
     nrTests += robustness_tests();

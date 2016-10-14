@@ -23,44 +23,46 @@
 #include <math.h>
 #include <time.h>
 
-#define USE_PTHREADS       // If your platform does not support pthread.h please change this line to #undef!
-// #undef USE_PTHREADS
-
 #include "../mapcodelib/mapcoder.c"
 #include "../mapcodelib/mapcode_countrynames_short.h"
 #include "test_territories.c"
 #include "decode_test.h"
 
-#ifdef USE_PTHREADS
-#include <pthread.h>
-#else
-#define pthread_mutex_lock(ignore)      // Fake implementation of pthread.
+// If your platform does not support pthread.h, either add -DNO_POSIX_THREADS
+// to your compiler command-line, or uncomment the following line:
+// #define NO_POSIX_THREADS
+
+#ifdef NO_POSIX_THREADS
+
+// Fake implementation of pthread to not use threads at all:
+#define pthread_mutex_lock(ignore)      
 #define pthread_mutex_unlock(ignore)
 #define pthread_mutex_t int
 #define PTHREAD_MUTEX_INITIALIZER 0
 #define pthread_t int
 #define pthread_join(ignore1, ignore2) 0
 #define pthread_create(ignore1, ignore2, func, context) func(context)
+#define MAX_THREADS 1
+#else
+#include <pthread.h>
+#define MAX_THREADS 16      // Optimal: not too much, approx. nr of cores * 2, better no more than 32.
 #endif
 
 #define MAXLINESIZE 1024
-#ifdef USE_PTHREADS
-#define MAX_THREADS 16      // Optimal: not too much, approx. nr of cores * 2, better no more than 32.
-#else
-#define MAX_THREADS 1
-#endif
 
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-int nrErrors = 0;
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static int nrErrors = 0;
 
-void found_error() {
+#define LARGE_NUMBER 16000
+
+static void found_error(void) {
     pthread_mutex_lock(&mutex);
     ++nrErrors;
     pthread_mutex_unlock(&mutex);
 }
 
 // test the alphabet conversion routines
-int alphabet_tests() {
+static int alphabet_tests(void) {
     int nrTests = 0;
     int i, j;
     const char *str, *expect;
@@ -153,7 +155,7 @@ int alphabet_tests() {
 }
 
 // Show progress.
-void show_progress(int at, int max, int nrTests) {
+static void show_progress(int at, int max, int nrTests) {
     static clock_t prevTick = 0;
 
     // No worries, clock() is a very fast call.
@@ -167,7 +169,7 @@ void show_progress(int at, int max, int nrTests) {
 }
 
 //
-void printGeneratedMapcodes(const char *title, const Mapcodes *mapcodes) {
+static void printGeneratedMapcodes(const char *title, const Mapcodes *mapcodes) {
     int i, nrresults = mapcodes->count;
     printf(" %s: %d results", title, nrresults);
     for (i = 0; i < nrresults; i++) {
@@ -178,7 +180,7 @@ void printGeneratedMapcodes(const char *title, const Mapcodes *mapcodes) {
 }
 
 // test encode x,y to M, decode M, re-encode back to M
-int testEncodeAndDecode(const char *str, double y, double x, int localsolutions, int globalsolutions) {
+static int testEncodeAndDecode(const char *str, double y, double x, int localsolutions, int globalsolutions) {
     int nrTests = 0;
     char clean[MAX_MAPCODE_RESULT_LEN];
     const char *p, *s;
@@ -368,7 +370,7 @@ int testEncodeAndDecode(const char *str, double y, double x, int localsolutions,
 }
 
 // test strings that are expected to FAIL a decode
-int test_failing_decodes() {
+static int test_failing_decodes(void) {
     int nrTests = 0;
     static const char *badcodes[] = {
 
@@ -492,7 +494,7 @@ int test_territory(const char *alphaCode, int tc, int isAlias, int needsParent, 
 
 
 // test closely around a particular coordinate
-int test_around(double y, double x) {
+static int test_around(double y, double x) {
     int nrTests = 0;
     nrTests += testEncodeAndDecode("", y + 0.00001, x + 0.00001, 0, 0);
     nrTests += testEncodeAndDecode("", y + 0.00001, x, 0, 0);
@@ -516,7 +518,7 @@ struct context_test_around {
 };
 
 
-int join_threads(pthread_t *threads, struct context_test_around *contexts, int total) {
+static int join_threads(pthread_t *threads, struct context_test_around *contexts, int total) {
     int i = 0;
     int nrTests = 0;
     for (i = 0; i < total; ++i) {
@@ -532,7 +534,7 @@ int join_threads(pthread_t *threads, struct context_test_around *contexts, int t
 }
 
 // perform testEncodeAndDecode for all elements of encode_test[] (from decode_test.h)
-int encode_decode_tests() {
+static int encode_decode_tests(void) {
     int nrTests = 0;
     int i = 0;
     int nr = sizeof(encode_test) / sizeof(encode_test_record) - 1;
@@ -546,7 +548,7 @@ int encode_decode_tests() {
     return nrTests;
 }
 
-void *execute_test_around(void *context) {
+static void *execute_test_around(void *context) {
     int nrTests = 0;
     double y, x, midx, midy, thirdx;
     struct context_test_around *c = (struct context_test_around *) context;
@@ -582,7 +584,7 @@ void *execute_test_around(void *context) {
 
 
 // test around all centers and corners of all territory rectangles
-int re_encode_tests() {
+static int re_encode_tests(void) {
     int nrTests = 0;
     int ccode = 0;
     int m = 0;
@@ -623,7 +625,7 @@ int re_encode_tests() {
     return nrTests;
 }
 
-int distance_tests() {
+static int distance_tests(void) {
     int nrTests = 0;
     if (strcmp(mapcode_cversion, "2.1.3") >= 0) {
         int i;
@@ -662,7 +664,7 @@ int distance_tests() {
 }
 
 
-int test_territory_insides() {
+static int test_territory_insides(void) {
     int nrTests = 0;
     if (strcmp(mapcode_cversion, "2.1.5") >= 0) {
         int i;
@@ -724,7 +726,7 @@ int test_territory_insides() {
     return nrTests;
 }
 
-int territory_code_tests() {
+static int territory_code_tests(void) {
     int nrTests = 0;
     int i;
 
@@ -772,7 +774,7 @@ int territory_code_tests() {
 }
 
 
-int check_incorrect_get_territory_code_test(char *tcAlpha) {
+static int check_incorrect_get_territory_code_test(char *tcAlpha) {
     int tc = getTerritoryCode(tcAlpha, 0);
     if (tc >= 0) {
         found_error();
@@ -782,11 +784,11 @@ int check_incorrect_get_territory_code_test(char *tcAlpha) {
 }
 
 
-int get_territory_robustness_tests() {
+static int get_territory_robustness_tests(void) {
     int nrTests = 0;
     int i;
     char s1[1];
-    char s10k[10000];
+    char largeString[LARGE_NUMBER];
 
     nrTests += check_incorrect_get_territory_code_test("UNKNOWN");
     nrTests += check_incorrect_get_territory_code_test("A");
@@ -806,15 +808,15 @@ int get_territory_robustness_tests() {
     s1[0] = 0;
     nrTests += check_incorrect_get_territory_code_test(s1);
 
-    for (i = 0; i < sizeof(s10k); ++i) {
-        s10k[i] = (char) ((i % 223) + 32);
+    for (i = 0; i < sizeof(largeString); ++i) {
+        largeString[i] = (char) ((i % 223) + 32);
     }
-    nrTests += check_incorrect_get_territory_code_test(s10k);
+    nrTests += check_incorrect_get_territory_code_test(largeString);
     return nrTests;
 }
 
 
-int check_incorrect_encode_test(double lat, double lon, int treatAsError) {
+static int check_incorrect_encode_test(double lat, double lon, int treatAsError) {
     int nrResults;
     int nrTests = 0;
     Mapcodes mapcodes;
@@ -831,7 +833,7 @@ int check_incorrect_encode_test(double lat, double lon, int treatAsError) {
 }
 
 
-int check_correct_encode_test(double lat, double lon, int treatAsError) {
+static int check_correct_encode_test(double lat, double lon, int treatAsError) {
     Mapcodes mapcodes;
     int nrResults = encodeLatLonToMapcodes(&mapcodes, lat, lon, 0, 0);
     if (nrResults <= 0) {
@@ -845,7 +847,7 @@ int check_correct_encode_test(double lat, double lon, int treatAsError) {
 }
 
 
-int encode_robustness_tests() {
+static int encode_robustness_tests(void) {
     int nrTests = 0;
     double d;
     unsigned char *b = (unsigned char *) &d;
@@ -920,7 +922,7 @@ int encode_robustness_tests() {
 }
 
 
-int check_incorrect_decode_test(char *mc, int tc) {
+static int check_incorrect_decode_test(char *mc, int tc) {
     double lat;
     double lon;
     int rc = decodeMapcodeToLatLon(&lat, &lon, mc, tc);
@@ -932,7 +934,7 @@ int check_incorrect_decode_test(char *mc, int tc) {
 }
 
 
-int check_correct_decode_test(char *mc, int tc) {
+static int check_correct_decode_test(char *mc, int tc) {
     double lat;
     double lon;
     int rc = decodeMapcodeToLatLon(&lat, &lon, mc, tc);
@@ -944,11 +946,11 @@ int check_correct_decode_test(char *mc, int tc) {
 }
 
 
-int decode_robustness_tests() {
+static int decode_robustness_tests(void) {
     int nrTests = 0;
     int i;
     char s1[1];
-    char s10k[10000];
+    char largeString[LARGE_NUMBER];
 
     int tc = getTerritoryCode("NLD", 0);
     nrTests += check_incorrect_decode_test("", 0);
@@ -965,8 +967,8 @@ int decode_robustness_tests() {
     nrTests += check_incorrect_decode_test(s1, 0);
     nrTests += check_incorrect_decode_test(s1, tc);
 
-    for (i = 0; i < sizeof(s10k); ++i) {
-        s10k[i] = (char) ((i % 223) + 32);
+    for (i = 0; i < sizeof(largeString); ++i) {
+        largeString[i] = (char) ((i % 223) + 32);
     }
     nrTests += check_incorrect_decode_test(s1, 0);
     nrTests += check_incorrect_decode_test(s1, tc);
@@ -974,7 +976,7 @@ int decode_robustness_tests() {
 }
 
 
-int check_alphabet_assertion(char *msg, int condition, char *format, int a) {
+static int check_alphabet_assertion(char *msg, int condition, char *format, int a) {
     if (condition == 0) {
         found_error();
         printf("*** ERROR *** %s, ", msg);
@@ -985,20 +987,20 @@ int check_alphabet_assertion(char *msg, int condition, char *format, int a) {
 }
 
 
-int alphabet_robustness_tests() {
+static int alphabet_robustness_tests(void) {
     int nrTests = 0;
     int i;
     int a;
     char s1[1];
-    char s10k[10000];
+    char largeString[LARGE_NUMBER];
     char *ps;
     UWORD u1[1];
-    UWORD u10k[10000];
+    UWORD largeUnicodeString[LARGE_NUMBER];
     UWORD *pu;
 
     s1[0] = 0;
-    for (i = 0; i < sizeof(s10k); ++i) {
-        s10k[i] = (char) ((i % 223) + 32);
+    for (i = 0; i < sizeof(largeString); ++i) {
+        largeString[i] = (char) ((i % 223) + 32);
     }
 
     for (a = 0; a < MAPCODE_ALPHABETS_TOTAL; a++) {
@@ -1011,19 +1013,18 @@ int alphabet_robustness_tests() {
         nrTests += check_alphabet_assertion("convertToRoman cannot return 0", ps != 0, "alphabet=%d", a);
         nrTests += check_alphabet_assertion("convertToRoman must return empty string", ps[0] == 0, "alphabet=%d", a);
 
-        pu = convertToAlphabet(u10k, sizeof(u10k), s10k, 0);
+        pu = convertToAlphabet(largeUnicodeString, sizeof(largeUnicodeString) / sizeof(largeUnicodeString[0]), largeString, 0);
         nrTests += check_alphabet_assertion("convertToAlphabet cannot return 0", pu != 0, "alphabet=%d", a);
 
-        ps = convertToRoman(s10k, sizeof(s10k), pu);
+        ps = convertToRoman(largeString, sizeof(largeString) / sizeof(largeString[0]), pu);
         nrTests += check_alphabet_assertion("convertToRoman cannot return 0", ps != 0, "alphabet=%d", a);
-        nrTests += check_alphabet_assertion("convertToRoman must return size", strlen(ps) < sizeof(s10k), "alphabet=%d",
-                                            a);
+        nrTests += check_alphabet_assertion("convertToRoman must return size", strlen(ps) < sizeof(largeString), "alphabet=%d", a);
     }
     return nrTests;
 }
 
 
-int robustness_tests() {
+static int robustness_tests(void) {
     int nrTests = 0;
     nrTests += get_territory_robustness_tests();
     nrTests += encode_robustness_tests();
@@ -1032,7 +1033,7 @@ int robustness_tests() {
     return nrTests;
 }
 
-int alphabet_per_territory_tests() {
+static int alphabet_per_territory_tests(void) {
     int nrTests = 0;
     int i, j;
     for (i = 0; i < MAX_CCODE; i++) {
@@ -1054,7 +1055,7 @@ int alphabet_per_territory_tests() {
     return nrTests;
 }
 
-int test_territories_csv() {
+static int test_territories_csv(void) {
     int nrTests = 0;
     int linesTested = 0;
     const char *csvName = "territories.csv";

@@ -447,7 +447,7 @@ static int unpack_if_alldigits(char *input) {
     const int aonly = ((*s == 'A') || (*s == 'a'));
     if (aonly) {
         s++;
-    } //*** v1.50
+    } // v1.50
     for (; *s != 0 && s[2] != 0 && s[2] != '-'; s++) {
         if (*s == '-') {
             break;
@@ -934,7 +934,7 @@ static void encoderEngine(const int ccode, const encodeRec *enc, const int stop_
                     // *** do a recursive call for the parent ***
                     encoderEngine(ParentTerritoryOf(ccode), enc, stop_with_one_result, extraDigits, requiredEncoder,
                                   ccode);
-                    return; /**/
+                    return; 
                 } else // must be grid
                 {
                     // skip isRestricted records unless there already is a result

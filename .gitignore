@@ -95,6 +95,10 @@ atlassian-ide-plugin.xml
 *.dsw
 *.ncb
 *.plg
+*.suo
+*.sln
+*.vcxproj*
+Debug
 *.opt
 *.pch
 *.pdb

@@ -2,7 +2,7 @@
 
 extern int test_territory(const char *alphacode, int tc, int isAlias, int needsParent, int tcParent );
 
-int test_territories() {
+static int test_territories(void) {
     int nrTests = 0;
     nrTests += test_territory("AAA", 533, 0, 0, 0);
     nrTests += test_territory("AB", 396, 0, 0, 496);

@@ -22,7 +22,21 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+
+#define USE_PTHREADS       // Please change this to #undef USE_PTHREADS if your platform does not support pthread.h!
+// #undef USE_PTHREADS
+
+#ifdef USE_PTHREADS
 #include <pthread.h>
+#else
+#define pthread_mutex_lock(ignore)      // Fake implementation of pthread.
+#define pthread_mutex_unlock(ignore)
+#define pthread_mutex_t int
+#define PTHREAD_MUTEX_INITIALIZER 0
+#define pthread_t int
+#define pthread_join(ignore1, ignore2) 0
+#define pthread_create(ignore1, ignore2, func, context) func(context)
+#endif
 
 #include "../mapcodelib/mapcoder.c"
 #include "../mapcodelib/mapcode_countrynames_short.h"
@@ -30,8 +44,11 @@
 #include "decode_test.h"
 
 #define MAXLINESIZE 1024
+#ifdef USE_PTHREADS
 #define MAX_THREADS 16      // Optimal: not too much, approx. nr of cores * 2, better no more than 32.
-
+#else
+#define MAX_THREADS 1
+#endif
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 int nrErrors = 0;
@@ -562,6 +579,7 @@ void *execute_test_around(void *context) {
     c->nrTests = nrTests;
     return 0;
 }
+
 
 // test around all centers and corners of all territory rectangles
 int re_encode_tests() {

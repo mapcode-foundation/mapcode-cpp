@@ -316,7 +316,7 @@ int testEncodeAndDecode(const char *str, double y, double x, int localsolutions,
                     int tc2 = -1;
                     int tcParent = -1;
                     int j;
-                    char *e = strchr(strResult, ' ');
+                    char *e = (char*) strchr(strResult, ' ');
                     found = 0;
                     if (e) {
                         *e = 0;
@@ -538,8 +538,8 @@ int encode_decode_tests() {
     int nr = sizeof(encode_test) / sizeof(encode_test_record) - 1;
     printf("%d encodes\n", nr);
     for (i = 0; i < nr; i++) {
-        show_progress(i, nr, nrTests);
         const encode_test_record *t = &encode_test[i];
+        show_progress(i, nr, nrTests);
         nrTests += testEncodeAndDecode(t->mapcode, t->latitude, t->longitude, t->nr_local_mapcodes,
                                        t->nr_global_mapcodes);
     }
@@ -815,10 +815,11 @@ int get_territory_robustness_tests() {
 
 
 int check_incorrect_encode_test(double lat, double lon, int treatAsError) {
+    int nrResults;
     int nrTests = 0;
     Mapcodes mapcodes;
     ++nrTests;
-    int nrResults = encodeLatLonToMapcodes(&mapcodes, lat, lon, 0, 0);
+    nrResults = encodeLatLonToMapcodes(&mapcodes, lat, lon, 0, 0);
     if (nrResults > 0) {
         if (treatAsError) {
             found_error();
@@ -1139,7 +1140,7 @@ int test_territories_csv() {
                             if (sep) {
                                 *sep = 0;
                             }
-                            match = strstr(territoryNames, s);
+                            match = (char*) strstr(territoryNames, s);
                             if (match == NULL ||
                                 (match[strlen(s)] != ' ' && match[strlen(s)] != 0 && match[strlen(s)] != ',' &&
                                  match[strlen(s)] != ')')) {

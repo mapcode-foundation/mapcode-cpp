@@ -106,6 +106,10 @@ static void usage(const char *appName) {
     printf("\n");
     printf("       Create a full set of territories in CSV format.\n");
     printf("\n");
+    printf("    %s [-a | --alphabets]\n", appName);
+    printf("\n");
+    printf("       Create a full set of alphabet tests in CSV format.\n");
+    printf("\n");
     printf("    %s [-b[XYZ] | --boundaries[XYZ]] [<extraDigits>]\n", appName);
     printf("    %s [-g[XYZ] | --grid[XYZ]]   <nrOfPoints> [<extraDigits>]\n", appName);
     printf("    %s [-r[XYZ] | --random[XYZ]] <nrOfPoints> [<extraDigits>] [<seed>]\n", appName);
@@ -380,6 +384,25 @@ static void showProgress(int i) {
             i, totalNrOfPoints, totalNrOfResults);
 }
 
+/**
+ * Quickly convert a zero-terminated UTF16 to a UTF8 string (assuming sufficient room in utf8)
+ */
+void convertUtf16ToUtf8(char *utf8, const UWORD *utf16) {
+    while (*utf16) {
+        UWORD c = *utf16++;
+        if (c < 0x80) {
+            *utf8++ = (char) c;
+        } else if (c < 0x800) {
+            *utf8++ = (char) (192 + (c >> 6));
+            *utf8++ = (char) (128 + (c & 63));
+        } else {
+            *utf8++ = (char) (224 + (c >> 12));
+            *utf8++ = (char) (128 + ((c >> 6) & 63));
+            *utf8++ = (char) (128 + (c & 63));
+        }
+    }
+    *utf8 = 0;
+}
 
 /**
  * This is the main() method which is called from the command-line.
@@ -522,7 +545,7 @@ int main(const int argc, const char **argv) {
             }
         }
     } else if ((strcmp(cmd, "-t") == 0) ||
-               (strcmp(cmd, "--boundaries") == 0)) {
+               (strcmp(cmd, "--territories") == 0)) {
 
         // ------------------------------------------------------------------
         // Generate a test set based on the Mapcode territories
@@ -592,6 +615,110 @@ int main(const int argc, const char **argv) {
                 }
             }
             printf("\n");
+        }
+    } else if ((strcmp(cmd, "-a") == 0) ||
+               (strcmp(cmd, "--alphabets") == 0)) {
+
+        // ------------------------------------------------------------------
+        // Generate a test set based on the Mapcode territories
+        // ------------------------------------------------------------------
+        static const char *mapcodeForCSV[] = {
+                // all characters
+                "89.EU",
+                "00.0A",
+                "BCDF.GHJK",
+                "LMNP.QRST",
+                "VWXY.Z123",
+                "4567.890B",
+                // all forms
+                "pq.xy",
+                "pq.xyz",
+                "pqx.yz",
+                "pq.rxyz",
+                "pqr.xyz",
+                "pqrx.yz",
+                "pqr.sxyz",
+                "pqrs.xyz",
+                "pqrs.txyz",
+                "pqrst.vxyz",
+                // all adjad forms
+                "p1.xy",
+                "pq.2y",
+                "3q.x4",
+                "5q.6y",
+                "pq.1yz",
+                "pq1.yz",
+                "p2.x3z",
+                "p2x.3z",
+                "pq.1xy2",
+                "pq1.xy2",
+                "pq1x.y2",
+                "p3.rx4z",
+                "p3r.x4z",
+                "p3rx.4z",
+                "5q.r6y7",
+                "5qr.6y7",
+                "5qr6.y7",
+                "pq1.sx2z",
+                "pq1s.x2z",
+                "p3r.s4yz",
+                "p3rs.4yz",
+                "5qr.6xy7",
+                "5qr6.xy7",
+                "8q9.sx0z",
+                "8q9s.x0z",
+                "1qr2.tx3z",
+                "p4rs.5xy6",
+                "p7r8.t9y0",
+                "pq1st.2xy3",
+                "p4rs5.vx6z",
+                "7qr8t.v9yz",
+                "p1r2t.3x4z",
+                "5q6s7.v8y9",
+                // non-mapcode
+                "^0123456789!@#$^&*()/:;[]{}<>?|~%",
+                "abcdefghijklmnopqrstuvwxyz",
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                // special case for digit-like characters
+                "OI.xx",
+                "oi.xx",
+                "oi.xx-oooooooo",
+                "oi.xx-iiiiiiii",
+                "PQ.RS-01234567",
+                "PQ.RS-890",
+                NULL
+        };
+        if ((argc < 2) || (argc > 2)) {
+            fprintf(stderr, "error: incorrect number of arguments\n\n");
+            usage(appName);
+            return NORMAL_ERROR;
+        }
+
+        printf("alphabetNr,MapcodeInRoman,MapcodeInAlphabet,BackInRoman\n");
+        for (int alphabet = 0; alphabet < MAPCODE_ALPHABETS_TOTAL; ++alphabet) {
+            int variant;
+            for (variant = 0; variant <= 2; variant++) {
+                int m;
+                for (m = 0; mapcodeForCSV[m] != NULL; m++) {
+                    char str[128];
+                    char recoded[128];
+                    UWORD unibuf[128];
+                    // build a mapcode variant
+                    char mc[128];
+                    strcpy(mc, mapcodeForCSV[m]);
+                    strcat(mc, (variant == 1) ? "-bc" : (variant == 2) ? "-DFGHJKLM" : "");
+                    // convert to alphabet, and back to roman
+                    convertToAlphabet(unibuf, 128, mc, alphabet);
+                    convertToRoman(recoded, 128, unibuf);
+                    // output a line of csv (in utf8 format)
+                    convertUtf16ToUtf8(str, unibuf);
+                    printf("%d,%s,%s,%s\n", alphabet, mc, str, recoded);
+                    if (stricmp(mc, recoded) != 0) {
+                        fprintf(stderr, "error: utility produces unexpected results\n\n");
+                        return NORMAL_ERROR;
+                    }
+                }
+            }
         }
     } else if ((strcmp(cmd, "-b") == 0) || (strcmp(cmd, "-bXYZ") == 0) ||
                (strcmp(cmd, "--boundaries") == 0) || (strcmp(cmd, "--boundariesXYZ") == 0)) {

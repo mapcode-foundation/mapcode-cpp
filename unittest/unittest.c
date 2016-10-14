@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <pthread.h>
 
 #include "../mapcodelib/mapcoder.c"
 #include "../mapcodelib/mapcode_countrynames_short.h"
@@ -31,6 +32,8 @@
 extern void test_territories();
 
 #define MAXLINESIZE 1024
+#define MAX_THREADS 16
+
 
 // globals to count tests, errors and warnings
 int nrTests = 0;
@@ -230,7 +233,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
         nrTests++;
         if (nrresults != localsolutions) {
             nrErrors++;
-            printf("*** ERROR *** encode(%0.8f , %0.8f,%d) does not deliver %d local solutions\n",
+            printf("*** ERROR *** encode(%0.8f, %0.8f,%d) does not deliver %d local solutions\n",
                    y, x, tc, localsolutions);
             printGeneratedMapcodes("Delivered", &mapcodes);
         }
@@ -246,7 +249,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
         }
         if (!found) {
             nrErrors++;
-            printf("*** ERROR *** encode(%0.8f , %0.8f) does not deliver \"%s\"\n", y, x, clean);
+            printf("*** ERROR *** encode(%0.8f, %0.8f) does not deliver \"%s\"\n", y, x, clean);
             printGeneratedMapcodes("Delivered", &mapcodes);
         }
     }
@@ -258,7 +261,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
         nrresults = encodeLatLonToMapcodes(&mapcodes, y, x, 0, precision);
         if (nrresults != globalsolutions) {
             nrErrors++;
-            printf("*** ERROR *** encode(%0.8f , %0.8f) does not deliver %d global solutions\n", y, x, globalsolutions);
+            printf("*** ERROR *** encode(%0.8f, %0.8f) does not deliver %d global solutions\n", y, x, globalsolutions);
             printGeneratedMapcodes("Delivered", &mapcodes);
         }
     }
@@ -274,7 +277,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
             err = decodeMapcodeToLatLon(&lat, &lon, strResult, 0);
             if (err) {
                 nrErrors++;
-                printf("*** ERROR *** decode('%s') = no result, expected ~(%0.8f , %0.8f)\n", strResult, y, x);
+                printf("*** ERROR *** decode('%s') = no result, expected ~(%0.8f, %0.8f)\n", strResult, y, x);
             } else {
                 double dm = distanceInMeters(y, x, lat, lon);
                 double maxerror = maxErrorInMeters(precision);
@@ -282,7 +285,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
                 nrTests++;
                 if (dm > maxerror) {
                     nrErrors++;
-                    printf("*** ERROR *** decode('%s') = (%0.8f , %0.8f), which is %0.4f cm way (>%0.4f cm) from (%0.8f , %0.8f)\n",
+                    printf("*** ERROR *** decode('%s') = (%0.8f, %0.8f), which is %0.4f cm away (>%0.4f cm) from (%0.8f, %0.8f)\n",
                            strResult, lat, lon,
                            dm * 100.0, maxerror * 100.0, y, x);
                 } else {
@@ -423,18 +426,6 @@ static void test_failing_decodes() {
     }
 }
 
-// perform testEncodeAndDecode for all elements of encode_test[] (from decode_test.h)
-void encode_decode_tests() {
-    int i = 0;
-    int nr = sizeof(encode_test) / sizeof(encode_test_record) - 1;
-    printf("%d encodes\n", nr);
-    for (i = 0; i < nr; i++) {
-        show_progress(i, nr);
-        const encode_test_record *t = &encode_test[i];
-        testEncodeAndDecode(t->mapcode, t->latitude, t->longitude, t->nr_local_mapcodes, t->nr_global_mapcodes);
-    }
-}
-
 // perform tests on alphacodes (designed in test_territories.c)
 void test_territory(const char *alphaCode, int tc, int isAlias, int needsParent, int tcParent) {
 
@@ -491,45 +482,90 @@ static void test_around(double y, double x) {
     testEncodeAndDecode("", y - 0.00001, x - 0.00001, 0, 0);
 }
 
-// test around all centers and corners of all territory rectangles
-static void re_encode_tests() {
-    int ccode, m;
-    int nrrecords = lastrec(ccode_earth) + 1;
-    printf("%d records\n", nrrecords);
-    for (ccode = 0; ccode <= ccode_earth; ccode++) {
-        show_progress(ccode, ccode_earth);
-        for (m = firstrec(ccode); m <= lastrec(ccode); m++) {
-            double y, x, midx, midy, thirdx;
-            const mminforec *b = boundaries(m);
 
-            midy = (b->miny + b->maxy) / 2000000.0;
-            midx = (b->minx + b->maxx) / 2000000.0;
-            thirdx = (2 * b->minx + b->maxx) / 3000000.0;
-            test_around(midy, midx);
+void join_threads(pthread_t *threads, int total) {
+    for (int i = 0; i < total; ++i) {
+        if (pthread_join(threads[i], 0)) {
+            nrErrors++;
+            fprintf(stderr, "*** ERROR *** Error joining thread %d of %d\n", i, total);
+            return;
 
-            y = (b->miny) / 1000000.0;
-            x = (b->minx) / 1000000.0;
-            test_around(y, x);
-            test_around(midy, x);
-            test_around(y, midx);
-            test_around(y, thirdx);
-
-            x = (b->maxx) / 1000000.0;
-            test_around(y, x);
-            test_around(midy, x);
-
-            y = (b->maxy) / 1000000.0;
-            x = (b->minx) / 1000000.0;
-            test_around(y, x);
-            test_around(y, midx);
-
-            x = (b->maxx) / 1000000.0;
-            test_around(y, x);
-            test_around(midy, x);
         }
     }
 }
 
+// perform testEncodeAndDecode for all elements of encode_test[] (from decode_test.h)
+void encode_decode_tests() {
+    int i = 0;
+    int nr = sizeof(encode_test) / sizeof(encode_test_record) - 1;
+    printf("%d encodes\n", nr);
+    for (i = 0; i < nr; i++) {
+        show_progress(i, nr);
+        const encode_test_record *t = &encode_test[i];
+        testEncodeAndDecode(t->mapcode, t->latitude, t->longitude, t->nr_local_mapcodes, t->nr_global_mapcodes);
+    }
+}
+
+void *execute_test_around(void *context_mminforec) {
+    double y, x, midx, midy, thirdx;
+    const mminforec *b = (mminforec *) context_mminforec;
+
+    midy = (b->miny + b->maxy) / 2000000.0;
+    midx = (b->minx + b->maxx) / 2000000.0;
+    thirdx = (2 * b->minx + b->maxx) / 3000000.0;
+    test_around(midy, midx);
+
+    y = (b->miny) / 1000000.0;
+    x = (b->minx) / 1000000.0;
+    test_around(y, x);
+    test_around(midy, x);
+    test_around(y, midx);
+    test_around(y, thirdx);
+
+    x = (b->maxx) / 1000000.0;
+    test_around(y, x);
+    test_around(midy, x);
+
+    y = (b->maxy) / 1000000.0;
+    x = (b->minx) / 1000000.0;
+    test_around(y, x);
+    test_around(y, midx);
+
+    x = (b->maxx) / 1000000.0;
+    test_around(y, x);
+    test_around(midy, x);
+    return 0;
+}
+
+// test around all centers and corners of all territory rectangles
+static void re_encode_tests() {
+    int ccode = 0;
+    int m = 0;
+    int nrRecords = lastrec(ccode_earth) + 1;
+    int nrThread = 0;
+    pthread_t threads[MAX_THREADS];
+    printf("%d records\n", nrRecords);
+    for (ccode = 0; ccode <= ccode_earth; ccode++) {
+        show_progress(ccode, ccode_earth);
+        for (m = firstrec(ccode); m <= lastrec(ccode); m++) {
+            const mminforec *b = boundaries(m);
+            if (nrThread < MAX_THREADS) {
+                // Execute the test on a new thread.
+                if (pthread_create(&threads[nrThread], 0, execute_test_around, (void *) b)) {
+                    nrErrors++;
+                    fprintf(stderr, "*** ERROR *** Cannot create thread\n");
+                    return;
+                }
+                nrThread++;
+            } else {
+                join_threads(threads, nrThread);
+                nrThread = 0;
+            }
+        }
+        join_threads(threads, nrThread);
+        nrThread = 0;
+    }
+}
 
 void distance_tests() {
     if (strcmp(mapcode_cversion, "2.1.3") >= 0) {

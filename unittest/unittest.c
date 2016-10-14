@@ -26,6 +26,11 @@
 #define USE_PTHREADS       // If your platform does not support pthread.h please change this line to #undef!
 // #undef USE_PTHREADS
 
+#include "../mapcodelib/mapcoder.c"
+#include "../mapcodelib/mapcode_countrynames_short.h"
+#include "test_territories.c"
+#include "decode_test.h"
+
 #ifdef USE_PTHREADS
 #include <pthread.h>
 #else
@@ -37,11 +42,6 @@
 #define pthread_join(ignore1, ignore2) 0
 #define pthread_create(ignore1, ignore2, func, context) func(context)
 #endif
-
-#include "../mapcodelib/mapcoder.c"
-#include "../mapcodelib/mapcode_countrynames_short.h"
-#include "test_territories.c"
-#include "decode_test.h"
 
 #define MAXLINESIZE 1024
 #ifdef USE_PTHREADS

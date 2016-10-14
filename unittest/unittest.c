@@ -23,7 +23,7 @@
 #include <math.h>
 #include <time.h>
 
-#define USE_PTHREADS       // Please change this to #undef USE_PTHREADS if your platform does not support pthread.h!
+#define USE_PTHREADS       // If your platform does not support pthread.h please change this line to #undef!
 // #undef USE_PTHREADS
 
 #ifdef USE_PTHREADS

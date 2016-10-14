@@ -29,19 +29,22 @@
 #include "test_territories.c"
 #include "decode_test.h"
 
-extern void test_territories();
-
 #define MAXLINESIZE 1024
-#define MAX_THREADS 16
+#define MAX_THREADS 16      // Optimal: not too much, approx. nr of cores * 2, better no more than 32.
 
 
-// globals to count tests, errors and warnings
-int nrTests = 0;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 int nrErrors = 0;
-int nrWarnings = 0;
 
-// test the alphabet conversion routines 
-static void alphabet_tests() {
+void found_error() {
+    pthread_mutex_lock(&mutex);
+    ++nrErrors;
+    pthread_mutex_unlock(&mutex);
+}
+
+// test the alphabet conversion routines
+int alphabet_tests() {
+    int nrTests = 0;
     int i, j;
     const char *str, *expect;
     static const char *testpairs[] = {
@@ -122,17 +125,18 @@ static void alphabet_tests() {
             expect = testpairs[j + 1];
             convertToAlphabet(enc, 64, str, i);
             convertToRoman(dec, 60, enc);
-            nrTests++;
+            ++nrTests;
             if (strcmp(dec, expect)) {
-                nrErrors++;
-                printf("convertToRoman(convertToAlphabet(\"%s\",%d))=\"%s\"\n", str, i, dec);
+                found_error();
+                printf("*** ERROR *** convertToRoman(convertToAlphabet(\"%s\",%d))=\"%s\"\n", str, i, dec);
             }
         }
     }
+    return nrTests;
 }
 
 // Show progress.
-void show_progress(int at, int max) {
+void show_progress(int at, int max, int nrTests) {
     static clock_t prevTick = 0;
 
     // No worries, clock() is a very fast call.
@@ -141,12 +145,12 @@ void show_progress(int at, int max) {
         prevTick = tick;
 
         // Use stderr to not pollute logs.
-        fprintf(stderr, "\r%0.1f%%\r", (at * 100.0) / max);
+        fprintf(stderr, "\r%0.1f%% (executed %0.1fM tests)\r", (at * 100.0) / max, nrTests / 1000000.0);
     }
 }
 
 //
-static void printGeneratedMapcodes(const char *title, const Mapcodes *mapcodes) {
+void printGeneratedMapcodes(const char *title, const Mapcodes *mapcodes) {
     int i, nrresults = mapcodes->count;
     printf(" %s: %d results", title, nrresults);
     for (i = 0; i < nrresults; i++) {
@@ -157,7 +161,8 @@ static void printGeneratedMapcodes(const char *title, const Mapcodes *mapcodes) 
 }
 
 // test encode x,y to M, decode M, re-encode back to M
-static void testEncodeAndDecode(const char *str, double y, double x, int localsolutions, int globalsolutions) {
+int testEncodeAndDecode(const char *str, double y, double x, int localsolutions, int globalsolutions) {
+    int nrTests = 0;
     char clean[MAX_MAPCODE_RESULT_LEN];
     const char *p, *s;
     int found = 0;
@@ -230,16 +235,16 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
         // encode
         nrresults = encodeLatLonToMapcodes(&mapcodes, y, x, tc, precision);
 
-        nrTests++;
+        ++nrTests;
         if (nrresults != localsolutions) {
-            nrErrors++;
+            found_error();
             printf("*** ERROR *** encode(%0.8f, %0.8f,%d) does not deliver %d local solutions\n",
                    y, x, tc, localsolutions);
             printGeneratedMapcodes("Delivered", &mapcodes);
         }
 
         // test that EXPECTED solution is there (if requested)
-        nrTests++;
+        ++nrTests;
         for (i = 0; i < nrresults; i++) {
             const char *m = mapcodes.mapcode[i];
             if (strstr(m, clean) == m) {
@@ -248,7 +253,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
             }
         }
         if (!found) {
-            nrErrors++;
+            found_error();
             printf("*** ERROR *** encode(%0.8f, %0.8f) does not deliver \"%s\"\n", y, x, clean);
             printGeneratedMapcodes("Delivered", &mapcodes);
         }
@@ -257,10 +262,10 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
 
     // test if correct nr of global solutions (if requested)
     if (globalsolutions > 0) {
-        nrTests++;
+        ++nrTests;
         nrresults = encodeLatLonToMapcodes(&mapcodes, y, x, 0, precision);
         if (nrresults != globalsolutions) {
-            nrErrors++;
+            found_error();
             printf("*** ERROR *** encode(%0.8f, %0.8f) does not deliver %d global solutions\n", y, x, globalsolutions);
             printGeneratedMapcodes("Delivered", &mapcodes);
         }
@@ -273,18 +278,18 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
             const char *strResult = mapcodes.mapcode[i];
 
             // check if every solution decodes
-            nrTests++;
+            ++nrTests;
             err = decodeMapcodeToLatLon(&lat, &lon, strResult, 0);
             if (err) {
-                nrErrors++;
+                found_error();
                 printf("*** ERROR *** decode('%s') = no result, expected ~(%0.8f, %0.8f)\n", strResult, y, x);
             } else {
                 double dm = distanceInMeters(y, x, lat, lon);
                 double maxerror = maxErrorInMeters(precision);
                 // check if decode is sufficiently close to the encoded coordinate
-                nrTests++;
+                ++nrTests;
                 if (dm > maxerror) {
-                    nrErrors++;
+                    found_error();
                     printf("*** ERROR *** decode('%s') = (%0.8f, %0.8f), which is %0.4f cm away (>%0.4f cm) from (%0.8f, %0.8f)\n",
                            strResult, lat, lon,
                            dm * 100.0, maxerror * 100.0, y, x);
@@ -303,7 +308,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
                         *e = ' ';
                     }
 
-                    nrTests++;
+                    ++nrTests;
 
                     // see if the original mapcode was generated
                     {
@@ -328,7 +333,7 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
 
                     if (!found) { // within 7.5 meters, but not reproduced!
                         if (!multipleBordersNearby(lat, lon, tc2)) { // but SHOULD be reproduced!
-                            nrErrors++;
+                            found_error();
                             printf("*** ERROR *** %s does not re-encode (%0.15f,%0.15f) from (%0.15f,%0.15f)\n",
                                    strResult, lat, lon, y, x);
                             printGeneratedMapcodes("Global   ", &mapcodes);
@@ -342,10 +347,12 @@ static void testEncodeAndDecode(const char *str, double y, double x, int localso
             }
         }
     }
+    return nrTests;
 }
 
 // test strings that are expected to FAIL a decode
-static void test_failing_decodes() {
+int test_failing_decodes() {
+    int nrTests = 0;
     static const char *badcodes[] = {
 
             "",              // empty
@@ -416,19 +423,19 @@ static void test_failing_decodes() {
         const char *str = badcodes[i];
         int err;
 
-        nrTests++;
+        ++nrTests;
         err = decodeMapcodeToLatLon(&lat, &lon, str, 0);
         if (err >= 0) {
-            nrErrors++;
+            found_error();
             printf("*** ERROR *** invalid mapcode \"%s\" decodes without error\n", str);
         }
-        //printf("Confirm %d for decode(%s)\n",err,str);
     }
+    return nrTests;
 }
 
 // perform tests on alphacodes (designed in test_territories.c)
-void test_territory(const char *alphaCode, int tc, int isAlias, int needsParent, int tcParent) {
-
+int test_territory(const char *alphaCode, int tc, int isAlias, int needsParent, int tcParent) {
+    int nrTests = 0;
     unsigned int i;
     for (i = 0; i <= strlen(alphaCode); i++) {
         char alphacode[8];
@@ -436,18 +443,18 @@ void test_territory(const char *alphaCode, int tc, int isAlias, int needsParent,
         strcpy(alphacode, alphaCode);
         if (!needsParent && (i == 0)) {
             tn = getTerritoryCode(alphacode, 0);
-            nrTests++;
+            ++nrTests;
             if (tn != tc) {
-                nrErrors++;
+                found_error();
                 printf("*** ERROR *** getTerritoryCode('%s')=%d but expected %d (%s)\n",
                        alphacode, tn, tc, convertTerritoryCodeToIsoName(tc, 0));
             }
         }
         alphacode[i] = (char) tolower(alphacode[i]);
         tn = getTerritoryCode(alphacode, tcParent);
-        nrTests++;
+        ++nrTests;
         if (tn != tc) {
-            nrErrors++;
+            found_error();
             printf("*** ERROR *** getTerritoryCode('%s',%s)=%d but expected %d\n", alphacode,
                    tcParent ? convertTerritoryCodeToIsoName(tcParent, 0) : "", tn, tc);
         }
@@ -456,118 +463,149 @@ void test_territory(const char *alphaCode, int tc, int isAlias, int needsParent,
     if (tcParent == 0 && !isAlias && (strlen(alphaCode) <= 3 || alphaCode[3] != '-')) {
         char nam[8];
         getTerritoryIsoName(nam, tc, 0);
-        nrTests++;
+        ++nrTests;
         if (!strstr(nam, alphaCode)) { // @@@ why strstr
-            nrErrors++;
+            found_error();
             printf("*** ERROR *** getTerritoryIsoName(%d)=\"%s\" which does not equal or contain \"%s\"\n",
                    tc, nam, alphaCode);
         }
     }
-
+    return nrTests;
 }
 
 
 // test closely around a particular coordinate
-static void test_around(double y, double x) {
-    testEncodeAndDecode("", y + 0.00001, x + 0.00001, 0, 0);
-    testEncodeAndDecode("", y + 0.00001, x, 0, 0);
-    testEncodeAndDecode("", y + 0.00001, x - 0.00001, 0, 0);
+int test_around(double y, double x) {
+    int nrTests = 0;
+    nrTests += testEncodeAndDecode("", y + 0.00001, x + 0.00001, 0, 0);
+    nrTests += testEncodeAndDecode("", y + 0.00001, x, 0, 0);
+    nrTests += testEncodeAndDecode("", y + 0.00001, x - 0.00001, 0, 0);
 
-    testEncodeAndDecode("", y, x + 0.00001, 0, 0);
-    testEncodeAndDecode("", y, x, 0, 0);
-    testEncodeAndDecode("", y, x - 0.00001, 0, 0);
+    nrTests += testEncodeAndDecode("", y, x + 0.00001, 0, 0);
+    nrTests += testEncodeAndDecode("", y, x, 0, 0);
+    nrTests += testEncodeAndDecode("", y, x - 0.00001, 0, 0);
 
-    testEncodeAndDecode("", y - 0.00001, x + 0.00001, 0, 0);
-    testEncodeAndDecode("", y - 0.00001, x, 0, 0);
-    testEncodeAndDecode("", y - 0.00001, x - 0.00001, 0, 0);
+    nrTests += testEncodeAndDecode("", y - 0.00001, x + 0.00001, 0, 0);
+    nrTests += testEncodeAndDecode("", y - 0.00001, x, 0, 0);
+    nrTests += testEncodeAndDecode("", y - 0.00001, x - 0.00001, 0, 0);
+    return nrTests;
 }
 
 
-void join_threads(pthread_t *threads, int total) {
+// This context holds a record to process and a return value (nrTests) per thread.
+struct context_test_around {
+    int nrTests;
+    const mminforec *mminfo;
+};
+
+
+int join_threads(pthread_t *threads, struct context_test_around *contexts, int total) {
+    int nrTests = 0;
     for (int i = 0; i < total; ++i) {
         if (pthread_join(threads[i], 0)) {
-            nrErrors++;
-            fprintf(stderr, "*** ERROR *** Error joining thread %d of %d\n", i, total);
-            return;
+            found_error();
+            printf("*** ERROR *** Error joining thread %d of %d\n", i, total);
+            return 0;
 
         }
+        nrTests += contexts[i].nrTests;
     }
+    return nrTests;
 }
 
 // perform testEncodeAndDecode for all elements of encode_test[] (from decode_test.h)
-void encode_decode_tests() {
+int encode_decode_tests() {
+    int nrTests = 0;
     int i = 0;
     int nr = sizeof(encode_test) / sizeof(encode_test_record) - 1;
     printf("%d encodes\n", nr);
     for (i = 0; i < nr; i++) {
-        show_progress(i, nr);
+        show_progress(i, nr, nrTests);
         const encode_test_record *t = &encode_test[i];
-        testEncodeAndDecode(t->mapcode, t->latitude, t->longitude, t->nr_local_mapcodes, t->nr_global_mapcodes);
+        nrTests += testEncodeAndDecode(t->mapcode, t->latitude, t->longitude, t->nr_local_mapcodes,
+                                       t->nr_global_mapcodes);
     }
+    return nrTests;
 }
 
-void *execute_test_around(void *context_mminforec) {
+void *execute_test_around(void *context) {
+    int nrTests = 0;
     double y, x, midx, midy, thirdx;
-    const mminforec *b = (mminforec *) context_mminforec;
+    struct context_test_around *c = (struct context_test_around *) context;
+    const mminforec *b = c->mminfo;
 
     midy = (b->miny + b->maxy) / 2000000.0;
     midx = (b->minx + b->maxx) / 2000000.0;
     thirdx = (2 * b->minx + b->maxx) / 3000000.0;
-    test_around(midy, midx);
+    nrTests += test_around(midy, midx);
 
     y = (b->miny) / 1000000.0;
     x = (b->minx) / 1000000.0;
-    test_around(y, x);
-    test_around(midy, x);
-    test_around(y, midx);
-    test_around(y, thirdx);
+    nrTests += test_around(y, x);
+    nrTests += test_around(midy, x);
+    nrTests += test_around(y, midx);
+    nrTests += test_around(y, thirdx);
 
     x = (b->maxx) / 1000000.0;
-    test_around(y, x);
-    test_around(midy, x);
+    nrTests += test_around(y, x);
+    nrTests += test_around(midy, x);
 
     y = (b->maxy) / 1000000.0;
     x = (b->minx) / 1000000.0;
-    test_around(y, x);
-    test_around(y, midx);
+    nrTests += test_around(y, x);
+    nrTests += test_around(y, midx);
 
     x = (b->maxx) / 1000000.0;
-    test_around(y, x);
-    test_around(midy, x);
+    nrTests += test_around(y, x);
+    nrTests += test_around(midy, x);
+    c->nrTests = nrTests;
     return 0;
 }
 
 // test around all centers and corners of all territory rectangles
-static void re_encode_tests() {
+int re_encode_tests() {
+    int nrTests = 0;
     int ccode = 0;
     int m = 0;
     int nrRecords = lastrec(ccode_earth) + 1;
     int nrThread = 0;
+
+    // Declare threads and contexts.
     pthread_t threads[MAX_THREADS];
+    struct context_test_around contexts[MAX_THREADS];
+
     printf("%d records\n", nrRecords);
     for (ccode = 0; ccode <= ccode_earth; ccode++) {
-        show_progress(ccode, ccode_earth);
+        show_progress(ccode, ccode_earth, nrTests);
         for (m = firstrec(ccode); m <= lastrec(ccode); m++) {
             const mminforec *b = boundaries(m);
-            if (nrThread < MAX_THREADS) {
-                // Execute the test on a new thread.
-                if (pthread_create(&threads[nrThread], 0, execute_test_around, (void *) b)) {
-                    nrErrors++;
-                    fprintf(stderr, "*** ERROR *** Cannot create thread\n");
-                    return;
-                }
-                nrThread++;
-            } else {
-                join_threads(threads, nrThread);
+
+            // Create context for thread.
+            contexts[nrThread].nrTests = 0;
+            contexts[nrThread].mminfo = b;
+
+            // Execute task on new thread.
+            if (pthread_create(&threads[nrThread], 0, execute_test_around, (void *) &contexts[nrThread])) {
+                found_error();
+                printf("*** ERROR *** Cannot create thread\n");
+                return 0;
+            }
+
+            // Move to next thread in pool. If out of threads, join them and start over.
+            nrThread++;
+            if (nrThread >= MAX_THREADS) {
+                nrTests += join_threads(threads, contexts, nrThread);
                 nrThread = 0;
             }
         }
-        join_threads(threads, nrThread);
+        nrTests += join_threads(threads, contexts, nrThread);
         nrThread = 0;
     }
+    return nrTests;
 }
 
-void distance_tests() {
+int distance_tests() {
+    int nrTests = 0;
     if (strcmp(mapcode_cversion, "2.1.3") >= 0) {
         int i;
         double coordpairs[] = {
@@ -594,17 +632,19 @@ void distance_tests() {
             const double distance = distanceInMeters(
                     coordpairs[i], coordpairs[i + 1],
                     coordpairs[i + 2], coordpairs[i + 3]);
-            nrTests++;
+            ++nrTests;
             if (floor(0.5 + (100000.0 * distance)) != coordpairs[i + 4]) {
-                nrErrors++;
+                found_error();
                 printf("*** ERROR *** distanceInMeters %d failed: %f\n", i, distance);;
             }
         }
     }
+    return nrTests;
 }
 
 
-void test_territory_insides() {
+int test_territory_insides() {
+    int nrTests = 0;
     if (strcmp(mapcode_cversion, "2.1.5") >= 0) {
         int i;
         struct {
@@ -654,17 +694,19 @@ void test_territory_insides() {
 
         for (i = 0; iTestData[i].territory != 0; i++) {
             int territory = getTerritoryCode(iTestData[i].territory, 0);
-            nrTests++;
+            ++nrTests;
             if (multipleBordersNearby(iTestData[i].lat, iTestData[i].lon, territory) != iTestData[i].nearborders) {
-                nrErrors++;
+                found_error();
                 printf("*** ERROR *** multipleBordersNearby(%+18.13f,%+18.13f, \"%s\") not %d\n",
                        iTestData[i].lat, iTestData[i].lon, iTestData[i].territory, iTestData[i].nearborders);
             }
         }
     }
+    return nrTests;
 }
 
-void territory_code_tests() {
+int territory_code_tests() {
+    int nrTests = 0;
     int i;
 
     static const struct {
@@ -699,95 +741,104 @@ void territory_code_tests() {
 
     for (i = 0; tcTestData[i].inputstring != 0; i++) {
         int tc = getTerritoryCode(tcTestData[i].inputstring, tcTestData[i].context);
-        nrTests++;
+        ++nrTests;
         if (tc != tcTestData[i].expectedresult) {
-            nrErrors++;
+            found_error();
             printf("*** ERROR *** getTerritoryCode(\"%s\", %d)=%d, expected %d\n",
                    tcTestData[i].inputstring, tcTestData[i].context,
                    tc, tcTestData[i].expectedresult);
         }
     }
+    return nrTests;
 }
 
 
-void check_incorrect_get_territory_code_test(char *tcAlpha) {
+int check_incorrect_get_territory_code_test(char *tcAlpha) {
     int tc = getTerritoryCode(tcAlpha, 0);
     if (tc >= 0) {
-        nrErrors++;
+        found_error();
         printf("*** ERROR *** getTerritoryCode returns '%d' (should be < 0) for territory code '%s'\n", tc, tcAlpha);
     }
+    return 1;
 }
 
 
-void get_territory_robustness_tests() {
+int get_territory_robustness_tests() {
+    int nrTests = 0;
     int i;
     char s1[1];
     char s10k[10000];
 
-    check_incorrect_get_territory_code_test("UNKNOWN");
-    check_incorrect_get_territory_code_test("A");
-    check_incorrect_get_territory_code_test(" A");
-    check_incorrect_get_territory_code_test("A ");
-    check_incorrect_get_territory_code_test(" A ");
-    check_incorrect_get_territory_code_test("AA");
-    check_incorrect_get_territory_code_test(" AA");
-    check_incorrect_get_territory_code_test("AA ");
-    check_incorrect_get_territory_code_test(" AA ");
-    check_incorrect_get_territory_code_test("US-");
-    check_incorrect_get_territory_code_test(" US-");
-    check_incorrect_get_territory_code_test("US- ");
-    check_incorrect_get_territory_code_test(" US- ");
-    check_incorrect_get_territory_code_test(" ");
+    nrTests += check_incorrect_get_territory_code_test("UNKNOWN");
+    nrTests += check_incorrect_get_territory_code_test("A");
+    nrTests += check_incorrect_get_territory_code_test(" A");
+    nrTests += check_incorrect_get_territory_code_test("A ");
+    nrTests += check_incorrect_get_territory_code_test(" A ");
+    nrTests += check_incorrect_get_territory_code_test("AA");
+    nrTests += check_incorrect_get_territory_code_test(" AA");
+    nrTests += check_incorrect_get_territory_code_test("AA ");
+    nrTests += check_incorrect_get_territory_code_test(" AA ");
+    nrTests += check_incorrect_get_territory_code_test("US-");
+    nrTests += check_incorrect_get_territory_code_test(" US-");
+    nrTests += check_incorrect_get_territory_code_test("US- ");
+    nrTests += check_incorrect_get_territory_code_test(" US- ");
+    nrTests += check_incorrect_get_territory_code_test(" ");
 
     s1[0] = 0;
-    check_incorrect_get_territory_code_test(s1);
+    nrTests += check_incorrect_get_territory_code_test(s1);
 
     for (i = 0; i < sizeof(s10k); ++i) {
         s10k[i] = (char) ((i % 223) + 32);
     }
-    check_incorrect_get_territory_code_test(s10k);
+    nrTests += check_incorrect_get_territory_code_test(s10k);
+    return nrTests;
 }
 
 
-void check_incorrect_encode_test(double lat, double lon, int treatAsError) {
+int check_incorrect_encode_test(double lat, double lon, int treatAsError) {
+    int nrTests = 0;
     Mapcodes mapcodes;
+    ++nrTests;
     int nrResults = encodeLatLonToMapcodes(&mapcodes, lat, lon, 0, 0);
     if (nrResults > 0) {
         if (treatAsError) {
-            nrErrors++;
+            found_error();
         }
         printf("*** %s *** encodeLatLonToMapcodes returns '%d' (should be <= 0) for lat=%f, lon=%f\n",
                treatAsError ? "ERROR" : "WARNING", nrResults, lat, lon);
     }
+    return nrTests;
 }
 
 
-void check_correct_encode_test(double lat, double lon, int treatAsError) {
+int check_correct_encode_test(double lat, double lon, int treatAsError) {
     Mapcodes mapcodes;
     int nrResults = encodeLatLonToMapcodes(&mapcodes, lat, lon, 0, 0);
     if (nrResults <= 0) {
         if (treatAsError) {
-            nrErrors++;
+            found_error();
         }
         printf("*** %s *** encodeLatLonToMapcodes returns '%d' (should be > 0) for lat=%f, lon=%f\n",
                treatAsError ? "ERROR" : "WARNING", nrResults, lat, lon);
     }
+    return 1;
 }
 
 
-void encode_robustness_tests() {
+int encode_robustness_tests() {
+    int nrTests = 0;
     double d;
     unsigned char *b = (unsigned char *) &d;
 
-    check_correct_encode_test(-90.0, 0.0, 1);
-    check_correct_encode_test(90.0, 0.0, 1);
-    check_correct_encode_test(-91.0, 0.0, 1);
-    check_correct_encode_test(91.0, 0.0, 1);
+    nrTests += check_correct_encode_test(-90.0, 0.0, 1);
+    nrTests += check_correct_encode_test(90.0, 0.0, 1);
+    nrTests += check_correct_encode_test(-91.0, 0.0, 1);
+    nrTests += check_correct_encode_test(91.0, 0.0, 1);
 
-    check_correct_encode_test(0.0, -180.0, 1);
-    check_correct_encode_test(0.0, 180.0, 1);
-    check_correct_encode_test(1.0, -181.0, 1);
-    check_correct_encode_test(0.0, 181.0, 1);
+    nrTests += check_correct_encode_test(0.0, -180.0, 1);
+    nrTests += check_correct_encode_test(0.0, 180.0, 1);
+    nrTests += check_correct_encode_test(1.0, -181.0, 1);
+    nrTests += check_correct_encode_test(0.0, 181.0, 1);
 
     // NAN - See: https://en.wikipedia.org/wiki/Double-precision_floating-point_format
     b[7] = 0x7f;
@@ -798,9 +849,9 @@ void encode_robustness_tests() {
     b[2] = 0xff;
     b[1] = 0xff;
     b[0] = 0xff;
-    check_incorrect_encode_test(0.0, d, 0);
-    check_incorrect_encode_test(d, 0.0, 0);
-    check_incorrect_encode_test(d, d, 0);
+    nrTests += check_incorrect_encode_test(0.0, d, 0);
+    nrTests += check_incorrect_encode_test(d, 0.0, 0);
+    nrTests += check_incorrect_encode_test(d, d, 0);
 
     // Infinity.
     b[7] = 0x7f;
@@ -811,9 +862,9 @@ void encode_robustness_tests() {
     b[2] = 0x00;
     b[1] = 0x00;
     b[0] = 0x00;
-    check_correct_encode_test(d, 0.0, 0);      // Lat may be Inf.
-    check_incorrect_encode_test(0.0, d, 0);
-    check_incorrect_encode_test(d, d, 0);
+    nrTests += check_correct_encode_test(d, 0.0, 0);      // Lat may be Inf.
+    nrTests += check_incorrect_encode_test(0.0, d, 0);
+    nrTests += check_incorrect_encode_test(d, d, 0);
 
     // -Infinity.
     b[7] = 0xff;
@@ -824,9 +875,9 @@ void encode_robustness_tests() {
     b[2] = 0x00;
     b[1] = 0x00;
     b[0] = 0x00;
-    check_correct_encode_test(d, 0.0, 0);      // Lat may be -Inf.
-    check_incorrect_encode_test(0.0, d, 0);
-    check_incorrect_encode_test(d, d, 0);
+    nrTests += check_correct_encode_test(d, 0.0, 0);      // Lat may be -Inf.
+    nrTests += check_incorrect_encode_test(0.0, d, 0);
+    nrTests += check_incorrect_encode_test(d, d, 0);
 
     // Max double
     b[7] = 0x7f;
@@ -837,78 +888,85 @@ void encode_robustness_tests() {
     b[2] = 0xff;
     b[1] = 0xff;
     b[0] = 0xff;
-    check_correct_encode_test(d, 0.0, 0);
-    check_correct_encode_test(0.0, d, 0);
-    check_correct_encode_test(d, d, 0);
+    nrTests += check_correct_encode_test(d, 0.0, 0);
+    nrTests += check_correct_encode_test(0.0, d, 0);
+    nrTests += check_correct_encode_test(d, d, 0);
 
     d = -d;
-    check_correct_encode_test(d, 0.0, 0);
-    check_correct_encode_test(0.0, d, 0);
-    check_correct_encode_test(d, d, 0);
+    nrTests += check_correct_encode_test(d, 0.0, 0);
+    nrTests += check_correct_encode_test(0.0, d, 0);
+    nrTests += check_correct_encode_test(d, d, 0);
+    return nrTests;
 }
 
 
-void check_incorrect_decode_test(char *mc, int tc) {
+int check_incorrect_decode_test(char *mc, int tc) {
     double lat;
     double lon;
     int rc = decodeMapcodeToLatLon(&lat, &lon, mc, tc);
     if (rc >= 0) {
-        nrErrors++;
+        found_error();
         printf("*** ERROR *** decodeMapcodeToLatLon returns '%d' (should be non-0) for mapcode='%s'\n", rc, mc);
     }
+    return 1;
 }
 
 
-void check_correct_decode_test(char *mc, int tc) {
+int check_correct_decode_test(char *mc, int tc) {
     double lat;
     double lon;
     int rc = decodeMapcodeToLatLon(&lat, &lon, mc, tc);
     if (rc < 0) {
-        nrErrors++;
+        found_error();
         printf("*** ERROR *** decodeMapcodeToLatLon returns '%d' (should be 0) for mapcode='%s'\n", rc, mc);
     }
+    return 1;
 }
 
 
-void decode_robustness_tests() {
+int decode_robustness_tests() {
+    int nrTests = 0;
     int i;
     char s1[1];
     char s10k[10000];
 
     int tc = getTerritoryCode("NLD", 0);
-    check_incorrect_decode_test("", 0);
-    check_incorrect_decode_test(" ", 0);
-    check_incorrect_decode_test("AA", 0);
-    check_incorrect_decode_test("", tc);
-    check_incorrect_decode_test(" ", tc);
-    check_incorrect_decode_test("AA", tc);
-    check_incorrect_decode_test("XX.XX", 0);
-    check_correct_decode_test("NLD XX.XX", tc);
-    check_correct_decode_test("NLD XX.XX", 0);
+    nrTests += check_incorrect_decode_test("", 0);
+    nrTests += check_incorrect_decode_test(" ", 0);
+    nrTests += check_incorrect_decode_test("AA", 0);
+    nrTests += check_incorrect_decode_test("", tc);
+    nrTests += check_incorrect_decode_test(" ", tc);
+    nrTests += check_incorrect_decode_test("AA", tc);
+    nrTests += check_incorrect_decode_test("XX.XX", 0);
+    nrTests += check_correct_decode_test("NLD XX.XX", tc);
+    nrTests += check_correct_decode_test("NLD XX.XX", 0);
 
     s1[0] = 0;
-    check_incorrect_decode_test(s1, 0);
-    check_incorrect_decode_test(s1, tc);
+    nrTests += check_incorrect_decode_test(s1, 0);
+    nrTests += check_incorrect_decode_test(s1, tc);
 
     for (i = 0; i < sizeof(s10k); ++i) {
         s10k[i] = (char) ((i % 223) + 32);
     }
-    check_incorrect_decode_test(s1, 0);
-    check_incorrect_decode_test(s1, tc);
+    nrTests += check_incorrect_decode_test(s1, 0);
+    nrTests += check_incorrect_decode_test(s1, tc);
+    return nrTests;
 }
 
 
-void check_alphabet_assertion(char *msg, int condition, char *format, int a) {
+int check_alphabet_assertion(char *msg, int condition, char *format, int a) {
     if (condition == 0) {
-        nrErrors++;
+        found_error();
         printf("*** ERROR *** %s, ", msg);
         printf(format, a);
         printf("\n");
     }
+    return 1;
 }
 
 
-void alphabet_robustness_tests() {
+int alphabet_robustness_tests() {
+    int nrTests = 0;
     int i;
     int a;
     char s1[1];
@@ -926,54 +984,63 @@ void alphabet_robustness_tests() {
     for (a = 0; a < MAPCODE_ALPHABETS_TOTAL; a++) {
 
         pu = convertToAlphabet(u1, sizeof(u1), "", a);
-        check_alphabet_assertion("convertToAlphabet cannot return 0", pu != 0, "alphabet=%d", a);
-        check_alphabet_assertion("convertToAlphabet must return empty string", pu[0] == 0, "alphabet=%d", a);
+        nrTests += check_alphabet_assertion("convertToAlphabet cannot return 0", pu != 0, "alphabet=%d", a);
+        nrTests += check_alphabet_assertion("convertToAlphabet must return empty string", pu[0] == 0, "alphabet=%d", a);
 
         ps = convertToRoman(s1, sizeof(s1), u1);
-        check_alphabet_assertion("convertToRoman cannot return 0", ps != 0, "alphabet=%d", a);
-        check_alphabet_assertion("convertToRoman must return empty string", ps[0] == 0, "alphabet=%d", a);
+        nrTests += check_alphabet_assertion("convertToRoman cannot return 0", ps != 0, "alphabet=%d", a);
+        nrTests += check_alphabet_assertion("convertToRoman must return empty string", ps[0] == 0, "alphabet=%d", a);
 
         pu = convertToAlphabet(u10k, sizeof(u10k), s10k, 0);
-        check_alphabet_assertion("convertToAlphabet cannot return 0", pu != 0, "alphabet=%d", a);
+        nrTests += check_alphabet_assertion("convertToAlphabet cannot return 0", pu != 0, "alphabet=%d", a);
 
         ps = convertToRoman(s10k, sizeof(s10k), pu);
-        check_alphabet_assertion("convertToRoman cannot return 0", ps != 0, "alphabet=%d", a);
-        check_alphabet_assertion("convertToRoman must return size", strlen(ps) < sizeof(s10k), "alphabet=%d", a);
+        nrTests += check_alphabet_assertion("convertToRoman cannot return 0", ps != 0, "alphabet=%d", a);
+        nrTests += check_alphabet_assertion("convertToRoman must return size", strlen(ps) < sizeof(s10k), "alphabet=%d",
+                                            a);
     }
+    return nrTests;
 }
 
 
-void robustness_tests() {
-    get_territory_robustness_tests();
-    encode_robustness_tests();
-    decode_robustness_tests();
-    alphabet_robustness_tests();
+int robustness_tests() {
+    int nrTests = 0;
+    nrTests += get_territory_robustness_tests();
+    nrTests += encode_robustness_tests();
+    nrTests += decode_robustness_tests();
+    nrTests += alphabet_robustness_tests();
+    return nrTests;
 }
 
-void alphabet_per_territory_tests() {
+int alphabet_per_territory_tests() {
+    int nrTests = 0;
     int i, j;
     for (i = 0; i < MAX_CCODE; i++) {
+        ++nrTests;
         if (alphabetsForTerritory[i].count < 1 || alphabetsForTerritory[i].count > MAX_ALPHABETS_PER_TERRITORY) {
-            nrErrors++;
+            found_error();
             printf("*** ERROR *** Bad alphabetsForTerritory[%d].count: %d\n", i, alphabetsForTerritory[i].count);
         }
         for (j = 0; j < alphabetsForTerritory[i].count; j++) {
+            ++nrTests;
             if (alphabetsForTerritory[i].alphabet[j] < 0 ||
                 alphabetsForTerritory[i].alphabet[j] >= MAPCODE_ALPHABETS_TOTAL) {
-                nrErrors++;
+                found_error();
                 printf("*** ERROR *** Bad alphabetsForTerritory[%d].alphabet[%d]: %d\n", i, j,
                        alphabetsForTerritory[i].alphabet[j]);
             }
         }
     }
+    return nrTests;
 }
 
-void test_territories_csv() {
+int test_territories_csv() {
+    int nrTests = 0;
     int linesTested = 0;
     const char *csvName = "territories.csv";
     FILE *fp = fopen(csvName, "r");
     if (fp == NULL) {
-        nrErrors++;
+        found_error();
         printf("*** ERROR *** Can't read file %s\n", csvName);
     } else {
         char line[MAXLINESIZE];
@@ -999,7 +1066,7 @@ void test_territories_csv() {
                             }
                             territoryCode = getTerritoryCode(s, 0);
                             if (territoryCode != csvTerritoryCode) {
-                                nrErrors++;
+                                found_error();
                                 printf("*** ERROR *** Territory string %s returns code %d, expected %d\n", s,
                                        territoryCode, csvTerritoryCode);
                             }
@@ -1025,7 +1092,7 @@ void test_territories_csv() {
                             csvNrAlphabets++;
                             if ((csvNrAlphabets > territoryAlphabet->count) ||
                                 (atoi(s) != territoryAlphabet->alphabet[csvNrAlphabets - 1])) {
-                                nrErrors++;
+                                found_error();
                                 printf("*** ERROR *** Mismatch: alphabet %d of territory %d should be %d\n",
                                        csvNrAlphabets, csvTerritoryCode, atoi(s));
                             }
@@ -1036,7 +1103,7 @@ void test_territories_csv() {
                             }
                         }
                         if (csvNrAlphabets != territoryAlphabet->count) {
-                            nrErrors++;
+                            found_error();
                             printf("*** ERROR *** %d alphabets for territory %d, expected %d\n",
                                    territoryAlphabet->count, csvTerritoryCode, csvNrAlphabets);
                         }
@@ -1057,7 +1124,7 @@ void test_territories_csv() {
                             if (match == NULL ||
                                 (match[strlen(s)] != ' ' && match[strlen(s)] != 0 && match[strlen(s)] != ',' &&
                                  match[strlen(s)] != ')')) {
-                                nrErrors++;
+                                found_error();
                                 printf("*** ERROR *** Name \"%s\" not found in \"%s\"\n", s, territoryNames);
                             }
                             if (sep) {
@@ -1066,7 +1133,6 @@ void test_territories_csv() {
                                 s = e;
                             }
                         }
-                        s++;
                     }
                 }
             }
@@ -1075,46 +1141,48 @@ void test_territories_csv() {
         fclose(fp);
     }
     printf("%d lines tested from %s\n", linesTested, csvName);
+    return nrTests;
 }
 
 int main(const int argc, const char **argv) {
+    int nrTests = 0;
     printf("Mapcode C Library Unit Tests\n");
     printf("Library version %s (data version %s)\n", mapcode_cversion, mapcode_dataversion);
 
     printf("-----------------------------------------------------------\nRobustness tests\n");
-    robustness_tests();
+    nrTests += robustness_tests();
 
     printf("-----------------------------------------------------------\nAlphabet tests\n");
-    alphabet_tests();
+    nrTests += alphabet_tests();
 
     printf("-----------------------------------------------------------\nAlphabet per territory tests\n");
-    alphabet_per_territory_tests();
+    nrTests += alphabet_per_territory_tests();
 
     printf("-----------------------------------------------------------\nDistance tests\n");
-    distance_tests();
+    nrTests += distance_tests();
 
     printf("-----------------------------------------------------------\nTerritory tests\n");
     printf("%d territories\n", MAX_CCODE);
-    test_territories_csv();
-    test_territories();
-    territory_code_tests();
-    test_territory_insides();
+    nrTests += test_territories_csv();
+    nrTests += test_territories();
+    nrTests += territory_code_tests();
+    nrTests += test_territory_insides();
 
     printf("-----------------------------------------------------------\nFormat tests\n");
-    test_failing_decodes();
+    nrTests += test_failing_decodes();
 
     printf("-----------------------------------------------------------\nEncode/decode tests\n");
-    encode_decode_tests();
+    nrTests += encode_decode_tests();
 
     printf("-----------------------------------------------------------\nRe-encode tests\n");
-    re_encode_tests();
+    nrTests += re_encode_tests();
 
     printf("-----------------------------------------------------------\n");
-    printf("Done.\nExecuted %d tests, found %d errors (and %d warnings)\n", nrTests, nrErrors, nrWarnings);
-    if ((nrWarnings > 0) || (nrErrors > 0)) {
+    printf("Done.\nExecuted %d tests, found %d errors)\n", nrTests, nrErrors);
+    if (nrErrors > 0) {
         printf("UNIT TESTS FAILED!\n");
     } else {
         printf("Unit tests passed\n");
     }
-    return ((nrErrors + nrWarnings) == 0) ? 0 : -1;
+    return nrErrors;
 }

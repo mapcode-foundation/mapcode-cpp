@@ -500,8 +500,9 @@ struct context_test_around {
 
 
 int join_threads(pthread_t *threads, struct context_test_around *contexts, int total) {
+    int i = 0;
     int nrTests = 0;
-    for (int i = 0; i < total; ++i) {
+    for (i = 0; i < total; ++i) {
         if (pthread_join(threads[i], 0)) {
             found_error();
             printf("*** ERROR *** Error joining thread %d of %d\n", i, total);

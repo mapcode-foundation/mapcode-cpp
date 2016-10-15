@@ -999,9 +999,10 @@ static int alphabet_robustness_tests(void) {
     UWORD *pu;
 
     s1[0] = 0;
-    for (i = 0; i < sizeof(largeString); ++i) {
+    for (i = 0; i < sizeof(largeString) - 1; ++i) {
         largeString[i] = (char) ((i % 223) + 32);
     }
+    largeString[sizeof(largeString) - 1] = 0;
 
     for (a = 0; a < MAPCODE_ALPHABETS_TOTAL; a++) {
 

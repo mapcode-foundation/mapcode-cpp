@@ -24,10 +24,47 @@
 
 #define FAST_ENCODE
 #ifdef FAST_ENCODE
-
 #include "mapcode_fast_encode.h"
-
 #endif
+
+
+#define isNameless(m)        ((mminfo[m].flags & 64))
+#define isRestricted(m)      (mminfo[m].flags & 512)
+#define isSpecialShape22(m)  (mminfo[m].flags & 1024)
+#define recType(m)           ((mminfo[m].flags >> 7) & 3)
+#define smartDiv(m)          (mminfo[m].flags >> 16)
+#define headerLetter(m)      (encode_chars[(mminfo[m].flags >> 11) & 31])
+#define boundaries(m)        (&mminfo[m])
+
+#define TOKENSEP   0
+#define TOKENDOT   1
+#define TOKENCHR   2
+#define TOKENVOWEL 3
+#define TOKENZERO  4
+#define TOKENHYPH  5
+
+#define ERR -1
+#define Prt -9 // partial
+#define GO  99
+
+#define USIZE 256
+
+// Radius of Earth.
+#define EARTH_RADIUS_X_METERS 6378137
+#define EARTH_RADIUS_Y_METERS 6356752
+
+// Circumference of Earth.
+#define EARTH_CIRCUMFERENCE_X (EARTH_RADIUS_X_METERS * 2 * _PI)
+#define EARTH_CIRCUMFERENCE_Y (EARTH_RADIUS_Y_METERS * 2 * _PI)
+
+// Meters per degree latitude is fixed. For longitude: use factor * cos(midpoint of two degree latitudes).
+#define METERS_PER_DEGREE_LAT (EARTH_CIRCUMFERENCE_Y / 360.0)
+#define METERS_PER_DEGREE_LON (EARTH_CIRCUMFERENCE_X / 360.0)
+
+// PI
+#define _PI 3.14159265358979323846
+
+typedef mminforec Boundaries;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -37,21 +74,6 @@
 
 // PUBLIC - returns distance (in meters) between two coordinates (in degrees)
 double distanceInMeters(double latDeg1, double lonDeg1, double latDeg2, double lonDeg2) {
-    // Radius of Earth.
-#define EARTH_RADIUS_X_METERS 6378137
-#define EARTH_RADIUS_Y_METERS 6356752
-
-    // Circumference of Earth.
-#define EARTH_CIRCUMFERENCE_X (EARTH_RADIUS_X_METERS * 2 * _PI)
-#define EARTH_CIRCUMFERENCE_Y (EARTH_RADIUS_Y_METERS * 2 * _PI)
-
-    // Meters per degree latitude is fixed. For longitude: use factor * cos(midpoint of two degree latitudes).
-#define METERS_PER_DEGREE_LAT (EARTH_CIRCUMFERENCE_Y / 360.0)
-#define METERS_PER_DEGREE_LON (EARTH_CIRCUMFERENCE_X / 360.0)
-
-    // PI
-#define _PI 3.14159265358979323846
-
     if (lonDeg1 < 0 && lonDeg2 > 1) {
         lonDeg1 += 360;
     }
@@ -158,7 +180,6 @@ static void convertCoordsToMicrosAndFractions(point32 *coord32, int *fraclat, in
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-#define Boundaries mminforec
 
 // returns nonzero if x in the range minx...maxx
 static int isInRange(int x, const int minx, const int maxx) {
@@ -301,14 +322,6 @@ static int coDex(const int m) {
     int c = mminfo[m].flags & 31;
     return 10 * (c / 5) + ((c % 5) + 1);
 }
-
-#define isNameless(m)        ((mminfo[m].flags & 64))
-#define recType(m)           ((mminfo[m].flags>>7) & 3)
-#define isRestricted(m)      (mminfo[m].flags & 512)
-#define isSpecialShape22(m)  (mminfo[m].flags & 1024)
-#define headerLetter(m)      (encode_chars[(mminfo[m].flags>>11)&31])
-#define smartDiv(m)          (mminfo[m].flags>>16)
-#define boundaries(m)        (&mminfo[m])
 
 static int xDivider4(const int miny, const int maxy) {
     if (miny >= 0) { // both above equator? then miny is closest
@@ -1834,31 +1847,31 @@ static struct {
         };
 
 // Abjad forward declarations
-static int isAbjadScript(const UWORD *s);
+static int isAbjadScript(const UWORD *unicodeString);
 
 static char *convertToAbjad(char *str, const char *source, int maxlen);
 
 static void convertFromAbjad(char *s);
 
-char *convertToRoman(char *asciibuf, int maxlen, const UWORD *s) {
-    char *w = asciibuf;
-    const char *e = w + maxlen - 1;
-    int is_abjad = isAbjadScript(s);
-    while (*s > 0 && *s <= 32) {
-        s++;
+char *convertToRoman(char *asciiBuffer, int maxLength, const UWORD *unicodeBuffer) {
+    char *w = asciiBuffer;
+    const char *e = w + maxLength - 1;
+    int is_abjad = isAbjadScript(unicodeBuffer);
+    while (*unicodeBuffer > 0 && *unicodeBuffer <= 32) {
+        unicodeBuffer++;
     } // skip lead
-    for (; *s != 0 && w < e; s++) {
-        if (*s >= 1 && *s <= 127) { // normal ascii
-            *w++ = (char) (*s);
+    for (; *unicodeBuffer != 0 && w < e; unicodeBuffer++) {
+        if (*unicodeBuffer >= 1 && *unicodeBuffer <= 127) { // normal ascii
+            *w++ = (char) (*unicodeBuffer);
         } else {
             int i, found = 0;
             for (i = 0; unicode2asc[i].min != 0; i++) {
-                if (*s >= unicode2asc[i].min && *s <= unicode2asc[i].max) {
+                if (*unicodeBuffer >= unicode2asc[i].min && *unicodeBuffer <= unicode2asc[i].max) {
                     const char *cv = unicode2asc[i].convert;
                     if (*cv == 0) {
                         cv = "0123456789";
                     }
-                    *w++ = cv[*s - unicode2asc[i].min];
+                    *w++ = cv[*unicodeBuffer - unicode2asc[i].min];
                     found = 1;
                     break;
                 }
@@ -1870,16 +1883,16 @@ char *convertToRoman(char *asciibuf, int maxlen, const UWORD *s) {
         }
     }
     // trim
-    while (w > asciibuf && w[-1] > 0 && w[-1] <= 32) {
+    while (w > asciiBuffer && w[-1] > 0 && w[-1] <= 32) {
         w--;
     }
     *w = 0;
     // skip past last space (if any)
-    w = strrchr(asciibuf, ' ');
+    w = strrchr(asciiBuffer, ' ');
     if (w) {
         w++;
     } else {
-        w = asciibuf;
+        w = asciiBuffer;
     }
     if (*w == 'A') {
         unpack_if_alldigits(w);
@@ -1888,7 +1901,7 @@ char *convertToRoman(char *asciibuf, int maxlen, const UWORD *s) {
     if (is_abjad) {
         convertFromAbjad(w);
     }
-    return asciibuf;
+    return asciiBuffer;
 }
 
 
@@ -1918,59 +1931,58 @@ static UWORD *encode_utf16(UWORD *unibuf, const int maxlen, const char *mapcode,
 }
 
 // PUBLIC - convert as much as will fit of mapcode into unibuf
-UWORD *convertToAlphabet(UWORD *unibuf, int maxlength, const char *mapcode, int alphabet) // 0=roman, 2=cyrillic
+UWORD *convertToAlphabet(UWORD *unicodeString, int maxLength, const char *asciiString, int alphabet) // 0=roman, 2=cyrillic
 {
-    UWORD *startbuf = unibuf;
-    UWORD *lastspot = &unibuf[maxlength - 1];
-    if (maxlength > 0) {
-#define USIZE 256
+    UWORD *startbuf = unicodeString;
+    UWORD *lastspot = &unicodeString[maxLength - 1];
+    if (maxLength > 0) {
         char u[USIZE];
 
         // skip leading spaces
-        while (*mapcode > 0 && *mapcode <= 32) {
-            mapcode++;
+        while (*asciiString > 0 && *asciiString <= 32) {
+            asciiString++;
         }
 
         // straight-copy everything up to and including first space
         {
-            const char *e = strchr(mapcode, ' ');
+            const char *e = strchr(asciiString, ' ');
             if (e) {
-                while (mapcode <= e) {
-                    if (unibuf == lastspot) { // buffer fully filled?
+                while (asciiString <= e) {
+                    if (unicodeString == lastspot) { // buffer fully filled?
                         // zero-terminate and return
-                        *unibuf = 0;
+                        *unicodeString = 0;
                         return startbuf;
                     }
-                    *unibuf++ = (UWORD) *mapcode++;
+                    *unicodeString++ = (UWORD) *asciiString++;
                 }
             }
         }
 
         if (alphabet == 1 || alphabet == 3 || alphabet == 14 || alphabet == 15) { // greek hebrew arabic korean
-            mapcode = convertToAbjad(u, mapcode, USIZE);
+            asciiString = convertToAbjad(u, asciiString, USIZE);
         }
 
         // re-pack E/U-voweled mapcodes when necessary:
         if (alphabet == 1) { // alphabet has no letter E (greek!)
-            if (strchr(mapcode, 'E') || strchr(mapcode, 'U') ||
-                strchr(mapcode, 'e') || strchr(mapcode, 'u')) {
+            if (strchr(asciiString, 'E') || strchr(asciiString, 'U') ||
+                strchr(asciiString, 'e') || strchr(asciiString, 'u')) {
                 // copy trimmed mapcode into temporary buffer u
-                int len = (int) strlen(mapcode);
+                int len = (int) strlen(asciiString);
                 if (len < MAX_MAPCODE_RESULT_LEN) {
-                    while (len > 0 && mapcode[len - 1] > 0 && mapcode[len - 1] <= 32) {
+                    while (len > 0 && asciiString[len - 1] > 0 && asciiString[len - 1] <= 32) {
                         len--;
                     }
-                    memcpy(u, mapcode, len);
+                    memcpy(u, asciiString, len);
                     u[len] = 0;
                     // re-pack into A-voweled mapcode
                     unpack_if_alldigits(u);
                     repack_if_alldigits(u, 1);
-                    mapcode = u;
+                    asciiString = u;
                 }
             }
         }
 
-        encode_utf16(unibuf, 1 + (int) (lastspot - unibuf), mapcode, alphabet);
+        encode_utf16(unicodeString, 1 + (int) (lastspot - unicodeString), asciiString, alphabet);
     }
     return startbuf;
 }
@@ -1983,15 +1995,6 @@ UWORD *convertToAlphabet(UWORD *unibuf, int maxlength, const char *mapcode, int 
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-#define TOKENSEP   0
-#define TOKENDOT   1
-#define TOKENCHR   2
-#define TOKENVOWEL 3
-#define TOKENZERO  4
-#define TOKENHYPH  5
-#define ERR -1
-#define Prt -9 // partial
-#define GO  99
 
 static signed char fullmc_statemachine[23][6] = {
         //                    WHI  DOT  DET VOW   ZER  HYP
@@ -2049,22 +2052,22 @@ static signed char fullmc_statemachine[23][6] = {
 
 // pass fullcode=1 to recognise territory and mapcode, pass fullcode=0 to only recognise proper mapcode (without optional territory)
 // returns 0 if ok, negative in case of error (where -999 represents "may BECOME a valid mapcode if more characters are added)
-int compareWithMapcodeFormat(const char *s, int fullcode) {
+int compareWithMapcodeFormat(const char *asciiString, int fullcode) {
     int nondigits = 0, vowels = 0;
     int state = (fullcode ? 0 : 18); // initial state
-    for (;; s++) {
+    for (;; asciiString++) {
         int newstate, token;
         // recognise token: decode returns -2=a -3=e -4=0, 0..9 for digit or "o" or "i", 10..31 for char, -1 for illegal char
-        if (*s == '.') {
+        if (*asciiString == '.') {
             token = TOKENDOT;
-        } else if (*s == '-') {
+        } else if (*asciiString == '-') {
             token = TOKENHYPH;
-        } else if (*s == 0) {
+        } else if (*asciiString == 0) {
             token = TOKENZERO;
-        } else if ((*s == ' ') || (*s == '\t')) {
+        } else if ((*asciiString == ' ') || (*asciiString == '\t')) {
             token = TOKENSEP;
         } else {
-            const signed char c = decode_chars[(unsigned char) *s];
+            const signed char c = decode_chars[(unsigned char) *asciiString];
             if (c < 0) { // vowel or illegal?
                 token = TOKENVOWEL;
                 vowels++; // assume vowel (-2,-3,-4)
@@ -2104,9 +2107,9 @@ int compareWithMapcodeFormat(const char *s, int fullcode) {
 // PUBLIC - returns name of territoryCode in (sufficiently large!) result string. 
 // formats: 0=full 1=short
 // returns empty string in case of error
-char *getTerritoryIsoName(char *result, int territoryCode, int format) {
+char *getTerritoryIsoName(char *territoryISO, int territoryCode, int useShortName) {
     if ((territoryCode < 1) || (territoryCode > MAX_MAPCODE_TERRITORY_CODE)) {
-        *result = 0;
+        *territoryISO = 0;
     } else {
         const int p = ParentLetter(territoryCode - 1);
         char iso3[4];
@@ -2114,15 +2117,15 @@ char *getTerritoryIsoName(char *result, int territoryCode, int format) {
         if (*ei >= '0' && *ei <= '9') {
             ei++;
         }
-        if (format == 0 && p) {
-            memcpy(result, &parents2[p * 3 - 3], 2);
-            result[2] = '-';
-            strcpy(result + 3, ei);
+        if (useShortName == 0 && p) {
+            memcpy(territoryISO, &parents2[p * 3 - 3], 2);
+            territoryISO[2] = '-';
+            strcpy(territoryISO + 3, ei);
         } else {
-            strcpy(result, ei);
+            strcpy(territoryISO, ei);
         }
     }
-    return result;
+    return territoryISO;
 }
 
 // PUBLIC - returns negative if territoryCode tc is not a code that has a parent country
@@ -2224,30 +2227,30 @@ static int binfindmatch(const int parentcode, const char *str) {
 
 // PUBLIC - returns territoryCode of string (or negative if not found).
 // optional_tc: context territoryCode to handle ambiguities (pass <=0 if unknown).
-int getTerritoryCode(const char *string, int optional_tc) {
-    if (string == NULL) {
+int getTerritoryCode(const char *territoryISO, int optional_tc) {
+    if (territoryISO == NULL) {
         return -1;
     }
-    while (*string > 0 && *string <= 32) {
-        string++;
+    while (*territoryISO > 0 && *territoryISO <= 32) {
+        territoryISO++;
     } // skip leading whitespace
 
-    if (string[0] && string[1]) {
+    if (territoryISO[0] && territoryISO[1]) {
         const int ccode = optional_tc - 1;
-        if (string[2] == '-') {
-            return binfindmatch(getParentcode(string, 2), string + 3);
-        } else if (string[2] && string[3] == '-') {
-            return binfindmatch(getParentcode(string, 3), string + 4);
+        if (territoryISO[2] == '-') {
+            return binfindmatch(getParentcode(territoryISO, 2), territoryISO + 3);
+        } else if (territoryISO[2] && territoryISO[3] == '-') {
+            return binfindmatch(getParentcode(territoryISO, 3), territoryISO + 4);
         } else {
             const int parentcode =
                     ccode < 0 ? 0 : ((parentnumber[ccode] > 0) ? parentnumber[ccode] : parentnumber[ParentTerritoryOf(
                             ccode)]);
-            const int b = binfindmatch(parentcode, string);
+            const int b = binfindmatch(parentcode, territoryISO);
             if (b > 0) {
                 return b;
             } //
         } //
-        return binfindmatch(0, string);
+        return binfindmatch(0, territoryISO);
     } // else, fail:
     return -1;
 }
@@ -2315,13 +2318,13 @@ int encodeLatLonToMapcodes_Deprecated(char **v, double lat, double lon, int terr
 static char makeiso_bufbytes[16];
 static char *makeiso_buf;
 
-const char *convertTerritoryCodeToIsoName(int tc, int format) {
+const char *convertTerritoryCodeToIsoName(int tc, int useShortName) {
     if (makeiso_buf == makeiso_bufbytes) {
         makeiso_buf = makeiso_bufbytes + 8;
     } else {
         makeiso_buf = makeiso_bufbytes;
     }
-    return (const char *) getTerritoryIsoName(makeiso_buf, tc, format);
+    return (const char *) getTerritoryIsoName(makeiso_buf, tc, useShortName);
 }
 
 #ifdef SUPPORT_FOREIGN_ALPHABETS
@@ -2329,16 +2332,16 @@ const char *convertTerritoryCodeToIsoName(int tc, int format) {
 // Legacy: NOT threadsafe
 static char asciibuf[MAX_MAPCODE_RESULT_LEN];
 
-const char *decodeToRoman(const UWORD *s) {
-    return convertToRoman(asciibuf, MAX_MAPCODE_RESULT_LEN, s);
+const char *decodeToRoman(const UWORD *unicodeString) {
+    return convertToRoman(asciibuf, MAX_MAPCODE_RESULT_LEN, unicodeString);
 }
 
 // Legacy: NOT threadsafe
 static UWORD unibuf[MAX_MAPCODE_RESULT_LEN];
 
-const UWORD *encodeToAlphabet(const char *mapcode, int alphabet) // 0=roman, 2=cyrillic
+const UWORD *encodeToAlphabet(const char *asciiString, int alphabet) // 0=roman, 2=cyrillic
 {
-    return convertToAlphabet(unibuf, MAX_MAPCODE_RESULT_LEN, mapcode, alphabet);
+    return convertToAlphabet(unibuf, MAX_MAPCODE_RESULT_LEN, asciiString, alphabet);
 }
 
 #endif
@@ -2349,9 +2352,9 @@ const UWORD *encodeToAlphabet(const char *mapcode, int alphabet) // 0=roman, 2=c
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-static int isAbjadScript(const UWORD *s) {
-    for (; *s != 0; s++) {
-        UWORD c = *s;
+static int isAbjadScript(const UWORD *unicodeString) {
+    for (; *unicodeString != 0; unicodeString++) {
+        UWORD c = *unicodeString;
         if (c >= 0x0628 && c <= 0x0649) {
             return 1;
         } // arabic

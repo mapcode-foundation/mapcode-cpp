@@ -157,7 +157,7 @@ int decodeMapcodeToLatLon(
  * the return value '0' indicates the string has the Mapcode format, much like string comparison strcmp returns.)
  *
  * Arguments:
- *      check               - Mapcode string to check.
+ *      asciiString         - Mapcode string to check.
  *      includesTerritory   - If 0, no territory is includes in the string. If 1, territory information is
  *                            supposed to be available in the string as well.
  * Returns:
@@ -166,43 +166,43 @@ int decodeMapcodeToLatLon(
  *      to lack some characters.
  */
 int compareWithMapcodeFormat(
-        const char *check,
+        const char *asciiString,
         int includesTerritory);
 
 /**
  * Convert a territory name to a territory code.
  *
  * Arguments:
- *      string               - String starting with ISO code of territory (e.g. "USA" or "US-CA").
+ *      territoryISO         - String starting with ISO code of territory (e.g. "USA" or "US-CA").
  *      parentTerritoryCode  - Parent territory code, or 0 if not available.
  *
  * Returns:
  *      Territory code >0 if succeeded, or <0 if failed.
  */
 int getTerritoryCode(
-        const char *string,
+        const char *territoryISO,
         int parentTerritoryCode);
 
 /**
- * Convert a territory name to a territory code.
+ * Convert a territory code to a territory name.
  *
  * Arguments:
- *      result          - String to store result.
+ *      territoryISO    - String to territory ISO code name result.
  *      territoryCode   - Territory code.
- *      format          - Pass 0 for full name, 1 for short name (state codes may be ambiguous).
+ *      userShortName   - Pass 0 for full name, 1 for short name (state codes may be ambiguous).
  *
  * Returns:
  *      Pointer to result. Empty if territoryCode illegal.
  */
 char *getTerritoryIsoName(
-        char *result,
+        char *territoryISO,
         int territoryCode,
-        int format);
+        int useShortName);
 
 // the old, non-threadsafe routine which uses static storage, overwritten at each call:
 const char *convertTerritoryCodeToIsoName(
         int territoryCode,
-        int format);
+        int useShortName);
 
 /**
  * Given a territory code, return the territory code itself it it was a country, or return its parent
@@ -234,7 +234,6 @@ int getParentCountryOf(int territoryCode);
  */
 double distanceInMeters(double latDeg1, double lonDeg1, double latDeg2, double lonDeg2);
 
-
 /**
  * How far away, at worst, can a decoded mapcode be from the original encoded coordinate?
  * (which can be 0 for all territories).
@@ -244,7 +243,7 @@ double distanceInMeters(double latDeg1, double lonDeg1, double latDeg2, double l
  *                        make them represent coordinates more accurately.
  *
  * Returns:
- *      the worst-case distance in meters between a decoded mapcode and the encoded coordinate
+ *      The worst-case distance in meters between a decoded mapcode and the encoded coordinate.
  */
 double maxErrorInMeters(int extraDigits);
 
@@ -274,7 +273,7 @@ int multipleBordersNearby(
  *      territoryCode   - territory code.
  *
  * Returns:
- *      a pointer to a TerritoryAlphabets structure (or NULL if territoryCode is invalid)
+ *      A pointer to a TerritoryAlphabets structure (or NULL if territoryCode is invalid).
  */
 const TerritoryAlphabets *getAlphabetsForTerritory(int territoryCode);
 
@@ -282,28 +281,28 @@ const TerritoryAlphabets *getAlphabetsForTerritory(int territoryCode);
  * Decode a string to Roman characters.
  *
  * Arguments:
- *      string   - String to decode, allocated by caller.
- *      asciibuf - Buffer to be filled with the result
- *      maxlen   - Size of asciibuf
+ *      asciiString   - Buffer to be filled with the ASCII string result.
+ *      maxLength     - Size of asciiString buffer.
+ *      unicodeString - Unicode string to decode, allocated by caller.
  *
  * Returns:
- *      Pointer to same buffers as asciibuf (allocated by caller), which holds the result.
+ *      Pointer to same buffer as asciiString (allocated by caller), which holds the result.
  */
-char *convertToRoman(char *asciibuf, int maxlen, const UWORD *string);
+char *convertToRoman(char *asciiString, int maxLength, const UWORD *unicodeString);
 
 /**
  * Encode a string to Alphabet characters for a language.
  *
  * Arguments:
- *      string     - String to encode, allocated by caller.
- *      alphabet   - Alphabet to use.
- *      unibuf     - Buffer to be filled with the result.
- *      maxlen     - Size of unibuf.
+ *      unicodeString   - Buffer to be filled with the Unicode string result.
+ *      asciiString     - ASCII string to encode.
+ *      maxLength       - Size of unicodeString buffer.
+ *      alphabet        - Alphabet to use.
  *
  * Returns:
- *      Encoded string, points at buffer from 'unibuf', allocated by caller.
+ *      Encoded Unicode string, points at buffer from 'unicodeString', allocated/deallocated by caller.
  */
-UWORD *convertToAlphabet(UWORD *unibuf, int maxlength, const char *string, int alphabet);
+UWORD *convertToAlphabet(UWORD *unicodeString, int maxLength, const char *asciiString, int alphabet);
 
 
 /* DEPRECATED METHODS AND CONSTANT - WILL BE DROPPED IN FUTURE RELEASES. */
@@ -314,14 +313,14 @@ UWORD *convertToAlphabet(UWORD *unibuf, int maxlength, const char *string, int a
  * Returns converted string. allocated by the library. String must NOT be
  * de-allocated by the caller. It will be overwritten by a subsequent call to this method!
  */
-const char *decodeToRoman(const UWORD *string);
+const char *decodeToRoman(const UWORD *unicodeString);
 
 /**
  * DEPRECATED ODL VARIANT, NOT THREAD-SAFE:
  * Returns converted string. allocated by the library. String must NOT be
  * de-allocated by the caller. It will be overwritten by a subsequent call to this method!
  */
-const UWORD *encodeToAlphabet(const char *string, int alphabet);
+const UWORD *encodeToAlphabet(const char *asciiString, int alphabet);
 
 
 /**

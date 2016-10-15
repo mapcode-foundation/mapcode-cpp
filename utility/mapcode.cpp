@@ -700,20 +700,20 @@ int main(const int argc, const char **argv) {
             for (variant = 0; variant <= 2; variant++) {
                 int m;
                 for (m = 0; mapcodeForCSV[m] != NULL; m++) {
-                    char str[128];
-                    char recoded[128];
-                    UWORD unibuf[128];
+                    char asciiString[128];
+                    char aciiStringRecoded[128];
+                    UWORD utf16String[128];
                     // build a mapcode variant
-                    char mc[128];
-                    strcpy(mc, mapcodeForCSV[m]);
-                    strcat(mc, (variant == 1) ? "-bc" : (variant == 2) ? "-DFGHJKLM" : "");
+                    char mapcode[128];
+                    strcpy(mapcode, mapcodeForCSV[m]);
+                    strcat(mapcode, (variant == 1) ? "-bc" : (variant == 2) ? "-DFGHJKLM" : "");
                     // convert to alphabet, and back to roman
-                    convertToAlphabet(unibuf, 128, mc, alphabet);
-                    convertToRoman(recoded, 128, unibuf);
+                    convertToAlphabet(utf16String, 128, mapcode, alphabet);
+                    convertToRoman(aciiStringRecoded, 128, utf16String);
                     // output a line of csv (in utf8 format)
-                    convertUtf16ToUtf8(str, unibuf);
-                    printf("%d,%s,%s,%s\n", alphabet, mc, str, recoded);
-                    if (stricmp(mc, recoded) != 0) {
+                    convertUtf16ToUtf8(asciiString, utf16String);
+                    printf("%d,%s,%s,%s\n", alphabet, mapcode, asciiString, aciiStringRecoded);
+                    if (strcmp(mapcode, aciiStringRecoded) != 0) {
                         fprintf(stderr, "error: utility produces unexpected results\n\n");
                         return NORMAL_ERROR;
                     }

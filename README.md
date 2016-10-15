@@ -65,25 +65,33 @@ decode Mapcodes.
 
 This produces the following help text:
 
-    MAPCODE (version 2.2.2)
+    MAPCODE (version 2.4.0)
     Copyright (C) 2014-2015 Stichting Mapcode Foundation
     
     Usage:
-        mapcode [-d| --decode] <default-territory> <mapcode> [<mapcode> ...]
+        ./mapcode [-d| --decode] <default-territory> <mapcode> [<mapcode> ...]
     
            Decode a mapcode to a lat/lon. The default territory code is used if
            the mapcode is a shorthand local code
     
-        mapcode [-e[0-8] | --encode[0-8]] <lat:-90..90> <lon:-180..180> [territory]>
+        ./mapcode [-e[0-8] | --encode[0-8]] <lat:-90..90> <lon:-180..180> [territory]>
     
            Encode a lat/lon to a mapcode. If the territory code is specified, the
            encoding will only succeeed if the lat/lon is located in the territory.
            You can specify the number of additional digits, 0, 1 or 2 (default 0)
            for high-precision mapcodes.
     
-        mapcode [-b[XYZ] | --boundaries[XYZ]] [<extraDigits>]
-        mapcode [-g[XYZ] | --grid[XYZ]]   <nrOfPoints> [<extraDigits>]
-        mapcode [-r[XYZ] | --random[XYZ]] <nrOfPoints> [<extraDigits>] [<seed>]
+        ./mapcode [-t | --territories]
+    
+           Create a full set of territories in CSV format.
+    
+        ./mapcode [-a | --alphabets]
+    
+           Create a full set of alphabet tests in CSV format.
+    
+        ./mapcode [-b[XYZ] | --boundaries[XYZ]] [<extraDigits>]
+        ./mapcode [-g[XYZ] | --grid[XYZ]]   <nrOfPoints> [<extraDigits>]
+        ./mapcode [-r[XYZ] | --random[XYZ]] <nrOfPoints> [<extraDigits>] [<seed>]
     
            Create a test set of lat/lon pairs based on the mapcode boundaries database
            as a fixed 3D grid or random uniformly distributed set of lat/lons with their
@@ -107,8 +115,8 @@ This produces the following help text:
            The (x, y, z) coordinates are primarily meant for visualization of the data set.
     
            Example:
-           mapcode -g    100 : produces a grid of 100 points as lat/lon pairs
-           mapcode -gXYZ 100 : produces a grid of 100 points as (x, y, z) sphere coordinates)
+           ./mapcode -g    100 : produces a grid of 100 points as lat/lon pairs
+           ./mapcode -gXYZ 100 : produces a grid of 100 points as (x, y, z) sphere coordinates)
     
            Notes on the use of stdout and stderr:
            stdout: used for outputting 3D point data; stderr: used for statistics.

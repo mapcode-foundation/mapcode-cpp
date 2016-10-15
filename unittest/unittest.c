@@ -1201,7 +1201,7 @@ int main(const int argc, const char **argv) {
     nrTests += re_encode_tests();
 
     printf("-----------------------------------------------------------\n");
-    printf("Done.\nExecuted %d tests, found %d errors)\n", nrTests, nrErrors);
+    printf("Done.\nExecuted %d tests, found %d errors\n", nrTests, nrErrors);
     if (nrErrors > 0) {
         printf("UNIT TESTS FAILED!\n");
     } else {

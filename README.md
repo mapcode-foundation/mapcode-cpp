@@ -132,6 +132,16 @@ Chinese (Zhuyin, Bopomofo), Tifinagh (Berber), Tamil, Amharic, Telugu, Odia, Kan
 
 * Fixed Bengali to also support Assamese.
 
+* Improved readability of implementation.
+ 
+* Added conditional define option for `unittest`: `NO_POSIX_THREADS`. Add `-DNO_POSIX_THREADS`
+to your compiler command-line to not use `pthreads.h`, for example, on MSVC platforms.
+
+* Added conditional define option library: `NO_FAST_ENCODE`. Add `-DNO_FAST_ENCODE` to your
+compiler command-line to not use the fast encoding (default is to use fast encoding). Using
+fast encoding speeds up de encoding by a factor of 2. For normal use, there is no reason not
+to use fast encoding. 
+
 ### 2.3.1
 
 * Minor fixes to prevent compiler warnings.

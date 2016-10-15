@@ -54,7 +54,7 @@ typedef struct {
  * Encode a latitude, longitude pair (in degrees) to a set of Mapcodes.
  *
  * Arguments:
- *      mapcodes        - a pointer to an Mapcodes, allocated by the caller.
+ *      mapcodes        - A pointer to a buffer to hold the mapcodes, allocated by the caller.
  *      lat             - Latitude, in degrees. Range: -90..90.
  *      lon             - Longitude, in degrees. Range: -180..180.
  *      territoryCode   - Territory code (obtained from getTerritoryCode), used as encoding context.
@@ -71,8 +71,8 @@ typedef struct {
 
 int encodeLatLonToMapcodes(
         Mapcodes *mapcodes,
-        double lat,
-        double lon,
+        double latDeg,
+        double lonDeg,
         int territoryCode,
         int extraDigits);
 
@@ -83,17 +83,18 @@ int encodeLatLonToMapcodes(
  * Encode a latitude, longitude pair (in degrees) to a set of Mapcodes. Not thread-safe!
  *
  * Arguments:
- *      results         - Results set of Mapcodes. The caller must pass an array of at least 2 * MAX_NR_OF_MAPCODE_RESULTS
- *                        string points, which must NOT be allocated or de-allocated by the caller.
- *                        The resulting strings are statically allocated by the library and will be overwritten
- *                        by the next call to this method!
- *      lat             - Latitude, in degrees. Range: -90..90.
- *      lon             - Longitude, in degrees. Range: -180..180.
- *      territoryCode   - Territory code (obtained from getTerritoryCode), used as encoding context.
- *                        Pass 0 to get Mapcodes for all territories.
- *      extraDigits     - Number of extra "digits" to add to the generated mapcode. The preferred default is 0.
- *                        Other valid values are 1 and 2, which will add extra letters to the mapcodes to
- *                        make them represent the coordinate more accurately.
+ *      mapcodesAndTerritories - Results set of mapcodes and territories.
+ *                               The caller must pass an array of at least 2 * MAX_NR_OF_MAPCODE_RESULTS
+ *                               string points, which must NOT be allocated or de-allocated by the caller.
+ *                               The resulting strings are statically allocated by the library and will be overwritten
+ *                               by the next call to this method!
+ *      lat                    - Latitude, in degrees. Range: -90..90.
+ *      lon                    - Longitude, in degrees. Range: -180..180.
+ *      territoryCode          - Territory code (obtained from getTerritoryCode), used as encoding context.
+ *                               Pass 0 to get Mapcodes for all territories.
+ *      extraDigits            - Number of extra "digits" to add to the generated mapcode. The preferred default is 0.
+ *                               Other valid values are 1 and 2, which will add extra letters to the mapcodes to
+ *                               make them represent the coordinate more accurately.
  *
  * Returns:
  *      Number of results stored in parameter results. Always >= 0 (0 if no encoding was possible or an error occurred).
@@ -101,9 +102,9 @@ int encodeLatLonToMapcodes(
  *          (results[0], results[1])...(results[(2 * N) - 2], results[(2 * N) - 1])
  */
 int encodeLatLonToMapcodes_Deprecated(     // Warning: this method is deprecated and not thread-safe.
-        char **results,
-        double lat,
-        double lon,
+        char **mapcodesAndTerritories,
+        double latDeg,
+        double lonDeg,
         int territoryCode,
         int extraDigits);
 
@@ -127,9 +128,9 @@ int encodeLatLonToMapcodes_Deprecated(     // Warning: this method is deprecated
  *      0 if encoding failed, or >0 if it succeeded.
  */
 int encodeLatLonToSingleMapcode(
-        char *result,
-        double lat,
-        double lon,
+        char *mapcode,
+        double latDeg,
+        double lonDeg,
         int territoryCode,
         int extraDigits);
 
@@ -147,8 +148,8 @@ int encodeLatLonToSingleMapcode(
  *      0 if encoding succeeded, nonzero in case of error.
  */
 int decodeMapcodeToLatLon(
-        double *lat,
-        double *lon,
+        double *latDeg,
+        double *lonDeg,
         const char *mapcode,
         int territoryCode);
 
@@ -181,7 +182,7 @@ int compareWithMapcodeFormat(
  */
 int getTerritoryCode(
         const char *territoryISO,
-        int parentTerritoryCode);
+        int optionalTerritoryContext);
 
 /**
  * Convert a territory code to a territory name.
@@ -201,7 +202,7 @@ char *getTerritoryIsoName(
 
 // the old, non-threadsafe routine which uses static storage, overwritten at each call:
 const char *convertTerritoryCodeToIsoName(
-        int territoryCode,
+        int territoryContext,
         int useShortName);
 
 /**
@@ -262,8 +263,8 @@ double maxErrorInMeters(int extraDigits);
  * Furthermore, encode(q) must yield back M *unless* point q is near multiple borders.
  */
 int multipleBordersNearby(
-        double lat,
-        double lon,
+        double latDeg,
+        double lonDeg,
         int territoryCode);
 
 /**
@@ -281,28 +282,28 @@ const TerritoryAlphabets *getAlphabetsForTerritory(int territoryCode);
  * Decode a string to Roman characters.
  *
  * Arguments:
- *      asciiString   - Buffer to be filled with the ASCII string result.
- *      maxLength     - Size of asciiString buffer.
- *      unicodeString - Unicode string to decode, allocated by caller.
+ *      asciiString - Buffer to be filled with the ASCII string result.
+ *      maxLength   - Size of asciiString buffer.
+ *      utf16String - Unicode string to decode, allocated by caller.
  *
  * Returns:
  *      Pointer to same buffer as asciiString (allocated by caller), which holds the result.
  */
-char *convertToRoman(char *asciiString, int maxLength, const UWORD *unicodeString);
+char *convertToRoman(char *asciiString, int maxLength, const UWORD *utf16String);
 
 /**
  * Encode a string to Alphabet characters for a language.
  *
  * Arguments:
- *      unicodeString   - Buffer to be filled with the Unicode string result.
- *      asciiString     - ASCII string to encode.
- *      maxLength       - Size of unicodeString buffer.
- *      alphabet        - Alphabet to use.
+ *      utf16String  - Buffer to be filled with the Unicode string result.
+ *      asciiString  - ASCII string to encode.
+ *      maxLength    - Size of utf16String buffer.
+ *      alphabet     - Alphabet to use.
  *
  * Returns:
- *      Encoded Unicode string, points at buffer from 'unicodeString', allocated/deallocated by caller.
+ *      Encoded Unicode string, points at buffer from 'utf16String', allocated/deallocated by caller.
  */
-UWORD *convertToAlphabet(UWORD *unicodeString, int maxLength, const char *asciiString, int alphabet);
+UWORD *convertToAlphabet(UWORD *utf16String, int maxLength, const char *asciiString, int alphabet);
 
 
 /* DEPRECATED METHODS AND CONSTANT - WILL BE DROPPED IN FUTURE RELEASES. */
@@ -313,7 +314,7 @@ UWORD *convertToAlphabet(UWORD *unicodeString, int maxLength, const char *asciiS
  * Returns converted string. allocated by the library. String must NOT be
  * de-allocated by the caller. It will be overwritten by a subsequent call to this method!
  */
-const char *decodeToRoman(const UWORD *unicodeString);
+const char *decodeToRoman(const UWORD *utf16String);
 
 /**
  * DEPRECATED ODL VARIANT, NOT THREAD-SAFE:

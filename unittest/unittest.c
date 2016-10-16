@@ -53,8 +53,6 @@
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static int nrErrors = 0;
 
-#define LARGE_NUMBER 16000
-
 static void found_error(void) {
     pthread_mutex_lock(&mutex);
     ++nrErrors;
@@ -788,7 +786,7 @@ static int get_territory_robustness_tests(void) {
     int nrTests = 0;
     int i;
     char s1[1];
-    char largeString[LARGE_NUMBER];
+    char largeString[16000];
 
     nrTests += check_incorrect_get_territory_code_test("UNKNOWN");
     nrTests += check_incorrect_get_territory_code_test("A");
@@ -808,9 +806,10 @@ static int get_territory_robustness_tests(void) {
     s1[0] = 0;
     nrTests += check_incorrect_get_territory_code_test(s1);
 
-    for (i = 0; i < sizeof(largeString); ++i) {
+    for (i = 0; i < sizeof(largeString) - 1; ++i) {
         largeString[i] = (char) ((i % 223) + 32);
     }
+    largeString[sizeof(largeString) - 1] = 0;
     nrTests += check_incorrect_get_territory_code_test(largeString);
     return nrTests;
 }
@@ -950,7 +949,7 @@ static int decode_robustness_tests(void) {
     int nrTests = 0;
     int i;
     char s1[1];
-    char largeString[LARGE_NUMBER];
+    char largeString[16000];
 
     int tc = getTerritoryCode("NLD", 0);
     nrTests += check_incorrect_decode_test("", 0);
@@ -967,9 +966,10 @@ static int decode_robustness_tests(void) {
     nrTests += check_incorrect_decode_test(s1, 0);
     nrTests += check_incorrect_decode_test(s1, tc);
 
-    for (i = 0; i < sizeof(largeString); ++i) {
+    for (i = 0; i < sizeof(largeString) - 1; ++i) {
         largeString[i] = (char) ((i % 223) + 32);
     }
+    largeString[sizeof(largeString) - 1] = 0;
     nrTests += check_incorrect_decode_test(s1, 0);
     nrTests += check_incorrect_decode_test(s1, tc);
     return nrTests;
@@ -992,34 +992,47 @@ static int alphabet_robustness_tests(void) {
     int i;
     int a;
     char s1[1];
-    char largeString[LARGE_NUMBER];
+    char largeString1[20000];
+    char largeString2[10000];
     char *ps;
     UWORD u1[1];
-    UWORD largeUnicodeString[LARGE_NUMBER];
+    UWORD largeUnicodeString1[10000];
+    UWORD largeUnicodeString2[20000];
     UWORD *pu;
 
     s1[0] = 0;
-    for (i = 0; i < sizeof(largeString) - 1; ++i) {
-        largeString[i] = (char) ((i % 223) + 32);
+    for (i = 0; i < sizeof(largeString1) - 1; ++i) {
+        largeString1[i] = (char) ((i % 223) + 32);
     }
-    largeString[sizeof(largeString) - 1] = 0;
+    largeString1[sizeof(largeString1) - 1] = 0;
+    for (i = 0; i < sizeof(largeString2) - 1; ++i) {
+        largeString1[2] = (char) ((i % 223) + 32);
+    }
+    largeString2[sizeof(largeString2) - 1] = 0;
 
     for (a = 0; a < MAPCODE_ALPHABETS_TOTAL; a++) {
 
-        pu = convertToAlphabet(u1, sizeof(u1), "", a);
+        pu = convertToAlphabet(u1, sizeof(u1) / sizeof(u1[0]), "", a);
         nrTests += check_alphabet_assertion("convertToAlphabet cannot return 0", pu != 0, "alphabet=%d", a);
         nrTests += check_alphabet_assertion("convertToAlphabet must return empty string", pu[0] == 0, "alphabet=%d", a);
 
-        ps = convertToRoman(s1, sizeof(s1), u1);
+        ps = convertToRoman(s1, sizeof(s1) / sizeof(s1[0]), u1);
         nrTests += check_alphabet_assertion("convertToRoman cannot return 0", ps != 0, "alphabet=%d", a);
         nrTests += check_alphabet_assertion("convertToRoman must return empty string", ps[0] == 0, "alphabet=%d", a);
 
-        pu = convertToAlphabet(largeUnicodeString, sizeof(largeUnicodeString) / sizeof(largeUnicodeString[0]), largeString, 0);
+        pu = convertToAlphabet(largeUnicodeString1, sizeof(largeUnicodeString1) / sizeof(largeUnicodeString1[0]), largeString1, 0);
         nrTests += check_alphabet_assertion("convertToAlphabet cannot return 0", pu != 0, "alphabet=%d", a);
 
-        ps = convertToRoman(largeString, sizeof(largeString) / sizeof(largeString[0]), pu);
+        ps = convertToRoman(largeString1, sizeof(largeString1) / sizeof(largeString1[0]), pu);
         nrTests += check_alphabet_assertion("convertToRoman cannot return 0", ps != 0, "alphabet=%d", a);
-        nrTests += check_alphabet_assertion("convertToRoman must return size", strlen(ps) < sizeof(largeString), "alphabet=%d", a);
+        nrTests += check_alphabet_assertion("convertToRoman must return size", strlen(ps) < (sizeof(largeString1) / sizeof(largeString1[0])), "alphabet=%d", a);
+
+        pu = convertToAlphabet(largeUnicodeString2, sizeof(largeUnicodeString2) / sizeof(largeUnicodeString2[0]), largeString2, 0);
+        nrTests += check_alphabet_assertion("convertToAlphabet cannot return 0", pu != 0, "alphabet=%d", a);
+
+        ps = convertToRoman(largeString2, sizeof(largeString2) / sizeof(largeString2[0]), pu);
+        nrTests += check_alphabet_assertion("convertToRoman cannot return 0", ps != 0, "alphabet=%d", a);
+        nrTests += check_alphabet_assertion("convertToRoman must return size", strlen(ps) < (sizeof(largeString2) / sizeof(largeString2[0])), "alphabet=%d", a);
     }
     return nrTests;
 }

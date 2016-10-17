@@ -150,6 +150,10 @@ compiler command-line to not use the fast encoding (default is to use fast encod
 fast encoding speeds up de encoding by a factor of 2. For normal use, there is no reason not
 to use fast encoding. 
 
+* Added `parseMapcodeString` to get individual mapcode elements, like the territory code,
+the 'proper' mapcode (without the territory and precision extension) and the precision
+extension parsed from a (user) input string.
+
 ### 2.3.1
 
 * Minor fixes to prevent compiler warnings.

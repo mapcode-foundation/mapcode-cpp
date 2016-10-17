@@ -99,6 +99,7 @@ atlassian-ide-plugin.xml
 *.sln
 *.vcxproj*
 Debug
+Release
 *.opt
 *.pch
 *.pdb

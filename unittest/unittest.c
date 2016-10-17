@@ -44,7 +44,9 @@
 #define pthread_create(ignore1, ignore2, func, context) func(context)
 #define MAX_THREADS 1
 #else
+
 #include <pthread.h>
+
 #define MAX_THREADS 16      // Optimal: not too much, approx. nr of cores * 2, better no more than 32.
 #endif
 
@@ -65,6 +67,7 @@ static int alphabet_tests(void) {
     int i, j;
     const char *str, *expect;
     static const char *testpairs[] = {
+            "mx XX.XX", "mx XX.XX",
             ".123", ".123",
             "49.4V", "49.4V",
             "00.E0", "00.E0",
@@ -151,6 +154,267 @@ static int alphabet_tests(void) {
     }
     return nrTests;
 }
+
+
+// test the alphabet conversion routines
+static int test_mapcode_formats(void) {
+    int nrTests = 0;
+    int i;
+    static const char *testpairs[] = {
+            "WLF 01.AE-09V", "WLF 01.AE-09V|22",
+            "01.AE", "01.AE|22",
+            "CUB 3467.UY", "CUB 3467.UY|42",
+            "34.UY", "34.UY|22",
+            "mx XX.XX", "MX XX.XX|22",
+            "", "", // empty
+            "MAP.CODE", "", // vowels
+            "XAXX.XXXX", "", // vowels
+            "XXAX.XXXX", "", // vowels
+            "XXXA.XXXX", "", // vowels
+            "XXXAX.XXXX", "", // vowels
+            "XXXXA.XXXX", "", // vowels
+            "XXXX.AXXX", "", // vowel plus more than one token
+            "2A22.2222", "", // vowels
+            "22A2.2222", "", // vowels
+            "222A.2222", "", // vowels
+            "222A2.2222", "", // vowels
+            "2222A.2222", "", // vowels
+            "2222.A22", "-1102", // vowel plus more than one token
+            "2222.A222", "-1102", // vowel plus more than one token
+            "2222.2A22", "-1102", // vowel plus more than one token
+            "2222.2AAA", "-1103", // 2 vowels plus more tokens
+            "A222.2AAA", "-1103", // 2 vowels plus more tokens
+            "2222.22A2", "2222.22A2|44", //
+            "2222.22AA", "2222.22AA|44", //
+            "A222.22AA", "A222.22AA|44", //
+            ".123", "", // bad dot
+            ".xyz", "", // bad dot
+            "x.xyz", "", // bad dot
+            "xxx.z-12", "", // bad dot
+            "xx.xx.", "", // two dots
+
+            "123", "", // no dot OR incomplete
+            "xxx.z", "", // bad dot OR incomplete
+            "NLD 49.4V-", "", // incomplete
+
+            "NLD 49.4V", "NLD 49.4V|22",
+            "   NLD   49.4V  ", "NLD 49.4V|22",
+            "NLD 49.4V-1", "NLD 49.4V-1|22",
+            "NLD 49.4V-12", "NLD 49.4V-12|22",
+            "NLD 49.4V-123", "NLD 49.4V-123|22",
+            "NLD 49.4V-12345678", "NLD 49.4V-12345678|22",
+
+            "NLD 49.4V-123456789", "", // extension too long
+            "NLD 49.4V-123456789123456789", "", // extension too long
+
+            "XAX 49.4V", "XAX 49.4V|22",
+            "XXA 49.4V", "XXA 49.4V|22",
+            "XA 49.4V", "XA 49.4V|22",
+
+            "N 49.4V", "", // bad territory
+            "XXXX 49.4V", "", // bad territory
+            "XXXXX 49.4V", "", // bad territory
+            "-XX 49.4V", "", // bad territory
+            "X-XX 49.4V", "", // bad territory
+            "XXXX-XX 49.4V", "", // bad territory
+            "XX-X 49.4V", "", // bad territory
+            "XX-XXXX 49.4V", "", // bad territory
+
+            "12.34", "", // digits only
+            "NLD 12.34", "", // digits only
+            "AAA 12.34", "", // digits only
+            "xx-xx 12.34", "", // digits only
+            "12-34 12.34", "", // digits only
+            "12-34 12.3X", "12-34 12.3X|22",
+
+            "  TER  XX.XX-XX  ", "TER XX.XX-XX|22",
+            "  TER  XXX.XX-XX  ", "TER XXX.XX-XX|32",
+            "  TER  XX.XXX-XX  ", "TER XX.XXX-XX|23",
+            "  TER  XX.XXXX-XX  ", "TER XX.XXXX-XX|24",
+            "  TER  XXX.XXX-XX  ", "TER XXX.XXX-XX|33",
+            "  TER  XXXX.XX-XX  ", "TER XXXX.XX-XX|42",
+            "  TER  XXX.XXXX-XX  ", "TER XXX.XXXX-XX|34",
+            "  TER  XXXX.XXX-XX  ", "TER XXXX.XXX-XX|43",
+            "  TER  XXXX.XXXX-XX  ", "TER XXXX.XXXX-XX|44",
+            "  TER  XXXXX.XXXX-XX  ", "TER XXXXX.XXXX-XX|54",
+
+            "  TER  XXXXX.XXX-XX  ", "TER XXXXX.XXX-XX|53", // illegal but NOT recognised
+
+            "  TER  XX.XXXXX-XX  ", "",  // too many chars after dot
+            "  TER  XXX.XXXXX-XX  ", "",  // too many chars after dot
+            "  TER  XXXX.XXXXX-XX  ", "",  // too many chars after dot
+            "  TER  XXXXX.XXXXX-XX  ", "",  // too many chars after dot
+
+            "xx-xx.x xx.xx", "",  // dot in territory
+            "xx-xx-x xx.xx", "",  // second hyphen in territory
+            "xx.xx-x-x", "",  // second hyphen in mapcode
+            "xx-xx xx-xx", "",  // no dot in mapcode
+            "xx-xx xx-xx.xx", "",  // hyphen before dot (or no dot) in mapcode
+            "xx.xx.xx", "",  // second dot in mapcode
+            "xx-xx xx.xx.xx", "",  // second dot in mapcode
+            "xx-xx xx.xx-xx-xx", "",  // second hyphen in mapcode
+            "xx-xx xx.xx x", "",  // debris after mapcode
+            "xx-xx xx.xx-x x", "",  // debris after mapcode
+            "xx-xx xx.xx-x -", "",  // debris after mapcode
+            "xx-xx xx.xx-x .", "",  // debris after mapcode
+            "xx-xx xx.xx-x 2", "",  // debris after mapcode
+            "xx-xx xx.x#x", "",  // bad char in mapcode
+            "xx# xx.xx", "",  // bad char in territory
+            "xx-xx -xx.xx", "",  // unexpected hyphen at start of mapcode
+            "xx-xx .xx.xx", "",  // unexpected dot at start of mapcode
+            "xx-xx #xx.xx", "",  // unexpected char at start of mapcode
+
+            // all possible errors
+
+            ".123", "-1001",  // dot start
+            "  .123", "-1001",  // dot start
+            "", "-1004",  // empty
+            "  ", "-1004",  // empty
+            "-xx.xx", "-1005",  // hyphen start
+            "  - xx.xx", "-1005",  // hyphen start
+
+            "D xx.xx", "-1010",  // bad territory
+            "D.123", "-1011",  // not enough before dot
+            "D", "-1014",  // zero
+            "D-xxxxx", "-1015",  // hyphen
+
+            "DD", "-1024",  // zero
+
+            "DDDa.DDD", "-1033",  // vowel
+            "DDD", "-1034",  // zero
+
+            "DDDD xx.xx", "-1040",  // white
+            "DDDDE.xxxx", "-1043",  // vowel
+            "DDDD", "-1044",  // zero
+            "DDDD-CA xx.xx", "-1045",  // hyphen
+
+            "DDDDD CA xx.xx", "-1050",  // white
+            "DDDDDD   xx.xx", "-1052",  // letter
+            "DDDDDA   xx.xx", "-1053",  // vowel
+            "DDDDD", "-1054",  // zero
+            "DDDDD-CA xx.xx", "-1055",  // hyphen
+
+            "DDDDD. xxxx.xx", "-1060",  // white
+            "DDDDD..xxxx", "-1061",  // dot
+            "DDDDD.", "-999",  // ***PARTIAL***
+            "DDDDD.-xxxx.xx", "-1065",  // hyphen
+
+            "DDD.L         ", "-1070",  // white
+            "DDD.L.LLL     ", "-1071",  // dot
+            "DDD.L", "-999",  // ***PARTIAL***
+            "DDD.L-xxxxxxxx", "-1075",  // hyphen
+
+            "DD.DD.CA", "-1081",  // dot
+
+            "DD.DDD.CA", "-1091",  // dot
+
+            "DD.DDDD.CA    ", "-1101",  // dot
+            "DD.DDDDD      ", "-1102",  // letter
+            "DD.DDDDA      ", "-1103",  // vowel
+
+            "DD.DD-        ", "-1110",  // white
+            "DD.DD-.       ", "-1111",  // dot
+            "DD.DD-A", "-1113",  // vowel
+            "DD.DD-", "-999",  // ***PARTIAL***
+            "DD.DD--XXX", "-1115",  // hyphen
+
+            "DD.DD-x.      ", "-1121",  // dot
+            "DD.DD-xA", "-1123",  // vowel
+            "DD.DD-x-xxx", "-1125",  // hyphen
+
+            "ta.xx     ", "-1131",  // dot
+            "ta", "-1134",  // zero
+
+            "DAD-        ", "-1140",  // white
+            "DAD-.       ", "-1141",  // dot
+            "DAD-", "-1144",  // zero
+            "DAD--XXX", "-1145",  // hyphen
+
+            "DAD-X  xx.xx", "-1150",  // white
+            "DAD-X.      ", "-1151",  // dot
+            "DAD-X", "-1154",  // zero
+            "DAD-X-XXX", "-1155",  // hyphen
+
+            "DAD-XX.XX   ", "-1161",  // dot
+            "DAD-XX", "-1164",  // zero
+            "DAD-XX-XX", "-1165",  // hyphen
+
+            "DAD-XXX.XX   ", "-1171",  // dot
+            "DAD-XXXX", "-1172",  // letter
+            "DAD-XXXA", "-1173",  // vowel
+            "DAD-XXX", "-1174",  // zero
+            "DAD-XXX-XX", "-1175",  // hyphen
+
+            "DAD-XX  .XX   ", "-1181",  // dot
+            "DAD-XX  ", "-1184",  // zero
+            "DAD-XX  -XX", "-1185",  // hyphen
+
+            "DD-DD A      ", "-1190",  // white
+            "DD-DD A.     ", "-1191",  // dot
+            "DD-DD AA.33  ", "-1193",  // vowel
+            "DD-DD A", "-1194",  // zero
+            "DD-DD A-XX", "-1195",  // hyphen
+
+            "DD-DD A3     ", "-1200",  // white
+            "DD-DD A3A.XX ", "-1203",  // vowel
+            "DD-DD A3", "-1204",  // zero
+            "DD-DD A3-XX", "-1205",  // hyphen
+
+            "DD-DD A33    ", "-1210",  // white
+            "DD-DD A33A.XX", "-1213",  // vowel
+            "DD-DD A33", "-1214",  // zero
+            "DD-DD A33-XX", "-1215",  // hyphen
+
+            "DD-DD xx.xx .", "-1221",  // dot
+            "DD-DD xx.xx x", "-1222",  // letter
+            "DD-DD xx.xx a", "-1223",  // vowel
+            "DD-DD xx.xx -", "-1225",  // hyphen
+
+            "xx.xx .", "-1221",  // dot
+            "xx.xx x", "-1222",  // letter
+            "xx.xx a", "-1223",  // vowel
+            "xx.xx -", "-1225",  // hyphen
+
+            " xx.xx-DD .", "-1221",  // dot
+            " xx.xx-DD x", "-1222",  // letter
+            " xx.xx-DD a", "-1223",  // vowel
+            " xx.xx-DD -", "-1225",  // hyphen
+
+            "tta.ttt    ", "-1231",  // dot
+            "ttat.tt    ", "-1232",  // letter
+            "ttaa.ttt   ", "-1233",  // vowel
+            "tta", "-1234",  // zero
+
+            NULL, NULL
+    };
+    for (i = 0; testpairs[i] != NULL; i += 2) {
+        char str[MAX_MAPCODE_RESULT_LEN + 16];
+        MapcodeElements mapcodeFormat;
+        int err = parseMapcodeString(&mapcodeFormat, testpairs[i], 1, 0);
+        nrTests++;
+        if (err == 0) {
+            sprintf(str, "%s%s%s%s%s|%d",
+                    mapcodeFormat.territoryISO,
+                    *mapcodeFormat.territoryISO ? " " : "",
+                    mapcodeFormat.properMapcode,
+                    *mapcodeFormat.precisionExtension ? "-" : "",
+                    mapcodeFormat.precisionExtension,
+                    (mapcodeFormat.indexOfDot * 9) + mapcodeFormat.properMapcodeLength - 1);
+            if (strcmp(str, testpairs[i + 1]) != 0) {
+                found_error();
+                printf("*** ERROR *** compareWithMapcodeFormat(\"%s\") succeeded with \"%s\"\n", testpairs[i], str);
+            }
+        } else {
+            sprintf(str, "%d", err);
+            if (testpairs[i + 1][0] != 0 && strcmp(str, testpairs[i + 1]) != 0) {
+                found_error();
+                printf("*** ERROR *** compareWithMapcodeFormat(\"%s\") failed unexpectedly %d\n", testpairs[i], err);
+            }
+        }
+    }
+    return nrTests;
+}
+
 
 // Show progress.
 static void show_progress(int at, int max, int nrTests) {
@@ -316,7 +580,7 @@ static int testEncodeAndDecode(const char *str, double y, double x, int localsol
                     int tc2 = -1;
                     int tcParent = -1;
                     int j;
-                    char *e = (char*) strchr(strResult, ' ');
+                    char *e = (char *) strchr(strResult, ' ');
                     found = 0;
                     if (e) {
                         *e = 0;
@@ -961,6 +1225,7 @@ static int decode_robustness_tests(void) {
     nrTests += check_incorrect_decode_test("XX.XX", 0);
     nrTests += check_correct_decode_test("NLD XX.XX", tc);
     nrTests += check_correct_decode_test("NLD XX.XX", 0);
+    nrTests += check_correct_decode_test("MX XX.XX", 0);
 
     s1[0] = 0;
     nrTests += check_incorrect_decode_test(s1, 0);
@@ -1155,7 +1420,7 @@ static int test_territories_csv(void) {
                             if (sep) {
                                 *sep = 0;
                             }
-                            match = (char*) strstr(territoryNames, s);
+                            match = (char *) strstr(territoryNames, s);
                             if (match == NULL ||
                                 (match[strlen(s)] != ' ' && match[strlen(s)] != 0 && match[strlen(s)] != ',' &&
                                  match[strlen(s)] != ')')) {
@@ -1205,6 +1470,7 @@ int main(const int argc, const char **argv) {
     nrTests += test_territory_insides();
 
     printf("-----------------------------------------------------------\nFormat tests\n");
+    nrTests += test_mapcode_formats();
     nrTests += test_failing_decodes();
 
     printf("-----------------------------------------------------------\nEncode/decode tests\n");

@@ -54,7 +54,6 @@ typedef struct {
     char territoryISO[MAX_ISOCODE_LEN + 1];            // The (trimmed and uppercased) candidate territory.
     int territoryCode;                                 // The territory, as recognised and disambiguated, same as from getTerritoryCode().
     char properMapcode[MAX_PROPER_MAPCODE_LEN + 1];    // The (trimmed and uppercased) proper mapcode (excluding territory and precision extension).
-    int properMapcodeLength;                           // Length of proper mapcode.
     int indexOfDot;                                    // Position of dot in properMapcode (a value between 2 and 5).
     char precisionExtension[MAX_PRECISION_DIGITS + 1]; // The (trimmed and uppercased) precision extension including hyphen; empty if precision 0.
 } MapcodeElements;
@@ -180,7 +179,8 @@ int compareWithMapcodeFormat(
         int includesTerritory);
 
 /**
- * Parses a string into its mapcode components (returns nonzero in case the string is not a valid mapcode).
+ * Parses a string into its mapcode components, separating the territory, the 'proper' mapcode (without the
+ * territory and the precision extension) and the precision extension.
  *
  * Arguments:
  *      mapcodeFormat       - If not NULL, filled with analysis of the 'check' string if it was a correct mapcode.

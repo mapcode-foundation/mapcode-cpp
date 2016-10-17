@@ -399,7 +399,7 @@ static int test_mapcode_formats(void) {
                     mapcodeFormat.properMapcode,
                     *mapcodeFormat.precisionExtension ? "-" : "",
                     mapcodeFormat.precisionExtension,
-                    (mapcodeFormat.indexOfDot * 9) + mapcodeFormat.properMapcodeLength - 1);
+                    (mapcodeFormat.indexOfDot * 9) + (int) strlen(mapcodeFormat.properMapcode) - 1);
             if (strcmp(str, testpairs[i + 1]) != 0) {
                 found_error();
                 printf("*** ERROR *** compareWithMapcodeFormat(\"%s\") succeeded with \"%s\"\n", testpairs[i], str);

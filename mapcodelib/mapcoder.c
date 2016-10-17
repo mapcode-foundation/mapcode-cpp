@@ -1557,7 +1557,7 @@ static int decoderEngine(decodeRec *dec) {
     dec->context = ccode;
     dec->mapcode = dec->mapcodeFormat.properMapcode;
     dec->extension = dec->mapcodeFormat.precisionExtension;
-    codex = dec->mapcodeFormat.indexOfDot * 9 + dec->mapcodeFormat.properMapcodeLength - 1;
+    codex = dec->mapcodeFormat.indexOfDot * 9 + (int) strlen(dec->mapcodeFormat.properMapcode) - 1;
     s = dec->mapcodeFormat.properMapcode;
 
     if (strchr(s, 'A') || strchr(s, 'E') || strchr(s, 'U')) {
@@ -2060,9 +2060,9 @@ int parseMapcodeString(MapcodeElements *mapcodeFormat, const char *asciiString, 
                 }
                 // end of proper mapcode
                 if (mapcodeFormat) {
-                    mapcodeFormat->properMapcodeLength = (int) (asciiString - mcStart);
-                    memcpy(mapcodeFormat->properMapcode, mcStart, mapcodeFormat->properMapcodeLength);
-                    mapcodeFormat->properMapcode[mapcodeFormat->properMapcodeLength] = 0;
+                    int properMapcodeLength = (int) (asciiString - mcStart);
+                    memcpy(mapcodeFormat->properMapcode, mcStart, properMapcodeLength);
+                    mapcodeFormat->properMapcode[properMapcodeLength] = 0;
                     makeupper(mapcodeFormat->properMapcode);
                 }
             } else if (newstate >= 64) { // end of territory
@@ -2089,7 +2089,7 @@ int parseMapcodeString(MapcodeElements *mapcodeFormat, const char *asciiString, 
                 } else {
                     mapcodeFormat->territoryCode = territoryCode;
                 }
-                if (mapcodeFormat->territoryCode == (ccode_mex + 1) && (mapcodeFormat->properMapcodeLength < 8)) {
+                if (mapcodeFormat->territoryCode == (ccode_mex + 1) && (strlen(mapcodeFormat->properMapcode) < 8)) {
                     mapcodeFormat->territoryCode = getTerritoryCode("5MX", -1);
                 }
             }

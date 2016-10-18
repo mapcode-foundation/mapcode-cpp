@@ -580,7 +580,7 @@ static int testEncodeAndDecode(const char *str, double y, double x, int localsol
                     int tc2 = -1;
                     int tcParent = -1;
                     int j;
-                    char *e = (char *) strchr(strResult, ' ');
+                    char *e = strchr(strResult, ' ');
                     found = 0;
                     if (e) {
                         *e = 0;
@@ -1420,7 +1420,7 @@ static int test_territories_csv(void) {
                             if (sep) {
                                 *sep = 0;
                             }
-                            match = (char *) strstr(territoryNames, s);
+                            match = strstr(territoryNames, s);
                             if (match == NULL ||
                                 (match[strlen(s)] != ' ' && match[strlen(s)] != 0 && match[strlen(s)] != ',' &&
                                  match[strlen(s)] != ')')) {

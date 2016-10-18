@@ -55,10 +55,6 @@ To build the original Mapcode tool, execute:
     cd utility
     gcc -O mapcode.cpp -o mapcode
 
-(Or if you need to make sure there are no warnings:)
-
-    gcc -Wall -Wstrict-prototypes -Wshorten-64-to-32 -O mapcode.cpp -o mapcode
-
 For help, simply execute the binary file 'mapcode' without no arguments.
 This tool provides a rather extensive command-line interface to encode and
 decode Mapcodes. 
@@ -124,6 +120,14 @@ This produces the following help text:
     
            The result code is 0 when no error occurred, 1 if an input error occurred and 2
            if an internal error occurred.
+
+If you use **Microsoft Visual C++**, you may need to add the following defines to your preprocessor
+settings:
+
+    NO_POSIX_THREADS
+    _CRT_SECURE_NO_WARNINGS
+    _CRT_NONSTDC_NO_DEPRECATE
+
 
 # Release Notes
 

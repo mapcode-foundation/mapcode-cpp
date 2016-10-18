@@ -20,3 +20,11 @@ As an example, type:
 This tool provides a rather extensive command-line interface to encode and
 decode Mapcodes.
 
+If you use **Microsoft Visual C++**, you may need to add the following defines to your preprocessor
+settings:
+
+    NO_POSIX_THREADS
+    _CRT_SECURE_NO_WARNINGS
+    _CRT_NONSTDC_NO_DEPRECATE
+
+

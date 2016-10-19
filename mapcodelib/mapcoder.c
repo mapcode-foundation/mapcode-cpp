@@ -1940,7 +1940,7 @@ UWORD *convertToAlphabet(UWORD *utf16String, int maxLength, const char *asciiStr
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  compareWithMapcodeFormat & parseMapcode
+//  hasMapcodeFormat & parseMapcode
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -2083,7 +2083,7 @@ int parseMapcodeString(MapcodeElements *mapcodeFormat, const char *asciiString, 
             return -(1000 + 10 * state + token);
         } else if (newstate == STATE_GO) {
             int ret = (nondigits ? (vowels > 2 ? -6 : 0) : (vowels > 0 && vowels <= 3 ? 0 : -5));
-            if (ret == 0) {
+            if (ret == 0 && mapcodeFormat) {
                 if (*mapcodeFormat->territoryISO) {
                     mapcodeFormat->territoryCode = getTerritoryCode(mapcodeFormat->territoryISO, territoryCode - 1);
                 } else {
@@ -2101,9 +2101,8 @@ int parseMapcodeString(MapcodeElements *mapcodeFormat, const char *asciiString, 
     }
 }
 
-int compareWithMapcodeFormat(const char *asciiString, int fullcode) {
-    parseMapcodeString(NULL, asciiString, fullcode, 0);
-    return -1;
+int hasMapcodeFormat(const char *asciiString, int includesTerritory) {
+    return parseMapcodeString(NULL, asciiString, includesTerritory, 0);
 }
 
 

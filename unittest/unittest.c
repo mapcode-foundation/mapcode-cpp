@@ -387,30 +387,47 @@ static int test_mapcode_formats(void) {
 
             NULL, NULL
     };
+    int shouldSucceed = 29; // Number of calls to parse() that should be successful.
+    int total = 0;
+    int succeeded = 0;
     for (i = 0; testpairs[i] != NULL; i += 2) {
         char str[MAX_MAPCODE_RESULT_LEN + 16];
-        MapcodeElements mapcodeFormat;
-        int err = parseMapcodeString(&mapcodeFormat, testpairs[i], 1, 0);
+        MapcodeElements mapcodeElements;
+        int result = parseMapcodeString(&mapcodeElements, testpairs[i], 1, 0);
+        int format = hasMapcodeFormat(testpairs[i], 1);
+
         nrTests++;
-        if (err == 0) {
+        if ((!result && format) || (result && !format)) {
+            found_error();
+            printf("*** ERROR *** parseMapcodeString=%d, hasMapcodeFormat=%d\n", result, format);
+        }
+
+        nrTests++;
+        ++total;
+        if (result == 0) {
+            ++succeeded;
             sprintf(str, "%s%s%s%s%s|%d",
-                    mapcodeFormat.territoryISO,
-                    *mapcodeFormat.territoryISO ? " " : "",
-                    mapcodeFormat.properMapcode,
-                    *mapcodeFormat.precisionExtension ? "-" : "",
-                    mapcodeFormat.precisionExtension,
-                    (mapcodeFormat.indexOfDot * 9) + (int) strlen(mapcodeFormat.properMapcode) - 1);
+                    mapcodeElements.territoryISO,
+                    *mapcodeElements.territoryISO ? " " : "",
+                    mapcodeElements.properMapcode,
+                    *mapcodeElements.precisionExtension ? "-" : "",
+                    mapcodeElements.precisionExtension,
+                    (mapcodeElements.indexOfDot * 9) + (int) strlen(mapcodeElements.properMapcode) - 1);
             if (strcmp(str, testpairs[i + 1]) != 0) {
                 found_error();
-                printf("*** ERROR *** compareWithMapcodeFormat(\"%s\") succeeded with \"%s\"\n", testpairs[i], str);
+                printf("*** ERROR *** parseMapcodeString(\"%s\") succeeded with \"%s\"\n", testpairs[i], str);
             }
         } else {
-            sprintf(str, "%d", err);
+            sprintf(str, "%d", result);
             if (testpairs[i + 1][0] != 0 && strcmp(str, testpairs[i + 1]) != 0) {
                 found_error();
-                printf("*** ERROR *** compareWithMapcodeFormat(\"%s\") failed unexpectedly %d\n", testpairs[i], err);
+                printf("*** ERROR *** hasMapcodeFormat(\"%s\") failed unexpectedly %d\n", testpairs[i], result);
             }
         }
+    }
+    if (succeeded != shouldSucceed) {
+        found_error();
+        printf("*** ERROR *** Too few parseMapcodeString() calls succeeded (%d of %d, expected %d)\n", succeeded, total, shouldSucceed);
     }
     return nrTests;
 }

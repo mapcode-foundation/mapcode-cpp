@@ -394,12 +394,12 @@ static int test_mapcode_formats(void) {
         char str[MAX_MAPCODE_RESULT_LEN + 16];
         MapcodeElements mapcodeElements;
         int result = parseMapcodeString(&mapcodeElements, testpairs[i], 1, 0);
-        int format = hasMapcodeFormat(testpairs[i], 1);
+        int format = compareWithMapcodeFormat(testpairs[i], 1);
 
         nrTests++;
         if ((!result && format) || (result && !format)) {
             found_error();
-            printf("*** ERROR *** parseMapcodeString=%d, hasMapcodeFormat=%d\n", result, format);
+            printf("*** ERROR *** parseMapcodeString=%d, compareWithMapcodeFormat=%d\n", result, format);
         }
 
         nrTests++;
@@ -421,7 +421,7 @@ static int test_mapcode_formats(void) {
             sprintf(str, "%d", result);
             if (testpairs[i + 1][0] != 0 && strcmp(str, testpairs[i + 1]) != 0) {
                 found_error();
-                printf("*** ERROR *** hasMapcodeFormat(\"%s\") failed unexpectedly %d\n", testpairs[i], result);
+                printf("*** ERROR *** compareWithMapcodeFormat(\"%s\") failed unexpectedly %d\n", testpairs[i], result);
             }
         }
     }

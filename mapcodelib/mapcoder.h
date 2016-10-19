@@ -174,7 +174,7 @@ int decodeMapcodeToLatLon(
  *      Special value COMPARE_MAPCODE_MISSING_CHARACTERS (-999) indicates the string could be a Mapcode, but it seems
  *      to lack some characters.
  */
-int hasMapcodeFormat(
+int compareWithMapcodeFormat(
         const char *asciiString,
         int includesTerritory);
 

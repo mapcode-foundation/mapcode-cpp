@@ -1940,7 +1940,7 @@ UWORD *convertToAlphabet(UWORD *utf16String, int maxLength, const char *asciiStr
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //
-//  hasMapcodeFormat & parseMapcode
+//  compareWithMapcodeFormat & parseMapcode
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -2101,7 +2101,7 @@ int parseMapcodeString(MapcodeElements *mapcodeFormat, const char *asciiString, 
     }
 }
 
-int hasMapcodeFormat(const char *asciiString, int includesTerritory) {
+int compareWithMapcodeFormat(const char *asciiString, int includesTerritory) {
     return parseMapcodeString(NULL, asciiString, includesTerritory, 0);
 }
 

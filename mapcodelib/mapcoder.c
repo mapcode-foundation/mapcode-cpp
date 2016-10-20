@@ -416,7 +416,7 @@ static int getParentNumber(const char *s, const int len) {
     if (len != 2 && len != 3) {
         return -923;
     } // solve bad args
-    memcpy(country, s, len);
+    memcpy(country, s, (size_t) len);
     country[len] = 0;
     makeupper(country);
     f = strstr(p, country);
@@ -1541,7 +1541,7 @@ static int decodeAutoHeader(decodeRec *dec, int m) {
 static int decoderEngine(decodeRec *dec) {
 
     int ccode;
-    int err = -817;
+    int err;
     int codex;
     char *s;
 
@@ -1916,7 +1916,7 @@ UWORD *convertToAlphabet(UWORD *utf16String, int maxLength, const char *asciiStr
                     while (len > 0 && asciiString[len - 1] > 0 && asciiString[len - 1] <= 32) {
                         len--;
                     }
-                    memcpy(targetAsciiString, asciiString, len);
+                    memcpy(targetAsciiString, asciiString, (size_t) len);
                     targetAsciiString[len] = 0;
                     // re-pack into A-voweled mapcode
                     unpack_if_alldigits(targetAsciiString);
@@ -2055,7 +2055,7 @@ parseMapcodeString(MapcodeElements *mapcodeFormat, const char *asciiString, int 
                     return -7;
                 }
                 if (mapcodeFormat) {
-                    memcpy(mapcodeFormat->precisionExtension, exStart, len);
+                    memcpy(mapcodeFormat->precisionExtension, exStart, (size_t) len);
                     mapcodeFormat->precisionExtension[len] = 0;
                 }
             } else if (newstate >= 128) { // start of extension
@@ -2065,7 +2065,7 @@ parseMapcodeString(MapcodeElements *mapcodeFormat, const char *asciiString, int 
                 // end of proper mapcode
                 if (mapcodeFormat) {
                     int properMapcodeLength = (int) (asciiString - mcStart);
-                    memcpy(mapcodeFormat->properMapcode, mcStart, properMapcodeLength);
+                    memcpy(mapcodeFormat->properMapcode, mcStart, (size_t) properMapcodeLength);
                     mapcodeFormat->properMapcode[properMapcodeLength] = 0;
                     makeupper(mapcodeFormat->properMapcode);
                 }
@@ -2073,7 +2073,7 @@ parseMapcodeString(MapcodeElements *mapcodeFormat, const char *asciiString, int 
                 nondigits = vowels = 0;
                 if (mapcodeFormat) {
                     int len = (int) (asciiString - mcStart);
-                    memcpy(mapcodeFormat->territoryISO, mcStart, len);
+                    memcpy(mapcodeFormat->territoryISO, mcStart, (size_t) len);
                     mapcodeFormat->territoryISO[len] = 0;
                     makeupper(mapcodeFormat->territoryISO);
                 }
@@ -2394,7 +2394,7 @@ static char *convertToAbjad(char *targetAsciiString, const char *sourceAsciiStri
     }
 
     // copy sourceAsciiString into targetAsciiString
-    memcpy(targetAsciiString, sourceAsciiString, len);
+    memcpy(targetAsciiString, sourceAsciiString, (size_t) len);
     targetAsciiString[len] = 0;
     unpack_if_alldigits(targetAsciiString);
 
@@ -2424,7 +2424,7 @@ static char *convertToAbjad(char *targetAsciiString, const char *sourceAsciiStri
         if (len >= maxLength) {
             len = maxLength - 1;
         }
-        memcpy(targetAsciiString, sourceAsciiString, len);
+        memcpy(targetAsciiString, sourceAsciiString, (size_t) len);
         targetAsciiString[len] = 0;
         return targetAsciiString;
     } else if (form >= 22 && form <= 54) {
@@ -2552,7 +2552,7 @@ static char *convertToAbjad(char *targetAsciiString, const char *sourceAsciiStri
             tocopy = needed;
         }
         if (tocopy > 0) {
-            memcpy(targetAsciiString + totalLen, rest, tocopy);
+            memcpy(targetAsciiString + totalLen, rest, (size_t) tocopy);
             targetAsciiString[totalLen + tocopy] = 0;
         }
     }

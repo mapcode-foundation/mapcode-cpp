@@ -7,7 +7,7 @@ To build the unit tests, execute:
 
 (Or if you need to make sure there are no warnings:)
 
-    gcc -Wall -O unittest.c -lm -lpthread -o unittest
+    gcc -Wall -O unittest.c -lm -lpthread -fsanitize=address -o unittest 
 
 To execute the tests, simply execute:
 

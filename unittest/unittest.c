@@ -713,6 +713,7 @@ static int test_failing_decodes(void) {
             "NLD ZZZ.ZZZ",   // grid out of range
             "NLD SHH.HHH",   // grid out of encompassing
             "NLD L222.222",  // grid out of range (restricted)
+            "W9.SX94",       // reported as an error case
             0
     };
     int i;

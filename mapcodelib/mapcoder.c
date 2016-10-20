@@ -1563,19 +1563,17 @@ static int decoderEngine(decodeRec *dec) {
         }
     }
 
-    {
-        if (codex == 54) {
-            // international mapcodes must be in international context
-            ccode = ccode_earth;
-        } else if (isSubdivision(ccode)) {
-            // int mapcodes must be interpreted in the parent of a subdivision
-            int parent = parentTerritoryOf(ccode);
-            if ((codex == 44) || ((codex == 34 || codex == 43) && (parent == ccode_ind || parent == ccode_mex))) {
-                ccode = parent;
-            }
+    if (codex == 54) {
+        // international mapcodes must be in international context
+        ccode = ccode_earth;
+    } else if (isSubdivision(ccode)) {
+        // int mapcodes must be interpreted in the parent of a subdivision
+        int parent = parentTerritoryOf(ccode);
+        if ((codex == 44) || ((codex == 34 || codex == 43) && (parent == ccode_ind || parent == ccode_mex))) {
+            ccode = parent;
         }
-
     }
+
 
     {
         const int from = firstrec(ccode);

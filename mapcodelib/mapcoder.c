@@ -53,19 +53,21 @@
 
 #define USIZE 256
 
+#define MATH_PI 3.14159265358979323846
+
 // Radius of Earth.
 #define EARTH_RADIUS_X_METERS 6378137
 #define EARTH_RADIUS_Y_METERS 6356752
 
 // Circumference of Earth.
-#define EARTH_CIRCUMFERENCE_X (EARTH_RADIUS_X_METERS * 2 * _PI)
-#define EARTH_CIRCUMFERENCE_Y (EARTH_RADIUS_Y_METERS * 2 * _PI)
+#define EARTH_CIRCUMFERENCE_X (EARTH_RADIUS_X_METERS * 2 * MATH_PI)
+#define EARTH_CIRCUMFERENCE_Y (EARTH_RADIUS_Y_METERS * 2 * MATH_PI)
 
 // Meters per degree latitude is fixed. For longitude: use factor * cos(midpoint of two degree latitudes).
 #define METERS_PER_DEGREE_LAT (EARTH_CIRCUMFERENCE_Y / 360.0)
 #define METERS_PER_DEGREE_LON (EARTH_CIRCUMFERENCE_X / 360.0)
 
-#define _PI 3.14159265358979323846
+#define PARENT_LETTER(ccode) ((int) parentletter[ccode])
 
 // Legacy buffers: NOT threadsafe!
 static char legacy_asciiBuffer[MAX_MAPCODE_RESULT_LEN];
@@ -95,7 +97,7 @@ double distanceInMeters(double latDeg1, double lonDeg1, double latDeg2, double l
     }
     {
         const double dy = (latDeg2 - latDeg1) * METERS_PER_DEGREE_LAT;
-        const double dx = (lonDeg2 - lonDeg1) * METERS_PER_DEGREE_LON * cos((latDeg1 + latDeg2) * _PI / 360.0);
+        const double dx = (lonDeg2 - lonDeg1) * METERS_PER_DEGREE_LON * cos((latDeg1 + latDeg2) * MATH_PI / 360.0);
         return sqrt(dx * dx + dy * dy);
     }
 }
@@ -338,14 +340,12 @@ static int lastrec(const int ccode) {
     return data_start[ccode + 1] - 1;
 }
 
-#define ParentLetter(ccode) ((int)parentletter[ccode])
-
 // returns parent of ccode, or -1
 static int parentTerritoryOf(const int ccode) {
     if (ccode < 0 || ccode > ccode_earth) {
         return -1;
     }
-    return parentnr[ParentLetter(ccode)];
+    return parentnr[PARENT_LETTER(ccode)];
 }
 
 static int coDex(const int m) {
@@ -1090,7 +1090,7 @@ static int encodeLatLonToMapcodes_internal(char **v, Mapcodes *mapcodes,
 
 typedef struct {
     // input
-    MapcodeElements mapcodeFormat;
+    MapcodeElements mapcodeElements;
     const char *orginput;   // original full input string
     const char *mapcode;    // input mapcode (first character of proper mapcode excluding territory code)
     const char *extension;  // input extension (or empty)
@@ -1543,19 +1543,22 @@ static int decoderEngine(decodeRec *dec) {
     int ccode;
     int err;
     int codex;
+    int from;
+    int upto;
+    int i;
     char *s;
 
-    err = parseMapcodeString(&dec->mapcodeFormat, dec->orginput, 1, dec->context);
+    err = parseMapcodeString(&dec->mapcodeElements, dec->orginput, 1, dec->context);
     if (err) {
         return err;
     }
 
-    ccode = dec->mapcodeFormat.territoryCode - 1;
+    ccode = dec->mapcodeElements.territoryCode - 1;
     dec->context = ccode;
-    dec->mapcode = dec->mapcodeFormat.properMapcode;
-    dec->extension = dec->mapcodeFormat.precisionExtension;
-    codex = dec->mapcodeFormat.indexOfDot * 9 + (int) strlen(dec->mapcodeFormat.properMapcode) - 1;
-    s = dec->mapcodeFormat.properMapcode;
+    dec->mapcode = dec->mapcodeElements.properMapcode;
+    dec->extension = dec->mapcodeElements.precisionExtension;
+    codex = dec->mapcodeElements.indexOfDot * 9 + (int) strlen(dec->mapcodeElements.properMapcode) - 1;
+    s = dec->mapcodeElements.properMapcode;
 
     if (strchr(s, 'A') || strchr(s, 'E') || strchr(s, 'U')) {
         if (unpack_if_alldigits(s) <= 0) {
@@ -1574,95 +1577,94 @@ static int decoderEngine(decodeRec *dec) {
         }
     }
 
+    if (ccode < 0) {
+        return -1;
+    }
+    from = firstrec(ccode);
+    upto = lastrec(ccode);
 
-    {
-        const int from = firstrec(ccode);
-        const int upto = lastrec(ccode);
-        int i;
-
-        // try all ccode rectangles to decode s (pointing to first character of proper mapcode)
-        for (i = from; i <= upto; i++) {
-            const int codexi = coDex(i);
-            const int r = recType(i);
-            if (r == 0) {
-                if (isNameless(i)) {
-                    if (((codexi == 21) && (codex == 22)) ||
-                        ((codexi == 22) && (codex == 32)) ||
-                        ((codexi == 13) && (codex == 23))) {
-                        err = decodeNameless(dec, i);
-                        break;
-                    }
-                } else {
-                    if ((codexi == codex) || ((codex == 22) && (codexi == 21))) {
-                        err = decodeGrid(dec, i, 0);
-
-                        // first of all, make sure the zone fits the country
-                        restrictZoneTo(&dec->zone, &dec->zone, boundaries(upto));
-
-                        if ((err == 0) && isRestricted(i)) {
-                            int nrZoneOverlaps = 0;
-                            int j;
-
-                            // *** make sure decode fits somewhere ***
-                            dec->result = getMidPointFractions(&dec->zone);
-                            dec->coord32 = convertFractionsToCoord32(&dec->result);
-                            for (j = i - 1; j >= from; j--) { // look in previous rects
-                                if (!isRestricted(j)) {
-                                    if (fitsInsideBoundaries(&dec->coord32, boundaries(j))) {
-                                        nrZoneOverlaps = 1;
-                                        break;
-                                    }
-                                }
-                            }
-
-                            if (!nrZoneOverlaps) {
-                                MapcodeZone zfound;
-                                Boundaries prevu;
-                                for (j = from; j < i; j++) { // try all smaller rectangles j
-                                    if (!isRestricted(j)) {
-                                        MapcodeZone z;
-                                        if (restrictZoneTo(&z, &dec->zone, boundaries(j))) {
-                                            nrZoneOverlaps++;
-                                            if (nrZoneOverlaps == 1) {
-                                                // first fit! remember...
-                                                zoneCopyFrom(&zfound, &z);
-                                                memcpy(&prevu, boundaries(j), sizeof(Boundaries));
-                                            } else { // nrZoneOverlaps >= 2
-                                                // more than one hit
-                                                break; // give up
-                                            }
-                                        }
-                                    } // isRestricted
-                                } // for j
-
-                                // if several sub-areas intersect, just return the whole zone
-                                // (the center of which may NOT re-encode to the same mapcode!)
-                                if (nrZoneOverlaps == 1) { // found exactly ONE intersection?
-                                    zoneCopyFrom(&dec->zone, &zfound);
-                                }
-                            }
-
-                            if (!nrZoneOverlaps) {
-                                err = -1234;
-                            }
-                        }  // *** make sure decode fits somewhere ***
-                        break;
-                    }
-                }
-            } else if (r == 1) {
-                if (codex == codexi + 10 && headerLetter(i) == *s) {
-                    err = decodeGrid(dec, i, 1);
+    // try all ccode rectangles to decode s (pointing to first character of proper mapcode)
+    for (i = from; i <= upto; i++) {
+        const int codexi = coDex(i);
+        const int r = recType(i);
+        if (r == 0) {
+            if (isNameless(i)) {
+                if (((codexi == 21) && (codex == 22)) ||
+                    ((codexi == 22) && (codex == 32)) ||
+                    ((codexi == 13) && (codex == 23))) {
+                    err = decodeNameless(dec, i);
                     break;
                 }
-            } else { //r>1
-                if (((codex == 23) && (codexi == 22)) ||
-                    ((codex == 33) && (codexi == 23))) {
-                    err = decodeAutoHeader(dec, i);
+            } else {
+                if ((codexi == codex) || ((codex == 22) && (codexi == 21))) {
+                    err = decodeGrid(dec, i, 0);
+
+                    // first of all, make sure the zone fits the country
+                    restrictZoneTo(&dec->zone, &dec->zone, boundaries(upto));
+
+                    if ((err == 0) && isRestricted(i)) {
+                        int nrZoneOverlaps = 0;
+                        int j;
+
+                        // *** make sure decode fits somewhere ***
+                        dec->result = getMidPointFractions(&dec->zone);
+                        dec->coord32 = convertFractionsToCoord32(&dec->result);
+                        for (j = i - 1; j >= from; j--) { // look in previous rects
+                            if (!isRestricted(j)) {
+                                if (fitsInsideBoundaries(&dec->coord32, boundaries(j))) {
+                                    nrZoneOverlaps = 1;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!nrZoneOverlaps) {
+                            MapcodeZone zfound;
+                            Boundaries prevu;
+                            for (j = from; j < i; j++) { // try all smaller rectangles j
+                                if (!isRestricted(j)) {
+                                    MapcodeZone z;
+                                    if (restrictZoneTo(&z, &dec->zone, boundaries(j))) {
+                                        nrZoneOverlaps++;
+                                        if (nrZoneOverlaps == 1) {
+                                            // first fit! remember...
+                                            zoneCopyFrom(&zfound, &z);
+                                            memcpy(&prevu, boundaries(j), sizeof(Boundaries));
+                                        } else { // nrZoneOverlaps >= 2
+                                            // more than one hit
+                                            break; // give up
+                                        }
+                                    }
+                                } // isRestricted
+                            } // for j
+
+                            // if several sub-areas intersect, just return the whole zone
+                            // (the center of which may NOT re-encode to the same mapcode!)
+                            if (nrZoneOverlaps == 1) { // found exactly ONE intersection?
+                                zoneCopyFrom(&dec->zone, &zfound);
+                            }
+                        }
+
+                        if (!nrZoneOverlaps) {
+                            err = -1234;
+                        }
+                    }  // *** make sure decode fits somewhere ***
                     break;
                 }
             }
-        } // for
-    }
+        } else if (r == 1) {
+            if (codex == codexi + 10 && headerLetter(i) == *s) {
+                err = decodeGrid(dec, i, 1);
+                break;
+            }
+        } else { //r>1
+            if (((codex == 23) && (codexi == 22)) ||
+                ((codex == 33) && (codexi == 23))) {
+                err = decodeAutoHeader(dec, i);
+                break;
+            }
+        }
+    } // for
 
     restrictZoneTo(&dec->zone, &dec->zone, boundaries(lastrec(ccode)));
 
@@ -2249,14 +2251,26 @@ int getTerritoryCode(const char *territoryISO, int optionalTerritoryContext) {
         } else if (territoryISO[2] && territoryISO[3] == '-') {
             return binfindmatch(getParentNumber(territoryISO, 3), territoryISO + 4);
         } else {
-            const int parentNumber =
-                    ccode < 0 ? 0 : ((parentnumber[ccode] > 0) ? parentnumber[ccode] : parentnumber[parentTerritoryOf(
-                            ccode)]);
-            const int b = binfindmatch(parentNumber, territoryISO);
+            int b;
+            int parentNumber = 0;
+            if (ccode >= 0) {
+                if (parentnumber[ccode] > 0) {
+                    parentNumber = parentnumber[ccode];
+                } else {
+                    int parentTerritory = parentTerritoryOf(ccode);
+                    if (parentTerritory >= 0) {
+                        parentNumber = parentnumber[parentTerritory];
+                    } else {
+                        parentNumber = -1;
+                    }
+
+                }
+            }
+            b = binfindmatch(parentNumber, territoryISO);
             if (b > 0) {
                 return b;
-            } //
-        } //
+            }
+        }
         return binfindmatch(0, territoryISO);
     } // else, fail:
     return -1;

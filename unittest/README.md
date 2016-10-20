@@ -5,7 +5,7 @@ To build the unit tests, execute:
     cd unittest
     gcc -O unittest.c -lm -lpthread -o unittest
 
-(Or if you need to make sure there are no warnings:)
+(Or to compile and run with additional checks, when using `clang`:)
 
     gcc -Wall -O unittest.c -lm -lpthread -fsanitize=address -o unittest 
 

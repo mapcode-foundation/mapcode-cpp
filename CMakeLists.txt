@@ -15,6 +15,13 @@
 cmake_minimum_required(VERSION 3.3)
 project(mapcode_cpp)
 
+# The debug configuration adds the "address sanitizer" to check for out of bounds behavior and such.
+# You may wish to set the following environment variables during runtime as well:
+#
+# export ASAN_OPTIONS=verbosity=2:coverage=true:strict_string_checks=1:replace_str=true:
+#                       replace_intrin=true:detect_stack_use_after_return=true:detect_invalid_pointer_pairs=99999:
+#                       detect_container_overflow=true:detect_odr_violation=2
+
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wall -Werror -fsanitize=address -O1 -fno-common -fno-optimize-sibling-calls -fno-omit-frame-pointer")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++11")
 set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fsanitize=address")

@@ -23,61 +23,93 @@
 
 #define MAX_CCODE 533 // nr of territories in this database
 
-static const char *entity_iso = ""
-  "VAT,MCO,GIB,TKL,CCK,BLM,NRU,TUV,MAC,SXM,"
-  "MAF,NFK,PCN,BVT,BMU,IOT,SMR,GGY,AIA,MSR,"
-  "JEY,CXR,WLF,VGB,LIE,ABW,MHL,ASM,COK,SPM,"
-  "NIU,KNA,CYM,BES,MDV,SHN,MLT,GRD,VIR,MYT,"
-  "SJM,VCT,HMD,BRB,ATG,CUW,SYC,PLW,MNP,AND,"
-  "GUM,IMN,LCA,FSM,SGP,TON,DMA,BHR,KIR,TCA,"
-  "STP,HKG,MTQ,FRO,GLP,COM,MUS,REU,LUX,WSM,"
-  "SGS,PYF,CPV,TTO,BRN,ATF,PRI,CYP,LBN,JAM,"
-  "GMB,QAT,FLK,VUT,MNE,BHS,TLS,SWZ,KWT,FJI,"
-  "NCL,SVN,ISR,PSE,SLV,BLZ,DJI,MKD,RWA,HTI,"
-  "BDI,GNQ,ALB,SLB,ARM,LSO,BEL,MDA,GNB,TWN,"
-  "BTN,CHE,NLD,DNK,EST,DOM,SVK,CRI,BIH,HRV,"
-  "TGO,LVA,LTU,LKA,GEO,IRL,SLE,PAN,CZE,GUF,"
-  "ARE,AUT,AZE,SRB,JOR,PRT,HUN,KOR,ISL,GTM,"
-  "CUB,BGR,LBR,HND,BEN,ERI,MWI,PRK,NIC,GRC,"
-  "TJK,BGD,NPL,TUN,SUR,URY,KHM,SYR,SEN,KGZ,"
-  "BLR,GUY,LAO,ROU,GHA,UGA,GBR,GIN,ECU,ESH,"
-  "GAB,NZL,BFA,PHL,ITA,OMN,POL,CIV,NOR,MYS,"
-  "VNM,FIN,COG,DEU,JPN,ZWE,PRY,IRQ,MAR,UZB,"
-  "SWE,PNG,CMR,TKM,ESP,THA,YEM,FRA,ALA,KEN,"
-  "BWA,MDG,UKR,SSD,CAF,SOM,AFG,MMR,ZMB,CHL,"
-  "TUR,PAK,MOZ,NAM,VEN,NGA,TZA,EGY,MRT,BOL,"
-  "ETH,COL,ZAF,MLI,AGO,NER,TCD,PER,MNG,IRN,"
-  "LBY,SDN,IDN,DIF,TLA,MOR,AGU,5CL,QUE,HID,"
-  "5MX,TAB,NAY,GUA,PUE,YUC,ROO,SIN,CAM,MIC,"
-  "SLP,GRO,NLE,BCN,VER,CHP,BCS,ZAC,JAL,TAM,"
-  "OAX,DUR,COA,SON,CHH,GRL,SAU,COD,DZA,KAZ,"
-  "ARG,2DD,2DN,2CH,2AN,2LD,2DL,2ML,2NL,2MN,"
-  "2TR,2MZ,2SK,2PB,2HR,2AR,2AS,2BR,2UT,2GA,"
-  "2KL,2TN,2HP,2JK,2CT,2JH,2KA,2RJ,2OR,2GJ,"
-  "2WB,2MP,2TG,2AP,2MH,2UP,2PY,NSW,ACT,JBT,"
-  "4NT,4SA,TAS,VIC,4WA,QLD,6DF,6SE,6AL,6RJ,"
-  "6ES,6RN,6PB,6SC,6PE,6AP,6CE,6AC,6PR,6RR,"
-  "6RO,6SP,6PI,6TO,6RS,6MA,6GO,6MS,6BA,6MG,"
-  "6MT,6PA,6AM,1DC,1RI,1DE,1CT,1NJ,1NH,1VT,"
-  "1MA,1HI,1MD,1WV,1SC,1ME,1IN,1KY,1TN,1VA,"
-  "1OH,1PA,1MS,1LA,1AL,1AR,1NC,1NY,1IA,1IL,"
-  "1GA,1WI,1FL,1MO,1OK,1ND,1WA,1SD,1NE,1KS,"
-  "1ID,1UT,1MN,1MI,1WY,1OR,1CO,1NV,1AZ,1NM,"
-  "1MT,1CA,1TX,1AK,3BC,3AB,3ON,3QC,3SK,3MB,"
-  "3NL,3NB,3NS,3PE,3YT,3NT,3NU,IND,AUS,BRA,"
-  "USA,MEX,MOW,SPE,KGD,7IN,7AD,7SE,7KB,7KC,"
-  "7CE,7CU,IVA,LIP,ORL,TUL,7BE,VLA,KRS,KLU,"
-  "7TT,BRY,YAR,RYA,AST,MOS,SMO,7DA,VOR,NGR,"
-  "PSK,KOS,STA,KDA,7KL,TVE,LEN,ROS,VGG,VLG,"
-  "MUR,7KR,NEN,7KO,ARK,7MO,NIZ,PNZ,7KI,7ME,"
-  "ORE,ULY,7PM,7BA,7UD,7TA,SAM,SAR,YAN,7KM,"
-  "SVE,TYU,KGN,7CH,7BU,ZAB,IRK,NVS,TOM,OMS,"
-  "7KK,KEM,7AL,ALT,7TY,KYA,MAG,CHU,KAM,SAK,"
-  "7PO,YEV,KHA,AMU,7SA,CAN,RUS,8SH,8TJ,8BJ,"
-  "8HI,8NX,8CQ,8ZJ,8JS,8FJ,8AH,8LN,8SD,8SX,"
-  "8JX,8HA,8GZ,8GD,8HB,8JL,8HE,8SN,8NM,8HL,"
-  "8HN,8GX,8SC,8YN,8XZ,8GS,8QH,8XJ,CHN,UMI,"
-  "CPT,ATA,AAA,";
+static const char *iso3166alpha[533] = {
+   
+    "VAT", "MCO", "GIB", "TKL", "CCK", "BLM", "NRU", "TUV", "MAC", "SXM",
+    "MAF", "NFK", "PCN", "BVT", "BMU", "IOT", "SMR", "GGY", "AIA", "MSR",
+    "JEY", "CXR", "WLF", "VGB", "LIE", "ABW", "MHL", "ASM", "COK", "SPM",
+    "NIU", "KNA", "CYM", "BES", "MDV", "SHN", "MLT", "GRD", "VIR", "MYT",
+    "SJM", "VCT", "HMD", "BRB", "ATG", "CUW", "SYC", "PLW", "MNP", "AND",
+    "GUM", "IMN", "LCA", "FSM", "SGP", "TON", "DMA", "BHR", "KIR", "TCA",
+    "STP", "HKG", "MTQ", "FRO", "GLP", "COM", "MUS", "REU", "LUX", "WSM",
+    "SGS", "PYF", "CPV", "TTO", "BRN", "ATF", "PRI", "CYP", "LBN", "JAM",
+    "GMB", "QAT", "FLK", "VUT", "MNE", "BHS", "TLS", "SWZ", "KWT", "FJI",
+    "NCL", "SVN", "ISR", "PSE", "SLV", "BLZ", "DJI", "MKD", "RWA", "HTI",
+    "BDI", "GNQ", "ALB", "SLB", "ARM", "LSO", "BEL", "MDA", "GNB", "TWN",
+    "BTN", "CHE", "NLD", "DNK", "EST", "DOM", "SVK", "CRI", "BIH", "HRV",
+    "TGO", "LVA", "LTU", "LKA", "GEO", "IRL", "SLE", "PAN", "CZE", "GUF",
+    "ARE", "AUT", "AZE", "SRB", "JOR", "PRT", "HUN", "KOR", "ISL", "GTM",
+    "CUB", "BGR", "LBR", "HND", "BEN", "ERI", "MWI", "PRK", "NIC", "GRC",
+    "TJK", "BGD", "NPL", "TUN", "SUR", "URY", "KHM", "SYR", "SEN", "KGZ",
+    "BLR", "GUY", "LAO", "ROU", "GHA", "UGA", "GBR", "GIN", "ECU", "ESH",
+    "GAB", "NZL", "BFA", "PHL", "ITA", "OMN", "POL", "CIV", "NOR", "MYS",
+    "VNM", "FIN", "COG", "DEU", "JPN", "ZWE", "PRY", "IRQ", "MAR", "UZB",
+    "SWE", "PNG", "CMR", "TKM", "ESP", "THA", "YEM", "FRA", "ALA", "KEN",
+    "BWA", "MDG", "UKR", "SSD", "CAF", "SOM", "AFG", "MMR", "ZMB", "CHL",
+    "TUR", "PAK", "MOZ", "NAM", "VEN", "NGA", "TZA", "EGY", "MRT", "BOL",
+    "ETH", "COL", "ZAF", "MLI", "AGO", "NER", "TCD", "PER", "MNG", "IRN",
+    "LBY", "SDN", "IDN", "MX-DIF", "MX-TLA",
+    "MX-MOR", "MX-AGU", "MX-CL", "MX-QUE", "MX-HID",
+    "MX-MX", "MX-TAB", "MX-NAY", "MX-GUA", "MX-PUE",
+    "MX-YUC", "MX-ROO", "MX-SIN", "MX-CAM", "MX-MIC",
+    "MX-SLP", "MX-GRO", "MX-NLE", "MX-BCN", "MX-VER",
+    "MX-CHP", "MX-BCS", "MX-ZAC", "MX-JAL", "MX-TAM",
+    "MX-OAX", "MX-DUR", "MX-COA", "MX-SON", "MX-CHH",
+    "GRL", "SAU", "COD", "DZA", "KAZ",
+    "ARG", "IN-DD", "IN-DN", "IN-CH", "IN-AN",
+    "IN-LD", "IN-DL", "IN-ML", "IN-NL", "IN-MN",
+    "IN-TR", "IN-MZ", "IN-SK", "IN-PB", "IN-HR",
+    "IN-AR", "IN-AS", "IN-BR", "IN-UT", "IN-GA",
+    "IN-KL", "IN-TN", "IN-HP", "IN-JK", "IN-CT",
+    "IN-JH", "IN-KA", "IN-RJ", "IN-OR", "IN-GJ",
+    "IN-WB", "IN-MP", "IN-TG", "IN-AP", "IN-MH",
+    "IN-UP", "IN-PY", "AU-NSW", "AU-ACT", "AU-JBT",
+    "AU-NT", "AU-SA", "AU-TAS", "AU-VIC", "AU-WA",
+    "AU-QLD", "BR-DF", "BR-SE", "BR-AL", "BR-RJ",
+    "BR-ES", "BR-RN", "BR-PB", "BR-SC", "BR-PE",
+    "BR-AP", "BR-CE", "BR-AC", "BR-PR", "BR-RR",
+    "BR-RO", "BR-SP", "BR-PI", "BR-TO", "BR-RS",
+    "BR-MA", "BR-GO", "BR-MS", "BR-BA", "BR-MG",
+    "BR-MT", "BR-PA", "BR-AM", "US-DC", "US-RI",
+    "US-DE", "US-CT", "US-NJ", "US-NH", "US-VT",
+    "US-MA", "US-HI", "US-MD", "US-WV", "US-SC",
+    "US-ME", "US-IN", "US-KY", "US-TN", "US-VA",
+    "US-OH", "US-PA", "US-MS", "US-LA", "US-AL",
+    "US-AR", "US-NC", "US-NY", "US-IA", "US-IL",
+    "US-GA", "US-WI", "US-FL", "US-MO", "US-OK",
+    "US-ND", "US-WA", "US-SD", "US-NE", "US-KS",
+    "US-ID", "US-UT", "US-MN", "US-MI", "US-WY",
+    "US-OR", "US-CO", "US-NV", "US-AZ", "US-NM",
+    "US-MT", "US-CA", "US-TX", "US-AK", "CA-BC",
+    "CA-AB", "CA-ON", "CA-QC", "CA-SK", "CA-MB",
+    "CA-NL", "CA-NB", "CA-NS", "CA-PE", "CA-YT",
+    "CA-NT", "CA-NU", "IND", "AUS", "BRA",
+    "USA", "MEX", "RU-MOW", "RU-SPE", "RU-KGD",
+    "RU-IN", "RU-AD", "RU-SE", "RU-KB", "RU-KC",
+    "RU-CE", "RU-CU", "RU-IVA", "RU-LIP", "RU-ORL",
+    "RU-TUL", "RU-BE", "RU-VLA", "RU-KRS", "RU-KLU",
+    "RU-TT", "RU-BRY", "RU-YAR", "RU-RYA", "RU-AST",
+    "RU-MOS", "RU-SMO", "RU-DA", "RU-VOR", "RU-NGR",
+    "RU-PSK", "RU-KOS", "RU-STA", "RU-KDA", "RU-KL",
+    "RU-TVE", "RU-LEN", "RU-ROS", "RU-VGG", "RU-VLG",
+    "RU-MUR", "RU-KR", "RU-NEN", "RU-KO", "RU-ARK",
+    "RU-MO", "RU-NIZ", "RU-PNZ", "RU-KI", "RU-ME",
+    "RU-ORE", "RU-ULY", "RU-PM", "RU-BA", "RU-UD",
+    "RU-TA", "RU-SAM", "RU-SAR", "RU-YAN", "RU-KM",
+    "RU-SVE", "RU-TYU", "RU-KGN", "RU-CH", "RU-BU",
+    "RU-ZAB", "RU-IRK", "RU-NVS", "RU-TOM", "RU-OMS",
+    "RU-KK", "RU-KEM", "RU-AL", "RU-ALT", "RU-TY",
+    "RU-KYA", "RU-MAG", "RU-CHU", "RU-KAM", "RU-SAK",
+    "RU-PO", "RU-YEV", "RU-KHA", "RU-AMU", "RU-SA",
+    "CAN", "RUS", "CN-SH", "CN-TJ", "CN-BJ",
+    "CN-HI", "CN-NX", "CN-CQ", "CN-ZJ", "CN-JS",
+    "CN-FJ", "CN-AH", "CN-LN", "CN-SD", "CN-SX",
+    "CN-JX", "CN-HA", "CN-GZ", "CN-GD", "CN-HB",
+    "CN-JL", "CN-HE", "CN-SN", "CN-NM", "CN-HL",
+    "CN-HN", "CN-GX", "CN-SC", "CN-YN", "CN-XZ",
+    "CN-GS", "CN-QH", "CN-XJ", "CHN", "UMI",
+    "CPT", "ATA", "AAA"
+};
 
 #define  usa_from    343
 #define  usa_upto    393

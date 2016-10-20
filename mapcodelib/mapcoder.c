@@ -157,13 +157,16 @@ static point convertFractionsToDegrees(const point *p) {
     return pd;
 }
 
-static const unsigned char DOUBLE_NAN[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F};     // NAN - See: https://en.wikipedia.org/wiki/Double-precision_floating-point_format
+static const unsigned char DOUBLE_NAN[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                            0x7F};     // NAN - See: https://en.wikipedia.org/wiki/Double-precision_floating-point_format
 static const unsigned char DOUBLE_INF[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x7F};     // +Infinity
 static const unsigned char DOUBLE_MIN_INF[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0xFF}; // -Infinity
 
-static int convertCoordsToMicrosAndFractions(point32 *coord32, int *fracLat, int *fracLon, double latDeg, double lonDeg) {
+static int
+convertCoordsToMicrosAndFractions(point32 *coord32, int *fracLat, int *fracLon, double latDeg, double lonDeg) {
     double frac;
-    if (memcmp(&lonDeg, DOUBLE_NAN, 8) == 0 || memcmp(&lonDeg, DOUBLE_INF, 8) == 0 || memcmp(&lonDeg, DOUBLE_MIN_INF, 8) == 0 ||
+    if (memcmp(&lonDeg, DOUBLE_NAN, 8) == 0 || memcmp(&lonDeg, DOUBLE_INF, 8) == 0 ||
+        memcmp(&lonDeg, DOUBLE_MIN_INF, 8) == 0 ||
         memcmp(&latDeg, DOUBLE_NAN, 8) == 0) {
         return -1;
     }
@@ -338,7 +341,10 @@ static int lastrec(const int ccode) {
 #define ParentLetter(ccode) ((int)parentletter[ccode])
 
 // returns parent of ccode, or -1
-static int ParentTerritoryOf(const int ccode) {
+static int parentTerritoryOf(const int ccode) {
+    if (ccode < 0 || ccode > ccode_earth) {
+        return -1;
+    }
     return parentnr[ParentLetter(ccode)];
 }
 
@@ -361,7 +367,7 @@ static int xDivider4(const int miny, const int maxy) {
 
 // returns true iff ccode is a subdivision of some other country
 static int isSubdivision(const int ccode) {
-    return (ParentTerritoryOf(ccode) >= 0);
+    return (parentTerritoryOf(ccode) >= 0);
 }
 
 // find first territory rectangle of the same type as m
@@ -392,15 +398,6 @@ static int isNearBorderOf(const point32 *coord32, const Boundaries *b) {
             (!fitsInsideBoundaries(coord32, getExtendedBoundaries(&tmp, b, -60, -xdiv8))));
 }
 
-static const char *get_entity_iso3(char *entity_iso3_result, const int ccode) {
-    if (ccode < 0 || ccode >= MAX_MAPCODE_TERRITORY_CODE) {
-        return "AAA";
-    } // solve bad args
-    memcpy(entity_iso3_result, entity_iso + ccode * 4, 3);
-    entity_iso3_result[3] = 0;
-    return entity_iso3_result;
-}
-
 static void makeupper(char *s) {
     while (*s) {
         *s = (char) toupper(*s);
@@ -409,7 +406,7 @@ static void makeupper(char *s) {
 }
 
 // returns 1 - 8, or negative if error
-static int getParentcode(const char *s, const int len) {
+static int getParentNumber(const char *s, const int len) {
     const char *p = (len == 2 ? parents2 : parents3);
     const char *f;
     char country[4];
@@ -964,7 +961,7 @@ static void encoderEngine(const int ccode, const encodeRec *enc, const int stop_
                     encodeAutoHeader(result, enc, i, extraDigits);
                 } else if ((i == upto) && isSubdivision(ccode)) {
                     // *** do a recursive call for the parent ***
-                    encoderEngine(ParentTerritoryOf(ccode), enc, stop_with_one_result, extraDigits, requiredEncoder,
+                    encoderEngine(parentTerritoryOf(ccode), enc, stop_with_one_result, extraDigits, requiredEncoder,
                                   ccode);
                     return;
                 } else // must be grid
@@ -1572,7 +1569,7 @@ static int decoderEngine(decodeRec *dec) {
             ccode = ccode_earth;
         } else if (isSubdivision(ccode)) {
             // int mapcodes must be interpreted in the parent of a subdivision
-            int parent = ParentTerritoryOf(ccode);
+            int parent = parentTerritoryOf(ccode);
             if ((codex == 44) || ((codex == 34 || codex == 43) && (parent == ccode_ind || parent == ccode_mex))) {
                 ccode = parent;
             }
@@ -1947,64 +1944,73 @@ UWORD *convertToAlphabet(UWORD *utf16String, int maxLength, const char *asciiStr
 // 32=termstart 64=end territory 128(256)=end of clean mapcode(with extension) 512=end of extension
 static int fullmc_statemachine[24][6] = {
         //                    WHI        DOT        DET        VOW        ZER        HYP
-        /* 0 start        */ {0,         STATE_ERR, 1 | 32,  1 | 32,      STATE_ERR,      STATE_ERR}, // looking for very first detter
+        /* 0 start        */
+        {0,         STATE_ERR, 1 | 32,  1 | 32,      STATE_ERR,      STATE_ERR}, // looking for very first detter
         /* 1 gotL         */
-                             {STATE_ERR, STATE_ERR, 2,       13,          STATE_ERR,      STATE_ERR}, // got one detter, MUST get another one (if vowel, must be territory!)
+        {STATE_ERR, STATE_ERR, 2,       13,          STATE_ERR,      STATE_ERR}, // got one detter, MUST get another one (if vowel, must be territory!)
         /* 2 gotLL        */
-                             {18 |
-                              64,        6,         3,       23,          STATE_ERR, 14}, // GOT2: white: got territory + start prefix | dot: 2.X mapcode | det:3letter | hyphen: 2-state | vowel: 3-territory
+        {18 |
+         64,        6,         3,       23,          STATE_ERR, 14}, // GOT2: white: got territory | dot: 2.X mapcode | det:3letter | hyphen: 2-state | vowel: 3-ter
         /* 3 gotLLL       */
-                             {18 | 64,   6,         4,         STATE_ERR, STATE_ERR, 14}, // white: got territory + start prefix | dot: 3.X mapcode | det:4letterprefix | hyphen: 3-state
+        {18 |
+         64,        6,         4,         STATE_ERR, STATE_ERR, 14}, // white: got territory + start prefix | dot: 3.X mapcode | det:4letterprefix | hyphen: 3-state
         /* 4 gotLLLL      */
-                             {STATE_ERR, 6,         5,         STATE_ERR, STATE_ERR,      STATE_ERR}, // dot: 4.X mapcode | det: got 5th prefix letter
+        {STATE_ERR, 6,         5,         STATE_ERR, STATE_ERR,      STATE_ERR}, // dot: 4.X mapcode | det: got 5th prefix letter
         /* 5 gotLLLLL     */
-                             {STATE_ERR, 6,         STATE_ERR, STATE_ERR, STATE_ERR,      STATE_ERR}, // got 5char so MUST get dot!
+        {STATE_ERR, 6,         STATE_ERR, STATE_ERR, STATE_ERR,      STATE_ERR}, // got 5char so MUST get dot!
         /* 6 prefix.      */
-                             {STATE_ERR, STATE_ERR, 7,       9,           STATE_PRT,      STATE_ERR}, // MUST get first letter after dot (after a vowel, next letter is LAST letter)
+        {STATE_ERR, STATE_ERR, 7,       9,           STATE_PRT,      STATE_ERR}, // MUST get first letter after dot (after a vowel, next letter is LAST letter)
         /* 7 prefix.L     */
-                             {STATE_ERR, STATE_ERR, 8,       9,           STATE_PRT,      STATE_ERR}, // MUST get second letter after dot
+        {STATE_ERR, STATE_ERR, 8,       9,           STATE_PRT,      STATE_ERR}, // MUST get second letter after dot
         /* 8 prefix.LL    */
-                             {22 | 128,  STATE_ERR, 9,       9,           STATE_GO | 128, 11 | 256}, // get 3d letter after dot | X.2- | X.2 done!
+        {22 | 128,  STATE_ERR, 9,       9,           STATE_GO | 128, 11 |
+                                                                     256}, // get 3d letter after dot | X.2- | X.2 done!
         /* 9 prefix.LLL   */
-                             {22 | 128,  STATE_ERR, 10,      10,          STATE_GO | 128, 11 | 256}, // get 4th letter after dot | X.3- | X.3 done!
+        {22 | 128,  STATE_ERR, 10,      10,          STATE_GO | 128, 11 |
+                                                                     256}, // get 4th letter after dot | X.3- | X.3 done!
         /*10 prefix.LLLL  */
-                             {22 | 128,  STATE_ERR, STATE_ERR, STATE_ERR, STATE_GO | 128, 11 | 256}, // X.4- | x.4 done!
+        {22 | 128,  STATE_ERR, STATE_ERR, STATE_ERR, STATE_GO | 128, 11 | 256}, // X.4- | x.4 done!
 
         /*11 mc-          */
-                             {STATE_ERR, STATE_ERR, 12,        STATE_ERR, STATE_PRT,      STATE_ERR}, // MUST get first precision letter
+        {STATE_ERR, STATE_ERR, 12,        STATE_ERR, STATE_PRT,      STATE_ERR}, // MUST get first precision letter
         /*12 mc-L*        */
-                             {22 | 512,  STATE_ERR, 12,        STATE_ERR, STATE_GO | 512, STATE_ERR}, // *** keep reading precision detters *** until whitespace or done
+        {22 | 512,  STATE_ERR, 12,        STATE_ERR, STATE_GO |
+                                                     512, STATE_ERR}, // *** keep reading precision detters *** until whitespace or done
         /*13 gotTA        */
-                             {18 | 64,   STATE_ERR, 23,      23,          STATE_ERR, 14}, // got two territory letters:
+        {18 | 64,   STATE_ERR, 23,      23,          STATE_ERR, 14}, // got two territory letters:
 
         /*14 ctry-        */
-                             {STATE_ERR, STATE_ERR, 15,      15,          STATE_ERR,      STATE_ERR}, // MUST get first state letter
+        {STATE_ERR, STATE_ERR, 15,      15,          STATE_ERR,      STATE_ERR}, // MUST get first state letter
         /*15 ctry-L       */
-                             {STATE_ERR, STATE_ERR, 16,      16,          STATE_ERR,      STATE_ERR}, // MUST get 2nd state letter
+        {STATE_ERR, STATE_ERR, 16,      16,          STATE_ERR,      STATE_ERR}, // MUST get 2nd state letter
         /*16 ctry-LL      */
-                             {18 | 64,   STATE_ERR, 17,      17,          STATE_ERR,      STATE_ERR}, // white: got CCC-SS and get prefix | got 3d letter
+        {18 |
+         64,        STATE_ERR, 17,      17,          STATE_ERR,      STATE_ERR}, // white: got CCC-SS and get prefix | got 3d letter
         /*17 ctry-LLL     */
-                             {18 | 64,   STATE_ERR, STATE_ERR, STATE_ERR, STATE_ERR,      STATE_ERR}, // got CCC-SSS so MUST get whitespace and then get prefix
+        {18 |
+         64,        STATE_ERR, STATE_ERR, STATE_ERR, STATE_ERR,      STATE_ERR}, // got CCC-SSS so MUST get whitespace and then get prefix
 
         /*18 startprefix  */
-                             {18,        STATE_ERR, 19 | 32, 19 | 32,     STATE_ERR,      STATE_ERR}, // skip more whitespace, MUST get 1st prefix letter
+        {18,        STATE_ERR, 19 | 32, 19 |
+                                        32,          STATE_ERR,      STATE_ERR}, // skip more whitespace, MUST get 1st prefix letter
         /*19 gotprefix1   */
-                             {STATE_ERR, STATE_ERR, 20,        STATE_ERR, STATE_ERR,      STATE_ERR}, // MUST get second prefix letter
+        {STATE_ERR, STATE_ERR, 20,        STATE_ERR, STATE_ERR,      STATE_ERR}, // MUST get second prefix letter
         /*20 gotprefix2   */
-                             {STATE_ERR, 6,         21,        STATE_ERR, STATE_ERR,      STATE_ERR}, // dot: 2.X mapcode | det: 3d perfix letter
+        {STATE_ERR, 6,         21,        STATE_ERR, STATE_ERR,      STATE_ERR}, // dot: 2.X mapcode | det: 3d perfix letter
         /*21 gotprefix3   */
-                             {STATE_ERR, 6,         4,         STATE_ERR, STATE_ERR,      STATE_ERR}, // dot: 3.x mapcode | det: got 4th prefix letter
+        {STATE_ERR, 6,         4,         STATE_ERR, STATE_ERR,      STATE_ERR}, // dot: 3.x mapcode | det: got 4th prefix letter
 
         /*22 whitespace   */
-                             {22,        STATE_ERR, STATE_ERR, STATE_ERR, STATE_GO,       STATE_ERR}, // whitespace until end of string
+        {22,        STATE_ERR, STATE_ERR, STATE_ERR, STATE_GO,       STATE_ERR}, // whitespace until end of string
         /*23 gotTTA       */
-                             {18 | 64,   STATE_ERR, STATE_ERR, STATE_ERR, STATE_ERR, 14}  // MUST get hyphen or space
+        {18 | 64,   STATE_ERR, STATE_ERR, STATE_ERR, STATE_ERR, 14}  // MUST get hyphen or space
 };
 
 
 // Pass fullcode=1 to recognise territory and mapcode, pass fullcode=0 to only recognise proper mapcode (without optional territory)
 // Returns 0 if ok, negative in case of error (where -999 represents "may BECOME a valid mapcode if more characters are added)
-int parseMapcodeString(MapcodeElements *mapcodeFormat, const char *asciiString, int containsTerritory, int territoryCode) {
+int
+parseMapcodeString(MapcodeElements *mapcodeFormat, const char *asciiString, int containsTerritory, int territoryCode) {
     const char *mcStart = NULL, *exStart = NULL;
     int nondigits = 0, vowels = 0;
     int state = (containsTerritory ? 0 : 18); // initial state
@@ -2090,7 +2096,7 @@ int parseMapcodeString(MapcodeElements *mapcodeFormat, const char *asciiString, 
                     mapcodeFormat->territoryCode = territoryCode;
                 }
                 if (mapcodeFormat->territoryCode == (ccode_mex + 1) && (strlen(mapcodeFormat->properMapcode) < 8)) {
-                    mapcodeFormat->territoryCode = getTerritoryCode("5MX", -1);
+                    mapcodeFormat->territoryCode = getTerritoryCode("MX-MX", -1);
                 }
             }
             return ret;
@@ -2101,8 +2107,8 @@ int parseMapcodeString(MapcodeElements *mapcodeFormat, const char *asciiString, 
     }
 }
 
-int compareWithMapcodeFormat(const char *asciiString, int includesTerritory) {
-    return parseMapcodeString(NULL, asciiString, includesTerritory, 0);
+int compareWithMapcodeFormat(const char *asciiString, int containsTerritory) {
+    return parseMapcodeString(NULL, asciiString, containsTerritory, 0);
 }
 
 
@@ -2119,18 +2125,12 @@ char *getTerritoryIsoName(char *territoryISO, int territoryCode, int useShortNam
     if ((territoryCode < 1) || (territoryCode > MAX_MAPCODE_TERRITORY_CODE)) {
         *territoryISO = 0;
     } else {
-        const int p = ParentLetter(territoryCode - 1);
-        char iso3[4];
-        const char *ei = get_entity_iso3(iso3, territoryCode - 1);
-        if (*ei >= '0' && *ei <= '9') {
-            ei++;
-        }
-        if (useShortName == 0 && p) {
-            memcpy(territoryISO, &parents2[p * 3 - 3], 2);
-            territoryISO[2] = '-';
-            strcpy(territoryISO + 3, ei);
+        const char *alphaCode = iso3166alpha[territoryCode - 1];
+        const char *hyphen = strchr(alphaCode, '-');
+        if (useShortName && hyphen != NULL) {
+            strcpy(territoryISO, hyphen + 1);
         } else {
-            strcpy(territoryISO, ei);
+            strcpy(territoryISO, alphaCode);
         }
     }
     return territoryISO;
@@ -2138,7 +2138,7 @@ char *getTerritoryIsoName(char *territoryISO, int territoryCode, int useShortNam
 
 // PUBLIC - returns negative if territoryCode is not a code that has a parent country
 int getParentCountryOf(int territoryCode) {
-    const int parentccode = ParentTerritoryOf(territoryCode - 1); // returns parent ccode or -1
+    const int parentccode = parentTerritoryOf(territoryCode - 1); // returns parent ccode or -1
     if (parentccode >= 0) {
         return parentccode + 1;
     }
@@ -2197,19 +2197,21 @@ static int cmp_alphacode(const void *e1, const void *e2) {
     return strcmp(a1->alphaCode, a2->alphaCode);
 } // cmp
 
-static int binfindmatch(const int parentTerritoryCode, const char *territoryISO) {
-    // build a 4-letter uppercase search term
-    char codeISO[5];
+static int binfindmatch(const int parentNumber, const char *territoryISO) {
+    // build an uppercase search term
+    char codeISO[MAX_ISOCODE_LEN + 1];
     const char *r = territoryISO;
     int len = 0;
 
-    if (parentTerritoryCode < 0) {
+    if (parentNumber < 0) {
         return -1;
     }
-    if (parentTerritoryCode > 0) {
-        codeISO[len++] = (char) ('0' + parentTerritoryCode);
+    if (parentNumber > 0) {
+        static const char *p2[9] = {"", "US-", "IN-", "CA-", "AU-", "MX-", "BR-", "RU-", "CN-"};
+        strcpy(codeISO, p2[parentNumber]);
+        len = 3;
     }
-    while ((len < 4) && (*r > 32)) {
+    while ((len < MAX_ISOCODE_LEN) && (*r > 32)) {
         codeISO[len++] = *r++;
     }
     if (*r > 32) {
@@ -2221,7 +2223,6 @@ static int binfindmatch(const int parentTerritoryCode, const char *territoryISO)
         const alphaRec *p;
         alphaRec t;
         t.alphaCode = codeISO;
-        t.ccode = parentTerritoryCode;
 
         p = (const alphaRec *) bsearch(&t, alphaSearch, NRTERREC, sizeof(alphaRec), cmp_alphacode);
         if (p) {
@@ -2246,14 +2247,14 @@ int getTerritoryCode(const char *territoryISO, int optionalTerritoryContext) {
     if (territoryISO[0] && territoryISO[1]) {
         const int ccode = optionalTerritoryContext - 1;
         if (territoryISO[2] == '-') {
-            return binfindmatch(getParentcode(territoryISO, 2), territoryISO + 3);
+            return binfindmatch(getParentNumber(territoryISO, 2), territoryISO + 3);
         } else if (territoryISO[2] && territoryISO[3] == '-') {
-            return binfindmatch(getParentcode(territoryISO, 3), territoryISO + 4);
+            return binfindmatch(getParentNumber(territoryISO, 3), territoryISO + 4);
         } else {
-            const int parentcode =
-                    ccode < 0 ? 0 : ((parentnumber[ccode] > 0) ? parentnumber[ccode] : parentnumber[ParentTerritoryOf(
+            const int parentNumber =
+                    ccode < 0 ? 0 : ((parentnumber[ccode] > 0) ? parentnumber[ccode] : parentnumber[parentTerritoryOf(
                             ccode)]);
-            const int b = binfindmatch(parentcode, territoryISO);
+            const int b = binfindmatch(parentNumber, territoryISO);
             if (b > 0) {
                 return b;
             } //
@@ -2319,8 +2320,10 @@ int encodeLatLonToMapcodes(Mapcodes *mapcodes, double latDeg, double lonDeg, int
 // Legacy: NOT threadsafe
 Mapcodes rglobal;
 
-int encodeLatLonToMapcodes_Deprecated(char **mapcodesAndTerritories, double latDeg, double lonDeg, int territoryCode, int extraDigits) {
-    return encodeLatLonToMapcodes_internal(mapcodesAndTerritories, &rglobal, latDeg, lonDeg, territoryCode, 0, debugStopAt, extraDigits);
+int encodeLatLonToMapcodes_Deprecated(char **mapcodesAndTerritories, double latDeg, double lonDeg, int territoryCode,
+                                      int extraDigits) {
+    return encodeLatLonToMapcodes_internal(mapcodesAndTerritories, &rglobal, latDeg, lonDeg, territoryCode, 0,
+                                           debugStopAt, extraDigits);
 }
 
 // Legacy: NOT threadsafe
@@ -2590,7 +2593,7 @@ static void convertFromAbjad(char *s) {
         if (c >= 0 && c < 63) {
 //          s[0] = s[0];
 //          s[1] = s[1];
-//        	s[2] = '.';
+//          s[2] = '.';
             s[3] = '.';
             s[4] = s[5];
             s[5] = s[6];
@@ -2607,8 +2610,8 @@ static void convertFromAbjad(char *s) {
 //          s[0] = s[0];
 //          s[1] = s[1];
             s[2] = '.';
-//        	s[3] = '.';
-//        	s[4] = s[4];
+//          s[3] = '.';
+//          s[4] = s[4];
             s[5] = s[6];
             s[6] = s[7];
             s[7] = 0;
@@ -2628,9 +2631,9 @@ static void convertFromAbjad(char *s) {
         if (c >= 0 && c < 63) {
 //          s[0] = s[0];
 //          s[1] = s[1];
-//        	s[3] = '.';
-//        	s[4] = s[4];
-//        	s[5] = s[5];
+//          s[3] = '.';
+//          s[4] = s[4];
+//          s[5] = s[5];
             s[6] = s[7];
             s[7] = s[8];
             s[8] = 0;
@@ -2648,8 +2651,8 @@ static void convertFromAbjad(char *s) {
 //          s[0] = s[0];
 //          s[1] = s[1];
             s[2] = encode_chars[c / 31];
-//        	s[3] = s[3];
-//        	s[4] = '.';
+//          s[3] = s[3];
+//          s[4] = '.';
             s[5] = s[6];
             s[6] = s[7];
             s[7] = s[9];
@@ -2662,8 +2665,8 @@ static void convertFromAbjad(char *s) {
 //          s[0] = s[0];
 //          s[1] = s[1];
             s[2] = encode_chars[c / 31];
-//        	s[3] = s[3];
-//        	s[4] = s[4];
+//          s[3] = s[3];
+//          s[4] = s[4];
 //          s[5] = '.';
             s[6] = s[7];
             s[7] = s[8];

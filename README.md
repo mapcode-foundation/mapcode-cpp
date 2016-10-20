@@ -158,6 +158,8 @@ to use fast encoding.
 the 'proper' mapcode (without the territory and precision extension) and the precision
 extension parsed from a (user) input string.
 
+* Additional bug fixes.
+
 ### 2.3.1
 
 * Minor fixes to prevent compiler warnings.

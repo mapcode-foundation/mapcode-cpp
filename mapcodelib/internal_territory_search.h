@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Stichting Mapcode Foundation (http://www.mapcode.com)
+ * Copyright (C) 2014-2016 Stichting Mapcode Foundation (http://www.mapcode.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-#ifndef __MAPCODE_FAST_ENCODE_H__
-#define __MAPCODE_FAST_ENCODE_H__
+#ifndef __INTERNAL_TERRITORY_SEARCH_H__
+#define __INTERNAL_TERRITORY_SEARCH_H__
 
 // *** GENERATED FILE (dividemaps.cpp), DO NOT CHANGE OR PRETTIFY ***
 
-#define REDIVAR_SIZE 2924
-static int redivar[REDIVAR_SIZE] = {
+static int redivar[] = {
         27984500, 1383,
         2537718, 676,
         12842450, 332,
@@ -811,4 +810,4 @@ static int redivar[REDIVAR_SIZE] = {
         TERRITORY_RU_SA, TERRITORY_RUS,
         0
 }; // 2924 records, data version 2.3.0
-#endif // __MAPCODE_FAST_ENCODE_H__
+#endif // __INTERNAL_TERRITORY_SEARCH_H__

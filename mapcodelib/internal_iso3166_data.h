@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Stichting Mapcode Foundation (http://www.mapcode.com)
+ * Copyright (C) 2014-2016 Stichting Mapcode Foundation (http://www.mapcode.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-#ifndef __MAPCODE_FASTALPHA_H__
-#define __MAPCODE_FASTALPHA_H__
+#ifndef __INTERNAL_ISO3166_DATA_H__
+#define __INTERNAL_ISO3166_DATA_H__
 
 #include "mapcode_territories.h"
 
 // *** GENERATED FILE (dividemaps/fast_territories), DO NOT CHANGE OR PRETTIFY ***
 
-static const char parentletter[MAPCODE_NR_TERRITORIES + 1] = {
+static const char parentletter[_TERRITORY_MAX - _TERRITORY_MIN] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -42,7 +42,7 @@ static const char parentletter[MAPCODE_NR_TERRITORIES + 1] = {
         8, 0, 0, 0, 0, 0, 0};
 
 
-static const char parentnumber[MAPCODE_NR_TERRITORIES + 1] = {
+static const char parentnumber[_TERRITORY_MAX - _TERRITORY_MIN] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -987,4 +987,4 @@ static const alphaRec alphaSearch[NRTERREC] = {
 };
 
 // produced by dividemaps.cpp : fast_territories.cpp
-#endif // __MAPCODE_FASTALPHA_H__
+#endif // __INTERNAL_ISO3166_DATA_H__

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Stichting Mapcode Foundation (http://www.mapcode.com)
+ * Copyright (C) 2014-2016 Stichting Mapcode Foundation (http://www.mapcode.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,6 @@
 extern "C" {
 #endif
 
-/**
- * Alphabets:
- */
 enum Alphabet {
     _ALPHABET_MIN = -1,
     ALPHABET_ROMAN,
@@ -56,12 +53,6 @@ enum Alphabet {
     ALPHABET_GUJARATI,
     _ALPHABET_MAX,
 };
-
-#define MAX_ALPHABETS_PER_TERRITORY    3
-typedef struct {
-    int count;
-    enum Alphabet alphabet[MAX_ALPHABETS_PER_TERRITORY];
-} TerritoryAlphabets;
 
 #ifdef __cplusplus
 }

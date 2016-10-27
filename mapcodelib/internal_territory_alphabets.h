@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Stichting Mapcode Foundation (http://www.mapcode.com)
+ * Copyright (C) 2014-2016 Stichting Mapcode Foundation (http://www.mapcode.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __MAPCODE_TERRITORY_ALPHABETS_H__
-#define __MAPCODE_TERRITORY_ALPHABETS_H__
+#ifndef __INTERNAL_TERRITORY_ALPHABETS_H__
+#define __INTERNAL_TERRITORY_ALPHABETS_H__
 
 
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
@@ -23,10 +23,9 @@
 extern "C" {
 #endif
 
-#include "basics.h"
-#include "mapcode_alphabets.h"
+#include "mapcoder.h"
 
-static const TerritoryAlphabets alphabetsForTerritory[MAPCODE_NR_TERRITORIES] = {
+static const TerritoryAlphabets alphabetsForTerritory[_TERRITORY_MAX - _TERRITORY_MIN - 1] = {
         {1, {ALPHABET_ROMAN}}, // VAT Vatican
         {1, {ALPHABET_ROMAN}}, // MCO Monaco
         {1, {ALPHABET_ROMAN}}, // GIB Gibraltar
@@ -566,5 +565,5 @@ static const TerritoryAlphabets alphabetsForTerritory[MAPCODE_NR_TERRITORIES] = 
 }
 #endif
 
-#endif // __MAPCODE_TERRITORY_ALPHABETS_H__
+#endif // __INTERNAL_TERRITORY_ALPHABETS_H__
 

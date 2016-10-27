@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Stichting Mapcode Foundation (http://www.mapcode.com)
+ * Copyright (C) 2014-2016 Stichting Mapcode Foundation (http://www.mapcode.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,11 +39,15 @@
  */
 
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <math.h>
+#include <ctype.h>
 #include <time.h>
 #include "../mapcodelib/mapcoder.h"
-#include "../mapcodelib/mapcoder.c"
-#include "../mapcodelib/mapcode_countrynames_short.h"
+#include "../mapcodelib/internal_territory_names_english.h"
+#include "../mapcodelib/internal_data.h"
+#include "../mapcodelib/internal_iso3166_data.h"
 
 // Specific define to be able to limit output to microdegrees, for test files.
 #undef LIMIT_TO_MICRODEGREES
@@ -81,7 +85,7 @@ static double lonLargestNrOfResults = 0.0;
  */
 static void usage(const char *appName) {
     printf("MAPCODE (version %s)\n", mapcode_cversion);
-    printf("Copyright (C) 2014-2015 Stichting Mapcode Foundation\n");
+    printf("Copyright (C) 2014-2016 Stichting Mapcode Foundation\n");
     printf("\n");
 #ifndef SUPPORT_HIGH_PRECISION
     printf("Warning: High precision support is disabled in this build.)\n\n");
@@ -385,26 +389,6 @@ static void showProgress(int i) {
 }
 
 /**
- * Quickly convert a zero-terminated UTF16 to a UTF8 string (assuming sufficient room in utf8)
- */
-void convertUtf16ToUtf8(char *utf8, const UWORD *utf16) {
-    while (*utf16) {
-        UWORD c = *utf16++;
-        if (c < 0x80) {
-            *utf8++ = (char) c;
-        } else if (c < 0x800) {
-            *utf8++ = (char) (192 + (c >> 6));
-            *utf8++ = (char) (128 + (c & 63));
-        } else {
-            *utf8++ = (char) (224 + (c >> 12));
-            *utf8++ = (char) (128 + ((c >> 6) & 63));
-            *utf8++ = (char) (128 + (c & 63));
-        }
-    }
-    *utf8 = 0;
-}
-
-/**
  * This is the main() method which is called from the command-line.
  * Return code 0 means success. Any other values means some sort of error occurred.
  */
@@ -568,6 +552,7 @@ int main(const int argc, const char **argv) {
                     char fullcode[16];
                     strcpy(fullcode, alphaSearch[a].alphaCode);
                     if (fullcode[0] >= '0' && fullcode[0] <= '9') {
+                        static const char *parents2 = "US,IN,CA,AU,MX,BR,RU,CN,";
                         int p = (fullcode[0] - '0');
                         memcpy(fullcode, &parents2[p * 3 - 3], 2);
                         fullcode[2] = '-';
@@ -746,7 +731,7 @@ int main(const int argc, const char **argv) {
         }
         useXYZ = (strstr(cmd, "XYZ") != 0);
 
-        resetStatistics(MAPCODE_NR_RECS);
+        resetStatistics(MAPCODE_BOUNDARY_MAX);
         for (int i = 0; i < totalNrOfPoints; ++i) {
             double minLon;
             double maxLon;
@@ -755,7 +740,7 @@ int main(const int argc, const char **argv) {
             double lat;
             double lon;
 
-            const mminforec *mm = boundaries(i);
+            const TerritoryBoundary *mm = territoryBoundary(i);
             minLon = ((double) mm->minx) / 1.0E6;
             maxLon = ((double) mm->maxx) / 1.0E6;
             minLat = ((double) mm->miny) / 1.0E6;

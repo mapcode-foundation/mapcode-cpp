@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Stichting Mapcode Foundation (http://www.mapcode.com)
+ * Copyright (C) 2014-2016 Stichting Mapcode Foundation (http://www.mapcode.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __MAPCODE_LOCALNAMES_H__
-#define __MAPCODE_LOCALNAMES_H__
+#ifndef __INTERNAL_TERRITORY_NAMES_LOCAL_H__
+#define __INTERNAL_TERRITORY_NAMES_LOCAL_H__
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
 
 
 /*
  * The first N names are precisely in the alphabets
- * as listed in mapcode_territory_alphabets.
+ * as listed in internal_territory_alphabets.
  * There may be even more names (for these, the alphabet is unspecified)
 */
 
@@ -560,4 +560,4 @@ static const char *localname_utf8[] = {
         "Earth",
         "?"};
 
-#endif // __MAPCODE_LOCALNAMES_H__
+#endif // __INTERNAL_TERRITORY_NAMES_LOCAL_H__

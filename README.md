@@ -61,8 +61,8 @@ decode Mapcodes.
 
 This produces the following help text:
 
-    MAPCODE (version 2.4.0)
-    Copyright (C) 2014-2015 Stichting Mapcode Foundation
+    MAPCODE (version 2.4.1)
+    Copyright (C) 2014-2016 Stichting Mapcode Foundation
     
     Usage:
         ./mapcode [-d| --decode] <default-territory> <mapcode> [<mapcode> ...]
@@ -133,11 +133,13 @@ settings:
 
 ### 2.4.1
 
-* Turned territories, alphabets and error codes into enums; Cleaned up source.
+* Renamed .h files to internal_*.h unless they are relevant to the interface.
 
-* Split off legacy stuff into mapcode_legacy.h 
+* Turned territories, alphabets and error codes into enums.
 
-* Added mapcode_territories.h
+* Split off legacy stuff into `mapcode_legacy.h`. 
+
+* Added `convertUtf8ToUtf16`, `convertUtf16ToUtf8`, `recogniseAlphabetUtf8`, `recogniseAlphabetUtf16`.
 
 ### 2.4.0
 

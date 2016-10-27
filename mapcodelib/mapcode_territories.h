@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Stichting Mapcode Foundation (http://www.mapcode.com)
+ * Copyright (C) 2014-2016 Stichting Mapcode Foundation (http://www.mapcode.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -559,19 +559,8 @@ enum Territory {
     _TERRITORY_MAX
 };
 
-#define INDEX_OF_TERRITORY(c) (((int)c) - 1 - _TERRITORY_MIN)
-#define TERRITORY_OF_INDEX(x) ((x < 0) ? TERRITORY_NONE : (_TERRITORY_MIN + x + 1))
-
-static const enum Territory parentnr[9] = {
-        TERRITORY_NONE,
-        TERRITORY_USA,
-        TERRITORY_IND,
-        TERRITORY_CAN,
-        TERRITORY_AUS,
-        TERRITORY_MEX,
-        TERRITORY_BRA,
-        TERRITORY_RUS,
-        TERRITORY_CHN};
+#define INDEX_OF_TERRITORY(c) (((int) c) - _TERRITORY_MIN - 1)
+#define TERRITORY_OF_INDEX(x) ((x < 0) ? TERRITORY_NONE : (enum Territory) (_TERRITORY_MIN + x + 1))
 
 #endif // __MAPCODE_TERRITORIES_H__
 

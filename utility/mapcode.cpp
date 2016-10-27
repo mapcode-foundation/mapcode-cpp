@@ -41,8 +41,8 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#include "../mapcodelib/mapcoder.c"
 #include "../mapcodelib/mapcoder.h"
+#include "../mapcodelib/mapcoder.c"
 #include "../mapcodelib/mapcode_countrynames_short.h"
 
 // Specific define to be able to limit output to microdegrees, for test files.
@@ -208,8 +208,8 @@ static void convertLatLonToXYZ(double latDeg, double lonDeg, double *x, double *
  */
 static void selfCheckLatLonToMapcode(const double lat, double lon, const char *mapcode, int extraDigits) {
     // TODO: Fix self check; read context.
-    // int context = convertTerritoryIsoNameToCode(territory, 0);
-    int context = 0;
+    // int context = getTerritoryCode(territory, 0);
+    enum Territory context = TERRITORY_NONE;
     Mapcodes mapcodes;
     const double limitLat = (lat < -90.0) ? -90.0 : ((lat > 90.0) ? 90.0 : lat);
     const double limitLon = (lon < -180.0) ? -180.0 : ((lon > 180.0) ? 180.0 : lon);
@@ -252,8 +252,8 @@ static void selfCheckMapcodeToLatLon(const char *mapcode,
     double foundLat;
     double foundLon;
     // TODO: Fix self-check.
-    // int foundContext = convertTerritoryIsoNameToCode(territory, 0);
-    int foundContext = 0;
+    // int foundContext = getTerritoryCode(territory, TERRITORY_NONE);
+    enum Territory foundContext = TERRITORY_NONE;
     int err = decodeMapcodeToLatLon(&foundLat, &foundLon, mapcode, foundContext);
     if (err != 0) {
         fprintf(stderr, "error: decoding mapcode to lat/lon failure; "
@@ -282,7 +282,7 @@ static void selfCheckMapcodeToLatLon(const char *mapcode,
 
 static void generateAndOutputMapcodes(double lat, double lon, int iShowError, int extraDigits, int useXYZ) {
 
-    int context = 0;
+    enum Territory context = TERRITORY_NONE;
 
     while (lon > 180.0) {
         lon -= 360.0;
@@ -444,7 +444,7 @@ int main(const int argc, const char **argv) {
         double lon;
 
         // Get the territory context.
-        int context = getTerritoryCode(defaultTerritory, 0);
+        enum Territory context = getTerritoryCode(defaultTerritory, TERRITORY_NONE);
 
         // Decode every Mapcode.
         for (int i = 3; i < argc; ++i) {
@@ -518,10 +518,10 @@ int main(const int argc, const char **argv) {
         }
 
         // Get territory context.
-        int context = 0;
+        enum Territory context = TERRITORY_NONE;
         const char *defaultTerritory = "AAA";
         if (argc == 5) {
-            context = convertTerritoryIsoNameToCode(argv[4], 0);
+            context = getTerritoryCode(argv[4], TERRITORY_NONE);
             defaultTerritory = argv[4];
         }
 
@@ -556,15 +556,15 @@ int main(const int argc, const char **argv) {
             return NORMAL_ERROR;
         }
         printf("ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separated)\n");
-        for (int i = 1; i <= MAX_MAPCODE_TERRITORY_CODE; ++i) {
-            int ccode = i - 1;
+        for (int i = _TERRITORY_MIN + 1; i < _TERRITORY_MAX; ++i) {
+            const enum Territory ccode = (enum Territory) i;
             char territoryName[MAX_MAPCODE_RESULT_LEN];
-            printf("%d,", ccode);
+            printf("%d,", INDEX_OF_TERRITORY(i));
 
             // Use internal knowledge of alphaSearch to show aliases of territoryName.
-            printf("%s", getTerritoryIsoName(territoryName, i, 0));
+            printf("%s", getTerritoryIsoName(territoryName, ccode, 0));
             for (int a = 0; a < NRTERREC; a++) {
-                if (alphaSearch[a].ccode == ccode) {
+                if (alphaSearch[a].territory == ccode) {
                     char fullcode[16];
                     strcpy(fullcode, alphaSearch[a].alphaCode);
                     if (fullcode[0] >= '0' && fullcode[0] <= '9') {
@@ -581,7 +581,7 @@ int main(const int argc, const char **argv) {
             printf(",");
 
             // Print alphabets.
-            const TerritoryAlphabets *territoryAlphabets = getAlphabetsForTerritory(i);
+            const TerritoryAlphabets *territoryAlphabets = getAlphabetsForTerritory(ccode);
             for (int j = 0; j < territoryAlphabets->count; j++) {
                 if (j > 0) {
                     printf("|");
@@ -591,7 +591,7 @@ int main(const int argc, const char **argv) {
             printf(",");
 
             // Use internal knowledge of isofullname to show aliases of full territory name.
-            char *names = strdup(isofullname[ccode]);
+            char *names = strdup(isofullname[INDEX_OF_TERRITORY(ccode)]);
             char *s = names;
             while (s) {
                 if (s != names) {
@@ -695,11 +695,13 @@ int main(const int argc, const char **argv) {
         }
 
         printf("alphabetNr,MapcodeInRoman,MapcodeInAlphabet,BackInRoman\n");
-        for (int alphabet = 0; alphabet < MAPCODE_ALPHABETS_TOTAL; ++alphabet) {
+        for (enum Alphabet alphabet = ALPHABET_ROMAN;
+             alphabet < _ALPHABET_MAX; alphabet = (enum Alphabet) (alphabet + 1)) {
             int variant;
             for (variant = 0; variant <= 2; variant++) {
                 int m;
                 for (m = 0; mapcodeForCSV[m] != NULL; m++) {
+                    int i;
                     char asciiString[128];
                     char aciiStringRecoded[128];
                     UWORD utf16String[128];
@@ -707,6 +709,9 @@ int main(const int argc, const char **argv) {
                     char mapcode[128];
                     strcpy(mapcode, mapcodeForCSV[m]);
                     strcat(mapcode, (variant == 1) ? "-bc" : (variant == 2) ? "-DFGHJKLM" : "");
+                    for (i = 0; mapcode[i]; ++i) {
+                        mapcode[i] = (char) toupper((int) mapcode[i]);
+                    }
                     // convert to alphabet, and back to roman
                     convertToAlphabet(utf16String, 128, mapcode, alphabet);
                     convertToRoman(aciiStringRecoded, 128, utf16String);
@@ -741,7 +746,7 @@ int main(const int argc, const char **argv) {
         }
         useXYZ = (strstr(cmd, "XYZ") != 0);
 
-        resetStatistics(NR_BOUNDARY_RECS);
+        resetStatistics(MAPCODE_NR_RECS);
         for (int i = 0; i < totalNrOfPoints; ++i) {
             double minLon;
             double maxLon;

@@ -131,6 +131,14 @@ settings:
 
 # Release Notes
 
+### 2.4.1
+
+* Turned territories, alphabets and error codes into enums; Cleaned up source.
+
+* Split off legacy stuff into mapcode_legacy.h 
+
+* Added mapcode_territories.h
+
 ### 2.4.0
 
 * Added scripts for Korean (Choson'gul / Hangul), Burmese, Khmer, Sinhalese, Thaana (Maldivan), 

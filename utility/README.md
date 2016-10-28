@@ -4,9 +4,9 @@ This directory contains a Mapcode encoding/decoding utility.
 To build the original Mapcode tool, execute:
 
     cd ../mapcodelib
-    gcc -c mapcoder.c
+    gcc -O -c mapcoder.c
     cd ../utility
-    gcc -O mapcode.cpp -lm -lpthread -o mapcode ../mapcodelib/mapcoder.o
+    gcc -O mapcode.cpp -lm -o mapcode ../mapcodelib/mapcoder.o
 
 For help, simply execute:
 

@@ -28,7 +28,7 @@ project(mapcode_cpp)
 # NO_SUPPORT_ALPHABETS  - Drop alphabet support.
 # LIMIT_TO_MICRODEGREES - Limit mapcode utility using microdegrees.
 
-set(CMAKE_C_FLAGS_DEBUG "-O0 -DNO_FAST_ENCODE -DNO_ALPHABET_SUPPORT -g -DDEBUG -Wall -fsanitize=address -fno-common -fno-optimize-sibling-calls -fno-omit-frame-pointer")
+set(CMAKE_C_FLAGS_DEBUG "-O0 -g -DDEBUG -Wall -fsanitize=address -fno-common -fno-optimize-sibling-calls -fno-omit-frame-pointer")
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g -DDEBUG")
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
 

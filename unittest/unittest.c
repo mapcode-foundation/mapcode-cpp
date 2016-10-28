@@ -1683,16 +1683,16 @@ int main(const int argc, const char **argv) {
     int nrTests = 0;
     printf("Mapcode C Library Unit Tests\n");
     printf("Library version %s (data version %s)\n", mapcode_cversion, mapcode_dataversion);
-#ifndef NO_POSIX_THREADS
+#ifdef NO_POSIX_THREADS
     printf("Compiler options: NO_POSIX_THREADS\n");
 #endif
-#ifndef LIMIT_TO_MICRODEGREES
+#ifdef LIMIT_TO_MICRODEGREES
     printf("Compiler options: LIMIT_TO_MICRODEGREES\n");
 #endif
-#ifndef NO_FAST_ENCODE
+#ifdef NO_FAST_ENCODE
     printf("Compiler options: NO_FAST_ENCODE\n");
 #endif
-#ifndef NO_SUPPORT_ALPHABETS
+#ifdef NO_SUPPORT_ALPHABETS
     printf("Compiler options: NO_SUPPORT_ALPHABETS\n");
 #endif
     printf("Using up to %d threads to test in parallel...\n", MAX_THREADS);

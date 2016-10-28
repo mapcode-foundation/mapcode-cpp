@@ -45,7 +45,7 @@ void _TestAssert(int iCondition, const char *cstrFile, int iLine) {
 #endif
 
 
-// If you do not want to use the fast encoding from mapcode_fast_encode.h, define NO_FAST_ENCODE on the
+// If you do not want to use the fast encoding from internal_territory_search.h, define NO_FAST_ENCODE on the
 // command-line of your compiler (or uncomment the following line).
 // #define NO_FAST_ENCODE
 
@@ -1167,37 +1167,41 @@ static int encodeLatLonToMapcodes_internal(Mapcodes *mapcodes,
     {
 
 #ifndef NO_FAST_ENCODE
-        const int sum = enc.coord32.lonMicroDeg + enc.coord32.latMicroDeg;
-        int coord = enc.coord32.lonMicroDeg;
-        int i = 0; // pointer into redivar
-        for (;;) {
-            const int r = redivar[i++];
-            if (r >= 0 && r < 1024) { // leaf?
-                int j;
-                for (j = 0; j <= r; j++) {
-                    const enum Territory ccode = (j == r ? TERRITORY_AAA : (enum Territory) redivar[i + j]);
-                    encoderEngine(ccode, &enc, stop_with_one_result, extraDigits, requiredEncoder, TERRITORY_NONE);
-                    if ((stop_with_one_result || (requiredEncoder >= 0)) && (enc.mapcodes->count > 0)) {
-                        break;
+        {
+            const int sum = enc.coord32.lonMicroDeg + enc.coord32.latMicroDeg;
+            int coord = enc.coord32.lonMicroDeg;
+            int i = 0; // pointer into redivar
+            for (;;) {
+                const int r = redivar[i++];
+                if (r >= 0 && r < 1024) { // leaf?
+                    int j;
+                    for (j = 0; j <= r; j++) {
+                        const enum Territory ccode = (j == r ? TERRITORY_AAA : (enum Territory) redivar[i + j]);
+                        encoderEngine(ccode, &enc, stop_with_one_result, extraDigits, requiredEncoder, TERRITORY_NONE);
+                        if ((stop_with_one_result || (requiredEncoder >= 0)) && (enc.mapcodes->count > 0)) {
+                            break;
+                        }
                     }
-                }
-                break;
-            } else {
-                coord = sum - coord;
-                if (coord > r) {
-                    i = redivar[i];
+                    break;
                 } else {
-                    i++;
+                    coord = sum - coord;
+                    if (coord > r) {
+                        i = redivar[i];
+                    } else {
+                        i++;
+                    }
                 }
             }
         }
 #else
-        int i;
-        for(i = _TERRITORY_MIN + 1; i < _TERRITORY_MAX; i++) {
-          encoderEngine( (enum Territory)i, &enc, stop_with_one_result, extraDigits, requiredEncoder, TERRITORY_NONE);
-          if ((stop_with_one_result || (requiredEncoder >= 0)) && (enc.mapcodes->count > 0)) {
-              break;
-          }
+        {
+            int i;
+            for (i = _TERRITORY_MIN + 1; i < _TERRITORY_MAX; i++) {
+                encoderEngine((enum Territory) i, &enc, stop_with_one_result, extraDigits, requiredEncoder, TERRITORY_NONE);
+                if ((stop_with_one_result || (requiredEncoder >= 0)) && (enc.mapcodes->count > 0)) {
+                    break;
+                }
+            }
         }
 #endif
 
@@ -1843,7 +1847,7 @@ static enum MapcodeError decoderEngine(decodeRec *dec) {
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifdef SUPPORT_FOREIGN_ALPHABETS
+#ifndef NO_SUPPORT_ALPHABETS
 
 // WARNING - these alphabets have NOT yet been released as standard! use at your own risk! check www.mapcode.com for details.
 static UWORD asc2lan[_ALPHABET_MAX][36] = { // A-Z equivalents for ascii characters A to Z, 0-9
@@ -1939,7 +1943,7 @@ static struct {
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 static int isAbjadScript(const UWORD *utf16String) {
-    const enum Alphabet alphabet = recogniseAlphabetUtf16(utf16String);
+    const enum Alphabet alphabet = recognizeAlphabetUtf16(utf16String);
     return (alphabet == ALPHABET_GREEK || alphabet == ALPHABET_HEBREW || alphabet == ALPHABET_ARABIC ||
             alphabet == ALPHABET_KOREAN);
 }
@@ -2400,7 +2404,7 @@ UWORD *convertToAlphabet(UWORD *utf16String, int maxLength, const char *asciiStr
     return startbuf;
 }
 
-#endif // SUPPORT_FOREIGN_ALPHABETS
+#endif // NO_SUPPORT_ALPHABETS
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -2830,7 +2834,7 @@ encodeLatLonToMapcodes(Mapcodes *mapcodes, double latDeg, double lonDeg, enum Te
     return encodeLatLonToMapcodes_internal(mapcodes, latDeg, lonDeg, territory, 0, debugStopAt, extraDigits);
 }
 
-#ifdef SUPPORT_FOREIGN_ALPHABETS
+#ifndef NO_SUPPORT_ALPHABETS
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -2936,7 +2940,7 @@ int convertUtf8ToUtf16(UWORD *utf16, const char *utf8) {
  *      encountered, or negative (_ALPHABET_MIN) if it isn't recognised.
  */
 
-enum Alphabet recogniseAlphabetUtf16(const UWORD *utf16String) {
+enum Alphabet recognizeAlphabetUtf16(const UWORD *utf16String) {
     ASSERT(utf16String);
     for (; *utf16String != 0; utf16String++) {
         const UWORD c = *utf16String;
@@ -2960,7 +2964,7 @@ enum Alphabet recogniseAlphabetUtf16(const UWORD *utf16String) {
  *      otherwise returns the alphabet of the first different character
  *      encountered, or negative (_ALPHABET_MIN) if it isn't recognised.
  */
-enum Alphabet recogniseAlphabetUtf8(const char *utf8) {
+enum Alphabet recognizeAlphabetUtf8(const char *utf8) {
     ASSERT(utf8);
     while (*utf8 != 0) {
         int c3 = 0x80, c = (unsigned char) *utf8++;
@@ -2984,4 +2988,4 @@ enum Alphabet recogniseAlphabetUtf8(const char *utf8) {
     return ALPHABET_ROMAN;
 }
 
-#endif // SUPPORT_FOREIGN_ALPHABETS
+#endif // NO_SUPPORT_ALPHABETS

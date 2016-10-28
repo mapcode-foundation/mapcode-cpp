@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+#ifdef NO_SUPPORT_ALPHABETS
+#error "NO_SUPPORT_ALPHABETS cannot be specified in this file"
+#endif
+
 #include "mapcoder.h"
 
 static const TerritoryAlphabets alphabetsForTerritory[_TERRITORY_MAX - _TERRITORY_MIN - 1] = {

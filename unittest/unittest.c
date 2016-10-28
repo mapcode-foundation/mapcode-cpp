@@ -65,105 +65,7 @@ static void found_error(void) {
     pthread_mutex_unlock(&mutex);
 }
 
-// test the alphabet conversion routines
-static int alphabet_tests(void) {
-    int nrTests = 0;
-#ifdef SUPPORT_FOREIGN_ALPHABETS
-    int j;
-    const char *str, *expect;
-    static const char *alphabet_testpairs[] = {
-            "mx XX.XX", "mx XX.XX",
-            ".123", ".123",
-            "49.4V", "49.4V",
-            "00.E0", "00.E0",
-            "X123.P456", "X123.P456",
-            "z789.b012", "Z789.B012",
-            "", "",
-            "-", "-",
-            ".", ".",
-            "-123", "-123",
-            "-xyz", "-XYZ",
-            ".xyz", ".XYZ",
-            "12.34", "12.34",
-            "56.78", "56.78",
-            "90.01", "90.01",
-            "OEUoi OIoi#%?-.abcdfghjklmnpqrstvwxyz0123456789euEUABCDFGHJKLMNPQRSTVWXYZ",
-            "OEUoi OIOI#%?-.ABCDFGHJKLMNPQRSTVWXYZ0123456789EUEUABCDFGHJ",
-            "OEUoi OIoi#%?abcdfghjklmnpqrstvwxyz0123456789euEUABCDFGHJKLMNPQRSTVWXYZ",
-            "OEUoi OIOI#%?ABCDFGHJKLMNPQRSTVWXYZ0123456789EUEUABCDFGHJKL",
-            "  Oio 12.AU  ", "Oio 12.AU",
-            "OMN 112.3EU", "OMN 112.3EU",
-            "49.4V", "49.4V",
-            "NLD 49.4V-xx123", "NLD 49.4V-XX123",
-            "A12.345", "112.3AU",
-            "xx.xx", "XX.XX",
-            "xx.xxx", "XX.XXX",
-            "xxx.xx", "XXX.XX",
-            "xx.xxxx", "XX.XXXX",
-            "xxx.xxx", "XXX.XXX",
-            "xxxx.xx", "XXXX.XX",
-            "xxx.xxxx", "XXX.XXXX",
-            "xxxx.xxx", "XXXX.XXX",
-            "xxxx.xxxx", "XXXX.XXXX",
-            "xxxxx.xxxx", "XXXXX.XXXX",
-            "pq.rs", "PQ.RS",
-            "bc.123", "BC.123",
-            "123.xy", "123.XY",
-            " nld 12.34E0", "nld 12.34E0",
-            "VVX.xxx", "VVX.XXX",
-            "x123.xx", "X123.XX",
-            "xxx.xxxx", "XXX.XXXX",
-            "12xx.xxx", "12XX.XXX",
-            "xxxx.xx12", "XXXX.XX12",
-            "99zxx.xxxx", "99ZXX.XXXX",
-            "xx.xx-P", "XX.XX-P",
-            "xx.xxx-pq", "XX.XXX-PQ",
-            "xxx.xx-123", "XXX.XX-123",
-            "xx.xxxx-pqRS", "XX.XXXX-PQRS",
-            "xxx.xxx-PQRSTZVW", "XXX.XXX-PQRSTZVW",
-            "xxxx.xx-pqrstZvw", "XXXX.XX-PQRSTZVW",
-            "xxx.xxxx-PQrsTZ", "XXX.XXXX-PQRSTZ",
-            "xxxx.xxx-09876543", "XXXX.XXX-09876543",
-            "xxxx.xxxx-PQRSTZVW", "XXXX.XXXX-PQRSTZVW",
-            "xxxxx.xxxx-PQRSTZVW", "XXXXX.XXXX-PQRSTZVW",
-            "pq.rs-PQRSTZVW", "PQ.RS-PQRSTZVW",
-            "bc.123-PQRSTZVW", "BC.123-PQRSTZVW",
-            "123.xy-PQRSTZVW", "123.XY-PQRSTZVW",
-            "12.34E0-PQRSTZVW", "12.34E0-PQRSTZVW",
-            "VVX.xxx-PQRSTZVW", "VVX.XXX-PQRSTZVW",
-            "x123.xx-PQRSTZVW", "X123.XX-PQRSTZVW",
-            "xxx.xxxx-PQRSTZVW", "XXX.XXXX-PQRSTZVW",
-            "12xx.xxx-PQRSTZVW", "12XX.XXX-PQRSTZVW",
-            "xxxx.xx12-PQRSTZVW", "XXXX.XX12-PQRSTZVW",
-            "99zxx.xxxx-PQRSTZVW", "99ZXX.XXXX-PQRSTZVW",
-            0
-    };
 
-    printf("%d alphabets\n", _ALPHABET_MAX);
-
-    for (j = 0; alphabet_testpairs[j] != 0; j += 2) {
-        enum Alphabet i;
-        for (i = _ALPHABET_MIN + 1; i < _ALPHABET_MAX; i++) {
-            UWORD enc[64];
-            char dec[64];
-            // see if alphabets (re)convert as expected
-            str = alphabet_testpairs[j];
-            expect = alphabet_testpairs[j + 1];
-            convertToAlphabet(enc, 64, str, i);
-            convertToRoman(dec, 60, enc);
-            ++nrTests;
-            if (strcmp(dec, expect)) {
-                found_error();
-                printf("*** ERROR *** convertToRoman(convertToAlphabet(\"%s\",%d))=\"%s\"\n", str, (int) i, dec);
-            }
-        }
-    }
-#endif // SUPPORT_FOREIGN_ALPHABETS
-    return nrTests;
-}
-
-
-// test the alphabet conversion routines
 static int test_mapcode_formats(void) {
     int nrTests = 0;
     static const struct {
@@ -1404,7 +1306,170 @@ static int decode_robustness_tests(void) {
 }
 
 
-#ifdef SUPPORT_FOREIGN_ALPHABETS
+static int robustness_tests(void) {
+    int nrTests = 0;
+    nrTests += get_territory_robustness_tests();
+    nrTests += encode_robustness_tests();
+    nrTests += decode_robustness_tests();
+    return nrTests;
+}
+
+
+static int test_territories_csv(void) {
+    int nrTests = 0;
+    int linesTested = 0;
+    const char *csvName = "territories.csv";
+    FILE *fp = fopen(csvName, "r");
+    if (fp == NULL) {
+        found_error();
+        printf("*** ERROR *** Can't read file %s\n", csvName);
+    } else {
+        char line[MAXLINESIZE];
+        if (fgets(line, MAXLINESIZE, fp) != NULL) { // skip header line
+            while (fgets(line, MAXLINESIZE, fp) != NULL) {
+                enum Territory csvTerritoryCode;
+                char *s = line;
+                char *e = strchr(s, ',');
+                if (e) {
+                    linesTested++;
+                    *e = 0;
+                    csvTerritoryCode = TERRITORY_OF_INDEX(atoi(s));
+                    s = e + 1;
+                    // parse and check aliases
+                    e = strchr(s, ',');
+                    if (e) {
+                        *e = 0;
+                        while (*s) {
+                            enum Territory territoryCode;
+                            char *sep = strchr(s, '|');
+                            if (sep) {
+                                *sep = 0;
+                            }
+                            territoryCode = getTerritoryCode(s, TERRITORY_NONE);
+                            if (territoryCode != csvTerritoryCode) {
+                                found_error();
+                                printf("*** ERROR *** Territory string %s returns code %d, expected %d\n", s,
+                                       territoryCode, csvTerritoryCode);
+                            }
+                            if (sep) {
+                                s = sep + 1;
+                            } else {
+                                s = e;
+                            }
+                        }
+                        s++;
+                    }
+                    // parse and check alphabets
+                    e = strchr(s, ',');
+                    if (e) {
+
+#ifndef NO_SUPPORT_ALPHABETS
+                        int csvNrAlphabets = 0;
+                        const TerritoryAlphabets *territoryAlphabet = getAlphabetsForTerritory(csvTerritoryCode);
+#endif // NO_SUPPORT_ALPHABETS
+
+                        *e = 0;
+                        while (*s) {
+                            char *sep = strchr(s, '|');
+                            if (sep) {
+                                *sep = 0;
+                            }
+
+#ifndef NO_SUPPORT_ALPHABETS
+                            csvNrAlphabets++;
+                            if ((csvNrAlphabets > territoryAlphabet->count) ||
+                                (atoi(s) != territoryAlphabet->alphabet[csvNrAlphabets - 1])) {
+                                found_error();
+                                printf("*** ERROR *** Mismatch: alphabet %d of territory %d should be %d\n",
+                                       csvNrAlphabets, csvTerritoryCode, atoi(s));
+                            }
+#endif // NO_SUPPORT_ALPHABETS
+
+                            if (sep) {
+                                s = sep + 1;
+                            } else {
+                                s = e;
+                            }
+                        }
+
+#ifndef NO_SUPPORT_ALPHABETS
+                        if (csvNrAlphabets != territoryAlphabet->count) {
+                            found_error();
+                            printf("*** ERROR *** %d alphabets for territory %d, expected %d\n",
+                                   territoryAlphabet->count, csvTerritoryCode, csvNrAlphabets);
+                        }
+#endif // NO_SUPPORT_ALPHABETS
+
+                        s++;
+                    }
+                    // parse and check names
+                    e = strchr(s, 10);
+                    if (e) {
+                        const char *territoryNames = isofullname[INDEX_OF_TERRITORY(csvTerritoryCode)];
+                        *e = 0;
+                        while (*s) {
+                            char *match;
+                            char *sep = strchr(s, '|');
+                            if (sep) {
+                                *sep = 0;
+                            }
+                            match = strstr(territoryNames, s);
+                            if (match == NULL ||
+                                (match[strlen(s)] != ' ' && match[strlen(s)] != 0 && match[strlen(s)] != ',' &&
+                                 match[strlen(s)] != ')')) {
+                                found_error();
+                                printf("*** ERROR *** Name \"%s\" not found in \"%s\"\n", s, territoryNames);
+                            }
+                            if (sep) {
+                                s = sep + 1;
+                            } else {
+                                s = e;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        fclose(fp);
+    }
+    printf("%d lines tested from %s\n", linesTested, csvName);
+    return nrTests;
+}
+
+
+static int test_single_encodes(void) {
+    int nrTests = 0;
+    struct {
+        double latDeg;
+        double lonDeg;
+        enum Territory territory;
+        const char *result;
+    } test_single_encode[] = {
+            {52.3, 4.9, TERRITORY_NLD, "NLD GG.LCG-RJQ4"},
+            {50,   5,   TERRITORY_BEL, "BEL T71.5V7-N0PT"},
+            {32,   5,   TERRITORY_DZA, "DZA CG4.G4F6-KJ00"},
+            {0,    0,   TERRITORY_NONE, NULL}
+    };
+    int i;
+    for (i = 0; test_single_encode[i].result != NULL; i++) {
+        char result[MAX_MAPCODE_RESULT_LEN];
+        encodeLatLonToSingleMapcode(result, test_single_encode[i].latDeg, test_single_encode[i].lonDeg,
+                                    test_single_encode[i].territory, 4);
+        if (strcmp(result, test_single_encode[i].result) != 0) {
+            printf("*** ERROR *** encodeLatLonToSingleMapcode()=%s, expected %s\n",
+                   result, test_single_encode[i].result);
+        }
+        nrTests++;
+    }
+    return nrTests;
+}
+
+/**
+ * ALPHABET TESTS.
+ */
+
+#ifndef NO_SUPPORT_ALPHABETS
 
 static int check_alphabet_assertion(char *msg, int condition, char *format, int a) {
     if (condition == 0) {
@@ -1416,12 +1481,123 @@ static int check_alphabet_assertion(char *msg, int condition, char *format, int 
     return 1;
 }
 
-#endif // SUPPORT_FOREIGN_ALPHABETS
+
+static int utf8_and_utf16_tests(void) {
+    int i = 0;
+    UWORD utf16[2] = {0, 0};
+    char utf8[4]; // one 16-bit UTF16 code can become at most 3 UTF8 characters
+    UWORD newUtf16[4]; // each UTF8 character can become at most 1 UTF16 character
+    int err;
+    for (i = 0; i < 0xFFFF; i++) { // to test codes 0x0001 up to and including 0xFFFF
+        utf16[0]++;
+        convertUtf16ToUtf8(utf8, utf16);
+        err = convertUtf8ToUtf16(newUtf16, utf8);
+        if (err != 0 || newUtf16[1] != 0 || utf16[0] != newUtf16[0]) {
+            printf("*** ERROR *** UTF8/UTF16 errors found, first at UTF16 code %x\n", utf16[0]);
+            break;
+        }
+    }
+    return i; // nr of tests
+}
+
+
+static int alphabet_tests(void) {
+    int nrTests = 0;
+    int j;
+    const char *str, *expect;
+    static const char *alphabet_testpairs[] = {
+            "mx XX.XX", "mx XX.XX",
+            ".123", ".123",
+            "49.4V", "49.4V",
+            "00.E0", "00.E0",
+            "X123.P456", "X123.P456",
+            "z789.b012", "Z789.B012",
+            "", "",
+            "-", "-",
+            ".", ".",
+            "-123", "-123",
+            "-xyz", "-XYZ",
+            ".xyz", ".XYZ",
+            "12.34", "12.34",
+            "56.78", "56.78",
+            "90.01", "90.01",
+            "OEUoi OIoi#%?-.abcdfghjklmnpqrstvwxyz0123456789euEUABCDFGHJKLMNPQRSTVWXYZ",
+            "OEUoi OIOI#%?-.ABCDFGHJKLMNPQRSTVWXYZ0123456789EUEUABCDFGHJ",
+            "OEUoi OIoi#%?abcdfghjklmnpqrstvwxyz0123456789euEUABCDFGHJKLMNPQRSTVWXYZ",
+            "OEUoi OIOI#%?ABCDFGHJKLMNPQRSTVWXYZ0123456789EUEUABCDFGHJKL",
+            "  Oio 12.AU  ", "Oio 12.AU",
+            "OMN 112.3EU", "OMN 112.3EU",
+            "49.4V", "49.4V",
+            "NLD 49.4V-xx123", "NLD 49.4V-XX123",
+            "A12.345", "112.3AU",
+            "xx.xx", "XX.XX",
+            "xx.xxx", "XX.XXX",
+            "xxx.xx", "XXX.XX",
+            "xx.xxxx", "XX.XXXX",
+            "xxx.xxx", "XXX.XXX",
+            "xxxx.xx", "XXXX.XX",
+            "xxx.xxxx", "XXX.XXXX",
+            "xxxx.xxx", "XXXX.XXX",
+            "xxxx.xxxx", "XXXX.XXXX",
+            "xxxxx.xxxx", "XXXXX.XXXX",
+            "pq.rs", "PQ.RS",
+            "bc.123", "BC.123",
+            "123.xy", "123.XY",
+            " nld 12.34E0", "nld 12.34E0",
+            "VVX.xxx", "VVX.XXX",
+            "x123.xx", "X123.XX",
+            "xxx.xxxx", "XXX.XXXX",
+            "12xx.xxx", "12XX.XXX",
+            "xxxx.xx12", "XXXX.XX12",
+            "99zxx.xxxx", "99ZXX.XXXX",
+            "xx.xx-P", "XX.XX-P",
+            "xx.xxx-pq", "XX.XXX-PQ",
+            "xxx.xx-123", "XXX.XX-123",
+            "xx.xxxx-pqRS", "XX.XXXX-PQRS",
+            "xxx.xxx-PQRSTZVW", "XXX.XXX-PQRSTZVW",
+            "xxxx.xx-pqrstZvw", "XXXX.XX-PQRSTZVW",
+            "xxx.xxxx-PQrsTZ", "XXX.XXXX-PQRSTZ",
+            "xxxx.xxx-09876543", "XXXX.XXX-09876543",
+            "xxxx.xxxx-PQRSTZVW", "XXXX.XXXX-PQRSTZVW",
+            "xxxxx.xxxx-PQRSTZVW", "XXXXX.XXXX-PQRSTZVW",
+            "pq.rs-PQRSTZVW", "PQ.RS-PQRSTZVW",
+            "bc.123-PQRSTZVW", "BC.123-PQRSTZVW",
+            "123.xy-PQRSTZVW", "123.XY-PQRSTZVW",
+            "12.34E0-PQRSTZVW", "12.34E0-PQRSTZVW",
+            "VVX.xxx-PQRSTZVW", "VVX.XXX-PQRSTZVW",
+            "x123.xx-PQRSTZVW", "X123.XX-PQRSTZVW",
+            "xxx.xxxx-PQRSTZVW", "XXX.XXXX-PQRSTZVW",
+            "12xx.xxx-PQRSTZVW", "12XX.XXX-PQRSTZVW",
+            "xxxx.xx12-PQRSTZVW", "XXXX.XX12-PQRSTZVW",
+            "99zxx.xxxx-PQRSTZVW", "99ZXX.XXXX-PQRSTZVW",
+            0
+    };
+
+    printf("%d alphabets\n", _ALPHABET_MAX);
+
+    for (j = 0; alphabet_testpairs[j] != 0; j += 2) {
+        enum Alphabet i;
+        for (i = _ALPHABET_MIN + 1; i < _ALPHABET_MAX; i++) {
+            UWORD enc[64];
+            char dec[64];
+            // see if alphabets (re)convert as expected
+            str = alphabet_testpairs[j];
+            expect = alphabet_testpairs[j + 1];
+            convertToAlphabet(enc, 64, str, i);
+            convertToRoman(dec, 60, enc);
+            ++nrTests;
+            if (strcmp(dec, expect)) {
+                found_error();
+                printf("*** ERROR *** convertToRoman(convertToAlphabet(\"%s\",%d))=\"%s\"\n", str, (int) i, dec);
+            }
+        }
+    }
+    return nrTests;
+}
 
 
 static int alphabet_robustness_tests(void) {
     int nrTests = 0;
-#ifdef SUPPORT_FOREIGN_ALPHABETS
     int i;
     enum Alphabet a;
     char s1[1];
@@ -1473,23 +1649,12 @@ static int alphabet_robustness_tests(void) {
                                             strlen(ps) < (sizeof(largeString2) / sizeof(largeString2[0])),
                                             "alphabet=%d", a);
     }
-#endif // SUPPORT_FOREIGN_ALPHABETS
     return nrTests;
 }
 
-
-static int robustness_tests(void) {
-    int nrTests = 0;
-    nrTests += get_territory_robustness_tests();
-    nrTests += encode_robustness_tests();
-    nrTests += decode_robustness_tests();
-    nrTests += alphabet_robustness_tests();
-    return nrTests;
-}
 
 static int alphabet_per_territory_tests(void) {
     int nrTests = 0;
-#ifdef SUPPORT_FOREIGN_ALPHABETS
     int i, j;
     for (i = _TERRITORY_MIN + 1; i < _TERRITORY_MAX; i++) {
         const TerritoryAlphabets *alphabetsForTerritory = getAlphabetsForTerritory((enum Territory) i);
@@ -1508,193 +1673,44 @@ static int alphabet_per_territory_tests(void) {
             }
         }
     }
-#endif // SUPPORT_FOREIGN_ALPHABETS
     return nrTests;
 }
 
-static int test_territories_csv(void) {
-    int nrTests = 0;
-    int linesTested = 0;
-    const char *csvName = "territories.csv";
-    FILE *fp = fopen(csvName, "r");
-    if (fp == NULL) {
-        found_error();
-        printf("*** ERROR *** Can't read file %s\n", csvName);
-    } else {
-        char line[MAXLINESIZE];
-        if (fgets(line, MAXLINESIZE, fp) != NULL) { // skip header line
-            while (fgets(line, MAXLINESIZE, fp) != NULL) {
-                enum Territory csvTerritoryCode;
-                char *s = line;
-                char *e = strchr(s, ',');
-                if (e) {
-                    linesTested++;
-                    *e = 0;
-                    csvTerritoryCode = TERRITORY_OF_INDEX(atoi(s));
-                    s = e + 1;
-                    // parse and check aliases
-                    e = strchr(s, ',');
-                    if (e) {
-                        *e = 0;
-                        while (*s) {
-                            enum Territory territoryCode;
-                            char *sep = strchr(s, '|');
-                            if (sep) {
-                                *sep = 0;
-                            }
-                            territoryCode = getTerritoryCode(s, TERRITORY_NONE);
-                            if (territoryCode != csvTerritoryCode) {
-                                found_error();
-                                printf("*** ERROR *** Territory string %s returns code %d, expected %d\n", s,
-                                       territoryCode, csvTerritoryCode);
-                            }
-                            if (sep) {
-                                s = sep + 1;
-                            } else {
-                                s = e;
-                            }
-                        }
-                        s++;
-                    }
-                    // parse and check alphabets
-                    e = strchr(s, ',');
-                    if (e) {
-#ifdef SUPPORT_FOREIGN_ALPHABETS
-                        int csvNrAlphabets = 0;
-                        const TerritoryAlphabets *territoryAlphabet = getAlphabetsForTerritory(csvTerritoryCode);
 #endif // SUPPORT_FOREIGN_ALPHABETS
-                        *e = 0;
-                        while (*s) {
-                            char *sep = strchr(s, '|');
-                            if (sep) {
-                                *sep = 0;
-                            }
-#ifdef SUPPORT_FOREIGN_ALPHABETS
-                            csvNrAlphabets++;
-                            if ((csvNrAlphabets > territoryAlphabet->count) ||
-                                (atoi(s) != territoryAlphabet->alphabet[csvNrAlphabets - 1])) {
-                                found_error();
-                                printf("*** ERROR *** Mismatch: alphabet %d of territory %d should be %d\n",
-                                       csvNrAlphabets, csvTerritoryCode, atoi(s));
-                            }
-#endif // SUPPORT_FOREIGN_ALPHABETS
-                            if (sep) {
-                                s = sep + 1;
-                            } else {
-                                s = e;
-                            }
-                        }
-#ifdef SUPPORT_FOREIGN_ALPHABETS
-                        if (csvNrAlphabets != territoryAlphabet->count) {
-                            found_error();
-                            printf("*** ERROR *** %d alphabets for territory %d, expected %d\n",
-                                   territoryAlphabet->count, csvTerritoryCode, csvNrAlphabets);
-                        }
-#endif // SUPPORT_FOREIGN_ALPHABETS
-                        s++;
-                    }
-                    // parse and check names
-                    e = strchr(s, 10);
-                    if (e) {
-                        const char *territoryNames = isofullname[INDEX_OF_TERRITORY(csvTerritoryCode)];
-                        *e = 0;
-                        while (*s) {
-                            char *match;
-                            char *sep = strchr(s, '|');
-                            if (sep) {
-                                *sep = 0;
-                            }
-                            match = strstr(territoryNames, s);
-                            if (match == NULL ||
-                                (match[strlen(s)] != ' ' && match[strlen(s)] != 0 && match[strlen(s)] != ',' &&
-                                 match[strlen(s)] != ')')) {
-                                found_error();
-                                printf("*** ERROR *** Name \"%s\" not found in \"%s\"\n", s, territoryNames);
-                            }
-                            if (sep) {
-                                s = sep + 1;
-                            } else {
-                                s = e;
-                            }
-                        }
-                    }
-                }
-            }
-        }
 
-        fclose(fp);
-    }
-    printf("%d lines tested from %s\n", linesTested, csvName);
-    return nrTests;
-}
-
-static int test_single_encodes(void) {
-    int nrTests = 0;
-    struct {
-        double latDeg;
-        double lonDeg;
-        enum Territory territory;
-        const char *result;
-    } test_single_encode[] = {
-            {52.3, 4.9, TERRITORY_NLD, "NLD GG.LCG-RJQ4"},
-            {50,   5,   TERRITORY_BEL, "BEL T71.5V7-N0PT"},
-            {32,   5,   TERRITORY_DZA, "DZA CG4.G4F6-KJ00"},
-            {0,    0,   TERRITORY_NONE, NULL}
-    };
-    int i;
-    for (i = 0; test_single_encode[i].result != NULL; i++) {
-        char result[MAX_MAPCODE_RESULT_LEN];
-        encodeLatLonToSingleMapcode(result, test_single_encode[i].latDeg, test_single_encode[i].lonDeg,
-                                    test_single_encode[i].territory, 4);
-        if (strcmp(result, test_single_encode[i].result) != 0) {
-            printf("*** ERROR *** encodeLatLonToSingleMapcode()=%s, expected %s\n",
-                   result, test_single_encode[i].result);
-        }
-        nrTests++;
-    }
-    return nrTests;
-}
-
-int utf8_and_utf16_tests(void) {
-    int i = 0;
-#ifdef SUPPORT_FOREIGN_ALPHABETS
-    UWORD utf16[2] = {0, 0};
-    char utf8[4]; // one 16-bit UTF16 code can become at most 3 UTF8 characters
-    UWORD newUtf16[4]; // each UTF8 character can become at most 1 UTF16 character
-    int err;
-    for (i = 0; i < 0xFFFF; i++) { // to test codes 0x0001 up to and including 0xFFFF
-        utf16[0]++;
-        convertUtf16ToUtf8(utf8, utf16);
-        err = convertUtf8ToUtf16(newUtf16, utf8);
-        if (err != 0 || newUtf16[1] != 0 || utf16[0] != newUtf16[0]) {
-            printf("*** ERROR *** UTF8/UTF16 errors found, first at UTF16 code %x\n", utf16[0]);
-            break;
-        }
-    }
-#endif // SUPPORT_FOREIGN_ALPHABETS
-    return i; // nr of tests
-}
 
 int main(const int argc, const char **argv) {
     int nrTests = 0;
     printf("Mapcode C Library Unit Tests\n");
     printf("Library version %s (data version %s)\n", mapcode_cversion, mapcode_dataversion);
-#ifndef SUPPORT_FOREIGN_ALPHABETS
-    printf("SUPPORT_FOREIGN_ALPHABETS not defined!\n");
+#ifndef NO_POSIX_THREADS
+    printf("Compiler options: NO_POSIX_THREADS\n");
+#endif
+#ifndef LIMIT_TO_MICRODEGREES
+    printf("Compiler options: LIMIT_TO_MICRODEGREES\n");
+#endif
+#ifndef NO_FAST_ENCODE
+    printf("Compiler options: NO_FAST_ENCODE\n");
+#endif
+#ifndef NO_SUPPORT_ALPHABETS
+    printf("Compiler options: NO_SUPPORT_ALPHABETS\n");
 #endif
     printf("Using up to %d threads to test in parallel...\n", MAX_THREADS);
 
     printf("-----------------------------------------------------------\nRobustness tests\n");
     nrTests += robustness_tests();
 
-    printf("-----------------------------------------------------------\nCharacter tests\n");
+#ifndef NO_SUPPORT_ALPHABETS
+    printf("-----------------------------------------------------------\nUTF8/UTF16 tests\n");
     nrTests += utf8_and_utf16_tests();
 
     printf("-----------------------------------------------------------\nAlphabet tests\n");
+    nrTests += alphabet_robustness_tests();
     nrTests += alphabet_tests();
 
     printf("-----------------------------------------------------------\nAlphabet per territory tests\n");
     nrTests += alphabet_per_territory_tests();
+#endif
 
     printf("-----------------------------------------------------------\nDistance tests\n");
     nrTests += distance_tests();

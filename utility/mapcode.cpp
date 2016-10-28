@@ -50,7 +50,8 @@
 #include "../mapcodelib/internal_iso3166_data.h"
 
 // Specific define to be able to limit output to microdegrees, for test files.
-#undef LIMIT_TO_MICRODEGREES
+// Use -DLIMIT_TO_MICRODEGREES on compiler command-line or add:
+// #undef LIMIT_TO_MICRODEGREES
 
 #define my_isnan(x) (false)
 #define my_round(x) ((int) (floor((x) + 0.5)))
@@ -87,9 +88,7 @@ static void usage(const char *appName) {
     printf("MAPCODE (version %s)\n", mapcode_cversion);
     printf("Copyright (C) 2014-2016 Stichting Mapcode Foundation\n");
     printf("\n");
-#ifndef SUPPORT_HIGH_PRECISION
-    printf("Warning: High precision support is disabled in this build.)\n\n");
-#endif
+
 #ifdef LIMIT_TO_MICRODEGREES
     printf("Warning: This build is limited to using microdegrees.\n\n");
 #endif

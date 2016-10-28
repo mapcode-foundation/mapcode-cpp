@@ -16,6 +16,9 @@
 #ifndef __INTERNAL_DATA_H__
 #define __INTERNAL_DATA_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
 
@@ -16540,6 +16543,10 @@ static const TerritoryBoundary territoryBoundaries[MAPCODE_BOUNDARY_MAX + 1] = {
 #define territoryBoundary(m) (&territoryBoundaries[m])
 
 #endif // MAKE_SOURCE_DIGITAL
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __INTERNAL_DATA_H__
 

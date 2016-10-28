@@ -21,15 +21,16 @@
 extern "C" {
 #endif
 
-#include "mapcode_alphabets.h"
 #include "mapcode_territories.h"
+
+#ifndef NO_SUPPORT_ALPHABETS
+#include "mapcode_alphabets.h"
+#endif
+
 
 #define mapcode_cversion "2.4.1"
 
 #define UWORD                               unsigned short int  // 2-byte unsigned integer.
-
-#define SUPPORT_FOREIGN_ALPHABETS           // Define to support additional alphabets.
-#define SUPPORT_HIGH_PRECISION              // Define to enable high-precision extension logic.
 
 #define MAX_NR_OF_MAPCODE_RESULTS           22          // Max. number of results ever returned by encoder (e.g. for 26.904899, 95.138515).
 #define MAX_PROPER_MAPCODE_LEN              11          // Max. number of characters in a proper mapcode (including the dot, excl. precision extension).
@@ -305,13 +306,23 @@ int multipleBordersNearby(
         double lonDeg,
         enum Territory territory);
 
-#ifdef SUPPORT_FOREIGN_ALPHABETS
+/**
+ * ALPHABET SUPPORT
+ * ----------------
+ *
+ * Use -DNO_SUPPORT_ALPHABETS as a compiler option to switch off alphabet support for
+ * more alphabets. If NO_SUPPORT_ALPHABETS is not defined, alphabets other than ROMAN
+ * are supported.
+ */
+
+#ifndef NO_SUPPORT_ALPHABETS
 
 /**
  * This struct contains the returned alphabest for getAlphabetsForTerritory. The 'count' specifies
  * how many alphabets are listed in 'alphabet', range [1, MAX_ALPHABETS_PER_TERRITORY].
  */
 #define MAX_ALPHABETS_PER_TERRITORY 3
+
 typedef struct {
     int count;
     enum Alphabet alphabet[MAX_ALPHABETS_PER_TERRITORY];
@@ -391,7 +402,7 @@ int convertUtf8ToUtf16(UWORD *utf16, const char *utf8);
  *      otherwise returns the alphabet of the first different character
  *      encountered, or negative (_ALPHABET_MIN) if it isn't recognised.
  */
-enum Alphabet recogniseAlphabetUtf16(const UWORD *utf16String);
+enum Alphabet recognizeAlphabetUtf16(const UWORD *utf16String);
 
 /**
  * Returns the alphabet of given UTF8 (of ASCII) string (based on the
@@ -405,9 +416,9 @@ enum Alphabet recogniseAlphabetUtf16(const UWORD *utf16String);
  *      otherwise returns the alphabet of the first different character
  *      encountered, or negative (_ALPHABET_MIN) if it isn't recognised.
  */
-enum Alphabet recogniseAlphabetUtf8(const char *utf8);
+enum Alphabet recognizeAlphabetUtf8(const char *utf8);
 
-#endif // SUPPORT_FOREIGN_ALPHABETS
+#endif // NO_SUPPORT_ALPHABETS
 
 #ifdef __cplusplus
 }

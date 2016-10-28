@@ -17,6 +17,10 @@
 #ifndef __INTERNAL_ISO3166_DATA_H__
 #define __INTERNAL_ISO3166_DATA_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "mapcode_territories.h"
 
 // *** GENERATED FILE (dividemaps/fast_territories), DO NOT CHANGE OR PRETTIFY ***
@@ -987,4 +991,8 @@ static const alphaRec alphaSearch[NRTERREC] = {
 };
 
 // produced by dividemaps.cpp : fast_territories.cpp
+#ifdef __cplusplus
+}
+#endif
+
 #endif // __INTERNAL_ISO3166_DATA_H__

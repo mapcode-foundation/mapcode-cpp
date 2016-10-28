@@ -9,7 +9,7 @@
 
 **Latest stable release: https://github.com/mapcode-foundation/mapcode-cpp/releases**
 
-# The C/C++ Library: `mapcodelib/`
+## The C/C++ Library: `mapcodelib/`
 
 The directory 'mapcodelib' contains the files:
 
@@ -45,7 +45,7 @@ In that case, basics.h will state a version number of the for:
 where "xxx" states the geographical limitation.
 
 
-# A Real-Life Example, The 'mapcode' Codec Tool: `utility/`
+## A Real-Life Example, The 'mapcode' Codec Tool: `utility/`
 
 The directory 'utility' contains a Mapcode encoding/decoding utility, as an example
 of how to use the library.
@@ -121,15 +121,38 @@ This produces the following help text:
            The result code is 0 when no error occurred, 1 if an input error occurred and 2
            if an internal error occurred.
 
-If you use **Microsoft Visual C++**, you may need to add the following defines to your preprocessor
-settings:
+## Compile Options for Microsoft Visual C++
 
-    NO_POSIX_THREADS
-    _CRT_SECURE_NO_WARNINGS
-    _CRT_NONSTDC_NO_DEPRECATE
+If you use **Microsoft Visual C++**, you may need to add the following compiler directives to your build:
 
+    -DNO_POSIX_THREADS
+    -D_CRT_SECURE_NO_WARNINGS
+    -D_CRT_NONSTDC_NO_DEPRECATE
 
-# Release Notes
+## Reducing the Footprint of the Mapcode Library
+
+The Mapcode C/C++ Library has includes a number of fixed data tables, which increase its footprint.
+You may not require all of this data, so we've added some options for you to be able to reduce its
+footprint, for example for embedded applications. 
+
+### Removing Alphabet Support: NO_SUPPORT_ALPHABETS
+
+By default, support is included for multiple alphabets (or scripts) other than Roman, such as Greek,
+Cyrillic, Hebrew, Arabic, Chinese and many, many more. This means you can encode and decode mapcodes
+in such scripts (in UTF16).
+
+You can disabled alphabet support by adding the following compiler directive:
+ 
+    -DNO_SUPPORT_ALPHABETS
+
+### Removing Fast Encoding Support: NO_FAST_ENCODE
+
+By default, encoding is optimized by the use of a additional data table (approx. 12K). You can
+remove this table from the library by adding the compiler directive:
+
+    -DNO_FAST_ENCODE
+
+## Release Notes
 
 ### 2.4.1
 

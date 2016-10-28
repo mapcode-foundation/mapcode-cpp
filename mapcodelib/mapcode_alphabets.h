@@ -16,11 +16,21 @@
 #ifndef __MAPCODE_ALPHABETS_H__
 #define __MAPCODE_ALPHABETS_H__
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#ifdef NO_SUPPORT_ALPHABETS
+#error "NO_SUPPORT_ALPHABETS cannot be specified in this file"
+#endif
+
+/**
+ * Mapcodes are suppored in a variety of alphabets, using UTF16. The following
+ * enum specifies the alphabets (or scripts, as they are also called).
+ * The 'default' alphabet is Roman, which is always supported. Other
+ * alphabets may not be supported by every application that accepts
+ * mapcodes.
+ */
 enum Alphabet {
     _ALPHABET_MIN = -1,
     ALPHABET_ROMAN,

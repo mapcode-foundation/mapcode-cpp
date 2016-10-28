@@ -22,8 +22,11 @@ extern "C" {
 #endif
 
 #include "mapcoder.h"
-#include "mapcode_alphabets.h"
 #include "mapcode_territories.h"
+
+#ifndef NO_SUPPORT_ALPHABETS
+#include "mapcode_alphabets.h"
+#endif
 
 /**
  * List of #defines to support legacy systems.
@@ -115,6 +118,16 @@ const char *convertTerritoryCodeToIsoName_Deprecated(
         enum Territory territory,
         int useShortName);
 
+/**
+ * ALPHABET SUPPORT
+ * ----------------
+ *
+ * Use -DNO_SUPPORT_ALPHABETS as a compiler option to switch off alphabet support for
+ * more alphabets. If NO_SUPPORT_ALPHABETS is not defined, alphabets other than ROMAN
+ * are supported.
+ */
+
+#ifndef NO_SUPPORT_ALPHABETS
 
 /**
  * DEPRECATED OLD VARIANT, NOT THREAD-SAFE:
@@ -137,6 +150,8 @@ const char *decodeToRoman_Deprecated(const UWORD *utf16String);
  * It will be overwritten by a subsequent call to this method!
  */
 const UWORD *encodeToAlphabet_Deprecated(const char *asciiString, enum Alphabet alphabet);
+
+#endif // NO_SUPPORT_ALPHABETS
 
 #ifdef __cplusplus
 }

@@ -16,6 +16,10 @@
 #ifndef __INTERNAL_TERRITORY_NAMES_ENGLISH_H__
 #define __INTERNAL_TERRITORY_NAMES_ENGLISH_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
 static const char *isofullname[] = {
         "Vatican (Holy See)",
@@ -552,5 +556,9 @@ static const char *isofullname[] = {
         "Antarctica",
         "International (Worldwide) (Earth)",
         "?"};
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __INTERNAL_TERRITORY_NAMES_ENGLISH_H__

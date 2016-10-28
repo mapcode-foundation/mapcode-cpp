@@ -19,19 +19,20 @@
 #include "mapcode_legacy.h"
 #include "mapcoder.h"
 
-// Legacy buffers: NOT threadsafe!
-static char legacy_asciiBuffer[MAX_MAPCODE_RESULT_LEN];
-static UWORD legacy_utf16Buffer[MAX_MAPCODE_RESULT_LEN];
+/**
+ * Include global legacy buffers. These are not thread-safe!
+ */
 static Mapcodes rglobal;
 static char makeiso_bufbytes[2 * (MAX_ISOCODE_LEN + 1)];
 static char *makeiso_buf;
 
 
-int encodeLatLonToMapcodes_Deprecated(char **mapcodesAndTerritories,
-                                      double latDeg,
-                                      double lonDeg,
-                                      enum Territory territory,
-                                      int extraDigits) {
+int encodeLatLonToMapcodes_Deprecated(
+        char **mapcodesAndTerritories,
+        double latDeg,
+        double lonDeg,
+        enum Territory territory,
+        int extraDigits) {
     char **v = mapcodesAndTerritories;
     encodeLatLonToMapcodes(&rglobal, latDeg, lonDeg, territory, extraDigits);
     if (v) {
@@ -53,8 +54,9 @@ int encodeLatLonToMapcodes_Deprecated(char **mapcodesAndTerritories,
 }
 
 
-const char *convertTerritoryCodeToIsoName_Deprecated(enum Territory territoryContext,
-                                                     int useShortName) {
+const char *convertTerritoryCodeToIsoName_Deprecated(
+        enum Territory territoryContext,
+        int useShortName) {
     if (makeiso_buf == makeiso_bufbytes) {
         makeiso_buf = makeiso_bufbytes + (MAX_ISOCODE_LEN + 1);
     } else {
@@ -63,6 +65,14 @@ const char *convertTerritoryCodeToIsoName_Deprecated(enum Territory territoryCon
     return (const char *) getTerritoryIsoName(makeiso_buf, territoryContext, useShortName);
 }
 
+
+#ifndef NO_SUPPORT_ALPHABETS
+
+/**
+ * Include global legacy buffers. These are not thread-safe!
+ */
+static char legacy_asciiBuffer[MAX_MAPCODE_RESULT_LEN];
+static UWORD legacy_utf16Buffer[MAX_MAPCODE_RESULT_LEN];
 
 const char *decodeToRoman_Deprecated(const UWORD *utf16String) {
     return convertToRoman(legacy_asciiBuffer, MAX_MAPCODE_RESULT_LEN, utf16String);
@@ -73,3 +83,5 @@ const UWORD *encodeToAlphabet_Deprecated(const char *asciiString,
                                          enum Alphabet alphabet) {
     return convertToAlphabet(legacy_utf16Buffer, MAX_MAPCODE_RESULT_LEN, asciiString, alphabet);
 }
+
+#endif

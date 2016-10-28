@@ -16,6 +16,9 @@
 #ifndef __MAPCODE_TERRITORIES_H__
 #define __MAPCODE_TERRITORIES_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // *** GENERATED FILE (coords.cpp data2.3.0), DO NOT CHANGE OR PRETTIFY ***
 
@@ -561,6 +564,10 @@ enum Territory {
 
 #define INDEX_OF_TERRITORY(c) (((int) c) - _TERRITORY_MIN - 1)
 #define TERRITORY_OF_INDEX(x) ((x < 0) ? TERRITORY_NONE : (enum Territory) (_TERRITORY_MIN + x + 1))
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __MAPCODE_TERRITORIES_H__
 

@@ -21,9 +21,14 @@ project(mapcode_cpp)
 # export ASAN_OPTIONS=debug=true:strict_string_checks=1:detect_stack_use_after_return=true:detect_invalid_pointer_pairs=99999:
 #   detect_container_overflow=true:detect_odr_violation=2:check_initialization_order=true
 #
-# And add -DNO_POSIX_THREADS to the compiler options if you do not want to use multi-threaded unit testing.
+# Compiler directives:
+#
+# NO_POSIX_THREADS      - No multi-threaded unit testing.
+# NO_FAST_ENCODE        - Drop fast encoding support.
+# NO_SUPPORT_ALPHABETS  - Drop alphabet support.
+# LIMIT_TO_MICRODEGREES - Limit mapcode utility using microdegrees.
 
-set(CMAKE_C_FLAGS_DEBUG "-O0 -g -DDEBUG -Wall -fsanitize=address -fno-common -fno-optimize-sibling-calls -fno-omit-frame-pointer")
+set(CMAKE_C_FLAGS_DEBUG "-O0 -DNO_FAST_ENCODE -DNO_ALPHABET_SUPPORT -g -DDEBUG -Wall -fsanitize=address -fno-common -fno-optimize-sibling-calls -fno-omit-frame-pointer")
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g -DDEBUG")
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
 

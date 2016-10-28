@@ -15,8 +15,15 @@
  */
 #ifndef __INTERNAL_TERRITORY_NAMES_LOCAL_H__
 #define __INTERNAL_TERRITORY_NAMES_LOCAL_H__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
 
+#ifdef NO_SUPPORT_ALPHABETS
+#error "NO_SUPPORT_ALPHABETS cannot be specified in this file"
+#endif
 
 /*
  * The first N names are precisely in the alphabets
@@ -559,5 +566,9 @@ static const char *localname_utf8[] = {
         "Antarctica",
         "Earth",
         "?"};
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __INTERNAL_TERRITORY_NAMES_LOCAL_H__

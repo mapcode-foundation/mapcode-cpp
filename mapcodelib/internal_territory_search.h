@@ -17,7 +17,16 @@
 #ifndef __INTERNAL_TERRITORY_SEARCH_H__
 #define __INTERNAL_TERRITORY_SEARCH_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // *** GENERATED FILE (dividemaps.cpp), DO NOT CHANGE OR PRETTIFY ***
+
+#ifdef NO_FAST_ENCODE
+#error
+#error "NO_FAST_ENCODE cannot be specified in this file"
+#endif
 
 static int redivar[] = {
         27984500, 1383,
@@ -810,4 +819,9 @@ static int redivar[] = {
         TERRITORY_RU_SA, TERRITORY_RUS,
         0
 }; // 2924 records, data version 2.3.0
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif // __INTERNAL_TERRITORY_SEARCH_H__

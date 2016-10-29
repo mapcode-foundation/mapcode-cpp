@@ -16,12 +16,11 @@
 #ifndef __INTERNAL_TERRITORY_ALPHABETS_H__
 #define __INTERNAL_TERRITORY_ALPHABETS_H__
 
-
-// *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
 
 #ifdef NO_SUPPORT_ALPHABETS
 #error "NO_SUPPORT_ALPHABETS cannot be specified in this file"

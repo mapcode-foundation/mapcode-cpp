@@ -27,8 +27,7 @@
 #include <ctype.h>
 
 #include "../mapcodelib/mapcoder.h"
-#include "../mapcodelib/mapcoder.c"
-#include "../mapcodelib/internal_territory_names_english.h"
+#include "../mapcodelib/internal_data.h"
 
 #include "decode_test.h"
 
@@ -57,6 +56,9 @@ static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #define MAXLINESIZE 1024
 
+static const double METERS_PER_DEGREE_LAT = 110946.252133;
+static const double METERS_PER_DEGREE_LON = 111319.490793;
+
 static int nrErrors = 0;
 
 static void found_error(void) {
@@ -73,6 +75,13 @@ static int test_mapcode_formats(void) {
         enum MapcodeError parseError;   // expected error
         enum MapcodeError decodeError;  // expected error when decoded
     } formattests[] = {
+            {"###################",  ERR_INVALID_CHARACTER},
+            {"...................",  ERR_UNEXPECTED_DOT},
+            {"1111111111111111.11",  ERR_INVALID_MAPCODE_FORMAT},
+            {"US-XXXXXXXXXXXXXXXX",  ERR_BAD_TERRITORY_FORMAT},
+            {"US-----------------",  ERR_UNEXPECTED_HYPHEN},
+            {"-------------------",  ERR_UNEXPECTED_HYPHEN},
+
             {"cck XX.XX",            ERR_OK, ERR_OK}, // nameless22
             {"cze XX.XXX",           ERR_OK, ERR_OK}, // nameless23
             {"NLD XXX.XX",           ERR_OK, ERR_OK}, // nameless32
@@ -314,6 +323,7 @@ static int test_mapcode_formats(void) {
             {" xx.xx-DD .",          ERR_UNEXPECTED_DOT},
             {" xx.xx-DD x",          ERR_TRAILING_CHARACTERS},
             {" xx.xx-DD a",          ERR_TRAILING_CHARACTERS},
+            {"xx.xx xxxxxxxxxxxx",   ERR_TRAILING_CHARACTERS},
             {" xx.xx-DD -",          ERR_UNEXPECTED_HYPHEN},
             {"tta.ttt    ",          ERR_INVALID_VOWEL},
             {"ttaa.ttt   ",          ERR_INVALID_VOWEL},
@@ -463,7 +473,7 @@ static int testEncodeAndDecode(const char *str, double y, double x, int localsol
         p = strchr(s, ' ');
         len = p ? (int) (p - s) : 0;
         if (p && len <= MAX_ISOCODE_LEN) {
-            // copy and recognise territory
+            // copy and recognize territory
             memcpy(territory, s, (size_t) len);
             territory[len] = 0;
             tc = getTerritoryCode(territory, TERRITORY_NONE);
@@ -857,7 +867,7 @@ static int re_encode_tests(void) {
     int nrTests = 0;
     enum Territory ccode;
     int m = 0;
-    int nrRecords = lastrec(_TERRITORY_MAX - 1) + 1;
+    int nrRecords = MAPCODE_BOUNDARY_MAX;
     int nrThread = 0;
 
     // Declare threads and contexts.
@@ -866,8 +876,11 @@ static int re_encode_tests(void) {
 
     printf("%d records\n", nrRecords);
     for (ccode = _TERRITORY_MIN + 1; ccode < _TERRITORY_MAX; ccode++) {
-        show_progress(lastrec(ccode), nrRecords, nrTests);
-        for (m = firstrec(ccode); m <= lastrec(ccode); m++) {
+        int min_boundary = data_start[INDEX_OF_TERRITORY(ccode)];
+        int max_boundary = data_start[INDEX_OF_TERRITORY(ccode) + 1];
+        show_progress(max_boundary, nrRecords, nrTests);
+        // use internal knowledge of mapcoder to test all the territory boundaries
+        for (m = min_boundary; m < max_boundary; m++) {
             const TerritoryBoundary *b = territoryBoundary(m);
 
             // Create context for thread.
@@ -895,9 +908,9 @@ static int re_encode_tests(void) {
 }
 
 static void check_distance(double d1, double d2) {
-    if (fabs(d1 - d2) > 0.00000001) {
+    if (fabs(d1 - d2) > 0.00001) {
         found_error();
-        printf("*** ERROR *** distanceInMeters failed, %f != %f\n", d1, d2);
+        printf("*** ERROR *** distanceInMeters failed, %lf != %lf\n", d1, d2);
     }
 }
 
@@ -1405,25 +1418,14 @@ static int test_territories_csv(void) {
                     // parse and check names
                     e = strchr(s, 10);
                     if (e) {
-                        const char *territoryNames = isofullname[INDEX_OF_TERRITORY(csvTerritoryCode)];
+                        int i, noMoreNames = 0;
                         *e = 0;
-                        while (*s) {
-                            char *match;
-                            char *sep = strchr(s, '|');
-                            if (sep) {
-                                *sep = 0;
-                            }
-                            match = strstr(territoryNames, s);
-                            if (match == NULL ||
-                                (match[strlen(s)] != ' ' && match[strlen(s)] != 0 && match[strlen(s)] != ',' &&
-                                 match[strlen(s)] != ')')) {
+                        for (i = 0; !noMoreNames; i++) {
+                            char territoryName[MAX_TERRITORY_FULLNAME_LENGTH + 1];
+                            noMoreNames = getFullTerritoryNameEnglish(territoryName, csvTerritoryCode, i);
+                            if (!strstr(s, territoryName)) {
                                 found_error();
-                                printf("*** ERROR *** Name \"%s\" not found in \"%s\"\n", s, territoryNames);
-                            }
-                            if (sep) {
-                                s = sep + 1;
-                            } else {
-                                s = e;
+                                printf("*** ERROR *** Name \"%s\" not found in \"%s\"\n", territoryName, s);
                             }
                         }
                     }
@@ -1584,6 +1586,22 @@ static int alphabet_tests(void) {
             str = alphabet_testpairs[j];
             expect = alphabet_testpairs[j + 1];
             convertToAlphabet(enc, 64, str, i);
+            // if any characters, should be recoignisable
+            {
+                size_t k, n = 0;
+                for (k = 0; k < strlen(str); k++) {
+                    if (str[k] >= 'A' && str[k] <= 'z') {
+                        n++;
+                    }
+                }
+                if (n > 0) {
+                    ++nrTests;
+                    if (recognizeAlphabetUtf16(enc) != i) {
+                        found_error();
+                        printf("*** ERROR *** recognizeAlphabetUtf16(convertToAlphabet(\"%s\",%d))=%d\n", str, i, recognizeAlphabetUtf16(enc));
+                    }
+                }
+            }
             convertToRoman(dec, 60, enc);
             ++nrTests;
             if (strcmp(dec, expect)) {
@@ -1676,26 +1694,75 @@ static int alphabet_per_territory_tests(void) {
     return nrTests;
 }
 
-#endif // SUPPORT_FOREIGN_ALPHABETS
+#endif // NO_SUPPORT_ALPHABETS
+
+
+
+int full_name_tests(void) {
+    int nrTests = 0;
+    enum Territory territory;
+    int nrNames = 0;
+    int maxLength = 0;
+    for (territory = _TERRITORY_MIN + 1; territory < _TERRITORY_MAX; ++territory) {
+        int alternative = 0;
+        char territoryName[2048];
+        nrTests++;
+        for (alternative = 0;; alternative++) {
+            int len;
+            nrNames = getFullTerritoryNameEnglish(territoryName, territory, alternative);
+            if (nrNames < alternative) {
+                break;
+            }
+            len = (int) strlen(territoryName);
+            if (len > MAX_TERRITORY_FULLNAME_LENGTH) {
+                found_error();
+                printf("*** ERROR *** Bad territoryname, %d characters (limit is %d): %s\n", len, MAX_TERRITORY_FULLNAME_LENGTH, territoryName);
+            }
+            if (len > maxLength) {
+                maxLength = len;
+            }
+
+        }
+
+#ifndef NO_SUPPORT_ALPHABETS
+        for (alternative = 0;; alternative++) {
+            int len;
+            nrNames = getFullTerritoryNameLocal(territoryName, territory, alternative, _ALPHABET_MIN);
+            if (nrNames<alternative) {
+                break;
+            }
+            len = (int) strlen(territoryName);
+            if (len > MAX_TERRITORY_FULLNAME_LENGTH) {
+                found_error();
+                printf("*** ERROR *** Bad territoryname, %d characters (limit is %d): %s\n", len, MAX_TERRITORY_FULLNAME_LENGTH, territoryName);
+            }
+            if (len > maxLength) {
+                maxLength = len;
+            }
+        }
+#endif // NO_SUPPORT_ALPHABETS
+
+    }
+    fprintf(stderr, "%d territory names, max length %d characters\n", nrNames, maxLength);
+    return nrTests;
+}
 
 
 int main(const int argc, const char **argv) {
     int nrTests = 0;
     printf("Mapcode C Library Unit Tests\n");
     printf("Library version %s (data version %s)\n", mapcode_cversion, mapcode_dataversion);
-#ifdef NO_POSIX_THREADS
-    printf("Compiler options: NO_POSIX_THREADS\n");
-#endif
 #ifdef LIMIT_TO_MICRODEGREES
     printf("Compiler options: LIMIT_TO_MICRODEGREES\n");
-#endif
-#ifdef NO_FAST_ENCODE
-    printf("Compiler options: NO_FAST_ENCODE\n");
 #endif
 #ifdef NO_SUPPORT_ALPHABETS
     printf("Compiler options: NO_SUPPORT_ALPHABETS\n");
 #endif
+#ifdef NO_POSIX_THREADS
+    printf("Compiler options: NO_POSIX_THREADS\n");
+#else
     printf("Using up to %d threads to test in parallel...\n", MAX_THREADS);
+#endif
 
     printf("-----------------------------------------------------------\nRobustness tests\n");
     nrTests += robustness_tests();
@@ -1714,6 +1781,9 @@ int main(const int argc, const char **argv) {
 
     printf("-----------------------------------------------------------\nDistance tests\n");
     nrTests += distance_tests();
+
+    printf("-----------------------------------------------------------\nDistance tests\n");
+    nrTests += full_name_tests();
 
     printf("-----------------------------------------------------------\nTerritory tests\n");
     nrTests += test_territories_csv();

@@ -145,13 +145,6 @@ You can disabled alphabet support by adding the following compiler directive:
  
     -DNO_SUPPORT_ALPHABETS
 
-### Removing Fast Encoding Support: NO_FAST_ENCODE
-
-By default, encoding is optimized by the use of a additional data table (approx. 12K). You can
-remove this table from the library by adding the compiler directive:
-
-    -DNO_FAST_ENCODE
-
 ## Release Notes
 
 ### 2.4.1
@@ -162,7 +155,7 @@ remove this table from the library by adding the compiler directive:
 
 * Split off legacy stuff into `mapcode_legacy.h`. 
 
-* Added `convertUtf8ToUtf16`, `convertUtf16ToUtf8`, `recogniseAlphabetUtf8`, `recogniseAlphabetUtf16`.
+* Added `convertUtf8ToUtf16`, `convertUtf16ToUtf8`, `recognizeAlphabetUtf8`, `recogniseAlphabetUtf16`.
 
 ### 2.4.0
 

@@ -42,10 +42,10 @@ set(CMAKE_EXE_LINKER_FLAGS_RELEASE "")
 
 set(SOURCE_FILES_MAPCODELIB
         mapcodelib/internal_data.h
+        mapcodelib/internal_alphabet_recognizer.h
         mapcodelib/internal_iso3166_data.h
         mapcodelib/internal_territory_alphabets.h
         mapcodelib/internal_territory_names_english.h
-        mapcodelib/internal_territory_names_english_full.h
         mapcodelib/internal_territory_names_local.h
         mapcodelib/internal_territory_search.h
         mapcodelib/mapcode_alphabets.h

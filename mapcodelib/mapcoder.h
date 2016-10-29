@@ -339,7 +339,7 @@ int multipleBordersNearby(
  *   Return value:
  *       non-0 if more alternatives are available (call again with alternative + 1).
  *       0 if no more alternatives are available.
-*/
+ */
 
 int getFullTerritoryNameEnglish(char *territoryName, enum Territory territory, int alternative);
 
@@ -357,19 +357,22 @@ int getFullTerritoryNameEnglish(char *territoryName, enum Territory territory, i
 #ifndef NO_SUPPORT_ALPHABETS
 
 /**
- * Returns territory names in the local language.
+ * Returns territory names in the local language. There are two variants of this call. One returns local
+ * territory names in a specified alphabet only. The other simply returns the local names, regardless
+ * of its alphabet.
  *
  *   Arguments:
  *       territoryName - Target string, allocated by caller to be at least MAX_TERRITORY_NAME_LENGTH + 1 bytes.
  *       territory     - Territory to get name for.
  *       alternative   - Which name to get, must be >= 0 (0 = default, 1 = first alternative, 2 = second etc.).
- *       alphabet      - Alphabet to use for territoryName.
+ *       alphabet      - Alphabet to use for territoryName. Must be a valid alphabet value.
  *
  *   Return value:
  *       non-0 if more alternatives are available (call again with alternative + 1).
  *       0 if no more alternatives are available.
-*/
-int getFullTerritoryNameLocal(char *territoryName, enum Territory territory, int alternative, enum Alphabet alphabet);
+ */
+int getFullTerritoryNameLocalInAlphabet(char *territoryName, enum Territory territory, int alternative, enum Alphabet alphabet);
+int getFullTerritoryNameLocal(char *territoryName, enum Territory territory, int alternative);
 
 
 /**

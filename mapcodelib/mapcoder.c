@@ -2951,7 +2951,8 @@ enum Alphabet recognizeAlphabetUtf8(const char *utf8) {
 static int getFullTerritoryName_internal(
         char *territoryName,
         enum Territory territory,
-        int alternative, int alphabet,
+        int alternative,
+        int alphabet,
         const char *namelist[]) {
 
     if (!territoryName || !namelist || alternative < 0 ||
@@ -2964,7 +2965,7 @@ static int getFullTerritoryName_internal(
         pipePtr = strstr(s, "|");
 
 #ifndef NO_SUPPORT_ALPHABETS
-        if (alphabet >= 0) {
+        if ((int) _ALPHABET_MIN < alphabet && alphabet < (int) _ALPHABET_MAX) {
             if (pipePtr) {
                 lengthCopy(territoryName, s, (int) (pipePtr - s), MAX_TERRITORY_FULLNAME_LEN);
             } else {
@@ -3006,8 +3007,17 @@ int getFullTerritoryNameEnglish(char *territoryName, enum Territory territory, i
 
 #ifndef NO_SUPPORT_ALPHABETS
 
-int getFullTerritoryNameLocal(char *territoryName, enum Territory territory, int alternative, enum Alphabet alphabet) {
+int getFullTerritoryNameLocalInAlphabet(char *territoryName, enum Territory territory, int alternative,
+                                        enum Alphabet alphabet) {
+    if ((alphabet <= _ALPHABET_MIN) || (alphabet >= _ALPHABET_MAX)) {
+        territoryName[0] = 0;
+        return 0;
+    }
     return getFullTerritoryName_internal(territoryName, territory, alternative, (int) alphabet, localname_utf8);
+}
+
+int getFullTerritoryNameLocal(char *territoryName, enum Territory territory, int alternative) {
+    return getFullTerritoryName_internal(territoryName, territory, alternative, -1, localname_utf8);
 }
 
 #endif // NO_SUPPORT_ALPHABETS

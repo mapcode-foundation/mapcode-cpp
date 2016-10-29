@@ -1492,15 +1492,31 @@ static int test_single_encodes(void) {
 }
 
 
+static int check_full_territory_name(const char* expectedName, const char* gotName, int expectedCode, int gotCode) {
+    int nrTests = 0;
+    ++nrTests;
+    if (strcmp(expectedName, gotName)) {
+        found_error();
+        printf("*** ERROR *** getFullTerritoryName error, expected name '%s', but got '%s'\n", expectedName, gotName);
+    }
+    ++nrTests;
+    if (expectedCode != gotCode) {
+        found_error();
+        printf("*** ERROR *** getFullTerritoryName error, expected return code %d, but got %d\n", expectedCode, gotCode);
+    }
+    return nrTests;
+}
+
+
 int territory_full_name_tests(void) {
     int nrTests = 0;
     enum Territory territory;
     int minNames;
     int nrNames = 0;
     int maxLength = 0;
+    char territoryName[2048];
     for (territory = _TERRITORY_MIN + 1; territory < _TERRITORY_MAX; ++territory) {
         int alternative = 0;
-        char territoryName[2048];
         nrTests++;
         for (alternative = 0;; alternative++) {
             int len;
@@ -1524,7 +1540,7 @@ int territory_full_name_tests(void) {
         for (alternative = 0;; alternative++) {
             int len;
             ++nrNames;
-            if (!getFullTerritoryNameLocal(territoryName, territory, alternative, _ALPHABET_MIN)) {
+            if (!getFullTerritoryNameLocal(territoryName, territory, alternative)) {
                 break;
             }
             len = (int) strlen(territoryName);
@@ -1551,6 +1567,10 @@ int territory_full_name_tests(void) {
         found_error();
         printf("*** ERROR *** Didn't find enough territory names, found %d, expected >= %d\n", nrNames, minNames);
     }
+
+    ++nrTests;
+    check_full_territory_name("Nederland", territoryName, getFullTerritoryNameLocal(territoryName, TERRITORY_NLD, 0), 0);
+    // TODO Add many more tests here.
     return nrTests;
 }
 

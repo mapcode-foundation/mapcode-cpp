@@ -1492,17 +1492,64 @@ static int test_single_encodes(void) {
 }
 
 
-static int check_full_territory_name(const char* expectedName, const char* gotName, int expectedCode, int gotCode) {
+static int check_full_territory_name_english(int expectedCode, const char *expectedName, enum Territory territory,
+                                            int alternative) {
     int nrTests = 0;
+    char gotName[MAX_TERRITORY_FULLNAME_LEN + 1];
+    int gotCode = getFullTerritoryNameEnglish(gotName, territory, alternative);
     ++nrTests;
     if (strcmp(expectedName, gotName)) {
         found_error();
-        printf("*** ERROR *** getFullTerritoryName error, expected name '%s', but got '%s'\n", expectedName, gotName);
+        printf("*** ERROR *** getFullTerritoryNameEnglish error, expected name '%s', but got '%s' for territory %d, alternative %d\n",
+               expectedName, gotName, (int) territory, alternative);
     }
     ++nrTests;
     if ((expectedCode && !gotCode) || (!expectedCode && gotCode)) {
         found_error();
-        printf("*** ERROR *** getFullTerritoryName error, expected return code %d, but got %d\n", expectedCode, gotCode);
+        printf("*** ERROR *** getFullTerritoryNameEnglish error, expected return code %d, but got %d for territory %d, alternative %d\n",
+               expectedCode, gotCode, (int) territory, alternative);
+    }
+    return nrTests;
+}
+
+
+static int
+check_full_territory_name_local(int expectedCode, const char *expectedName, enum Territory territory, int alternative) {
+    int nrTests = 0;
+    char gotName[MAX_TERRITORY_FULLNAME_LEN + 1];
+    int gotCode = getFullTerritoryNameLocal(gotName, territory, alternative);
+    ++nrTests;
+    if (strcmp(expectedName, gotName)) {
+        found_error();
+        printf("*** ERROR *** getFullTerritoryNameLocal error, expected name '%s', but got '%s' for territory %d, alternative %d\n",
+               expectedName, gotName, (int) territory, alternative);
+    }
+    ++nrTests;
+    if ((expectedCode && !gotCode) || (!expectedCode && gotCode)) {
+        found_error();
+        printf("*** ERROR *** getFullTerritoryNameLocal error, expected return code %d, but got %d for territory %d, alternative %d\n",
+               expectedCode, gotCode, (int) territory, alternative);
+    }
+    return nrTests;
+}
+
+
+static int check_full_territory_name_local_in_alphabet(int expectedCode, const char *expectedName, enum Territory territory,
+                                                       int alternative, enum Alphabet alphabet) {
+    int nrTests = 0;
+    char gotName[MAX_TERRITORY_FULLNAME_LEN + 1];
+    int gotCode = getFullTerritoryNameLocalInAlphabet(gotName, territory, alternative, alphabet);
+    ++nrTests;
+    if (strcmp(expectedName, gotName)) {
+        found_error();
+        printf("*** ERROR *** getFullTerritoryNameLocalInAlphabet error, expected name '%s', but got '%s' for territory %d, alternative %d\n",
+               expectedName, gotName, (int) territory, alternative);
+    }
+    ++nrTests;
+    if ((expectedCode && !gotCode) || (!expectedCode && gotCode)) {
+        found_error();
+        printf("*** ERROR *** getFullTerritoryNameLocalInAlphabet error, expected return code %d, but got %d for territory %d, alternative %d\n",
+               expectedCode, gotCode, (int) territory, alternative);
     }
     return nrTests;
 }
@@ -1568,31 +1615,63 @@ int territory_full_name_tests(void) {
         printf("*** ERROR *** Didn't find enough territory names, found %d, expected >= %d\n", nrNames, minNames);
     }
 
-    ++nrTests;
-    check_full_territory_name("Nederland", territoryName, getFullTerritoryNameLocal(territoryName, TERRITORY_NLD, 0), 0);
-    check_full_territory_name("Nederland", territoryName, getFullTerritoryNameLocalInAlphabet(territoryName, TERRITORY_NLD, 0, ALPHABET_ROMAN), 0);
-    check_full_territory_name("", territoryName, getFullTerritoryNameLocalInAlphabet(territoryName, TERRITORY_NLD, 0, ALPHABET_GREEK), 0);
-    check_full_territory_name("", territoryName, getFullTerritoryNameLocalInAlphabet(territoryName, TERRITORY_NLD, 0, _ALPHABET_MIN), 0);
-    check_full_territory_name("", territoryName, getFullTerritoryNameLocalInAlphabet(territoryName, TERRITORY_NLD, 0, _ALPHABET_MAX), 0);
+    nrTests += check_full_territory_name_english(0, "Netherland", TERRITORY_NLD, 0);
+    nrTests += check_full_territory_name_english(0, "", TERRITORY_NLD, 1);
 
-    check_full_territory_name("Russia", territoryName, getFullTerritoryNameEnglish(territoryName, TERRITORY_RUS, 0), 1);
-    check_full_territory_name("Russian Federation", territoryName, getFullTerritoryNameEnglish(territoryName, TERRITORY_RUS, 1), 0);
-    check_full_territory_name("", territoryName, getFullTerritoryNameEnglish(territoryName, TERRITORY_RUS, 2), 0);
+    nrTests += check_full_territory_name_local(0, "Nederland", TERRITORY_NLD, 0);
+    nrTests += check_full_territory_name_local(0, "", TERRITORY_NLD, 1);
 
-    check_full_territory_name("Росси́я", territoryName, getFullTerritoryNameLocalInAlphabet(territoryName, TERRITORY_RUS, 0, ALPHABET_CYRILLIC), 0);
-    check_full_territory_name("", territoryName, getFullTerritoryNameLocalInAlphabet(territoryName, TERRITORY_RUS, 1, ALPHABET_CYRILLIC), 0);
-    check_full_territory_name("", territoryName, getFullTerritoryNameLocalInAlphabet(territoryName, TERRITORY_RUS, 0, ALPHABET_ROMAN), 0);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "Nederland", TERRITORY_NLD, 0, ALPHABET_ROMAN);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_NLD, 1, ALPHABET_ROMAN);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_NLD, 0, ALPHABET_GREEK);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_NLD, 0, _ALPHABET_MIN);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_NLD, 0, _ALPHABET_MAX);
 
-    check_full_territory_name("Kazakhstan", territoryName, getFullTerritoryNameEnglish(territoryName, TERRITORY_KAZ, 0), 0);
-    check_full_territory_name("Kazakhstan", territoryName, getFullTerritoryNameEnglish(territoryName, TERRITORY_KAZ, 1), 0);
+    nrTests += check_full_territory_name_english(1, "Russia", TERRITORY_RUS, 0);
+    nrTests += check_full_territory_name_english(0, "Russian Federation", TERRITORY_RUS, 1);
 
-    check_full_territory_name("Қазақстан", territoryName, getFullTerritoryNameLocalInAlphabet(territoryName, TERRITORY_KAZ, 0, ALPHABET_CYRILLIC), 0);
-    check_full_territory_name("", territoryName, getFullTerritoryNameLocalInAlphabet(territoryName, TERRITORY_KAZ, 1, ALPHABET_CYRILLIC), 0);
-    check_full_territory_name("Qazaqstan", territoryName, getFullTerritoryNameLocalInAlphabet(territoryName, TERRITORY_KAZ, 0, ALPHABET_ROMAN), 1);
-    check_full_territory_name("Qazaqstan", territoryName, getFullTerritoryNameLocalInAlphabet(territoryName, TERRITORY_KAZ, 1, ALPHABET_ROMAN), 0);
-    check_full_territory_name("", territoryName, getFullTerritoryNameLocalInAlphabet(territoryName, TERRITORY_KAZ, 2, ALPHABET_ROMAN), 0);
+    nrTests += check_full_territory_name_local(0, "Росси́я", TERRITORY_RUS, 0);
+    nrTests += check_full_territory_name_local(0, "", TERRITORY_RUS, 0);
 
-    // TODO Add many more tests here.
+    nrTests += check_full_territory_name_local_in_alphabet(0, "Росси́я", TERRITORY_RUS, 0, ALPHABET_CYRILLIC);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_RUS, 0, ALPHABET_ROMAN);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_RUS, 0, ALPHABET_GREEK);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_RUS, 0, _ALPHABET_MIN);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_RUS, 0, _ALPHABET_MAX);
+
+    nrTests += check_full_territory_name_english(0, "Kazakhstan", TERRITORY_KAZ, 0);
+    nrTests += check_full_territory_name_english(0, "", TERRITORY_KAZ, 1);
+
+    nrTests += check_full_territory_name_local(1, "Қазақстан", TERRITORY_KAZ, 0);
+    nrTests += check_full_territory_name_local(0, "Qazaqstan", TERRITORY_KAZ, 1);
+    nrTests += check_full_territory_name_local(0, "", TERRITORY_KAZ, 2);
+
+    nrTests += check_full_territory_name_local_in_alphabet(0, "Қазақстан", TERRITORY_KAZ, 0, ALPHABET_CYRILLIC);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_KAZ, 1, ALPHABET_CYRILLIC);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "Qazaqstan", TERRITORY_KAZ, 0, ALPHABET_ROMAN);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_KAZ, 1, ALPHABET_ROMAN);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_KAZ, 0, ALPHABET_GREEK);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_KAZ, 0, _ALPHABET_MIN);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_KAZ, 0, _ALPHABET_MAX);
+
+    nrTests += check_full_territory_name_english(0, "Turkmenistan", TERRITORY_TKM, 0);
+    nrTests += check_full_territory_name_english(0, "", TERRITORY_TKM, 1);
+
+    nrTests += check_full_territory_name_local(1, "Türkmenistan", TERRITORY_TKM, 0);
+    nrTests += check_full_territory_name_local(1, "Түркменистан", TERRITORY_TKM, 1);
+    nrTests += check_full_territory_name_local(0, "تۆركمنيستآن", TERRITORY_TKM, 2);
+    nrTests += check_full_territory_name_local(0, "", TERRITORY_TKM, 3);
+
+    nrTests += check_full_territory_name_local_in_alphabet(0, "Türkmenistan", TERRITORY_TKM, 0, ALPHABET_ROMAN);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_TKM, 1, ALPHABET_ROMAN);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "Түркменистан", TERRITORY_TKM, 0, ALPHABET_CYRILLIC);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_TKM, 1, ALPHABET_CYRILLIC);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "تۆركمنيستآن", TERRITORY_TKM, 0, ALPHABET_ARABIC);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_TKM, 1, ALPHABET_ARABIC);
+
+    nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_KAZ, 0, ALPHABET_GREEK);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_KAZ, 0, _ALPHABET_MIN);
+    nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_KAZ, 0, _ALPHABET_MAX);
     return nrTests;
 }
 

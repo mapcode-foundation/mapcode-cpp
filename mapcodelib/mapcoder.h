@@ -30,17 +30,16 @@ extern "C" {
 #endif
 
 
-#define mapcode_cversion "2.4.1"
+#define MAPCODE_C_VERSION          "2.4.1"
+#define UWORD                      unsigned short int  // 2-byte unsigned integer.
+#define MAX_NR_OF_MAPCODE_RESULTS  22          // Max. number of results ever returned by encoder (e.g. for 26.904899, 95.138515).
+#define MAX_PROPER_MAPCODE_LEN     11          // Max. number of characters in a proper mapcode (including the dot, excl. precision extension).
+#define MAX_PRECISION_DIGITS       8           // Max. number of extension characters (excluding the hyphen). Must be even.
+#define MAX_ISOCODE_LEN            7           // Max. number of characters of a valid ISO3166 territory code; although nothing longer than SIX characters is ever generated (RU-KAM), users can input SEVEN characters (RUS-KAM).
+#define MAX_TERRITORY_FULLNAME_LEN 79          // Max. number of characters to store the longest possible territory name (in any alphabet, excl. 0-terminator).
+#define MAX_CLEAN_MAPCODE_LEN      (MAX_PROPER_MAPCODE_LEN + 1 + MAX_PRECISION_DIGITS)  // Max. number of characters in a clean mapcode (excluding zero-terminator).
+#define MAX_MAPCODE_RESULT_LEN     (MAX_ISOCODE_LEN + 1 + MAX_CLEAN_MAPCODE_LEN + 1)    // Max. number of characters to store a single result (including zero-terminator).
 
-#define UWORD                               unsigned short int  // 2-byte unsigned integer.
-
-#define MAX_NR_OF_MAPCODE_RESULTS           22          // Max. number of results ever returned by encoder (e.g. for 26.904899, 95.138515).
-#define MAX_PROPER_MAPCODE_LEN              11          // Max. number of characters in a proper mapcode (including the dot, excl. precision extension).
-#define MAX_PRECISION_DIGITS                8           // Max. number of extension characters (excluding the hyphen). Must be even.
-#define MAX_ISOCODE_LEN                     7           // Max. number of characters of a valid ISO3166 territory code; although nothing longer than SIX characters is ever generated (RU-KAM), users can input SEVEN characters (RUS-KAM).
-#define MAX_CLEAN_MAPCODE_LEN               (MAX_PROPER_MAPCODE_LEN + 1 + MAX_PRECISION_DIGITS)  // Max. number of characters in a clean mapcode (excluding zero-terminator).
-#define MAX_MAPCODE_RESULT_LEN              (MAX_ISOCODE_LEN + 1 + MAX_CLEAN_MAPCODE_LEN + 1)    // Max. number of characters to store a single result (including zero-terminator).
-#define MAX_TERRITORY_FULLNAME_LENGTH       79          // Max. number of characters to store the longest possible territory name (in any alphabet, excl. 0-terminator).
 
 /**
  * The type Mapcodes hold a number of mapcodes, for example from an encoding call.
@@ -52,13 +51,16 @@ typedef struct {
     char mapcode[MAX_NR_OF_MAPCODE_RESULTS][MAX_MAPCODE_RESULT_LEN];  // The mapcodes.
 } Mapcodes;
 
+
 typedef struct {
     char territoryISO[MAX_ISOCODE_LEN + 1];            // The (trimmed and uppercased) candidate territory ISO3166 code.
-    enum Territory territoryCode;                      // The territory, as recogized and disambiguated from territoryISO.
-    char properMapcode[MAX_PROPER_MAPCODE_LEN + 1];    // The (trimmed and uppercased) candidate proper mapcode (ex territory or extension).
+    enum Territory territoryCode;                      // The territory, as recognized and disambiguated from territoryISO.
+    char properMapcode[MAX_PROPER_MAPCODE_LEN +
+                       1];    // The (trimmed and uppercased) candidate proper mapcode (ex territory or extension).
     int indexOfDot;                                    // Position of dot in properMapcode (a value between 2 and 5).
     char precisionExtension[MAX_PRECISION_DIGITS + 1]; // The (trimmed and uppercased) candidate ex excluding hyphen.
 } MapcodeElements;
+
 
 /**
  * List of error return codes (negative except for ERR_OK = 0)
@@ -72,7 +74,7 @@ enum MapcodeError {
     // Format errors.
 
     ERR_ALL_DIGIT_CODE = -299,       // mapcode consists only of digits
-    ERR_INVALID_MAPCODE_FORMAT,      // string not recogized as mapcode format
+    ERR_INVALID_MAPCODE_FORMAT,      // string not recognized as mapcode format
     ERR_INVALID_CHARACTER,           // mapcode contains an invalid character
     ERR_BAD_ARGUMENTS,               // an argument is invalid (e.g. NULL)
     ERR_INVALID_ENDVOWELS,           // mapcodes ends in UE or UU
@@ -87,9 +89,9 @@ enum MapcodeError {
 
     // Parse errors.
 
-    ERR_UNKNOWN_TERRITORY = -199,    // mapcode territory not recogized
+    ERR_UNKNOWN_TERRITORY = -199,    // mapcode territory not recognized
 
-    // Other errors.
+    // other errors
 
     ERR_BAD_MAPCODE_LENGTH = -99,    // proper mapcode too short or too long
     ERR_MISSING_TERRITORY,           // mapcode can not be decoded without territory
@@ -101,6 +103,7 @@ enum MapcodeError {
 
     ERR_OK = 0,
 };
+
 
 /**
  * Encode a latitude, longitude pair (in degrees) to a set of Mapcodes.
@@ -127,6 +130,7 @@ int encodeLatLonToMapcodes(
         double lonDeg,
         enum Territory territory,
         int extraDigits);
+
 
 /**
  * Encode a latitude, longitude pair (in degrees) to a single Mapcode: the shortest possible for the given territory
@@ -155,6 +159,7 @@ int encodeLatLonToSingleMapcode(
         enum Territory territory,
         int extraDigits);
 
+
 /**
  * Decode a Mapcode to  a latitude, longitude pair (in degrees).
  *
@@ -174,6 +179,7 @@ enum MapcodeError decodeMapcodeToLatLon(
         const char *mapcode,
         enum Territory territory);
 
+
 /**
  * Checks if a string has the format of a Mapcode. (Note: The method is called compareXXX rather than hasXXX because
  * the return value '0' indicates the string has the Mapcode format, much like string comparison strcmp returns.)
@@ -191,6 +197,7 @@ enum MapcodeError decodeMapcodeToLatLon(
 enum MapcodeError compareWithMapcodeFormat(
         const char *asciiString,
         int stringIncludesTerritory);
+
 
 /**
  * Parses a string into its mapcode components, separating the territory, the 'proper' mapcode (without the
@@ -234,6 +241,7 @@ enum Territory getTerritoryCode(
         const char *territoryISO,
         enum Territory optionalTerritoryContext);
 
+
 /**
  * Convert a territory to a territory name.
  *
@@ -250,6 +258,7 @@ char *getTerritoryIsoName(
         enum Territory territory,
         int useShortName);
 
+
 /**
  * Given a territory, return the territory itself it it was a country, or return its parent
  * territory if it was a subdivision (e.g. a state).
@@ -263,6 +272,7 @@ char *getTerritoryIsoName(
  */
 enum Territory getCountryOrParentCountry(enum Territory territory);
 
+
 /**
  * Given a territory, return its parent country.
  *
@@ -275,11 +285,13 @@ enum Territory getCountryOrParentCountry(enum Territory territory);
  */
 enum Territory getParentCountryOf(enum Territory territory);
 
+
 /**
  * Returns the distance in meters between two coordinates (latitude/longitude pairs)
  * CAVEAT: only works for coordinates that are within a few miles from each other.
  */
 double distanceInMeters(double latDeg1, double lonDeg1, double latDeg2, double lonDeg2);
+
 
 /**
  * How far away, at worst, can a decoded mapcode be from the original encoded coordinate?
@@ -293,6 +305,7 @@ double distanceInMeters(double latDeg1, double lonDeg1, double latDeg2, double l
  *      The worst-case distance in meters between a decoded mapcode and the encoded coordinate.
  */
 double maxErrorInMeters(int extraDigits);
+
 
 /**
  * Is coordinate near more than one territory border?
@@ -314,6 +327,7 @@ int multipleBordersNearby(
         double lonDeg,
         enum Territory territory);
 
+
 /**
  * Returns territory names in English or in the local language.
  *
@@ -323,19 +337,21 @@ int multipleBordersNearby(
  *       alternative   - Which name to get, must be >= 0 (0 = default, 1 = first alternative, 2 = second etc.).
  *
  *   Return value:
- *       Total number of alternatives available (so, returning 1 means only alternative 0 is available, 2 means
- *       alternatives 0 and 1 are available etc.).
- */
+ *       non-0 if more alternatives are available (call again with alternative + 1).
+ *       0 if no more alternatives are available.
+*/
 
 int getFullTerritoryNameEnglish(char *territoryName, enum Territory territory, int alternative);
 
-/**
+
+/* ----------------------------------------------------------------------------
  * ALPHABET SUPPORT
- * ----------------
+ * ----------------------------------------------------------------------------
  *
  * Use -DNO_SUPPORT_ALPHABETS as a compiler option to switch off alphabet support for
  * more alphabets. If NO_SUPPORT_ALPHABETS is not defined, alphabets other than ROMAN
  * are supported.
+ * ----------------------------------------------------------------------------
  */
 
 #ifndef NO_SUPPORT_ALPHABETS
@@ -350,10 +366,11 @@ int getFullTerritoryNameEnglish(char *territoryName, enum Territory territory, i
  *       alphabet      - Alphabet to use for territoryName.
  *
  *   Return value:
- *       Total number of alternatives available (so, returning 1 means only alternative 0 is available, 2 means
- *       alternatives 0 and 1 are available etc.).
- */
+ *       non-0 if more alternatives are available (call again with alternative + 1).
+ *       0 if no more alternatives are available.
+*/
 int getFullTerritoryNameLocal(char *territoryName, enum Territory territory, int alternative, enum Alphabet alphabet);
+
 
 /**
  * This struct contains the returned alphabest for getAlphabetsForTerritory. The 'count' specifies
@@ -361,10 +378,12 @@ int getFullTerritoryNameLocal(char *territoryName, enum Territory territory, int
  */
 #define MAX_ALPHABETS_PER_TERRITORY 3
 
+
 typedef struct {
     int count;
     enum Alphabet alphabet[MAX_ALPHABETS_PER_TERRITORY];
 } TerritoryAlphabets;
+
 
 /**
  * Given a territory, returns a structure defining which alphabets (in order of importance) are in common use in the territory
@@ -376,6 +395,7 @@ typedef struct {
  *      A pointer to a TerritoryAlphabets structure (or NULL if the territory is invalid).
  */
 const TerritoryAlphabets *getAlphabetsForTerritory(enum Territory territory);
+
 
 /**
  * Decode a string to Roman characters.
@@ -389,6 +409,7 @@ const TerritoryAlphabets *getAlphabetsForTerritory(enum Territory territory);
  *      Pointer to same buffer as asciiString (allocated by caller), which holds the result.
  */
 char *convertToRoman(char *asciiString, int maxLength, const UWORD *utf16String);
+
 
 /**
  * Encode a string to Alphabet characters for a language.
@@ -404,6 +425,7 @@ char *convertToRoman(char *asciiString, int maxLength, const UWORD *utf16String)
  */
 UWORD *convertToAlphabet(UWORD *utf16String, int maxLength, const char *asciiString, enum Alphabet alphabet);
 
+
 /**
  * Convert a zero-terminated UTF16 (containing codes in range 0x0001 - 0xFFFF
  * to a UTF8 string (caller must make sure there is sufficient room in utf8).
@@ -413,6 +435,7 @@ UWORD *convertToAlphabet(UWORD *utf16String, int maxLength, const char *asciiStr
  *      utf8   - Target string
  */
 void convertUtf16ToUtf8(char *utf8String, const UWORD *utf16String);
+
 
 /**
  * Convert a zero-terminated UTF8 (or ASCII) string to a UTF16 string.
@@ -428,9 +451,10 @@ void convertUtf16ToUtf8(char *utf8String, const UWORD *utf16String);
  */
 int convertUtf8ToUtf16(UWORD *utf16, const char *utf8);
 
+
 /**
  * Returns the alphabet of given UTF8 (of ASCII) string (based on the
- * first recogizable non-Latin character).
+ * first recognisable non-Latin character).
  *
  * Arguments:
  *      utf16  - Zero-terminated UTF16 string.
@@ -438,23 +462,25 @@ int convertUtf8ToUtf16(UWORD *utf16, const char *utf8);
  * Returns:
  *      ALPHABET_ROMAN if all characters are in ASCII range 0..0xBF.
  *      Otherwise returns the alphabet of the first different character
- *      encountered, or negative (_ALPHABET_MIN) if it isn't recogized.
+ *      encountered, or negative (_ALPHABET_MIN) if it isn't recognized.
  */
 enum Alphabet recognizeAlphabetUtf16(const UWORD *utf16String);
 
+
 /**
  * Returns the alphabet of given UTF8 (of ASCII) string (based on the
- * first recogizable non-Latin character).
+ * first recognisable non-Latin character).
  *
  * Arguments:
- *      utf8   - Zero-terminated UTF8 (or ASCII) string.
+ *      utf8   - Zero-terminated UTF8 (or ASCII) string
  *
  * Returns:
  *      ALPHABET_ROMAN if all characters are in ASCII range 0..0xBF.
  *      Otherwise returns the alphabet of the first different character
- *      encountered, or negative (_ALPHABET_MIN) if it isn't recogized.
+ *      encountered, or negative (_ALPHABET_MIN) if it isn't recognized.
  */
 enum Alphabet recognizeAlphabetUtf8(const char *utf8);
+
 
 #endif // NO_SUPPORT_ALPHABETS
 

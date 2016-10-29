@@ -23,14 +23,15 @@ project(mapcode_cpp)
 #
 # Compiler directives:
 #
-# NO_POSIX_THREADS      - No multi-threaded unit testing.
-# NO_FAST_ENCODE        - Drop fast encoding support.
 # NO_SUPPORT_ALPHABETS  - Drop alphabet support.
-# LIMIT_TO_MICRODEGREES - Limit mapcode utility using microdegrees.
+# NO_POSIX_THREADS      - No multi-threaded unit testing - only effective for unit test.
+# NO_FAST_ENCODE        - Drop fast encoding support - only for internal use.
 
-set(CMAKE_C_FLAGS_DEBUG "-O0 -g -DDEBUG -Wall -fsanitize=address -fno-common -fno-optimize-sibling-calls -fno-omit-frame-pointer")
-set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g -DDEBUG")
-set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
+set(MAPCODE_OPTIONS "")
+
+set(CMAKE_C_FLAGS_DEBUG "${MAPCODE_OPTIONS} -O0 -g -DDEBUG -Wall -Werror -fsanitize=address -fno-common -fno-optimize-sibling-calls -fno-omit-frame-pointer")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "${MAPCODE_OPTIONS} -O2 -g -DDEBUG")
+set(CMAKE_C_FLAGS_RELEASE "${MAPCODE_OPTIONS} -O3 -DNDEBUG")
 
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG -std=c++11")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DDEBUG -std=c++11")

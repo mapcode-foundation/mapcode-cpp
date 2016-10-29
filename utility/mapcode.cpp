@@ -49,10 +49,6 @@
 #include "../mapcodelib/internal_data.h"
 #include "../mapcodelib/internal_iso3166_data.h"
 
-// Specific define to be able to limit output to microdegrees, for test files.
-// Use -DLIMIT_TO_MICRODEGREES on compiler command-line or add:
-// #undef LIMIT_TO_MICRODEGREES
-
 #define my_isnan(x) (false)
 #define my_round(x) ((int) (floor((x) + 0.5)))
 
@@ -85,13 +81,10 @@ static double lonLargestNrOfResults = 0.0;
  * whenever a incorrect amount or combination of parameters is entered.
  */
 static void usage(const char *appName) {
-    printf("MAPCODE (version %s)\n", mapcode_cversion);
+    printf("MAPCODE (version %s)\n", MAPCODE_C_VERSION);
     printf("Copyright (C) 2014-2016 Stichting Mapcode Foundation\n");
     printf("\n");
 
-#ifdef LIMIT_TO_MICRODEGREES
-    printf("Warning: This build is limited to using microdegrees.\n\n");
-#endif
     printf("Usage:\n");
     printf("    %s [-d| --decode] <default-territory> <mapcode> [<mapcode> ...]\n", appName);
     printf("\n");
@@ -299,16 +292,6 @@ static void generateAndOutputMapcodes(double lat, double lon, int iShowError, in
     while (lat < -90.0) {
         lat += 180.0;
     }
-
-#ifdef LIMIT_TO_MICRODEGREES
-    {
-        // Need to truncate lat/lon to microdegrees.
-        long lon32 = lon * 1000000.0;
-        long lat32 = lat * 1000000.0;
-        lon = (lon32 / 1000000.0);
-        lat = (lat32 / 1000000.0);
-    }
-#endif
 
     Mapcodes mapcodes;
     const int nrResults = encodeLatLonToMapcodes(&mapcodes, lat, lon, context, extraDigits);

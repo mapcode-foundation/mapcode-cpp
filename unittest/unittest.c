@@ -983,12 +983,12 @@ static int testReEncode(void) {
 
     printf("%d records\n", nrRecords);
     for (ccode = _TERRITORY_MIN + 1; ccode < _TERRITORY_MAX; ccode++) {
-        int min_boundary = data_start[INDEX_OF_TERRITORY(ccode)];
-        int max_boundary = data_start[INDEX_OF_TERRITORY(ccode) + 1];
+        int min_boundary = DATA_START[INDEX_OF_TERRITORY(ccode)];
+        int max_boundary = DATA_START[INDEX_OF_TERRITORY(ccode) + 1];
         showTestProgress(max_boundary, nrRecords, nrTests);
         // use internal knowledge of mapcoder to test all the territory boundaries
         for (m = min_boundary; m < max_boundary; m++) {
-            const TerritoryBoundary *b = territoryBoundary(m);
+            const TerritoryBoundary *b = TERRITORY_BOUNDARY(m);
 
             // Create context for thread.
             contexts[nrThread].nrTests = 0;
@@ -2026,7 +2026,7 @@ static int testAlphabetPerTerritory(void) {
             if (alphabetsForTerritory->alphabet[j] < 0 ||
                 alphabetsForTerritory->alphabet[j] >= _ALPHABET_MAX) {
                 foundError();
-                printf("*** ERROR *** Bad alphabetsForTerritory[%d].alphabet[%d]: %d\n", i, j,
+                printf("*** ERROR *** Bad ALPHABETS_FOR_TERRITORY[%d].alphabet[%d]: %d\n", i, j,
                        alphabetsForTerritory->alphabet[j]);
             }
         }
@@ -2037,8 +2037,13 @@ static int testAlphabetPerTerritory(void) {
 
 int main(const int argc, const char **argv) {
     int nrTests = 0;
+
+    // Ref unused var.
+    if (ISO3166_ALPHA[0] == 0) {
+    }
+
     printf("Mapcode C Library Unit Tests\n");
-    printf("Library version %s (data version %s)\n", MAPCODE_C_VERSION, mapcode_dataversion);
+    printf("Library version %s (data version %s)\n", MAPCODE_C_VERSION, MAPCODE_DATA_VERSION);
 #ifdef NO_POSIX_THREADS
     printf("Compiler options: NO_POSIX_THREADS\n");
 #else

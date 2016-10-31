@@ -136,7 +136,7 @@ static void usage(const char *appName) {
     printf("       %s -gXYZ 100 : produces a grid of 100 points as (x, y, z) sphere coordinates)\n", appName);
     printf("\n");
     printf("       Notes on the use of stdout and stderr:\n");
-    printf("       stdout: used for outputting 3D point data; stderr: used for statistics.\n");
+    printf("       stdout: used for outputting 3D Point data; stderr: used for statistics.\n");
     printf("       You can redirect stdout to a destination file, while stderr will show progress.\n");
     printf("\n");
     printf("       The result code is 0 when no error occurred, 1 if an input error occurred and 2\n");
@@ -167,7 +167,7 @@ static double degToRad(double deg) {
 static void unitToLatLonDeg(
         const double unit1, const double unit2, double *latDeg, double *lonDeg) {
 
-    // Calculate uniformly distributed 3D point on sphere (radius = 1.0):
+    // Calculate uniformly distributed 3D Point on sphere (radius = 1.0):
     // http://mathproofs.blogspot.co.il/2005/04/uniform-random-distribution-on-sphere.html
     const double theta0 = (2.0 * PI) * unit1;
     const double theta1 = acos(1.0 - (2.0 * unit2));
@@ -175,7 +175,7 @@ static void unitToLatLonDeg(
     double y = cos(theta0) * sin(theta1);
     double z = cos(theta1);
 
-    // Convert Carthesian 3D point into lat/lon (radius = 1.0):
+    // Convert Carthesian 3D Point into lat/lon (radius = 1.0):
     // http://stackoverflow.com/questions/1185408/converting-from-longitude-latitude-to-cartesian-coordinates
     const double latRad = asin(z);
     const double lonRad = atan2(y, x);
@@ -354,7 +354,7 @@ static void outputStatistics() {
     fprintf(stderr, "\nStatistics:\n");
     fprintf(stderr, "Total number of 3D points generated     = %d\n", totalNrOfPoints);
     fprintf(stderr, "Total number of mapcodes generated      = %d\n", totalNrOfResults);
-    fprintf(stderr, "Average number of mapcodes per 3D point = %.20g\n",
+    fprintf(stderr, "Average number of mapcodes per 3D Point = %.20g\n",
             ((float) totalNrOfResults) / ((float) totalNrOfPoints));
     fprintf(stderr, "Largest number of results for 1 mapcode = %d at (%.20g, %.20g)\n",
             largestNrOfResults, latLargestNrOfResults, lonLargestNrOfResults);
@@ -527,18 +527,18 @@ int main(const int argc, const char **argv) {
             char territoryName[MAX_MAPCODE_RESULT_LEN];
             printf("%d,", INDEX_OF_TERRITORY(i));
 
-            // Use internal knowledge of alphaSearch to show aliases of territoryName.
+            // Use internal knowledge of ALPHA_SEARCH to show aliases of territoryName.
             printf("%s", getTerritoryIsoName(territoryName, ccode, 0));
-            for (int a = 0; a < NRTERREC; a++) {
-                if (alphaSearch[a].territory == ccode) {
+            for (int a = 0; a < NR_TERRITORY_RECS; a++) {
+                if (ALPHA_SEARCH[a].territory == ccode) {
                     char fullcode[16];
-                    strcpy(fullcode, alphaSearch[a].alphaCode);
+                    strcpy(fullcode, ALPHA_SEARCH[a].alphaCode);
                     if (fullcode[0] >= '0' && fullcode[0] <= '9') {
                         static const char *parents2 = "US,IN,CA,AU,MX,BR,RU,CN,";
                         int p = (fullcode[0] - '0');
                         memcpy(fullcode, &parents2[p * 3 - 3], 2);
                         fullcode[2] = '-';
-                        strcpy(fullcode + 3, alphaSearch[a].alphaCode + 1);
+                        strcpy(fullcode + 3, ALPHA_SEARCH[a].alphaCode + 1);
                     }
                     if (strcmp(fullcode, territoryName) != 0) {
                         printf("|%s", fullcode);

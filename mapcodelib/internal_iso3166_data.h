@@ -25,7 +25,7 @@ extern "C" {
 
 // *** GENERATED FILE (dividemaps/fast_territories), DO NOT CHANGE OR PRETTIFY ***
 
-static const char parentletter[_TERRITORY_MAX - _TERRITORY_MIN] = {
+static const char PARENT_LETTER[_TERRITORY_MAX - _TERRITORY_MIN] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -46,7 +46,7 @@ static const char parentletter[_TERRITORY_MAX - _TERRITORY_MIN] = {
         8, 0, 0, 0, 0, 0, 0};
 
 
-static const char parentnumber[_TERRITORY_MAX - _TERRITORY_MIN] = {
+static const char PARENT_NUMBER[_TERRITORY_MAX - _TERRITORY_MIN] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -66,12 +66,12 @@ static const char parentnumber[_TERRITORY_MAX - _TERRITORY_MIN] = {
         7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 8, 0, 0, 0, 0, 0};
 
-#define NRTERREC 916
+#define NR_TERRITORY_RECS 916
 typedef struct {
     const char *alphaCode;
     enum Territory territory;
 } alphaRec;
-static const alphaRec alphaSearch[NRTERREC] = {
+static const alphaRec ALPHA_SEARCH[NR_TERRITORY_RECS] = {
         {"AAA",    TERRITORY_AAA},
         {"AB",     TERRITORY_CA_AB},
         {"ABW",    TERRITORY_ABW},

@@ -21,14 +21,12 @@
 #include "mapcoder.h"
 #include "internal_alphabet_recognizer.h"
 
-#define ASSERT(condition)
-
 /**
  * Include global legacy buffers. These are not thread-safe!
  */
-static Mapcodes rglobal;
-static char makeiso_bufbytes[2 * (MAX_ISOCODE_LEN + 1)];
-static char *makeiso_buf;
+static Mapcodes GLOBAL_RESULT;
+static char GLOBAL_MAKEISO_BUFFER[2 * (MAX_ISOCODE_LEN + 1)];
+static char *GLOBAL_MAKEISO_PTR;
 
 
 int encodeLatLonToMapcodes_Deprecated(
@@ -38,11 +36,11 @@ int encodeLatLonToMapcodes_Deprecated(
         enum Territory territory,
         int extraDigits) {
     char **v = mapcodesAndTerritories;
-    encodeLatLonToMapcodes(&rglobal, latDeg, lonDeg, territory, extraDigits);
+    encodeLatLonToMapcodes(&GLOBAL_RESULT, latDeg, lonDeg, territory, extraDigits);
     if (v) {
         int i;
-        for (i = 0; i < rglobal.count; i++) {
-            char *s = &rglobal.mapcode[i][0];
+        for (i = 0; i < GLOBAL_RESULT.count; i++) {
+            char *s = &GLOBAL_RESULT.mapcode[i][0];
             char *p = strchr(s, ' ');
             if (p == NULL) {
                 v[i * 2 + 1] = (char *) "AAA";
@@ -54,49 +52,45 @@ int encodeLatLonToMapcodes_Deprecated(
             }
         }
     }
-    return rglobal.count;
+    return GLOBAL_RESULT.count;
 }
 
 
 const char *convertTerritoryCodeToIsoName_Deprecated(
         enum Territory territoryContext,
         int useShortName) {
-    if (makeiso_buf == makeiso_bufbytes) {
-        makeiso_buf = makeiso_bufbytes + (MAX_ISOCODE_LEN + 1);
+    if (GLOBAL_MAKEISO_PTR == GLOBAL_MAKEISO_BUFFER) {
+        GLOBAL_MAKEISO_PTR = GLOBAL_MAKEISO_BUFFER + (MAX_ISOCODE_LEN + 1);
     } else {
-        makeiso_buf = makeiso_bufbytes;
+        GLOBAL_MAKEISO_PTR = GLOBAL_MAKEISO_BUFFER;
     }
-    return (const char *) getTerritoryIsoName(makeiso_buf, territoryContext, useShortName);
+    return (const char *) getTerritoryIsoName(GLOBAL_MAKEISO_PTR, territoryContext, useShortName);
 }
 
 
 /**
  * Include global legacy buffers. These are not thread-safe!
  */
-static char legacy_asciiBuffer[MAX_MAPCODE_RESULT_LEN];
-static UWORD legacy_utf16Buffer[MAX_MAPCODE_RESULT_LEN];
+static char GLOBAL_ASCII_BUFFER[MAX_MAPCODE_RESULT_LEN];
+static UWORD GLOBAL_UTF16_BUFFER[MAX_MAPCODE_RESULT_LEN];
+
 
 const char *decodeToRoman_Deprecated(const UWORD *utf16String) {
-    return convertToRoman(legacy_asciiBuffer, MAX_MAPCODE_RESULT_LEN, utf16String);
+    return convertToRoman(GLOBAL_ASCII_BUFFER, MAX_MAPCODE_RESULT_LEN, utf16String);
 }
 
 
 const UWORD *encodeToAlphabet_Deprecated(const char *asciiString,
                                          enum Alphabet alphabet) {
-    return convertToAlphabet(legacy_utf16Buffer, MAX_MAPCODE_RESULT_LEN, asciiString, alphabet);
+    return convertToAlphabet(GLOBAL_UTF16_BUFFER, MAX_MAPCODE_RESULT_LEN, asciiString, alphabet);
 }
 
 
-#define FLAG_MAY_CONTAIN_TERRITORY        1 // default
-#define FLAG_UTF16_STRING                 2 // interpret pointer a UWORD* to utf16 characters
 char *convertToRoman(char *asciiBuffer, int maxLength, const UWORD *unicodeBuffer) {
 
     MapcodeElements mapcodeElements;
     double lat, lon;
     enum MapcodeError err;
-
-    ASSERT(asciiBuffer);
-    ASSERT(unicodeBuffer);
 
     *asciiBuffer = 0;
     err = decodeMapcodeToLatLonUtf16(&lat, &lon, unicodeBuffer, TERRITORY_UNKNOWN, &mapcodeElements);
@@ -105,7 +99,7 @@ char *convertToRoman(char *asciiBuffer, int maxLength, const UWORD *unicodeBuffe
     }
     if (!err) {
         char romanized[MAX_MAPCODE_RESULT_LEN];
-        sprintf(romanized,"%s%s%s%s%s",
+        sprintf(romanized, "%s%s%s%s%s",
                 mapcodeElements.territoryISO,
                 *mapcodeElements.territoryISO ? " " : "",
                 mapcodeElements.properMapcode,
@@ -117,4 +111,3 @@ char *convertToRoman(char *asciiBuffer, int maxLength, const UWORD *unicodeBuffe
     }
     return asciiBuffer;
 }
-

@@ -19,12 +19,13 @@
 typedef struct {
     double latitude;        // 
     double longitude;       // 
-    int nr_local_mapcodes;  // 0 if no need to test
-    int nr_global_mapcodes; // 0 if no need to test
+    int nrLocalMapcodes;  // 0 if no need to test
+    int nrGlobalMapcodes; // 0 if no need to test
     const char *mapcode;    // expected mapcode, empty if no need to test
-} encode_test_record;
+} EncodeTestRecord;
 
-static const encode_test_record encode_test[] = {
+static const EncodeTestRecord ENCODE_TEST
+[] = {
         {-90.0,       0.0,            2, 3,  "ATA ZZ.ZZ"},
         {-90.0,       0.0,            2, 3,  "ATA  HK3N.ZZLZ"},
         {36.107682,   -5.384925,      0, 0,  ""},

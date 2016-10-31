@@ -24,7 +24,7 @@ extern "C" {
 // *** GENERATED FILE (dividemaps.cpp), DO NOT CHANGE OR PRETTIFY ***
 
 // Returns alphabet of character, or negative (_ALPHABET_MIN) in not recognized
-#define recognizeAlphabetOfChar(w) ((enum Alphabet) alphabetOf[(w) >> 6])
+#define ALPHABET_OF_CHAR(w) ((enum Alphabet) alphabetOf[(w) >> 6])
 
 static signed char alphabetOf[] = {
     /* 0000 */ ALPHABET_ROMAN       , ALPHABET_ROMAN       , ALPHABET_ROMAN       , ALPHABET_ROMAN,

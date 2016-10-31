@@ -59,6 +59,7 @@ static const double METERS_PER_DEGREE_LON = 111319.490793;
 
 static int nrErrors = 0;
 
+
 static void found_error(void) {
     pthread_mutex_lock(&mutex);
     ++nrErrors;
@@ -72,7 +73,7 @@ static char *myConvertToRoman(char *asciiBuffer, const UWORD *unicodeBuffer) {
     double lat, lon;
     *asciiBuffer = 0;
     decodeMapcodeToLatLonUtf16(&lat, &lon, unicodeBuffer, TERRITORY_FRA, &mapcodeElements);
-    sprintf(asciiBuffer,"%s%s%s%s%s",
+    sprintf(asciiBuffer, "%s%s%s%s%s",
             mapcodeElements.territoryISO,
             *mapcodeElements.territoryISO ? " " : "",
             mapcodeElements.properMapcode,
@@ -94,6 +95,7 @@ static enum MapcodeError myParseMapcodeString(
     }
     return err;
 }
+
 
 static int test_mapcode_formats(void) {
     int nrTests = 0;
@@ -428,7 +430,8 @@ static int test_mapcode_formats(void) {
         nrTests++;
         if (formattests[i].parseError != parseError) {
             found_error();
-            printf("*** ERROR *** compareWithMapcodeFormatUtf8(\"%s\") returns %d (%d expected)\n", formattests[i].input,
+            printf("*** ERROR *** compareWithMapcodeFormatUtf8(\"%s\") returns %d (%d expected)\n",
+                   formattests[i].input,
                    parseError, formattests[i].parseError);
         }
 
@@ -440,7 +443,8 @@ static int test_mapcode_formats(void) {
             ++succeeded;
             if (decodeError != formattests[i].decodeError) {
                 found_error();
-                printf("*** ERROR *** myParseMapcodeString(\"%s\")=%d, expected %d\n", formattests[i].input, decodeError,
+                printf("*** ERROR *** myParseMapcodeString(\"%s\")=%d, expected %d\n", formattests[i].input,
+                       decodeError,
                        formattests[i].decodeError);
             }
         }
@@ -454,41 +458,44 @@ static int test_mapcode_formats(void) {
 }
 
 
-static int test_foreign_parser(void) {
+static int test_alphabet_parser(void) {
     int nrTests = 0;
     static const struct {
         const char *userInput;
         const char *expected;
     } parseTests[] = {
-            {"nld bc.xy-x1y",        "NLD BC.XY-X1Y"},
-            {"nld Α0.12",           "NLD 00.E0"}, // A-encoded greek
-            {"DNK  РФ.ХХ",       "DNK PQ.XX"}, // greek
-            {"GRC HP.NO-1Х2ХХ",   "GRC HP.NO-1X2XX"},
-            {"PRT 31.E2-b2c",        "PRT 31.E2-B2C"},
-            {"GBR  רר.56ר",       "GBR XX.XX"},// hebrew abjad
-            {"BEL  طظ.56ط ",      "BEL PQ.XP"}, // arab abjad
-            {"FRA  ヒフ.ラヲ",   "FRA PQ.XZ"},
-            {NULL,                   NULL}
+            {"nld bc.xy-x1y",   "NLD BC.XY-X1Y"},
+            {"nld Α0.12",       "NLD 00.E0"}, // A-encoded greek
+            {"DNK  РФ.ХХ",      "DNK PQ.XX"}, // greek
+            {"GRC HP.NO-1Х2ХХ", "GRC HP.NO-1X2XX"},
+            {"PRT 31.E2-b2c",   "PRT 31.E2-B2C"},
+            {"GBR  רר.56ר",     "GBR XX.XX"},// hebrew abjad
+            {"BEL  طظ.56ط ",    "BEL PQ.XP"}, // arab abjad
+            {"FRA  ヒフ.ラヲ",      "FRA PQ.XZ"},
+            {NULL, NULL}
     };
     int i;
     for (i = 0; parseTests[i].userInput; i++) {
-        char romanized[MAX_MAPCODE_RESULT_LEN];
+        char romanized[MAX_MAPCODE_RESULT_LEN + 1];
         MapcodeElements mapcodeElements;
-        enum MapcodeError parseError = myParseMapcodeString(&mapcodeElements, parseTests[i].userInput, TERRITORY_UNKNOWN);
+        enum MapcodeError parseError = myParseMapcodeString(&mapcodeElements, parseTests[i].userInput,
+                                                            TERRITORY_UNKNOWN);
         nrTests++;
         if (parseError) {
             found_error();
-            printf("*** ERROR *** myParseMapcodeString(\"%s\") failed with error %d (expected %s)\n", parseTests[i].userInput, (int) parseError, parseTests[i].expected);
+            printf("*** ERROR *** myParseMapcodeString(\"%s\") failed with error %d (expected %s)\n",
+                   parseTests[i].userInput, (int) parseError, parseTests[i].expected);
         } else {
             nrTests++;
-            sprintf(romanized,"%s %s%s%s",
+            sprintf(romanized, "%s %s%s%s",
                     mapcodeElements.territoryISO,
                     mapcodeElements.properMapcode,
                     *mapcodeElements.precisionExtension ? "-" : "",
                     mapcodeElements.precisionExtension);
             if (strcmp(romanized, parseTests[i].expected) != 0) {
                 found_error();
-                printf("*** ERROR *** myParseMapcodeString(\"%s\") = \"%s\", (expected %s)\n", parseTests[i].userInput, romanized, parseTests[i].expected);
+                printf("*** ERROR *** myParseMapcodeString(\"%s\") = \"%s\", (expected %s)\n", parseTests[i].userInput,
+                       romanized, parseTests[i].expected);
             } else {
                 double lat1, lon1, lat2, lon2;
                 int err1 = decodeMapcodeToLatLonUtf8(&lat1, &lon1, parseTests[i].userInput, TERRITORY_UNKNOWN, NULL);
@@ -496,7 +503,7 @@ static int test_foreign_parser(void) {
                 ++nrTests;
                 if (err1 || err2) {
                     found_error();
-                    printf("*** ERROR *** decoding \"%s\" returns %d, decoding \"%s\" returns %d\n", 
+                    printf("*** ERROR *** decoding \"%s\" returns %d, decoding \"%s\" returns %d\n",
                            parseTests[i].userInput, err1, romanized, err2);
                 }
                 if (lat1 != lat2 || lon1 != lon2) {
@@ -525,7 +532,7 @@ static void show_progress(int at, int max, int nrTests) {
     }
 }
 
-//
+
 static void printGeneratedMapcodes(const char *title, const Mapcodes *mapcodes) {
     int i, nrresults = mapcodes->count;
     printf(" %s: %d results", title, nrresults);
@@ -536,10 +543,11 @@ static void printGeneratedMapcodes(const char *title, const Mapcodes *mapcodes) 
     printf("\n");
 }
 
+
 // test encode x,y to M, decode M, re-encode back to M
 static int testEncodeAndDecode(const char *str, double y, double x, int localsolutions, int globalsolutions) {
     int nrTests = 0;
-    char clean[MAX_MAPCODE_RESULT_LEN];
+    char clean[MAX_MAPCODE_RESULT_LEN + 1];
     const char *p, *s;
     int found = 0;
     enum Territory tc = TERRITORY_NONE;
@@ -726,6 +734,7 @@ static int testEncodeAndDecode(const char *str, double y, double x, int localsol
     return nrTests;
 }
 
+
 // test strings that are expected to FAIL a decode
 static int test_failing_decodes(void) {
     int nrTests = 0;
@@ -810,7 +819,9 @@ static int test_failing_decodes(void) {
     return nrTests;
 }
 
+
 #include "test_territories.h"
+
 
 static int
 test_territory(const char *alphaCode, enum Territory territory, int isAlias, int needsParent, enum Territory tcParent) {
@@ -906,20 +917,22 @@ static int join_threads(pthread_t *threads, struct context_test_around *contexts
     return nrTests;
 }
 
+
 // perform testEncodeAndDecode for all elements of encode_test[] (from decode_test.h)
 static int encode_decode_tests(void) {
     int nrTests = 0;
     int i = 0;
-    int nr = sizeof(encode_test) / sizeof(encode_test_record) - 1;
+    int nr = sizeof(ENCODE_TEST) / sizeof(ENCODE_TEST[0]) - 1;
     printf("%d encodes\n", nr);
     for (i = 0; i < nr; i++) {
-        const encode_test_record *t = &encode_test[i];
+        const EncodeTestRecord *t = &ENCODE_TEST[i];
         show_progress(i, nr, nrTests);
-        nrTests += testEncodeAndDecode(t->mapcode, t->latitude, t->longitude, t->nr_local_mapcodes,
-                                       t->nr_global_mapcodes);
+        nrTests += testEncodeAndDecode(t->mapcode, t->latitude, t->longitude,
+                                       t->nrLocalMapcodes, t->nrGlobalMapcodes);
     }
     return nrTests;
 }
+
 
 static void *execute_test_around(void *context) {
     int nrTests = 0;
@@ -954,6 +967,7 @@ static void *execute_test_around(void *context) {
     c->nrTests = nrTests;
     return 0;
 }
+
 
 // test around all centers and corners of all territory rectangles
 static int re_encode_tests(void) {
@@ -999,6 +1013,7 @@ static int re_encode_tests(void) {
     }
     return nrTests;
 }
+
 
 static void check_distance(double d1, double d2) {
     if (fabs(d1 - d2) > 0.00001) {
@@ -1148,6 +1163,7 @@ static int test_territory_insides(void) {
     }
     return nrTests;
 }
+
 
 static int territory_code_tests(void) {
     int nrTests = 0;
@@ -1435,8 +1451,11 @@ static int decode_robustness_tests(void) {
 static int environment_tests(void) {
     int nrTests = 0;
     int sizeOfWord = sizeof(UWORD);
-    char* s = "1234567890";
+    char *s = "1234567890";
     long distance = (strstr(s, "0") - s);
+
+    printf("sizeof(char)=%ld, sizeof(UWORD)=%ld, sizeof(int)=%ld, sizeof(long int)=%ld\n",
+           sizeof(char), sizeof(UWORD), sizeof(int), sizeof(long int));
 
     // Check size of UWORD.
     nrTests++;
@@ -1580,7 +1599,7 @@ static int test_single_encodes(void) {
     };
     int i;
     for (i = 0; test_single_encode[i].result != NULL; i++) {
-        char result[MAX_MAPCODE_RESULT_LEN];
+        char result[MAX_MAPCODE_RESULT_LEN + 1];
         encodeLatLonToSingleMapcode(result, test_single_encode[i].latDeg, test_single_encode[i].lonDeg,
                                     test_single_encode[i].territory, 4);
         if (strcmp(result, test_single_encode[i].result) != 0) {
@@ -1594,7 +1613,7 @@ static int test_single_encodes(void) {
 
 
 static int check_full_territory_name_english(int expectedCode, const char *expectedName, enum Territory territory,
-                                            int alternative) {
+                                             int alternative) {
     int nrTests = 0;
     char gotName[MAX_TERRITORY_FULLNAME_LEN + 1];
     int gotCode = getFullTerritoryNameEnglish(gotName, territory, alternative);
@@ -1638,8 +1657,10 @@ check_full_territory_name_local(int expectedCode, const char *expectedName, enum
     return nrTests;
 }
 
-static int check_full_territory_name_local_in_alphabet(int expectedCode, const char *expectedName, enum Territory territory,
-                                                       int alternative, enum Alphabet alphabet) {
+
+static int
+check_full_territory_name_local_in_alphabet(int expectedCode, const char *expectedName, enum Territory territory,
+                                            int alternative, enum Alphabet alphabet) {
     int nrTests = 0;
     char gotName[MAX_TERRITORY_FULLNAME_LEN + 1];
     int gotCode = getFullTerritoryNameLocalInAlphabet(gotName, territory, alternative, alphabet);
@@ -1691,7 +1712,8 @@ int territory_full_name_tests(void) {
             const TerritoryAlphabets *territoryAlphabets = getAlphabetsForTerritory(territory);
             int i;
             for (i = 0; i < territoryAlphabets->count; i++) {
-                if (!getFullTerritoryNameLocalInAlphabet(territoryName, territory, 0, territoryAlphabets->alphabet[i])) {
+                if (!getFullTerritoryNameLocalInAlphabet(territoryName, territory, 0,
+                                                         territoryAlphabets->alphabet[i])) {
                     char s[MAX_ISOCODE_LEN + 1];
                     found_error();
                     printf("*** ERROR *** getFullTerritoryNameLocal territory %s has NO name in common alphabet (%d)\n",
@@ -1726,17 +1748,19 @@ int territory_full_name_tests(void) {
             int i;
             for (i = 0; i < territoryAlphabets->count; i++) {
                 char territoryName2[MAX_TERRITORY_FULLNAME_LEN + 1];
-                if (!getFullTerritoryNameLocalInAlphabet(territoryName, territory, 0, territoryAlphabets->alphabet[i])) {
+                if (!getFullTerritoryNameLocalInAlphabet(territoryName, territory, 0,
+                                                         territoryAlphabets->alphabet[i])) {
                     char s[MAX_ISOCODE_LEN + 1];
                     found_error();
                     printf("*** ERROR *** getFullTerritoryNameLocal territory %s has NO name in common alphabet (%d)\n",
                            getTerritoryIsoName(s, territory, 0), territoryAlphabets->alphabet[0]);
                 }
-                if (!getFullTerritoryNameLocal(territoryName2, territory, i) || strcmp(territoryName,territoryName2)!=0) {
+                if (!getFullTerritoryNameLocal(territoryName2, territory, i) ||
+                    strcmp(territoryName, territoryName2) != 0) {
                     char s[MAX_ISOCODE_LEN + 1];
                     found_error();
                     printf("*** ERROR *** getFullTerritoryNameLocal %d-th (%s) name mismatches %d-th most common language for %s\n",
-                           i, territoryName, i, getTerritoryIsoName(s, territory, 0) );
+                           i, territoryName, i, getTerritoryIsoName(s, territory, 0));
                 }
             }
         }
@@ -1750,7 +1774,8 @@ int territory_full_name_tests(void) {
             len = (int) strlen(territoryName);
             if (len > MAX_TERRITORY_FULLNAME_LEN) {
                 found_error();
-                printf("*** ERROR *** Bad territory name, %d characters (limit is %d): %s\n", len, MAX_TERRITORY_FULLNAME_LEN, territoryName);
+                printf("*** ERROR *** Bad territory name, %d characters (limit is %d): %s\n", len,
+                       MAX_TERRITORY_FULLNAME_LEN, territoryName);
             }
             if (len > maxLength) {
                 maxLength = len;
@@ -1811,7 +1836,7 @@ int territory_full_name_tests(void) {
     nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_KAZ, 0, _ALPHABET_MIN);
     nrTests += check_full_territory_name_local_in_alphabet(0, "", TERRITORY_KAZ, 0, _ALPHABET_MAX);
 
-    nrTests += check_full_territory_name_local(1, "Түркменистан", TERRITORY_TKM,0);
+    nrTests += check_full_territory_name_local(1, "Түркменистан", TERRITORY_TKM, 0);
     nrTests += check_full_territory_name_local(1, "Türkmenistan", TERRITORY_TKM, 1);
     nrTests += check_full_territory_name_local(1, "تۆركمنيستآن", TERRITORY_TKM, 2);
     nrTests += check_full_territory_name_local(0, "", TERRITORY_TKM, 3);
@@ -1846,7 +1871,6 @@ static int check_alphabet_assertion(char *msg, int condition, char *format, int 
 }
 
 
-
 static int alphabet_tests(void) {
     int nrTests = 0;
     int j;
@@ -1866,7 +1890,7 @@ static int alphabet_tests(void) {
             ".xyz", "",
             "12.34", "",
             "  OMN  112.3xx ", "OMN 112.3XX",
-            " 49.4V" , "49.4V",
+            " 49.4V", "49.4V",
             "NLD 49.4V-xx123", "NLD 49.4V-XX123",
             "xx.xx", "XX.XX",
             "xx.xxx", "XX.XXX",
@@ -1906,17 +1930,16 @@ static int alphabet_tests(void) {
             "xxx.xxxx-PQRSTZVW", "XXX.XXXX-PQRSTZVW",
             "12xx.xxx-PQRSTZVW", "12XX.XXX-PQRSTZVW",
             "xxxx.xx12-PQRSTZVW", "XXXX.XX12-PQRSTZVW",
-            "99zxx.xxxx-PQRSTZVW", "99ZXX.XXXX-PQRSTZVW",
-            0
+            "99zxx.xxxx-PQRSTZVW", "99ZXX.XXXX-PQRSTZVW"
     };
 
     printf("%d alphabets\n", _ALPHABET_MAX);
 
-    for (j = 0; alphabet_testpairs[j] != 0; j += 2) {
+    for (j = 0; j < (sizeof(alphabet_testpairs) / sizeof(alphabet_testpairs[0])); j += 2) {
         enum Alphabet i;
         for (i = _ALPHABET_MIN + 1; i < _ALPHABET_MAX; i++) {
-            UWORD enc[MAX_MAPCODE_RESULT_LEN];
-            char dec[MAX_MAPCODE_RESULT_LEN];
+            UWORD enc[MAX_MAPCODE_RESULT_LEN + 1];
+            char dec[MAX_MAPCODE_RESULT_LEN + 1];
             // see if alphabets (re)convert as expected
             str = alphabet_testpairs[j];
             expect = alphabet_testpairs[j + 1];
@@ -1925,7 +1948,8 @@ static int alphabet_tests(void) {
             ++nrTests;
             if (strcmp(dec, expect)) {
                 found_error();
-                printf("*** ERROR *** myConvertToRoman(convertMapcodeToAlphabetUtf16(\"%s\",%d))=\"%s\"\n", str, (int) i, dec);
+                printf("*** ERROR *** myConvertToRoman(convertMapcodeToAlphabetUtf16(\"%s\",%d))=\"%s\"\n", str,
+                       (int) i, dec);
             }
         }
     }
@@ -1952,7 +1976,7 @@ static int alphabet_robustness_tests(void) {
     }
     largeString1[sizeof(largeString1) - 1] = 0;
     for (i = 0; i < sizeof(largeString2) - 1; ++i) {
-        largeString1[2] = (char) ((i % 223) + 32);
+        largeString2[i] = (char) ((i % 223) + 32);
     }
     largeString2[sizeof(largeString2) - 1] = 0;
 
@@ -1960,7 +1984,8 @@ static int alphabet_robustness_tests(void) {
 
         pu = convertMapcodeToAlphabetUtf16(u1, "", a);
         nrTests += check_alphabet_assertion("convertMapcodeToAlphabetUtf16 cannot return 0", pu != 0, "alphabet=%d", a);
-        nrTests += check_alphabet_assertion("convertMapcodeToAlphabetUtf16 must return empty string", pu[0] == 0, "alphabet=%d", a);
+        nrTests += check_alphabet_assertion("convertMapcodeToAlphabetUtf16 must return empty string", pu[0] == 0,
+                                            "alphabet=%d", a);
 
         ps = myConvertToRoman(s1, u1);
         nrTests += check_alphabet_assertion("myConvertToRoman cannot return 0", ps != 0, "alphabet=%d", a);
@@ -2012,7 +2037,6 @@ static int alphabet_per_territory_tests(void) {
 }
 
 
-
 int main(const int argc, const char **argv) {
     int nrTests = 0;
     printf("Mapcode C Library Unit Tests\n");
@@ -2041,8 +2065,8 @@ int main(const int argc, const char **argv) {
     printf("-----------------------------------------------------------\nAlphabet per territory tests\n");
     nrTests += alphabet_per_territory_tests();
 
-    printf("-----------------------------------------------------------\nAlphabet per territory tests\n");
-    nrTests += test_foreign_parser();
+    printf("-----------------------------------------------------------\nParser tests\n");
+    nrTests += test_alphabet_parser();
 
     printf("-----------------------------------------------------------\nTerritory name tests\n");
     nrTests += territory_full_name_tests();
@@ -2057,7 +2081,7 @@ int main(const int argc, const char **argv) {
     nrTests += distance_tests();
 
     printf("-----------------------------------------------------------\nMapcode format tests\n");
-    nrTests += test_mapcode_formats();    
+    nrTests += test_mapcode_formats();
     nrTests += test_failing_decodes();
 
     printf("-----------------------------------------------------------\nEncode/decode tests\n");

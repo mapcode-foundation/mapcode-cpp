@@ -2,8 +2,10 @@ REPORT=report_gprof.txt
 OPTS="-Wall -Werror -Wno-pointer-to-int-cast"
 LIB="../mapcodelib/mapcoder.o"
 
+echo "----------------------------------------------------------------" | tee -a $REPORT
 echo "Run gprof profiler..." | tee $REPORT
 date | tee -a $REPORT
+echo "----------------------------------------------------------------" | tee -a $REPORT
 
 TEST=`which gprof`
 if [ "$TEST" = "" ]

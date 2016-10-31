@@ -2,8 +2,10 @@ REPORT=report_valgrind.txt
 OPTS="-Wall -Werror -Wno-pointer-to-int-cast"
 LIB="../mapcodelib/mapcoder.o"
 
+echo "----------------------------------------------------------------" | tee -a $REPORT
 echo "Run valgrind" | tee $REPORT
 date | tee -a $REPORT
+echo "----------------------------------------------------------------" | tee -a $REPORT
 
 TEST=`which valgrind`
 if [ "$TEST" = "" ]

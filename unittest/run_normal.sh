@@ -1,8 +1,10 @@
 REPORT=report_normal.txt
 OPTS="-Wall -Werror -Wno-pointer-to-int-cast"
 
+echo "----------------------------------------------------------------" | tee -a $REPORT
 echo "Run normal..." | tee $REPORT
 date | tee -a $REPORT
+echo "----------------------------------------------------------------" | tee -a $REPORT
 
 echo "" | tee -a $REPORT
 echo "Run with: -O0" | tee -a $REPORT

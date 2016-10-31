@@ -21,25 +21,35 @@ project(mapcode_cpp)
 # export ASAN_OPTIONS=debug=true:strict_string_checks=1:detect_stack_use_after_return=true:detect_invalid_pointer_pairs=99999:
 #   detect_container_overflow=true:detect_odr_violation=2:check_initialization_order=true
 #
-# Compiler directives:
+# Compiler directives, only for internal use:
 #
-# NO_SUPPORT_ALPHABETS  - Drop alphabet support.
-# NO_POSIX_THREADS      - No multi-threaded unit testing - only effective for unit test.
-# NO_FAST_ENCODE        - Drop fast encoding support - only for internal use.
+# NO_POSIX_THREADS      - No multi-threaded unit testing.
+# NO_FAST_ENCODE        - Drop fast encoding support.
 
 set(MAPCODE_OPTIONS "")
+set(MAPCODE_WARNING_OPTIONS "-Wall -Werror")
+set(MAPCODE_ADDRESS_SANITIZER_COMPILER_OPTIONS "-fsanitize=address -fno-common -fno-optimize-sibling-calls -fno-omit-frame-pointer")
+set(MAPCODE_ADDRESS_SANITIZER_LINKER_OPTIONS "-fsanitize=address")
 
-set(CMAKE_C_FLAGS_DEBUG "${MAPCODE_OPTIONS} -O0 -g -DDEBUG -Wall -Werror -fsanitize=address -fno-common -fno-optimize-sibling-calls -fno-omit-frame-pointer")
-set(CMAKE_C_FLAGS_RELWITHDEBINFO "${MAPCODE_OPTIONS} -O2 -g -DDEBUG")
-set(CMAKE_C_FLAGS_RELEASE "${MAPCODE_OPTIONS} -O3 -DNDEBUG")
+set(CMAKE_C_FLAGS_DEBUG "${MAPCODE_OPTIONS} ${MAPCODE_WARNING_OPTIONS} ${MAPCODE_ADDRESS_SANITIZER_COMPILER_OPTIONS} -O0 -g -DDEBUG")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "${MAPCODE_OPTIONS} ${MAPCODE_WARNING_OPTIONS} -O2 -g -DDEBUG")
+set(CMAKE_C_FLAGS_RELEASE "${MAPCODE_OPTIONS} ${MAPCODE_WARNING_OPTIONS} -O3 -DNDEBUG")
 
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG -std=c++11")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DDEBUG -std=c++11")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -std=c++11")
+set(CMAKE_CXX_FLAGS_DEBUG "${MAPCODE_OPTIONS} ${MAPCODE_WARNING_OPTIONS} -O0 -g -DDEBUG -std=c++11")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${MAPCODE_OPTIONS} ${MAPCODE_WARNING_OPTIONS} -O2 -g -DDEBUG -std=c++11")
+set(CMAKE_CXX_FLAGS_RELEASE "${MAPCODE_OPTIONS} ${MAPCODE_WARNING_OPTIONS} -O3 -DNDEBUG -std=c++11")
 
-set(CMAKE_EXE_LINKER_FLAGS_DEBUG "-fsanitize=address")
+set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${MAPCODE_ADDRESS_SANITIZER_LINKER_OPTIONS}")
 set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "")
+
+set(SOURCE_DOC_FILES
+        README.md
+        utility/README.md
+        unittest/README.md
+        docs/logo_CLion.png
+        docs/mapcode_library_c.docx
+        docs/mapcode_library_c.pdf)
 
 set(SOURCE_FILES_MAPCODELIB
         mapcodelib/internal_data.h

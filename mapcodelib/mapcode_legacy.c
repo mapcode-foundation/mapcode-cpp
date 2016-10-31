@@ -15,9 +15,13 @@
  */
 
 #include <string.h>
+#include <stdio.h>
 
 #include "mapcode_legacy.h"
 #include "mapcoder.h"
+#include "internal_alphabet_recognizer.h"
+
+#define ASSERT(condition)
 
 /**
  * Include global legacy buffers. These are not thread-safe!
@@ -66,8 +70,6 @@ const char *convertTerritoryCodeToIsoName_Deprecated(
 }
 
 
-#ifndef NO_SUPPORT_ALPHABETS
-
 /**
  * Include global legacy buffers. These are not thread-safe!
  */
@@ -84,4 +86,35 @@ const UWORD *encodeToAlphabet_Deprecated(const char *asciiString,
     return convertToAlphabet(legacy_utf16Buffer, MAX_MAPCODE_RESULT_LEN, asciiString, alphabet);
 }
 
-#endif
+
+#define FLAG_MAY_CONTAIN_TERRITORY        1 // default
+#define FLAG_UTF16_STRING                 2 // interpret pointer a UWORD* to utf16 characters
+char *convertToRoman(char *asciiBuffer, int maxLength, const UWORD *unicodeBuffer) {
+
+    MapcodeElements mapcodeElements;
+    double lat, lon;
+    enum MapcodeError err;
+
+    ASSERT(asciiBuffer);
+    ASSERT(unicodeBuffer);
+
+    *asciiBuffer = 0;
+    err = decodeMapcodeToLatLonUtf16(&lat, &lon, unicodeBuffer, TERRITORY_UNKNOWN, &mapcodeElements);
+    if (err == ERR_MISSING_TERRITORY || err == ERR_MAPCODE_UNDECODABLE || err == ERR_EXTENSION_UNDECODABLE) {
+        err = ERR_OK;
+    }
+    if (!err) {
+        char romanized[MAX_MAPCODE_RESULT_LEN];
+        sprintf(romanized,"%s%s%s%s%s",
+                mapcodeElements.territoryISO,
+                *mapcodeElements.territoryISO ? " " : "",
+                mapcodeElements.properMapcode,
+                *mapcodeElements.precisionExtension ? "-" : "",
+                mapcodeElements.precisionExtension);
+        if ((int) strlen(romanized) < maxLength) {
+            strcpy(asciiBuffer, romanized);
+        }
+    }
+    return asciiBuffer;
+}
+

@@ -23,15 +23,15 @@ extern "C" {
 
 #include "mapcoder.h"
 #include "mapcode_territories.h"
-
-#ifndef NO_SUPPORT_ALPHABETS
 #include "mapcode_alphabets.h"
-#endif
 
 
 /**
  * List of #defines to support legacy systems.
  */
+#define decodeMapcodeToLatLon(latDeg, lonDeg, mapcode, territory) decodeUtf8MapcodeToLatLon(latDeg, lonDeg, NULL, mapcode, territory)
+#define compareWithMapcodeFormat(utf8, canContainTerritory)    compareUtf8WithMapcodeFormat(utf8)
+
 #define convertTerritoryIsoNameToCode           getTerritoryCode
 #define coord2mc(results, lat, lon, territory)  encodeLatLonToMapcodes_Deprecated(results, lat, lon,territory, 0)
 #define coord2mc1(results, lat, lon, territory) encodeLatLonToSingleMapcode(results, lat, lon, territory, 0)
@@ -120,18 +120,34 @@ const char *convertTerritoryCodeToIsoName_Deprecated(
         int useShortName);
 
 
-
-/* ----------------------------------------------------------------------------
- * ALPHABET SUPPORT
- * ----------------------------------------------------------------------------
+/**
+ * Decode a string to Roman characters.
  *
- * Use -DNO_SUPPORT_ALPHABETS as a compiler option to switch off alphabet support for
- * more alphabets. If NO_SUPPORT_ALPHABETS is not defined, alphabets other than ROMAN
- * are supported.
- * ----------------------------------------------------------------------------
+ * Arguments:
+ *      asciiString - Buffer to be filled with the ASCII string result.
+ *      maxLength   - Size of asciiString buffer.
+ *      utf16String - Unicode string to decode, allocated by caller.
+ *
+ * Returns:
+ *      Pointer to same buffer as asciiString (allocated by caller), which holds the result.
  */
+char *convertToRoman(char *asciiString, int maxLength, const UWORD *utf16String);
 
-#ifndef NO_SUPPORT_ALPHABETS
+
+
+/**
+ * Encode a string to Alphabet characters for a language.
+ *
+ * Arguments:
+ *      utf16String  - Buffer to be filled with the Unicode string result.
+ *      asciiString  - ASCII string to encode.
+ *      maxLength    - Size of utf16String buffer.
+ *      alphabet     - Alphabet to use.
+ *
+ * Returns:
+ *      Encoded Unicode string, points at buffer from 'utf16String', allocated/deallocated by caller.
+ */
+UWORD *convertToAlphabet(UWORD *utf16String, int maxLength, const char *asciiString, enum Alphabet alphabet);
 
 
 /**
@@ -157,9 +173,8 @@ const char *decodeToRoman_Deprecated(const UWORD *utf16String);
 const UWORD *encodeToAlphabet_Deprecated(const char *asciiString, enum Alphabet alphabet);
 
 
-#endif // NO_SUPPORT_ALPHABETS
-
 #ifdef __cplusplus
 }
 #endif
+
 #endif // __MAPCODE_LEGACY_H__

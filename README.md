@@ -135,21 +135,15 @@ The Mapcode C/C++ Library has includes a number of fixed data tables, which incr
 You may not require all of this data, so we've added some options for you to be able to reduce its
 footprint, for example for embedded applications. 
 
-### Removing Alphabet Support: NO_SUPPORT_ALPHABETS
-
-By default, support is included for multiple alphabets (or scripts) other than Roman, such as Greek,
-Cyrillic, Hebrew, Arabic, Chinese and many, many more. This means you can encode and decode mapcodes
-in such scripts (in UTF16).
-
-You can disabled alphabet support by adding the following compiler directive:
- 
-    -DNO_SUPPORT_ALPHABETS
-
 ## Release Notes
+
+### 2.5.0
+
+* Added support for getting territory names in English and local alphabets. 
 
 ### 2.4.1
 
-* Renamed .h files to internal_*.h unless they are relevant to the interface.
+* Renamed `.h` files to `internal_*.h` unless they are relevant to the interface.
 
 * Turned territories, alphabets and error codes into enums.
 

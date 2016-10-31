@@ -250,7 +250,7 @@ static void selfCheckMapcodeToLatLon(const char *mapcode,
     // TODO: Fix self-check.
     // int foundContext = getTerritoryCode(territory, TERRITORY_NONE);
     enum Territory foundContext = TERRITORY_NONE;
-    int err = decodeMapcodeToLatLon(&foundLat, &foundLon, mapcode, foundContext);
+    int err = decodeMapcodeToLatLonUtf8(&foundLat, &foundLon, mapcode, foundContext, NULL);
     if (err != 0) {
         fprintf(stderr, "error: decoding mapcode to lat/lon failure; "
                 "cannot decode '%s')\n", mapcode);
@@ -417,7 +417,7 @@ int main(const int argc, const char **argv) {
 
             // Decode the Mapcode to a lat/lon.
             const char *mapcode = argv[i];
-            int err = decodeMapcodeToLatLon(&lat, &lon, mapcode, context);
+            int err = decodeMapcodeToLatLonUtf8(&lat, &lon, mapcode, context, NULL);
             if (err != 0) {
                 fprintf(stderr, "error: cannot decode '%s %s'\n", defaultTerritory, mapcode);
                 return NORMAL_ERROR;
@@ -661,7 +661,7 @@ int main(const int argc, const char **argv) {
             return NORMAL_ERROR;
         }
 
-        printf("alphabetNr,MapcodeInRoman,MapcodeInAlphabet,BackInRoman\n");
+        printf("alphabetNr,MapcodeInRoman,MapcodeInAlphabet\n");
         for (enum Alphabet alphabet = ALPHABET_ROMAN;
              alphabet < _ALPHABET_MAX; alphabet = (enum Alphabet) (alphabet + 1)) {
             int variant;
@@ -670,8 +670,6 @@ int main(const int argc, const char **argv) {
                 for (m = 0; mapcodeForCSV[m] != NULL; m++) {
                     int i;
                     char asciiString[128];
-                    char aciiStringRecoded[128];
-                    UWORD utf16String[128];
                     // build a mapcode variant
                     char mapcode[128];
                     strcpy(mapcode, mapcodeForCSV[m]);
@@ -680,15 +678,9 @@ int main(const int argc, const char **argv) {
                         mapcode[i] = (char) toupper((int) mapcode[i]);
                     }
                     // convert to alphabet, and back to roman
-                    convertToAlphabet(utf16String, 128, mapcode, alphabet);
-                    convertToRoman(aciiStringRecoded, 128, utf16String);
+                    convertMapcodeToAlphabetUtf8(asciiString, mapcode, alphabet);
                     // output a line of csv (in utf8 format)
-                    convertUtf16ToUtf8(asciiString, utf16String);
-                    printf("%d,%s,%s,%s\n", alphabet, mapcode, asciiString, aciiStringRecoded);
-                    if (strcmp(mapcode, aciiStringRecoded) != 0) {
-                        fprintf(stderr, "error: utility produces unexpected results\n\n");
-                        return NORMAL_ERROR;
-                    }
+                    printf("%d,%s,%s\n", alphabet, mapcode, asciiString);
                 }
             }
         }

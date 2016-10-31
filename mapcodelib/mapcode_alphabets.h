@@ -20,10 +20,6 @@
 extern "C" {
 #endif
 
-#ifdef NO_SUPPORT_ALPHABETS
-#error "NO_SUPPORT_ALPHABETS cannot be specified in this file"
-#endif
-
 /**
  * Mapcodes are suppored in a variety of alphabets, using UTF16. The following
  * enum specifies the alphabets (or scripts, as they are also called).

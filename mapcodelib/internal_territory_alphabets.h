@@ -22,10 +22,6 @@ extern "C" {
 
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
 
-#ifdef NO_SUPPORT_ALPHABETS
-#error "NO_SUPPORT_ALPHABETS cannot be specified in this file"
-#endif
-
 #include "mapcoder.h"
 
 static const TerritoryAlphabets alphabetsForTerritory[_TERRITORY_MAX - _TERRITORY_MIN - 1] = {
@@ -33,7 +29,7 @@ static const TerritoryAlphabets alphabetsForTerritory[_TERRITORY_MAX - _TERRITOR
         {1, {ALPHABET_ROMAN}}, // MCO Monaco
         {1, {ALPHABET_ROMAN}}, // GIB Gibraltar
         {1, {ALPHABET_ROMAN}}, // TKL Tokelau
-        {2, {ALPHABET_ROMAN,      ALPHABET_ARABIC}}, // CCK Cocos Islands
+        {1, {ALPHABET_ROMAN}}, // CCK Cocos Islands
         {1, {ALPHABET_ROMAN}}, // BLM Saint-Barthelemy
         {1, {ALPHABET_ROMAN}}, // NRU Nauru
         {1, {ALPHABET_ROMAN}}, // TUV Tuvalu
@@ -50,7 +46,7 @@ static const TerritoryAlphabets alphabetsForTerritory[_TERRITORY_MAX - _TERRITOR
         {1, {ALPHABET_ROMAN}}, // AIA Anguilla
         {1, {ALPHABET_ROMAN}}, // MSR Montserrat
         {1, {ALPHABET_ROMAN}}, // JEY Jersey
-        {3, {ALPHABET_CHINESE,    ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // CXR Christmas Island
+        {1, {ALPHABET_ROMAN}}, // CXR Christmas Island
         {1, {ALPHABET_ROMAN}}, // WLF Wallis and Futuna the
         {1, {ALPHABET_ROMAN}}, // VGB British Virgin Islands
         {1, {ALPHABET_ROMAN}}, // LIE Liechtenstein
@@ -68,7 +64,7 @@ static const TerritoryAlphabets alphabetsForTerritory[_TERRITORY_MAX - _TERRITOR
         {1, {ALPHABET_ROMAN}}, // MLT Malta
         {1, {ALPHABET_ROMAN}}, // GRD Grenada
         {1, {ALPHABET_ROMAN}}, // VIR Virgin Islands of the United States
-        {2, {ALPHABET_ROMAN,      ALPHABET_ARABIC}}, // MYT Mayotte
+        {1, {ALPHABET_ROMAN}}, // MYT Mayotte
         {2, {ALPHABET_ROMAN,      ALPHABET_CYRILLIC}}, // SJM Svalbard and Jan Mayen
         {1, {ALPHABET_ROMAN}}, // VCT Saint Vincent and the Grenadines
         {1, {ALPHABET_ROMAN}}, // HMD Heard Island and McDonald Islands
@@ -83,7 +79,7 @@ static const TerritoryAlphabets alphabetsForTerritory[_TERRITORY_MAX - _TERRITOR
         {1, {ALPHABET_ROMAN}}, // IMN Isle of Mann
         {1, {ALPHABET_ROMAN}}, // LCA Saint Lucia
         {1, {ALPHABET_ROMAN}}, // FSM Micronesia
-        {3, {ALPHABET_CHINESE,    ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // SGP Singapore
+        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // SGP Singapore
         {1, {ALPHABET_ROMAN}}, // TON Tonga
         {1, {ALPHABET_ROMAN}}, // DMA Dominica, Commonwealth of
         {2, {ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // BHR Bahrain
@@ -115,14 +111,14 @@ static const TerritoryAlphabets alphabetsForTerritory[_TERRITORY_MAX - _TERRITOR
         {1, {ALPHABET_ROMAN}}, // VUT Vanuatu
         {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // MNE Montenegro
         {1, {ALPHABET_ROMAN}}, // BHS Bahamas, Commonwealth of the
-        {2, {ALPHABET_ROMAN,      ALPHABET_ARABIC}}, // TLS Timor-Leste
+        {1, {ALPHABET_ROMAN}}, // TLS Timor-Leste
         {1, {ALPHABET_ROMAN}}, // SWZ Swaziland
         {2, {ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // KWT Kuwait, State of
         {2, {ALPHABET_ROMAN,      ALPHABET_DEVANAGARI}}, // FJI Fiji
         {1, {ALPHABET_ROMAN}}, // NCL New Caledonia
         {1, {ALPHABET_ROMAN}}, // SVN Slovenia
         {3, {ALPHABET_HEBREW,     ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // ISR Israel
-        {3, {ALPHABET_HEBREW,     ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // PSE Palestinian territories
+        {2, {ALPHABET_ARABIC,     ALPHABET_HEBREW}}, // PSE Palestinian territories
         {1, {ALPHABET_ROMAN}}, // SLV El Salvador
         {1, {ALPHABET_ROMAN}}, // BLZ Belize
         {2, {ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // DJI Djibouti
@@ -136,22 +132,22 @@ static const TerritoryAlphabets alphabetsForTerritory[_TERRITORY_MAX - _TERRITOR
         {2, {ALPHABET_ARMENIAN,   ALPHABET_ROMAN}}, // ARM Armenia
         {1, {ALPHABET_ROMAN}}, // LSO Lesotho
         {1, {ALPHABET_ROMAN}}, // BEL Belgium
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // MDA Moldova
+        {1, {ALPHABET_ROMAN}}, // MDA Moldova
         {1, {ALPHABET_ROMAN}}, // GNB Guinea-Bissau
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // TWN Taiwan
-        {2, {ALPHABET_TIBETAN,    ALPHABET_ROMAN}}, // BTN Bhutan
+        {1, {ALPHABET_CHINESE}}, // TWN Taiwan
+        {1, {ALPHABET_TIBETAN}}, // BTN Bhutan
         {1, {ALPHABET_ROMAN}}, // CHE Switzerland
         {1, {ALPHABET_ROMAN}}, // NLD Netherlands
         {1, {ALPHABET_ROMAN}}, // DNK Denmark
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // EST Estonia
+        {1, {ALPHABET_ROMAN}}, // EST Estonia
         {1, {ALPHABET_ROMAN}}, // DOM Dominican Republic
         {1, {ALPHABET_ROMAN}}, // SVK Slovakia
         {1, {ALPHABET_ROMAN}}, // CRI Costa Rica
         {2, {ALPHABET_ROMAN,      ALPHABET_CYRILLIC}}, // BIH Bosnia and Herzegovina
-        {2, {ALPHABET_ROMAN,      ALPHABET_CYRILLIC}}, // HRV Croatia
+        {1, {ALPHABET_ROMAN}}, // HRV Croatia
         {1, {ALPHABET_ROMAN}}, // TGO Togo
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // LVA Latvia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // LTU Lithuania
+        {1, {ALPHABET_ROMAN}}, // LVA Latvia
+        {1, {ALPHABET_ROMAN}}, // LTU Lithuania
         {3, {ALPHABET_SINHALESE,  ALPHABET_TAMIL,      ALPHABET_ROMAN}}, // LKA Sri Lanka
         {3, {ALPHABET_GEORGIAN,   ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // GEO Georgia
         {1, {ALPHABET_ROMAN}}, // IRL Ireland
@@ -161,7 +157,7 @@ static const TerritoryAlphabets alphabetsForTerritory[_TERRITORY_MAX - _TERRITOR
         {1, {ALPHABET_ROMAN}}, // GUF French Guiana
         {2, {ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // ARE United Arab Emirates
         {1, {ALPHABET_ROMAN}}, // AUT Austria
-        {3, {ALPHABET_ROMAN,      ALPHABET_CYRILLIC,   ALPHABET_ARABIC}}, // AZE Azerbaijan
+        {1, {ALPHABET_ROMAN}}, // AZE Azerbaijan
         {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // SRB Serbia
         {2, {ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // JOR Jordan
         {1, {ALPHABET_ROMAN}}, // PRT Portugal
@@ -170,29 +166,29 @@ static const TerritoryAlphabets alphabetsForTerritory[_TERRITORY_MAX - _TERRITOR
         {1, {ALPHABET_ROMAN}}, // ISL Iceland
         {1, {ALPHABET_ROMAN}}, // GTM Guatemala
         {1, {ALPHABET_ROMAN}}, // CUB Cuba
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // BGR Bulgaria
+        {1, {ALPHABET_CYRILLIC}}, // BGR Bulgaria
         {1, {ALPHABET_ROMAN}}, // LBR Liberia
         {1, {ALPHABET_ROMAN}}, // HND Honduras
         {1, {ALPHABET_ROMAN}}, // BEN Benin
         {3, {ALPHABET_AMHARIC,    ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // ERI Eritrea
         {1, {ALPHABET_ROMAN}}, // MWI Malawi
-        {2, {ALPHABET_KOREAN,     ALPHABET_ROMAN}}, // PRK North Korea
+        {1, {ALPHABET_KOREAN}}, // PRK North Korea
         {1, {ALPHABET_ROMAN}}, // NIC Nicaragua
         {2, {ALPHABET_GREEK,      ALPHABET_ROMAN}}, // GRC Greece
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // TJK Tajikistan
-        {2, {ALPHABET_BENGALI,    ALPHABET_ROMAN}}, // BGD Bangladesh, People's Republic of
+        {1, {ALPHABET_CYRILLIC}}, // TJK Tajikistan
+        {1, {ALPHABET_BENGALI}}, // BGD Bangladesh, People's Republic of
         {2, {ALPHABET_DEVANAGARI, ALPHABET_ROMAN}}, // NPL Nepal
         {3, {ALPHABET_ARABIC,     ALPHABET_ROMAN,      ALPHABET_TIFINAGH}}, // TUN Tunisia
         {1, {ALPHABET_ROMAN}}, // SUR Suriname
         {1, {ALPHABET_ROMAN}}, // URY Uruguay
-        {2, {ALPHABET_KHMER,      ALPHABET_ROMAN}}, // KHM Cambodia
+        {1, {ALPHABET_KHMER}}, // KHM Cambodia
         {2, {ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // SYR Syria
         {1, {ALPHABET_ROMAN}}, // SEN Senegal
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // KGZ Kyrgyzstan
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // BLR Belarus
+        {1, {ALPHABET_CYRILLIC}}, // KGZ Kyrgyzstan
+        {3, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN,      ALPHABET_ARABIC}}, // BLR Belarus
         {1, {ALPHABET_ROMAN}}, // GUY Guyana
         {2, {ALPHABET_LAO,        ALPHABET_ROMAN}}, // LAO Laos
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // ROU Romania
+        {1, {ALPHABET_ROMAN}}, // ROU Romania
         {1, {ALPHABET_ROMAN}}, // GHA Ghana
         {1, {ALPHABET_ROMAN}}, // UGA Uganda
         {1, {ALPHABET_ROMAN}}, // GBR United Kingdom
@@ -208,7 +204,7 @@ static const TerritoryAlphabets alphabetsForTerritory[_TERRITORY_MAX - _TERRITOR
         {1, {ALPHABET_ROMAN}}, // POL Poland
         {1, {ALPHABET_ROMAN}}, // CIV Ivory Coast
         {1, {ALPHABET_ROMAN}}, // NOR Norway
-        {3, {ALPHABET_ROMAN,      ALPHABET_ARABIC,     ALPHABET_CHINESE}}, // MYS Malaysia
+        {2, {ALPHABET_ROMAN,      ALPHABET_CHINESE}}, // MYS Malaysia
         {1, {ALPHABET_ROMAN}}, // VNM Vietnam
         {1, {ALPHABET_ROMAN}}, // FIN Finland
         {1, {ALPHABET_ROMAN}}, // COG Congo-Brazzaville
@@ -218,11 +214,11 @@ static const TerritoryAlphabets alphabetsForTerritory[_TERRITORY_MAX - _TERRITOR
         {1, {ALPHABET_ROMAN}}, // PRY Paraguay
         {2, {ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // IRQ Iraq
         {3, {ALPHABET_ARABIC,     ALPHABET_ROMAN,      ALPHABET_TIFINAGH}}, // MAR Morocco
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // UZB Uzbekistan
+        {1, {ALPHABET_ROMAN}}, // UZB Uzbekistan
         {1, {ALPHABET_ROMAN}}, // SWE Sweden
         {1, {ALPHABET_ROMAN}}, // PNG Papua New Guinea
         {1, {ALPHABET_ROMAN}}, // CMR Cameroon
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // TKM Turkmenistan
+        {3, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN,      ALPHABET_ARABIC}}, // TKM Turkmenistan
         {1, {ALPHABET_ROMAN}}, // ESP Spain
         {2, {ALPHABET_THAI,       ALPHABET_ROMAN}}, // THA Thailand
         {2, {ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // YEM Yemen
@@ -231,7 +227,7 @@ static const TerritoryAlphabets alphabetsForTerritory[_TERRITORY_MAX - _TERRITOR
         {1, {ALPHABET_ROMAN}}, // KEN Kenya
         {1, {ALPHABET_ROMAN}}, // BWA Botswana
         {1, {ALPHABET_ROMAN}}, // MDG Madagascar
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // UKR Ukraine
+        {1, {ALPHABET_CYRILLIC}}, // UKR Ukraine
         {2, {ALPHABET_ROMAN,      ALPHABET_ARABIC}}, // SSD South Sudan
         {1, {ALPHABET_ROMAN}}, // CAF Central African Republic
         {2, {ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // SOM Somalia
@@ -240,16 +236,16 @@ static const TerritoryAlphabets alphabetsForTerritory[_TERRITORY_MAX - _TERRITOR
         {1, {ALPHABET_ROMAN}}, // ZMB Zambia
         {1, {ALPHABET_ROMAN}}, // CHL Chile
         {1, {ALPHABET_ROMAN}}, // TUR Turkey
-        {3, {ALPHABET_GURMUKHI,   ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // PAK Pakistan
+        {2, {ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // PAK Pakistan
         {1, {ALPHABET_ROMAN}}, // MOZ Mozambique
         {1, {ALPHABET_ROMAN}}, // NAM Namibia
         {1, {ALPHABET_ROMAN}}, // VEN Venezuela
-        {2, {ALPHABET_ROMAN,      ALPHABET_ARABIC}}, // NGA Nigeria
+        {1, {ALPHABET_ROMAN}}, // NGA Nigeria
         {1, {ALPHABET_ROMAN}}, // TZA Tanzania
         {2, {ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // EGY Egypt
         {2, {ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // MRT Mauritania
         {1, {ALPHABET_ROMAN}}, // BOL Bolivia
-        {3, {ALPHABET_ROMAN,      ALPHABET_AMHARIC,    ALPHABET_ARABIC}}, // ETH Ethiopia
+        {2, {ALPHABET_ROMAN,      ALPHABET_AMHARIC}}, // ETH Ethiopia
         {1, {ALPHABET_ROMAN}}, // COL Colombia
         {1, {ALPHABET_ROMAN}}, // ZAF South Africa
         {1, {ALPHABET_ROMAN}}, // MLI Mali
@@ -257,9 +253,9 @@ static const TerritoryAlphabets alphabetsForTerritory[_TERRITORY_MAX - _TERRITOR
         {1, {ALPHABET_ROMAN}}, // NER Niger
         {2, {ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // TCD Chad
         {1, {ALPHABET_ROMAN}}, // PER Peru
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // MNG Mongolia
+        {1, {ALPHABET_CYRILLIC}}, // MNG Mongolia
         {2, {ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // IRN Iran
-        {3, {ALPHABET_ARABIC,     ALPHABET_ROMAN,      ALPHABET_TIFINAGH}}, // LBY Libya
+        {2, {ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // LBY Libya
         {2, {ALPHABET_ARABIC,     ALPHABET_ROMAN}}, // SDN Sudan
         {1, {ALPHABET_ROMAN}}, // IDN Indonesia
         {1, {ALPHABET_ROMAN}}, // MX-DIF Federal District, Mexico
@@ -308,33 +304,33 @@ static const TerritoryAlphabets alphabetsForTerritory[_TERRITORY_MAX - _TERRITOR
         {3, {ALPHABET_DEVANAGARI, ALPHABET_GURMUKHI,   ALPHABET_ROMAN}}, // IN-DL Delhi, National Capital Territory of
         {2, {ALPHABET_ROMAN,      ALPHABET_DEVANAGARI}}, // IN-ML Meghalaya
         {2, {ALPHABET_ROMAN,      ALPHABET_DEVANAGARI}}, // IN-NL Nagaland
-        {3, {ALPHABET_BENGALI,    ALPHABET_DEVANAGARI, ALPHABET_ROMAN}}, // IN-MN Manipur
-        {3, {ALPHABET_BENGALI,    ALPHABET_DEVANAGARI, ALPHABET_ROMAN}}, // IN-TR Tripura
+        {1, {ALPHABET_BENGALI}}, // IN-MN Manipur
+        {1, {ALPHABET_BENGALI}}, // IN-TR Tripura
         {2, {ALPHABET_DEVANAGARI, ALPHABET_ROMAN}}, // IN-MZ Mizoram
-        {2, {ALPHABET_DEVANAGARI, ALPHABET_ROMAN}}, // IN-SK Sikkim
+        {1, {ALPHABET_DEVANAGARI}}, // IN-SK Sikkim
         {3, {ALPHABET_GURMUKHI,   ALPHABET_DEVANAGARI, ALPHABET_ROMAN}}, // IN-PB Punjab
         {3, {ALPHABET_DEVANAGARI, ALPHABET_GURMUKHI,   ALPHABET_ROMAN}}, // IN-HR Haryana
         {2, {ALPHABET_ROMAN,      ALPHABET_DEVANAGARI}}, // IN-AR Arunachal Pradesh
-        {3, {ALPHABET_BENGALI,    ALPHABET_ROMAN,      ALPHABET_DEVANAGARI}}, // IN-AS Assam
-        {2, {ALPHABET_DEVANAGARI, ALPHABET_ROMAN}}, // IN-BR Bihar
-        {2, {ALPHABET_DEVANAGARI, ALPHABET_ROMAN}}, // IN-UT Uttarakhand
-        {2, {ALPHABET_DEVANAGARI, ALPHABET_ROMAN}}, // IN-GA Goa
+        {1, {ALPHABET_BENGALI}}, // IN-AS Assam
+        {2, {ALPHABET_DEVANAGARI, ALPHABET_ARABIC}}, // IN-BR Bihar
+        {1, {ALPHABET_DEVANAGARI}}, // IN-UT Uttarakhand
+        {1, {ALPHABET_DEVANAGARI}}, // IN-GA Goa
         {3, {ALPHABET_MALAYALAM,  ALPHABET_ROMAN,      ALPHABET_DEVANAGARI}}, // IN-KL Kerala
-        {3, {ALPHABET_TAMIL,      ALPHABET_DEVANAGARI, ALPHABET_ROMAN}}, // IN-TN Tamil Nadu
+        {2, {ALPHABET_TAMIL,      ALPHABET_DEVANAGARI}}, // IN-TN Tamil Nadu
         {2, {ALPHABET_DEVANAGARI, ALPHABET_ROMAN}}, // IN-HP Himachal Pradesh
-        {3, {ALPHABET_DEVANAGARI, ALPHABET_GURMUKHI,   ALPHABET_ROMAN}}, // IN-JK Jammu and Kashmir
-        {2, {ALPHABET_DEVANAGARI, ALPHABET_ROMAN}}, // IN-CT Chhattisgarh
+        {3, {ALPHABET_ARABIC,     ALPHABET_DEVANAGARI, ALPHABET_GURMUKHI}}, // IN-JK Jammu and Kashmir
+        {1, {ALPHABET_DEVANAGARI}}, // IN-CT Chhattisgarh
         {3, {ALPHABET_DEVANAGARI, ALPHABET_BENGALI,    ALPHABET_ROMAN}}, // IN-JH Jharkhand
         {3, {ALPHABET_KANNADA,    ALPHABET_DEVANAGARI, ALPHABET_ROMAN}}, // IN-KA Karnataka
-        {2, {ALPHABET_DEVANAGARI, ALPHABET_ROMAN}}, // IN-RJ Rajasthan
-        {3, {ALPHABET_ODIA,       ALPHABET_ROMAN,      ALPHABET_DEVANAGARI}}, // IN-OR Odisha
+        {1, {ALPHABET_DEVANAGARI}}, // IN-RJ Rajasthan
+        {2, {ALPHABET_ODIA,       ALPHABET_ROMAN}}, // IN-OR Odisha
         {3, {ALPHABET_GUJARATI,   ALPHABET_ROMAN,      ALPHABET_DEVANAGARI}}, // IN-GJ Gujarat
-        {3, {ALPHABET_BENGALI,    ALPHABET_ROMAN,      ALPHABET_DEVANAGARI}}, // IN-WB West Bengal
-        {2, {ALPHABET_DEVANAGARI, ALPHABET_ROMAN}}, // IN-MP Madhya Pradesh
-        {3, {ALPHABET_TELUGU,     ALPHABET_DEVANAGARI, ALPHABET_ROMAN}}, // IN-TG Telangana
-        {3, {ALPHABET_TELUGU,     ALPHABET_ROMAN,      ALPHABET_DEVANAGARI}}, // IN-AP Andhra Pradesh
-        {2, {ALPHABET_DEVANAGARI, ALPHABET_ROMAN}}, // IN-MH Maharashtra
-        {2, {ALPHABET_DEVANAGARI, ALPHABET_ROMAN}}, // IN-UP Uttar Pradesh
+        {2, {ALPHABET_BENGALI,    ALPHABET_ROMAN}}, // IN-WB West Bengal
+        {1, {ALPHABET_DEVANAGARI}}, // IN-MP Madhya Pradesh
+        {3, {ALPHABET_TELUGU,     ALPHABET_ARABIC,     ALPHABET_DEVANAGARI}}, // IN-TG Telangana
+        {2, {ALPHABET_TELUGU,     ALPHABET_DEVANAGARI}}, // IN-AP Andhra Pradesh
+        {1, {ALPHABET_DEVANAGARI}}, // IN-MH Maharashtra
+        {3, {ALPHABET_DEVANAGARI, ALPHABET_ROMAN,      ALPHABET_ARABIC}}, // IN-UP Uttar Pradesh
         {3, {ALPHABET_MALAYALAM,  ALPHABET_TELUGU,     ALPHABET_DEVANAGARI}}, // IN-PY Puducherry
         {1, {ALPHABET_ROMAN}}, // AU-NSW New South Wales, Australia
         {1, {ALPHABET_ROMAN}}, // AU-ACT Australian Capital Territory, Australia
@@ -441,123 +437,123 @@ static const TerritoryAlphabets alphabetsForTerritory[_TERRITORY_MAX - _TERRITOR
         {1, {ALPHABET_ROMAN}}, // BRA Brazil
         {1, {ALPHABET_ROMAN}}, // USA USA
         {1, {ALPHABET_ROMAN}}, // MEX Mexico
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-MOW Moscow, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-SPE Saint Petersburg, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-KGD Kaliningrad Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-IN Ingushetia, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-AD Adygea Republic, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-SE North Ossetia-Alania Republic, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-KB Kabardino-Balkar Republic, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-KC Karachay-Cherkess Republic, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-CE Chechen Republic, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-CU Chuvash Republic, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-IVA Ivanovo Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-LIP Lipetsk Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-ORL Oryol Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-TUL Tula Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-BE Belgorod Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-VLA Vladimir Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-KRS Kursk Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-KLU Kaluga Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-TAM Tambov Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-BRY Bryansk Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-YAR Yaroslavl Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-RYA Ryazan Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-AST Astrakhan Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-MOS Moscow Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-SMO Smolensk Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-DA Dagestan Republic, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-VOR Voronezh Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-NGR Novgorod Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-PSK Pskov Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-KOS Kostroma Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-STA Stavropol Krai, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-KDA Krasnodar Krai, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-MOW Moscow, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-SPE Saint Petersburg, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-KGD Kaliningrad Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-IN Ingushetia, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-AD Adygea Republic, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-SE North Ossetia-Alania Republic, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-KB Kabardino-Balkar Republic, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-KC Karachay-Cherkess Republic, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-CE Chechen Republic, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-CU Chuvash Republic, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-IVA Ivanovo Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-LIP Lipetsk Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-ORL Oryol Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-TUL Tula Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-BE Belgorod Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-VLA Vladimir Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-KRS Kursk Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-KLU Kaluga Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-TAM Tambov Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-BRY Bryansk Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-YAR Yaroslavl Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-RYA Ryazan Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-AST Astrakhan Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-MOS Moscow Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-SMO Smolensk Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-DA Dagestan Republic, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-VOR Voronezh Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-NGR Novgorod Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-PSK Pskov Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-KOS Kostroma Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-STA Stavropol Krai, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-KDA Krasnodar Krai, Russia
         {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-KL Kalmykia Republic, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-TVE Tver Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-LEN Leningrad Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-ROS Rostov Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-VGG Volgograd Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-VLG Vologda Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-MUR Murmansk Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-KR Karelia Republic, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-NEN Nenets Autonomous Okrug, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-KO Komi Republic, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-ARK Arkhangelsk Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-MO Mordovia Republic, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-NIZ Nizhny Novgorod Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-PNZ Penza Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-KI Kirov Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-ME Mari El Republic, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-ORE Orenburg Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-ULY Ulyanovsk Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-PM Perm Krai, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-BA Bashkortostan Republic, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-UD Udmurt Republic, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-TA Tatarstan Republic, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-SAM Samara Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-SAR Saratov Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-YAN Yamalo-Nenets, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-KM Khanty-Mansi, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-SVE Sverdlovsk Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-TYU Tyumen Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-KGN Kurgan Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-CH Chelyabinsk Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-BU Buryatia Republic, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-ZAB Zabaykalsky Krai, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-IRK Irkutsk Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-NVS Novosibirsk Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-TOM Tomsk Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-OMS Omsk Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-KK Khakassia Republic, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-KEM Kemerovo Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-AL Altai Republic, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-ALT Altai Krai, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-TY Tuva Republic, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-KYA Krasnoyarsk Krai, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-MAG Magadan Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-CHU Chukotka Okrug, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-KAM Kamchatka Krai, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-SAK Sakhalin Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-PO Primorsky Krai, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-YEV Jewish Autonomous Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-KHA Khabarovsk Krai, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-AMU Amur Oblast, Russia
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RU-SA Sakha Republic, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-TVE Tver Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-LEN Leningrad Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-ROS Rostov Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-VGG Volgograd Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-VLG Vologda Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-MUR Murmansk Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-KR Karelia Republic, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-NEN Nenets Autonomous Okrug, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-KO Komi Republic, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-ARK Arkhangelsk Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-MO Mordovia Republic, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-NIZ Nizhny Novgorod Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-PNZ Penza Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-KI Kirov Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-ME Mari El Republic, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-ORE Orenburg Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-ULY Ulyanovsk Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-PM Perm Krai, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-BA Bashkortostan Republic, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-UD Udmurt Republic, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-TA Tatarstan Republic, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-SAM Samara Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-SAR Saratov Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-YAN Yamalo-Nenets, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-KM Khanty-Mansi, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-SVE Sverdlovsk Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-TYU Tyumen Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-KGN Kurgan Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-CH Chelyabinsk Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-BU Buryatia Republic, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-ZAB Zabaykalsky Krai, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-IRK Irkutsk Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-NVS Novosibirsk Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-TOM Tomsk Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-OMS Omsk Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-KK Khakassia Republic, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-KEM Kemerovo Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-AL Altai Republic, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-ALT Altai Krai, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-TY Tuva Republic, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-KYA Krasnoyarsk Krai, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-MAG Magadan Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-CHU Chukotka Okrug, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-KAM Kamchatka Krai, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-SAK Sakhalin Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-PO Primorsky Krai, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-YEV Jewish Autonomous Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-KHA Khabarovsk Krai, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-AMU Amur Oblast, Russia
+        {1, {ALPHABET_CYRILLIC}}, // RU-SA Sakha Republic, Russia
         {1, {ALPHABET_ROMAN}}, // CAN Canada
-        {2, {ALPHABET_CYRILLIC,   ALPHABET_ROMAN}}, // RUS Russia
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-SH Shanghai Municipality, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-TJ Tianjin Municipality, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-BJ Beijing Municipality, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-HI Hainan Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-NX Ningxia Hui Autonomous Region, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-CQ Chongqing Municipality, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-ZJ Zhejiang Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-JS Jiangsu Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-FJ Fujian Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-AH Anhui Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-LN Liaoning Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-SD Shandong Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-SX Shanxi Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-JX Jiangxi Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-HA Henan Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-GZ Guizhou Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-GD Guangdong Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-HB Hubei Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-JL Jilin Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-HE Hebei Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-SN Shaanxi Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-NM Nei Mongol Autonomous Region, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-HL Heilongjiang Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-HN Hunan Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-GX Guangxi Zhuang Autonomous Region, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-SC Sichuan Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-YN Yunnan Province, China
-        {3, {ALPHABET_TIBETAN,    ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-XZ Xizang Autonomous Region, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-GS Gansu Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-QH Qinghai Province, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CN-XJ Xinjiang Uyghur Autonomous Region, China
-        {2, {ALPHABET_CHINESE,    ALPHABET_ROMAN}}, // CHN China, People's Republic of
+        {1, {ALPHABET_CYRILLIC}}, // RUS Russia
+        {1, {ALPHABET_CHINESE}}, // CN-SH Shanghai Municipality, China
+        {1, {ALPHABET_CHINESE}}, // CN-TJ Tianjin Municipality, China
+        {1, {ALPHABET_CHINESE}}, // CN-BJ Beijing Municipality, China
+        {1, {ALPHABET_CHINESE}}, // CN-HI Hainan Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-NX Ningxia Hui Autonomous Region, China
+        {1, {ALPHABET_CHINESE}}, // CN-CQ Chongqing Municipality, China
+        {1, {ALPHABET_CHINESE}}, // CN-ZJ Zhejiang Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-JS Jiangsu Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-FJ Fujian Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-AH Anhui Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-LN Liaoning Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-SD Shandong Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-SX Shanxi Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-JX Jiangxi Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-HA Henan Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-GZ Guizhou Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-GD Guangdong Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-HB Hubei Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-JL Jilin Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-HE Hebei Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-SN Shaanxi Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-NM Nei Mongol Autonomous Region, China
+        {1, {ALPHABET_CHINESE}}, // CN-HL Heilongjiang Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-HN Hunan Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-GX Guangxi Zhuang Autonomous Region, China
+        {1, {ALPHABET_CHINESE}}, // CN-SC Sichuan Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-YN Yunnan Province, China
+        {2, {ALPHABET_TIBETAN,    ALPHABET_CHINESE}}, // CN-XZ Xizang Autonomous Region, China
+        {1, {ALPHABET_CHINESE}}, // CN-GS Gansu Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-QH Qinghai Province, China
+        {1, {ALPHABET_CHINESE}}, // CN-XJ Xinjiang Uyghur Autonomous Region, China
+        {1, {ALPHABET_CHINESE}}, // CHN China, People's Republic of
         {1, {ALPHABET_ROMAN}}, // UMI United States Minor Outlying Islands
         {1, {ALPHABET_ROMAN}}, // CPT Clipperton Island
         {1, {ALPHABET_ROMAN}}, // ATA Antarctica

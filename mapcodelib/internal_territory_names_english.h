@@ -21,7 +21,7 @@ extern "C" {
 #endif
 
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
-static const char *isofullname[] = {
+static const char *TERRITORY_FULL_NAME[] = {
         "Vatican|Holy See",
         "Monaco",
         "Gibraltar",

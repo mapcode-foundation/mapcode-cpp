@@ -24,9 +24,9 @@ extern "C" {
 // *** GENERATED FILE (dividemaps.cpp), DO NOT CHANGE OR PRETTIFY ***
 
 // Returns alphabet of character, or negative (_ALPHABET_MIN) in not recognized
-#define ALPHABET_OF_CHAR(w) ((enum Alphabet) alphabetOf[(w) >> 6])
+#define ALPHABET_OF_CHAR(w) ((enum Alphabet) ALPHABET_OF[(w) >> 6])
 
-static signed char alphabetOf[] = {
+static const signed char ALPHABET_OF[] = {
     /* 0000 */ ALPHABET_ROMAN       , ALPHABET_ROMAN       , ALPHABET_ROMAN       , ALPHABET_ROMAN,
     /* 0100 */ ALPHABET_ROMAN       , ALPHABET_ROMAN       , ALPHABET_ROMAN       , ALPHABET_ROMAN,
     /* 0200 */ ALPHABET_ROMAN       , ALPHABET_ROMAN       , ALPHABET_ROMAN       , ALPHABET_ROMAN,
@@ -285,8 +285,8 @@ static signed char alphabetOf[] = {
     /* ff00 */ ALPHABET_ARABIC      , ALPHABET_ARABIC      , ALPHABET_ARABIC      , ALPHABET_ARABIC
 }; // 1024 records
 
-#define ROMANVERSION_MAXCHAR 0x3129
-static const char *romanVersionOf[] = {
+#define ROMAN_VERSION_MAX_CHAR 0x3129
+static const char *ROMAN_VERSION_OF[] = {
     /* 0000 */ "\0                                !?#$%&'()*+,-./0123456789:;<=>?",
     /* 0040 */ "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[?]^_`abcdefghijklmnopqrstuvwxyz{|}~?",
     /* 0080 */ NULL,

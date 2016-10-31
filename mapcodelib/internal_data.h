@@ -22,9 +22,9 @@ extern "C" {
 
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
 
-#define mapcode_dataversion "2.3.0" // coords 2.0.2
+#define MAPCODE_DATA_VERSION "2.3.0" // coords 2.0.2
 
-static const char *iso3166alpha[_TERRITORY_MAX - _TERRITORY_MIN - 1] = {
+static const char *ISO3166_ALPHA[_TERRITORY_MAX - _TERRITORY_MIN - 1] = {
         "VAT", "MCO", "GIB", "TKL", "CCK", "BLM", "NRU", "TUV", "MAC", "SXM",
         "MAF", "NFK", "PCN", "BVT", "BMU", "IOT", "SMR", "GGY", "AIA", "MSR",
         "JEY", "CXR", "WLF", "VGB", "LIE", "ABW", "MHL", "ASM", "COK", "SPM",
@@ -113,7 +113,7 @@ static const char *iso3166alpha[_TERRITORY_MAX - _TERRITORY_MIN - 1] = {
 
 
 // index of first rectangle record for x-th territory
-static const int data_start[_TERRITORY_MAX - _TERRITORY_MIN] = {
+static const int DATA_START[_TERRITORY_MAX - _TERRITORY_MIN] = {
         0, 3, 6, 10, 14, 17, 19, 20, 31, 32,
         34, 36, 38, 43, 45, 48, 52, 59, 63, 65,
         67, 71, 73, 81, 87, 95, 97, 132, 139, 149,
@@ -181,7 +181,7 @@ typedef struct {
 } TerritoryBoundary;
 
 #ifndef MAKE_SOURCE_DIGITAL
-static const TerritoryBoundary territoryBoundaries[MAPCODE_BOUNDARY_MAX + 1] = {
+static const TerritoryBoundary TERRITORY_BOUNDARIES[MAPCODE_BOUNDARY_MAX + 1] = {
         {12433114,   41851944,  12548434,   41938434,  0x001000b}, // VAT
         {5850000,    35450000,  18560000,   55080000,  0x50a0216},
         {12444000,   41899000,  12460000,   41908000,  0x003021c},
@@ -16540,7 +16540,7 @@ static const TerritoryBoundary territoryBoundaries[MAPCODE_BOUNDARY_MAX + 1] = {
         {-180000000, -90000000, 180000000,  90000001,  0x000001d},
 };
 
-#define territoryBoundary(m) (&territoryBoundaries[m])
+#define TERRITORY_BOUNDARY(m) (&TERRITORY_BOUNDARIES[m])
 
 #endif // MAKE_SOURCE_DIGITAL
 

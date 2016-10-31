@@ -70,8 +70,9 @@ static const char PARENT_NUMBER[_TERRITORY_MAX - _TERRITORY_MIN] = {
 typedef struct {
     const char *alphaCode;
     enum Territory territory;
-} alphaRec;
-static const alphaRec ALPHA_SEARCH[NR_TERRITORY_RECS] = {
+} AlphaRec;
+
+static const AlphaRec ALPHA_SEARCH[NR_TERRITORY_RECS] = {
         {"AAA",    TERRITORY_AAA},
         {"AB",     TERRITORY_CA_AB},
         {"ABW",    TERRITORY_ABW},

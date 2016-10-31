@@ -24,7 +24,7 @@ extern "C" {
 
 #include "mapcoder.h"
 
-static const TerritoryAlphabets alphabetsForTerritory[_TERRITORY_MAX - _TERRITORY_MIN - 1] = {
+static const TerritoryAlphabets ALPHABETS_FOR_TERRITORY[_TERRITORY_MAX - _TERRITORY_MIN - 1] = {
         {1, {ALPHABET_ROMAN}}, // VAT Vatican
         {1, {ALPHABET_ROMAN}}, // MCO Monaco
         {1, {ALPHABET_ROMAN}}, // GIB Gibraltar

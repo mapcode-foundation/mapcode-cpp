@@ -28,7 +28,7 @@ extern "C" {
 #error "NO_FAST_ENCODE cannot be specified in this file"
 #endif
 
-static int redivar[] = {
+static const int REDIVAR[] = {
         27984500, 1383,
         2537718, 676,
         12842450, 332,

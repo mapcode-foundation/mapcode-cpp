@@ -557,8 +557,8 @@ int main(const int argc, const char **argv) {
             }
             printf(",");
 
-            // Use internal knowledge of isofullname to show aliases of full territory name.
-            char *names = strdup(isofullname[INDEX_OF_TERRITORY(ccode)]);
+            // Use internal knowledge of TERRITORY_FULL_NAME to show aliases of full territory name.
+            char *names = strdup(TERRITORY_FULL_NAME[INDEX_OF_TERRITORY(ccode)]);
             char *s = names;
             while (s) {
                 if (s != names) {
@@ -714,7 +714,7 @@ int main(const int argc, const char **argv) {
             double lat;
             double lon;
 
-            const TerritoryBoundary *mm = territoryBoundary(i);
+            const TerritoryBoundary *mm = TERRITORY_BOUNDARY(i);
             minLon = ((double) mm->minx) / 1.0E6;
             maxLon = ((double) mm->maxx) / 1.0E6;
             minLat = ((double) mm->miny) / 1.0E6;

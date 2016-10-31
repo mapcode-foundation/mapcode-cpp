@@ -62,13 +62,13 @@ void _TestAssert(int iCondition, const char *cstrFile, int iLine) {
 
 #endif
 
-#define IS_NAMELESS(m)        (territoryBoundaries[m].flags & 64)
-#define IS_RESTRICTED(m)      (territoryBoundaries[m].flags & 512)
-#define IS_SPECIAL_SHAPE(m)   (territoryBoundaries[m].flags & 1024)
-#define REC_TYPE(m)           ((territoryBoundaries[m].flags >> 7) & 3)
-#define SMART_DIV(m)          (territoryBoundaries[m].flags >> 16)
-#define HEADER_LETTER(m)      (ENCODE_CHARS[(territoryBoundaries[m].flags >> 11) & 31])
-#define BOUNDARY_PTR(m)       (&territoryBoundaries[m])
+#define IS_NAMELESS(m)        (TERRITORY_BOUNDARIES[m].flags & 64)
+#define IS_RESTRICTED(m)      (TERRITORY_BOUNDARIES[m].flags & 512)
+#define IS_SPECIAL_SHAPE(m)   (TERRITORY_BOUNDARIES[m].flags & 1024)
+#define REC_TYPE(m)           ((TERRITORY_BOUNDARIES[m].flags >> 7) & 3)
+#define SMART_DIV(m)          (TERRITORY_BOUNDARIES[m].flags >> 16)
+#define HEADER_LETTER(m)      (ENCODE_CHARS[(TERRITORY_BOUNDARIES[m].flags >> 11) & 31])
+#define BOUNDARY_PTR(m)       (&TERRITORY_BOUNDARIES[m])
 
 #define TOKENSEP   0
 #define TOKENDOT   1
@@ -454,13 +454,13 @@ static char *safeCopy(char *targetString, const char *sourceString, const int ta
 
 static int firstRec(const enum Territory ccode) {
     ASSERT((_TERRITORY_MIN < ccode) && (ccode < _TERRITORY_MAX));
-    return data_start[INDEX_OF_TERRITORY(ccode)];
+    return DATA_START[INDEX_OF_TERRITORY(ccode)];
 }
 
 
 static int lastRec(const enum Territory ccode) {
     ASSERT((_TERRITORY_MIN < ccode) && (ccode < _TERRITORY_MAX));
-    return data_start[INDEX_OF_TERRITORY(ccode) + 1] - 1;
+    return DATA_START[INDEX_OF_TERRITORY(ccode) + 1] - 1;
 }
 
 
@@ -475,7 +475,7 @@ static enum Territory parentTerritoryOf(const enum Territory ccode) {
 
 
 static int coDex(const int m) {
-    int c = territoryBoundaries[m].flags & 31;
+    int c = TERRITORY_BOUNDARIES[m].flags & 31;
     ASSERT((0 <= m) && (m <= MAPCODE_BOUNDARY_MAX));
     return 10 * (c / 5) + ((c % 5) + 1);
 }
@@ -1228,13 +1228,13 @@ static int encodeLatLonToMapcodes_internal(Mapcodes *mapcodes,
         {
             const int sum = enc.coord32.lonMicroDeg + enc.coord32.latMicroDeg;
             int coord = enc.coord32.lonMicroDeg;
-            int i = 0; // pointer into redivar
+            int i = 0; // pointer into REDIVAR
             for (;;) {
-                const int r = redivar[i++];
+                const int r = REDIVAR[i++];
                 if (r >= 0 && r < 1024) { // leaf?
                     int j;
                     for (j = 0; j <= r; j++) {
-                        const enum Territory ccode = (j == r ? TERRITORY_AAA : (enum Territory) redivar[i + j]);
+                        const enum Territory ccode = (j == r ? TERRITORY_AAA : (enum Territory) REDIVAR[i + j]);
                         encoderEngine(ccode, &enc, stop_with_one_result, extraDigits, requiredEncoder, TERRITORY_NONE);
                         if ((stop_with_one_result || (requiredEncoder >= 0)) && (enc.mapcodes->count > 0)) {
                             break;
@@ -1244,7 +1244,7 @@ static int encodeLatLonToMapcodes_internal(Mapcodes *mapcodes,
                 } else {
                     coord = sum - coord;
                     if (coord > r) {
-                        i = redivar[i];
+                        i = REDIVAR[i];
                     } else {
                         i++;
                     }
@@ -1750,10 +1750,10 @@ static enum MapcodeError decodeAutoHeader(DecodeRec *dec, int m) {
 
 // Returns romanised version of character, or question mark in not recognized
 static unsigned char getRomanVersionOf(UWORD w) {
-    if (w > ROMANVERSION_MAXCHAR || romanVersionOf[w >> 6] == NULL) {
+    if (w > ROMAN_VERSION_MAX_CHAR || ROMAN_VERSION_OF[w >> 6] == NULL) {
         return '?';
     }
-    return (unsigned char) romanVersionOf[w >> 6][w & 63];
+    return (unsigned char) ROMAN_VERSION_OF[w >> 6][w & 63];
 }
 
 
@@ -2745,7 +2745,7 @@ char *getTerritoryIsoName(char *territoryISO, enum Territory territory, int useS
     if (territory == TERRITORY_NONE) {
         *territoryISO = 0;
     } else {
-        const char *alphaCode = iso3166alpha[INDEX_OF_TERRITORY(territory)];
+        const char *alphaCode = ISO3166_ALPHA[INDEX_OF_TERRITORY(territory)];
         const char *hyphen = strchr(alphaCode, '-');
         if (useShortName && hyphen != NULL) {
             strcpy(territoryISO, hyphen + 1);
@@ -2809,8 +2809,8 @@ int multipleBordersNearby(double latDeg, double lonDeg, enum Territory territory
 
 
 static int compareAlphaCode(const void *e1, const void *e2) {
-    const alphaRec *a1 = (const alphaRec *) e1;
-    const alphaRec *a2 = (const alphaRec *) e2;
+    const AlphaRec *a1 = (const AlphaRec *) e1;
+    const AlphaRec *a2 = (const AlphaRec *) e2;
     ASSERT(e1);
     ASSERT(e2);
     return strcmp(a1->alphaCode, a2->alphaCode);
@@ -2841,11 +2841,11 @@ static enum Territory findMatch(const int parentNumber, const char *territoryISO
     codeISO[len] = 0;
     makeUppercase(codeISO);
     { // binary-search the result
-        const alphaRec *p;
-        alphaRec t;
+        const AlphaRec *p;
+        AlphaRec t;
         t.alphaCode = codeISO;
 
-        p = (const alphaRec *) bsearch(&t, ALPHA_SEARCH, NR_TERRITORY_RECS, sizeof(alphaRec), compareAlphaCode);
+        p = (const AlphaRec *) bsearch(&t, ALPHA_SEARCH, NR_TERRITORY_RECS, sizeof(AlphaRec), compareAlphaCode);
         if (p) {
             if (strcmp(t.alphaCode, p->alphaCode) == 0) { // only interested in PERFECT match
                 return p->territory;
@@ -3004,7 +3004,7 @@ encodeLatLonToMapcodes(Mapcodes *mapcodes, double latDeg, double lonDeg, enum Te
 // PUBLIC - returns most common alphabets for territory, NULL if error
 const TerritoryAlphabets *getAlphabetsForTerritory(enum Territory territory) {
     if (territory > _TERRITORY_MIN && territory < _TERRITORY_MAX) {
-        return &alphabetsForTerritory[INDEX_OF_TERRITORY(territory)];
+        return &ALPHABETS_FOR_TERRITORY[INDEX_OF_TERRITORY(territory)];
     }
     return NULL;
 }
@@ -3079,7 +3079,7 @@ static int getFullTerritoryName_internal(
 
 
 int getFullTerritoryNameEnglish(char *territoryName, enum Territory territory, int alternative) {
-    return getFullTerritoryName_internal(territoryName, territory, alternative, -1, isofullname);
+    return getFullTerritoryName_internal(territoryName, territory, alternative, -1, TERRITORY_FULL_NAME);
 }
 
 
@@ -3093,12 +3093,12 @@ int getFullTerritoryNameLocalInAlphabet(char *territoryName, enum Territory terr
         *territoryName = 0;
         return 0;
     }
-    return getFullTerritoryName_internal(territoryName, territory, alternative, (int) alphabet, localname_utf8);
+    return getFullTerritoryName_internal(territoryName, territory, alternative, (int) alphabet, TERRITORY_LOCAL_NAME_UTF8);
 }
 
 
 int getFullTerritoryNameLocal(char *territoryName, enum Territory territory, int alternative) {
-    return getFullTerritoryName_internal(territoryName, territory, alternative, -1, localname_utf8);
+    return getFullTerritoryName_internal(territoryName, territory, alternative, -1, TERRITORY_LOCAL_NAME_UTF8);
 }
 
 

@@ -21,7 +21,7 @@ extern "C" {
 #endif
 
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
-static const char *localname_utf8[] = {
+static const char *TERRITORY_LOCAL_NAME_UTF8[] = {
         "Sancta Sedes|Holy See",
         "Monaco",
         "Gibraltar",

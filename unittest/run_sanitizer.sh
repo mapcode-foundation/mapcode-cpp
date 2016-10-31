@@ -31,7 +31,7 @@ echo "Run with: -O1" | tee -a $REPORT
 cd ../mapcodelib
 gcc $OPTS -O1 -c mapcoder.c
 cd ../unittest
-gcc $OPTS -O1 unittest.c -lm -lpthread -fsanitize=address -o unittest $LINK
+gcc $OPTS -O1 unittest.c -lm -lpthread -fsanitize=address -o unittest $LIB
 ./unittest | tee -a $REPORT
 echo "----------------" | tee -a $REPORT
 

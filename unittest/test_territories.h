@@ -26,7 +26,7 @@ typedef struct {
     enum Territory parent;
 } TestTerritoryInfo;
 
-static const TestTerritoryInfo testTerritories[] = {
+static const TestTerritoryInfo TEST_TERRITORIES[] = {
         {"AAA",    TERRITORY_AAA,    0, 0, TERRITORY_NONE},
         {"AB",     TERRITORY_CA_AB,  0, 0, TERRITORY_CAN},
         {"ABW",    TERRITORY_ABW,    0, 0, TERRITORY_NONE},

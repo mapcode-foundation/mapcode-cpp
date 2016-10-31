@@ -2108,7 +2108,7 @@ static enum MapcodeError parseMapcodeString(MapcodeElements *mapcodeElements, co
             } else if (c < 10) { // digit
                 token = TOKENCHR; // digit
                 if (mapcodeElements) {
-                    *cleanPtr++ = cx;
+                    *cleanPtr++ = (char) toupper(cx);
                 }
             } else { // character B-Z
                 token = TOKENCHR;
@@ -2168,6 +2168,7 @@ static enum MapcodeError parseMapcodeString(MapcodeElements *mapcodeElements, co
                 }
                 if (isAbjad) {
                     convertFromAbjad(mapcodeElements->properMapcode);
+                    mapcodeElements->indexOfDot = (int) (strchr(mapcodeElements->properMapcode, '.') - mapcodeElements->properMapcode);
                 }
                 if (*mapcodeElements->territoryISO) {
                     mapcodeElements->territoryCode = getTerritoryCode(mapcodeElements->territoryISO, territory);

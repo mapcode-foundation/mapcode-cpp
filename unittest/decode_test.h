@@ -24,8 +24,7 @@ typedef struct {
     const char *mapcode;    // expected mapcode, empty if no need to test
 } EncodeTestRecord;
 
-static const EncodeTestRecord ENCODE_TEST
-[] = {
+static const EncodeTestRecord ENCODE_TEST[] = {
         {-90.0,       0.0,            2, 3,  "ATA ZZ.ZZ"},
         {-90.0,       0.0,            2, 3,  "ATA  HK3N.ZZLZ"},
         {36.107682,   -5.384925,      0, 0,  ""},

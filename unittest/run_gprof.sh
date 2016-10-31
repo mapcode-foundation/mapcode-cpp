@@ -5,6 +5,13 @@ LIB="../mapcodelib/mapcoder.o"
 echo "Run gprof profiler..." | tee $REPORT
 date | tee -a $REPORT
 
+TEST=`which gprof`
+if [ "$TEST" = "" ]
+then
+    echo "No gprof found on this machine - skipping script..."
+    exit 1
+fi
+
 echo "" | tee -a $REPORT
 echo "Run with: -O0" | tee -a $REPORT
 cd ../mapcodelib

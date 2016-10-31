@@ -7,6 +7,12 @@ export ASAN_OPTIONS=debug=true:strict_string_checks=1:detect_stack_use_after_ret
 echo "Run address sanitizer..." | tee $REPORT
 date | tee -a $REPORT
 
+TEST=`which clang`
+if [ "$TEST" = "" ]
+then
+    echo "No clang found on this machine - skipping script..."
+    exit 1
+fi
 # No optimize
 echo "" | tee -a $REPORT
 echo "Run with: -O0" | tee -a $REPORT

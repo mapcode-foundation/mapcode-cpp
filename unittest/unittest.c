@@ -57,6 +57,8 @@ static const double METERS_PER_DEGREE_LON = 111319.490793;
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
+#define REF(x) if (x) {} else {}
+
 static int nrErrors = 0;
 
 
@@ -2039,8 +2041,7 @@ int main(const int argc, const char **argv) {
     int nrTests = 0;
 
     // Ref unused var.
-    if (ISO3166_ALPHA[0] == 0) {
-    }
+    REF(ISO3166_ALPHA[0]);
 
     printf("Mapcode C Library Unit Tests\n");
     printf("Library version %s (data version %s)\n", MAPCODE_C_VERSION, MAPCODE_DATA_VERSION);

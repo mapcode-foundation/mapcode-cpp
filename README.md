@@ -141,6 +141,9 @@ footprint, for example for embedded applications.
 
 * Added support for getting territory names in English and local alphabets. 
 
+* Added much improved unit test scripts to run `gprof`, `valgrind`, the CLang address sanitize
+and compare the output of the new library with and older version.
+
 ### 2.4.1
 
 * Renamed `.h` files to `internal_*.h` unless they are relevant to the interface.

@@ -1,11 +1,12 @@
+#!/bin/sh
 REPORT=report_gprof.txt
 OPTS="-Wall -Werror -Wno-pointer-to-int-cast"
 LIB="../mapcodelib/mapcoder.o"
 
-echo "----------------------------------------------------------------" | tee -a $REPORT
+echo "!! -------------------------------------------------------------" | tee -a $REPORT
 echo "Run gprof profiler..." | tee $REPORT
 date | tee -a $REPORT
-echo "----------------------------------------------------------------" | tee -a $REPORT
+echo "!! -------------------------------------------------------------" | tee -a $REPORT
 
 TEST=`which gprof`
 if [ "$TEST" = "" ]
@@ -22,7 +23,7 @@ cd ../unittest
 gcc $OPTS -g -O0 unittest.c -lm -lpthread -o unittest $LIB -pg
 ./unittest | tee -a $REPORT
 gprof ./unittest | tee -a $REPORT
-echo "----------------" | tee -a $REPORT
+echo "!! -------------------------------------------------------------" | tee -a $REPORT
 
 echo "" | tee -a $REPORT
 echo "Run with: -O3" | tee -a $REPORT
@@ -32,7 +33,7 @@ cd ../unittest
 gcc $OPTS -g -O3 unittest.c -lm -lpthread -o unittest $LIB -pg
 ./unittest | tee -a $REPORT
 gprof ./unittest | tee -a $REPORT
-echo "----------------" | tee -a $REPORT
+echo "!! -------------------------------------------------------------" | tee -a $REPORT
 
 echo "" | tee -a $REPORT
 echo "Report in: $REPORT"

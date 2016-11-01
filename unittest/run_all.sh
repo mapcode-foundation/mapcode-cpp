@@ -1,3 +1,4 @@
+#!/bin/sh
 echo "Run all tests..."
 date
 echo ""

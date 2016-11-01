@@ -1,11 +1,12 @@
+#!/bin/sh
 REPORT=report_valgrind.txt
 OPTS="-Wall -Werror -Wno-pointer-to-int-cast"
 LIB="../mapcodelib/mapcoder.o"
 
-echo "----------------------------------------------------------------" | tee -a $REPORT
+echo "!! -------------------------------------------------------------" | tee -a $REPORT
 echo "Run valgrind" | tee $REPORT
 date | tee -a $REPORT
-echo "----------------------------------------------------------------" | tee -a $REPORT
+echo "!! -------------------------------------------------------------" | tee -a $REPORT
 
 TEST=`which valgrind`
 if [ "$TEST" = "" ]
@@ -21,7 +22,7 @@ gcc $OPTS -g -O0 -c mapcoder.c
 cd ../unittest
 gcc $OPTS -g -O0 unittest.c -lm -lpthread -o unittest $LIB
 valgrind --leak-check=yes ./unittest | tee -a $REPORT
-echo "----------------" tee -a $REPORT
+echo "!! -------------------------------------------------------------" | tee -a $REPORT
 
 echo "" tee -a $REPORT
 echo "Report in: $REPORT"

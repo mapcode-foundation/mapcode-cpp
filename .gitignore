@@ -1,5 +1,5 @@
-gmon.out
-report_*.txt
+unittest/gmon.out
+unittest/_*.txt
 
 # -----------------------------------------------------------------------------
 # Compiled sources

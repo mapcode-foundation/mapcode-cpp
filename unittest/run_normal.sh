@@ -1,5 +1,5 @@
 #!/bin/sh
-REPORT=report_normal.txt
+REPORT=_report_normal.txt
 OPTS="-Wall -Werror -Wno-pointer-to-int-cast"
 
 echo "!! -------------------------------------------------------------" | tee -a $REPORT

@@ -3,7 +3,7 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 1,MCO,0,Monaco
 2,GIB,0,Gibraltar
 3,TKL,0,Tokelau
-4,CCK|AU-CC|CC,0|14,Cocos Islands|Keeling Islands
+4,CCK|AU-CC|CC,0,Cocos Islands|Keeling Islands
 5,BLM,0,Saint-Barthelemy
 6,NRU,0,Nauru
 7,TUV,0,Tuvalu
@@ -20,7 +20,7 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 18,AIA,0,Anguilla
 19,MSR,0,Montserrat
 20,JEY,0,Jersey
-21,CXR|AU-CX|CX,20|14|0,Christmas Island
+21,CXR|AU-CX|CX,0,Christmas Island
 22,WLF,0,Wallis and Futuna|Futuna|Wallis
 23,VGB,0,British Virgin Islands|Virgin Islands, British
 24,LIE,0,Liechtenstein
@@ -38,7 +38,7 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 36,MLT,0,Malta
 37,GRD,0,Grenada
 38,VIR|US-VI|VI,0,Virgin Islands of the United States|US Virgin Islands|American Virgin Islands
-39,MYT,0|14,Mayotte|Maore
+39,MYT,0,Mayotte|Maore
 40,SJM,0|2,Svalbard and Jan Mayen|Svalbard|Jan Mayen|Spitsbergen
 41,VCT,0,Saint Vincent and the Grenadines|Saint Vincent|Grenadines
 42,HMD|AU-HM|HM,0,Heard Island and McDonald Islands|Heard Island|McDonald Islands
@@ -49,11 +49,11 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 47,PLW,0,Palau
 48,MNP|US-MP,0,Northern Mariana Islands
 49,AND,0,Andorra
-50,GUM|US-GU|GU,0,Guam
+50,GUM|GU|US-GU,0,Guam
 51,IMN,0,Isle of Mann|Mann
 52,LCA,0,Saint Lucia
 53,FSM,0,Micronesia|Federated States of Micronesia
-54,SGP,20|14|0,Singapore
+54,SGP,20|0,Singapore
 55,TON,0,Tonga
 56,DMA,0,Dominica
 57,BHR,14|0,Bahrain
@@ -85,14 +85,14 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 83,VUT,0,Vanuatu
 84,MNE,2|0,Montenegro
 85,BHS,0,Bahamas
-86,TLS,0|14,Timor-Leste|East Timor
+86,TLS,0,Timor-Leste|East Timor
 87,SWZ,0,Swaziland
 88,KWT,14|0,Kuwait
 89,FJI,0|4,Fiji
 90,NCL,0,New Caledonia
 91,SVN,0,Slovenia
 92,ISR,3|14|0,Israel
-93,PSE,3|14|0,Palestinian territories|State of Palestine
+93,PSE,14|3,Palestinian territories|State of Palestine
 94,SLV,0,El Salvador
 95,BLZ,0,Belize
 96,DJI,14|0,Djibouti
@@ -106,22 +106,22 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 104,ARM,10|0,Armenia
 105,LSO,0,Lesotho
 106,BEL,0,Belgium
-107,MDA,2|0,Moldova
+107,MDA,0,Moldova
 108,GNB,0,Guinea-Bissau
-109,TWN|CN-71|CN-TW|TW,20|0,Taiwan|Republic of China
-110,BTN,13|0,Bhutan
+109,TWN|CN-71|CN-TW|TW,20,Taiwan|Republic of China
+110,BTN,13,Bhutan
 111,CHE,0,Switzerland|Swiss Confederation
 112,NLD,0,Netherlands|The Netherlands
 113,DNK,0,Denmark
-114,EST,2|0,Estonia
+114,EST,0,Estonia
 115,DOM,0,Dominican Republic
 116,SVK,0,Slovakia|Slovak Republic
 117,CRI,0,Costa Rica
 118,BIH,0|2,Bosnia and Herzegovina
-119,HRV,0|2,Croatia
+119,HRV,0,Croatia
 120,TGO,0,Togo|Togolese Republic
-121,LVA,2|0,Latvia
-122,LTU,2|0,Lithuania
+121,LVA,0,Latvia
+122,LTU,0,Lithuania
 123,LKA,18|22|0,Sri Lanka
 124,GEO,6|2|0,Georgia
 125,IRL,0,Ireland
@@ -131,7 +131,7 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 129,GUF,0,French Guiana|Guiana
 130,ARE,14|0,United Arab Emirates|Emirates
 131,AUT,0,Austria
-132,AZE,0|2|14,Azerbaijan
+132,AZE,0,Azerbaijan
 133,SRB,2|0,Serbia
 134,JOR,14|0,Jordan
 135,PRT,0,Portugal|Portuguese Republic
@@ -140,29 +140,29 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 138,ISL,0,Iceland
 139,GTM,0,Guatemala
 140,CUB,0,Cuba
-141,BGR,2|0,Bulgaria
+141,BGR,2,Bulgaria
 142,LBR,0,Liberia
 143,HND,0,Honduras
 144,BEN,0,Benin
 145,ERI,23|14|0,Eritrea
 146,MWI,0,Malawi
-147,PRK,15|0,North Korea|Democratic People's Republic of Korea|Korea, North
+147,PRK,15,North Korea|Democratic People's Republic of Korea|Korea, North
 148,NIC,0,Nicaragua
 149,GRC,1|0,Greece|Hellenic Republic|Hellas
-150,TJK,2|0,Tajikistan
-151,BGD,11|0,Bangladesh
+150,TJK,2,Tajikistan
+151,BGD,11,Bangladesh
 152,NPL,4|0,Nepal
 153,TUN,14|0|21,Tunisia|Tunisian Republic
 154,SUR,0,Suriname
 155,URY,0,Uruguay
-156,KHM,17|0,Cambodia
+156,KHM,17,Cambodia
 157,SYR,14|0,Syria|Syrian Arab Republic
 158,SEN,0,Senegal
-159,KGZ,2|0,Kyrgyzstan|Kyrgyz Republic
-160,BLR,2|0,Belarus
+159,KGZ,2,Kyrgyzstan|Kyrgyz Republic
+160,BLR,2|0|14,Belarus
 161,GUY,0,Guyana
 162,LAO,9|0,Laos|Lao People's Democratic Republic
-163,ROU,2|0,Romania
+163,ROU,0,Romania
 164,GHA,0,Ghana
 165,UGA,0,Uganda
 166,GBR,0,United Kingdom|Scotland|Great Britain|England|Northern Ireland|Ireland, Northern|Britain|United Kingdom of Great Britain and Northern Ireland
@@ -178,7 +178,7 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 176,POL,0,Poland
 177,CIV,0,Ivory Coast|Cote d'Ivoire|Republic of Cote d'Ivoire
 178,NOR,0,Norway
-179,MYS,0|14|20,Malaysia
+179,MYS,0|20,Malaysia
 180,VNM,0,Vietnam
 181,FIN,0,Finland
 182,COG,0,Congo-Brazzaville|West Congo|Republic of the Congo
@@ -188,11 +188,11 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 186,PRY,0,Paraguay
 187,IRQ,14|0,Iraq
 188,MAR,14|0|21,Morocco
-189,UZB,2|0,Uzbekistan
+189,UZB,0,Uzbekistan
 190,SWE,0,Sweden
 191,PNG,0,Papua New Guinea
 192,CMR,0,Cameroon
-193,TKM,2|0,Turkmenistan
+193,TKM,2|0|14,Turkmenistan
 194,ESP,0,Spain
 195,THA,8|0,Thailand
 196,YEM,14|0,Yemen
@@ -201,7 +201,7 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 199,KEN,0,Kenya
 200,BWA,0,Botswana
 201,MDG,0,Madagascar
-202,UKR,2|0,Ukraine
+202,UKR,2,Ukraine
 203,SSD,0|14,South Sudan
 204,CAF,0,Central African Republic
 205,SOM,14|0,Somalia
@@ -210,16 +210,16 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 208,ZMB,0,Zambia
 209,CHL,0,Chile
 210,TUR,0,Turkey
-211,PAK,12|14|0,Pakistan
+211,PAK,14|0,Pakistan
 212,MOZ,0,Mozambique
 213,NAM,0,Namibia
 214,VEN,0,Venezuela
-215,NGA,0|14,Nigeria
+215,NGA,0,Nigeria
 216,TZA,0,Tanzania
 217,EGY,14|0,Egypt
 218,MRT,14|0,Mauritania
 219,BOL,0,Bolivia
-220,ETH,0|23|14,Ethiopia
+220,ETH,0|23,Ethiopia
 221,COL,0,Colombia
 222,ZAF,0,South Africa
 223,MLI,0,Mali
@@ -227,43 +227,43 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 225,NER,0,Niger
 226,TCD,14|0,Chad
 227,PER,0,Peru
-228,MNG,2|0,Mongolia
+228,MNG,2,Mongolia
 229,IRN,14|0,Iran|Persia
-230,LBY,14|0|21,Libya
+230,LBY,14|0,Libya
 231,SDN,14|0,Sudan
 232,IDN,0,Indonesia
-233,MX-DIF|MX-DF|DIF,0,Federal District
+233,MX-DIF|DIF|MX-DF,0,Federal District
 234,MX-TLA|MX-TL|TL|TLA,0,Tlaxcala
-235,MX-MOR|MX-MO|MOR,0,Morelos
-236,MX-AGU|MX-AG|AG|AGU,0,Aguascalientes
-237,MX-CL|MX-COL|CL,0,Colima
+235,MX-MOR|MOR|MX-MO,0,Morelos
+236,MX-AGU|AG|AGU|MX-AG,0,Aguascalientes
+237,MX-CL|CL|MX-COL,0,Colima
 238,MX-QUE|MX-QE|QE|QUE,0,Queretaro
-239,MX-HID|MX-HG|HG|HID,0,Hidalgo
-240,MX-MX|MX-ME|MX-MEX|MX,0,Mexico State
+239,MX-HID|HG|HID|MX-HG,0,Hidalgo
+240,MX-MX|MX|MX-ME|MX-MEX,0,Mexico State
 241,MX-TAB|MX-TB|TAB|TB,0,Tabasco
 242,MX-NAY|MX-NA|NA|NAY,0,Nayarit
-243,MX-GUA|MX-GT|GT|GUA,0,Guanajuato
+243,MX-GUA|GT|GUA|MX-GT,0,Guanajuato
 244,MX-PUE|MX-PB|PUE,0,Puebla
 245,MX-YUC|MX-YU|YU|YUC,0,Yucatan
 246,MX-ROO|MX-QR|QR|ROO,0,Quintana Roo
 247,MX-SIN|MX-SI|SI|SIN,0,Sinaloa
-248,MX-CAM|MX-CM|CAM|CM,0,Campeche
-249,MX-MIC|MX-MI|MIC,0,Michoacan
+248,MX-CAM|CAM|CM|MX-CM,0,Campeche
+249,MX-MIC|MIC|MX-MI,0,Michoacan
 250,MX-SLP|MX-SL|SL|SLP,0,San Luis Potosi
-251,MX-GRO|MX-GR|GR|GRO,0,Guerrero
+251,MX-GRO|GR|GRO|MX-GR,0,Guerrero
 252,MX-NLE|MX-NL|NLE,0,Nuevo Leon|New Leon
-253,MX-BCN|MX-BC|BCN,0,Baja California
+253,MX-BCN|BCN|MX-BC,0,Baja California
 254,MX-VER|MX-VE|VE|VER,0,Veracruz
-255,MX-CHP|MX-CS|CHP|CS,0,Chiapas
-256,MX-BCS|MX-BS|BCS|BS,0,Baja California Sur
+255,MX-CHP|CHP|CS|MX-CS,0,Chiapas
+256,MX-BCS|BCS|BS|MX-BS,0,Baja California Sur
 257,MX-ZAC|MX-ZA|ZA|ZAC,0,Zacatecas
-258,MX-JAL|MX-JA|JA|JAL,0,Jalisco
+258,MX-JAL|JA|JAL|MX-JA,0,Jalisco
 259,MX-TAM|MX-TM|TAM|TM,0,Tamaulipas
 260,MX-OAX|MX-OA|OA|OAX,0,Oaxaca
-261,MX-DUR|MX-DG|DG|DUR,0,Durango
-262,MX-COA|MX-CO|COA,0,Coahuila
+261,MX-DUR|DG|DUR|MX-DG,0,Durango
+262,MX-COA|COA|MX-CO,0,Coahuila
 263,MX-SON|MX-SO|SO|SON,0,Sonora
-264,MX-CHH|MX-CH|CHH,0,Chihuahua
+264,MX-CHH|CHH|MX-CH,0,Chihuahua
 265,GRL,0,Greenland
 266,SAU,14|0,Saudi Arabia
 267,COD,0,Congo-Kinshasa|Democratic Republic of the Congo|East Congo
@@ -278,33 +278,33 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 276,IN-DL|DL,4|12|0,Delhi
 277,IN-ML|ML,0|4,Meghalaya
 278,IN-NL|NL,0|4,Nagaland
-279,IN-MN|MN,11|4|0,Manipur
-280,IN-TR|TR,11|4|0,Tripura
+279,IN-MN|MN,11,Manipur
+280,IN-TR|TR,11,Tripura
 281,IN-MZ|MZ,4|0,Mizoram
-282,IN-SK|SK,4|0,Sikkim
+282,IN-SK|SK,4,Sikkim
 283,IN-PB|PB,12|4|0,Punjab
 284,IN-HR|HR,4|12|0,Haryana
 285,IN-AR|AR,0|4,Arunachal Pradesh
-286,IN-AS|AS,11|0|4,Assam
-287,IN-BR|BR,4|0,Bihar
-288,IN-UT|IN-UK|UK|UT,4|0,Uttarakhand
-289,IN-GA|GA,4|0,Goa
+286,IN-AS|AS,11,Assam
+287,IN-BR|BR,4|14,Bihar
+288,IN-UT|IN-UK|UK|UT,4,Uttarakhand
+289,IN-GA|GA,4,Goa
 290,IN-KL|KL,5|0|4,Kerala
-291,IN-TN|TN,22|4|0,Tamil Nadu
+291,IN-TN|TN,22|4,Tamil Nadu
 292,IN-HP|HP,4|0,Himachal Pradesh
-293,IN-JK|JK,4|12|0,Jammu and Kashmir|Jammu|Kashmir
-294,IN-CT|IN-CG|CG|CT,4|0,Chhattisgarh
+293,IN-JK|JK,14|4|12,Jammu and Kashmir|Jammu|Kashmir
+294,IN-CT|CG|CT|IN-CG,4,Chhattisgarh
 295,IN-JH|JH,4|11|0,Jharkhand
 296,IN-KA|KA,26|4|0,Karnataka
-297,IN-RJ|RJ,4|0,Rajasthan
-298,IN-OR|IN-OD|OD|OR,25|0|4,Odisha|Orissa
+297,IN-RJ|RJ,4,Rajasthan
+298,IN-OR|IN-OD|OD|OR,25|0,Odisha|Orissa
 299,IN-GJ|GJ,27|0|4,Gujarat
-300,IN-WB|WB,11|0|4,West Bengal
-301,IN-MP|MP,4|0,Madhya Pradesh
-302,IN-TG|TG,24|4|0,Telangana
-303,IN-AP|AP,24|0|4,Andhra Pradesh
-304,IN-MH|MH,4|0,Maharashtra
-305,IN-UP|UP,4|0,Uttar Pradesh
+300,IN-WB|WB,11|0,West Bengal
+301,IN-MP|MP,4,Madhya Pradesh
+302,IN-TG|TG,24|14|4,Telangana
+303,IN-AP|AP,24|4,Andhra Pradesh
+304,IN-MH|MH,4,Maharashtra
+305,IN-UP|UP,4|0|14,Uttar Pradesh
 306,IN-PY|PY,5|24|4,Puducherry
 307,AU-NSW|NSW,0,New South Wales
 308,AU-ACT|ACT,0,Australian Capital Territory
@@ -350,7 +350,7 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 348,US-NH|NH,0,New Hampshire
 349,US-VT|VT,0,Vermont
 350,US-MA,0,Massachusetts
-351,US-HI|US-MID|HI|MID,0,Hawaii
+351,US-HI|HI|MID|US-MID,0,Hawaii
 352,US-MD|MD,0,Maryland
 353,US-WV|WV,0,West Virginia
 354,US-SC,0,South Carolina
@@ -411,124 +411,124 @@ ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separa
 409,BRA,0,Brazil
 410,USA|US,0,USA|United States of America|America
 411,MEX,0,Mexico|United Mexican States
-412,RU-MOW|MOW,2|0,Moscow
-413,RU-SPE|SPE,2|0,Saint Petersburg
-414,RU-KGD|KGD,2|0,Kaliningrad Oblast
-415,RU-IN,2|0,Ingushetia
-416,RU-AD|AD,2|0,Adygea Republic
-417,RU-SE,2|0,North Ossetia-Alania Republic
-418,RU-KB|KB,2|0,Kabardino-Balkar Republic
-419,RU-KC|KC,2|0,Karachay-Cherkess Republic
-420,RU-CE,2|0,Chechen Republic|Chechnya|Ichkeria
-421,RU-CU|CU,2|0,Chuvash Republic
-422,RU-IVA|IVA,2|0,Ivanovo Oblast
-423,RU-LIP|LIP,2|0,Lipetsk Oblast
-424,RU-ORL|ORL,2|0,Oryol Oblast
-425,RU-TUL|TUL,2|0,Tula Oblast
-426,RU-BE|RU-BEL|BE,2|0,Belgorod Oblast
-427,RU-VLA|VLA,2|0,Vladimir Oblast
-428,RU-KRS|KRS,2|0,Kursk Oblast
-429,RU-KLU|KLU,2|0,Kaluga Oblast
-430,RU-TT|RU-TAM|TT,2|0,Tambov Oblast
-431,RU-BRY|BRY,2|0,Bryansk Oblast
-432,RU-YAR|YAR,2|0,Yaroslavl Oblast
-433,RU-RYA|RYA,2|0,Ryazan Oblast
-434,RU-AST|AST,2|0,Astrakhan Oblast
-435,RU-MOS|MOS,2|0,Moscow Oblast
-436,RU-SMO|SMO,2|0,Smolensk Oblast
-437,RU-DA|DA,2|0,Dagestan Republic
-438,RU-VOR|VOR,2|0,Voronezh Oblast
-439,RU-NGR|NGR,2|0,Novgorod Oblast
-440,RU-PSK|PSK,2|0,Pskov Oblast
-441,RU-KOS|KOS,2|0,Kostroma Oblast
-442,RU-STA|STA,2|0,Stavropol Krai
-443,RU-KDA|KDA,2|0,Krasnodar Krai
+412,RU-MOW|MOW,2,Moscow
+413,RU-SPE|SPE,2,Saint Petersburg
+414,RU-KGD|KGD,2,Kaliningrad Oblast
+415,RU-IN,2,Ingushetia
+416,RU-AD|AD,2,Adygea Republic
+417,RU-SE,2,North Ossetia-Alania Republic
+418,RU-KB|KB,2,Kabardino-Balkar Republic
+419,RU-KC|KC,2,Karachay-Cherkess Republic
+420,RU-CE,2,Chechen Republic|Chechnya|Ichkeria
+421,RU-CU|CU,2,Chuvash Republic
+422,RU-IVA|IVA,2,Ivanovo Oblast
+423,RU-LIP|LIP,2,Lipetsk Oblast
+424,RU-ORL|ORL,2,Oryol Oblast
+425,RU-TUL|TUL,2,Tula Oblast
+426,RU-BE|BE|RU-BEL,2,Belgorod Oblast
+427,RU-VLA|VLA,2,Vladimir Oblast
+428,RU-KRS|KRS,2,Kursk Oblast
+429,RU-KLU|KLU,2,Kaluga Oblast
+430,RU-TT|RU-TAM|TT,2,Tambov Oblast
+431,RU-BRY|BRY,2,Bryansk Oblast
+432,RU-YAR|YAR,2,Yaroslavl Oblast
+433,RU-RYA|RYA,2,Ryazan Oblast
+434,RU-AST|AST,2,Astrakhan Oblast
+435,RU-MOS|MOS,2,Moscow Oblast
+436,RU-SMO|SMO,2,Smolensk Oblast
+437,RU-DA|DA,2,Dagestan Republic
+438,RU-VOR|VOR,2,Voronezh Oblast
+439,RU-NGR|NGR,2,Novgorod Oblast
+440,RU-PSK|PSK,2,Pskov Oblast
+441,RU-KOS|KOS,2,Kostroma Oblast
+442,RU-STA|STA,2,Stavropol Krai
+443,RU-KDA|KDA,2,Krasnodar Krai
 444,RU-KL,2|0,Kalmykia Republic
-445,RU-TVE|TVE,2|0,Tver Oblast
-446,RU-LEN|LEN,2|0,Leningrad Oblast
-447,RU-ROS|ROS,2|0,Rostov Oblast
-448,RU-VGG|VGG,2|0,Volgograd Oblast
-449,RU-VLG|VLG,2|0,Vologda Oblast
-450,RU-MUR|MUR,2|0,Murmansk Oblast
-451,RU-KR|KR,2|0,Karelia Republic
-452,RU-NEN|NEN,2|0,Nenets Autonomous Okrug
-453,RU-KO|KO,2|0,Komi Republic
-454,RU-ARK|ARK,2|0,Arkhangelsk Oblast
-455,RU-MO,2|0,Mordovia Republic
-456,RU-NIZ|NIZ,2|0,Nizhny Novgorod Oblast
-457,RU-PNZ|PNZ,2|0,Penza Oblast
-458,RU-KI|RU-KIR|KI,2|0,Kirov Oblast
-459,RU-ME,2|0,Mari El Republic
-460,RU-ORE|ORE,2|0,Orenburg Oblast
-461,RU-ULY|ULY,2|0,Ulyanovsk Oblast
-462,RU-PM|RU-PER|PM,2|0,Perm Krai
-463,RU-BA,2|0,Bashkortostan Republic
-464,RU-UD|UD,2|0,Udmurt Republic
-465,RU-TA|TA,2|0,Tatarstan Republic
-466,RU-SAM|SAM,2|0,Samara Oblast
-467,RU-SAR|SAR,2|0,Saratov Oblast
-468,RU-YAN|YAN,2|0,Yamalo-Nenets
-469,RU-KM|RU-KHM|KM,2|0,Khanty-Mansi
-470,RU-SVE|SVE,2|0,Sverdlovsk Oblast
-471,RU-TYU|TYU,2|0,Tyumen Oblast
-472,RU-KGN|KGN,2|0,Kurgan Oblast
-473,RU-CH|RU-CHE,2|0,Chelyabinsk Oblast
-474,RU-BU|BU,2|0,Buryatia Republic
-475,RU-ZAB|ZAB,2|0,Zabaykalsky Krai
-476,RU-IRK|IRK,2|0,Irkutsk Oblast
-477,RU-NVS|NVS,2|0,Novosibirsk Oblast
-478,RU-TOM|TOM,2|0,Tomsk Oblast
-479,RU-OMS|OMS,2|0,Omsk Oblast
-480,RU-KK|KK,2|0,Khakassia Republic
-481,RU-KEM|KEM,2|0,Kemerovo Oblast
-482,RU-AL,2|0,Altai Republic
-483,RU-ALT|ALT,2|0,Altai Krai
-484,RU-TY|TY,2|0,Tuva Republic
-485,RU-KYA|KYA,2|0,Krasnoyarsk Krai
-486,RU-MAG|MAG,2|0,Magadan Oblast
-487,RU-CHU|CHU,2|0,Chukotka Okrug
-488,RU-KAM|KAM,2|0,Kamchatka Krai
-489,RU-SAK|SAK,2|0,Sakhalin Oblast
-490,RU-PO|RU-PRI|PO,2|0,Primorsky Krai
-491,RU-YEV|YEV,2|0,Jewish Autonomous Oblast
-492,RU-KHA|KHA,2|0,Khabarovsk Krai
-493,RU-AMU|AMU,2|0,Amur Oblast
-494,RU-SA,2|0,Sakha Republic|Yakutia Republic
+445,RU-TVE|TVE,2,Tver Oblast
+446,RU-LEN|LEN,2,Leningrad Oblast
+447,RU-ROS|ROS,2,Rostov Oblast
+448,RU-VGG|VGG,2,Volgograd Oblast
+449,RU-VLG|VLG,2,Vologda Oblast
+450,RU-MUR|MUR,2,Murmansk Oblast
+451,RU-KR|KR,2,Karelia Republic
+452,RU-NEN|NEN,2,Nenets Autonomous Okrug
+453,RU-KO|KO,2,Komi Republic
+454,RU-ARK|ARK,2,Arkhangelsk Oblast
+455,RU-MO,2,Mordovia Republic
+456,RU-NIZ|NIZ,2,Nizhny Novgorod Oblast
+457,RU-PNZ|PNZ,2,Penza Oblast
+458,RU-KI|KI|RU-KIR,2,Kirov Oblast
+459,RU-ME,2,Mari El Republic
+460,RU-ORE|ORE,2,Orenburg Oblast
+461,RU-ULY|ULY,2,Ulyanovsk Oblast
+462,RU-PM|PM|RU-PER,2,Perm Krai
+463,RU-BA,2,Bashkortostan Republic
+464,RU-UD|UD,2,Udmurt Republic
+465,RU-TA|TA,2,Tatarstan Republic
+466,RU-SAM|SAM,2,Samara Oblast
+467,RU-SAR|SAR,2,Saratov Oblast
+468,RU-YAN|YAN,2,Yamalo-Nenets
+469,RU-KM|KM|RU-KHM,2,Khanty-Mansi
+470,RU-SVE|SVE,2,Sverdlovsk Oblast
+471,RU-TYU|TYU,2,Tyumen Oblast
+472,RU-KGN|KGN,2,Kurgan Oblast
+473,RU-CH|RU-CHE,2,Chelyabinsk Oblast
+474,RU-BU|BU,2,Buryatia Republic
+475,RU-ZAB|ZAB,2,Zabaykalsky Krai
+476,RU-IRK|IRK,2,Irkutsk Oblast
+477,RU-NVS|NVS,2,Novosibirsk Oblast
+478,RU-TOM|TOM,2,Tomsk Oblast
+479,RU-OMS|OMS,2,Omsk Oblast
+480,RU-KK|KK,2,Khakassia Republic
+481,RU-KEM|KEM,2,Kemerovo Oblast
+482,RU-AL,2,Altai Republic
+483,RU-ALT|ALT,2,Altai Krai
+484,RU-TY|TY,2,Tuva Republic
+485,RU-KYA|KYA,2,Krasnoyarsk Krai
+486,RU-MAG|MAG,2,Magadan Oblast
+487,RU-CHU|CHU,2,Chukotka Okrug
+488,RU-KAM|KAM,2,Kamchatka Krai
+489,RU-SAK|SAK,2,Sakhalin Oblast
+490,RU-PO|PO|RU-PRI,2,Primorsky Krai
+491,RU-YEV|YEV,2,Jewish Autonomous Oblast
+492,RU-KHA|KHA,2,Khabarovsk Krai
+493,RU-AMU|AMU,2,Amur Oblast
+494,RU-SA,2,Sakha Republic|Yakutia Republic
 495,CAN,0,Canada
-496,RUS|RU,2|0,Russia|Russian Federation
-497,CN-SH|CN-31|SH,20|0,Shanghai
-498,CN-TJ|CN-12|TJ,20|0,Tianjin
-499,CN-BJ|CN-11|BJ,20|0,Beijing
-500,CN-HI|CN-46,20|0,Hainan
-501,CN-NX|CN-64|NX,20|0,Ningxia Hui
-502,CN-CQ|CN-50|CQ,20|0,Chongqing
-503,CN-ZJ|CN-33|ZJ,20|0,Zhejiang
-504,CN-JS|CN-32|JS,20|0,Jiangsu
-505,CN-FJ|CN-35|FJ,20|0,Fujian
-506,CN-AH|CN-34|AH,20|0,Anhui
-507,CN-LN|CN-21|LN,20|0,Liaoning
-508,CN-SD|CN-37,20|0,Shandong
-509,CN-SX|CN-14|SX,20|0,Shanxi
-510,CN-JX|CN-36|JX,20|0,Jiangxi
-511,CN-HA|CN-41|HA,20|0,Henan
-512,CN-GZ|CN-52|GZ,20|0,Guizhou
-513,CN-GD|CN-44|GD,20|0,Guangdong
-514,CN-HB|CN-42|HB,20|0,Hubei
-515,CN-JL|CN-22|JL,20|0,Jilin
-516,CN-HE|CN-13|HE,20|0,Hebei|Yanzhao
-517,CN-SN|CN-61|SN,20|0,Shaanxi
-518,CN-NM|CN-15,20|0,Nei Mongol|Inner Mongolia
-519,CN-HL|CN-23|HL,20|0,Heilongjiang
-520,CN-HN|CN-43|HN,20|0,Hunan
-521,CN-GX|CN-45|GX,20|0,Guangxi Zhuang
-522,CN-SC|CN-51,20|0,Sichuan
-523,CN-YN|CN-53|YN,20|0,Yunnan
-524,CN-XZ|CN-54|XZ,13|20|0,Xizang|Tibet
-525,CN-GS|CN-62|GS,20|0,Gansu
-526,CN-QH|CN-63|QH,20|0,Qinghai|Tsinghai
-527,CN-XJ|CN-65|XJ,20|0,Xinjiang Uyghur
-528,CHN|CN,20|0,China
-529,UMI|US-UM|JTN|UM,0,United States Minor Outlying Islands
+496,RUS|RU,2,Russia|Russian Federation
+497,CN-SH|CN-31|SH,20,Shanghai
+498,CN-TJ|CN-12|TJ,20,Tianjin
+499,CN-BJ|BJ|CN-11,20,Beijing
+500,CN-HI|CN-46,20,Hainan
+501,CN-NX|CN-64|NX,20,Ningxia Hui
+502,CN-CQ|CN-50|CQ,20,Chongqing
+503,CN-ZJ|CN-33|ZJ,20,Zhejiang
+504,CN-JS|CN-32|JS,20,Jiangsu
+505,CN-FJ|CN-35|FJ,20,Fujian
+506,CN-AH|AH|CN-34,20,Anhui
+507,CN-LN|CN-21|LN,20,Liaoning
+508,CN-SD|CN-37,20,Shandong
+509,CN-SX|CN-14|SX,20,Shanxi
+510,CN-JX|CN-36|JX,20,Jiangxi
+511,CN-HA|CN-41|HA,20,Henan
+512,CN-GZ|CN-52|GZ,20,Guizhou
+513,CN-GD|CN-44|GD,20,Guangdong
+514,CN-HB|CN-42|HB,20,Hubei
+515,CN-JL|CN-22|JL,20,Jilin
+516,CN-HE|CN-13|HE,20,Hebei|Yanzhao
+517,CN-SN|CN-61|SN,20,Shaanxi
+518,CN-NM|CN-15,20,Nei Mongol|Inner Mongolia
+519,CN-HL|CN-23|HL,20,Heilongjiang
+520,CN-HN|CN-43|HN,20,Hunan
+521,CN-GX|CN-45|GX,20,Guangxi Zhuang
+522,CN-SC|CN-51,20,Sichuan
+523,CN-YN|CN-53|YN,20,Yunnan
+524,CN-XZ|CN-54|XZ,13|20,Xizang|Tibet
+525,CN-GS|CN-62|GS,20,Gansu
+526,CN-QH|CN-63|QH,20,Qinghai|Tsinghai
+527,CN-XJ|CN-65|XJ,20,Xinjiang Uyghur
+528,CHN|CN,20,China
+529,UMI|JTN|UM|US-UM,0,United States Minor Outlying Islands
 530,CPT,0,Clipperton Island
 531,ATA,0,Antarctica
 532,AAA,0,International|Worldwide|Earth

@@ -1,4 +1,4 @@
-# Copyright (C) 2014-2015 Stichting Mapcode Foundation (http://www.mapcode.com)
+# Copyright (C) 2014-2016 Stichting Mapcode Foundation (http://www.mapcode.com)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,34 +20,56 @@ project(mapcode_cpp)
 #
 # export ASAN_OPTIONS=debug=true:strict_string_checks=1:detect_stack_use_after_return=true:detect_invalid_pointer_pairs=99999:
 #   detect_container_overflow=true:detect_odr_violation=2:check_initialization_order=true
+#
+# Compiler directives (for internal use only):
+#
+# NO_POSIX_THREADS      - No multi-threaded unit testing - only effective for unit test.
+# NO_FAST_ENCODE        - Drop fast encoding support - only for internal use.
 
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wall -Werror -fsanitize=address -fno-common -fno-optimize-sibling-calls -fno-omit-frame-pointer")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++11")
-set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fsanitize=address")
+set(MAPCODE_OPTIONS "")
+set(MAPCODE_WARNING_OPTIONS "-Wall -Werror")
+set(MAPCODE_SANITIZER_COMPILER_OPTIONS "-fsanitize=address -fno-common -fno-optimize-sibling-calls -fno-omit-frame-pointer")
+set(MAPCODE_SANITIZER_LINKER_OPTIONS "-fsanitize=address")
 
-set(SOURCE_FILES
-    mapcodelib/basics.h
-    mapcodelib/mapcode_alphabets.h
-    mapcodelib/mapcode_countrynames.h
-    mapcodelib/mapcode_countrynames_short.h
-    mapcodelib/mapcode_fast_encode.h
-    mapcodelib/mapcode_fastalpha.h
-    mapcodelib/mapcode_territory_alphabets.h
-    mapcodelib/mapcoder.c
-    mapcodelib/mapcoder.h
-    unittest/decode_test.h
-    unittest/test_territories.c
-    unittest/unittest.c
-    utility/mapcode.cpp)
+set(CMAKE_C_FLAGS_DEBUG "${MAPCODE_OPTIONS} ${MAPCODE_WARNING_OPTIONS} ${MAPCODE_SANITIZER_COMPILER_OPTIONS} -O0 -g -DDEBUG")
+set(CMAKE_C_FLAGS_RELWITHDEBINFO "${MAPCODE_OPTIONS} ${MAPCODE_WARNING_OPTIONS} ${MAPCODE_SANITIZER_COMPILER_OPTIONS} -O2 -g -DNDEBUG")
+set(CMAKE_C_FLAGS_RELEASE "${MAPCODE_OPTIONS} ${MAPCODE_WARNING_OPTIONS} -O3 -DNDEBUG")
+
+set(CMAKE_CXX_FLAGS_DEBUG "${MAPCODE_OPTIONS} ${MAPCODE_WARNING_OPTIONS} ${MAPCODE_SANITIZER_COMPILER_OPTIONS} -O0 -g -DDEBUG -std=c++11")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${MAPCODE_OPTIONS} ${MAPCODE_WARNING_OPTIONS} ${MAPCODE_SANITIZER_COMPILER_OPTIONS} -O2 -g -DNDEBUG -std=c++11")
+set(CMAKE_CXX_FLAGS_RELEASE "${MAPCODE_OPTIONS} ${MAPCODE_WARNING_OPTIONS} -O3 -DNDEBUG -std=c++11")
+
+set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${MAPCODE_SANITIZER_LINKER_OPTIONS}")
+set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${MAPCODE_SANITIZER_LINKER_OPTIONS}")
+set(CMAKE_EXE_LINKER_FLAGS_RELEASE "")
+
+set(SOURCE_FILES_MAPCODELIB
+        mapcodelib/internal_data.h
+        mapcodelib/internal_alphabet_recognizer.h
+        mapcodelib/internal_iso3166_data.h
+        mapcodelib/internal_territory_alphabets.h
+        mapcodelib/internal_territory_names_english.h
+        mapcodelib/internal_territory_names_local.h
+        mapcodelib/internal_territory_search.h
+        mapcodelib/mapcode_alphabets.h
+        mapcodelib/mapcode_legacy.c
+        mapcodelib/mapcode_legacy.h
+        mapcodelib/mapcode_territories.h
+        mapcodelib/mapcoder.c
+        mapcodelib/mapcoder.h)
 
 set(SOURCE_FILES_UNITTEST
+        unittest/decode_test.h
         unittest/unittest.c)
 
 set(SOURCE_FILES_UTILITY
         utility/mapcode.cpp)
 
-add_executable(fullset ${SOURCE_FILES})
+add_library(mapcodelib ${SOURCE_FILES_MAPCODELIB})
+target_include_directories(mapcodelib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(unittest ${SOURCE_FILES_UNITTEST})
+target_link_libraries(unittest LINK_PUBLIC mapcodelib)
 
 add_executable(mapcode ${SOURCE_FILES_UTILITY})
+target_link_libraries(mapcode LINK_PUBLIC mapcodelib)

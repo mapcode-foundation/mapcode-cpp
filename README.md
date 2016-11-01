@@ -9,7 +9,7 @@
 
 **Latest stable release: https://github.com/mapcode-foundation/mapcode-cpp/releases**
 
-# The C/C++ Library: `mapcodelib/`
+## The C/C++ Library: `mapcodelib/`
 
 The directory 'mapcodelib' contains the files:
 
@@ -45,7 +45,7 @@ In that case, basics.h will state a version number of the for:
 where "xxx" states the geographical limitation.
 
 
-# A Real-Life Example, The 'mapcode' Codec Tool: `utility/`
+## A Real-Life Example, The 'mapcode' Codec Tool: `utility/`
 
 The directory 'utility' contains a Mapcode encoding/decoding utility, as an example
 of how to use the library.
@@ -61,8 +61,8 @@ decode Mapcodes.
 
 This produces the following help text:
 
-    MAPCODE (version 2.4.0)
-    Copyright (C) 2014-2015 Stichting Mapcode Foundation
+    MAPCODE (version 2.4.1)
+    Copyright (C) 2014-2016 Stichting Mapcode Foundation
     
     Usage:
         ./mapcode [-d| --decode] <default-territory> <mapcode> [<mapcode> ...]
@@ -121,15 +121,38 @@ This produces the following help text:
            The result code is 0 when no error occurred, 1 if an input error occurred and 2
            if an internal error occurred.
 
-If you use **Microsoft Visual C++**, you may need to add the following defines to your preprocessor
-settings:
+## Compile Options for Microsoft Visual C++
 
-    NO_POSIX_THREADS
-    _CRT_SECURE_NO_WARNINGS
-    _CRT_NONSTDC_NO_DEPRECATE
+If you use **Microsoft Visual C++**, you may need to add the following compiler directives to your build:
 
+    -DNO_POSIX_THREADS
+    -D_CRT_SECURE_NO_WARNINGS
+    -D_CRT_NONSTDC_NO_DEPRECATE
 
-# Release Notes
+## Reducing the Footprint of the Mapcode Library
+
+The Mapcode C/C++ Library has includes a number of fixed data tables, which increase its footprint.
+You may not require all of this data, so we've added some options for you to be able to reduce its
+footprint, for example for embedded applications. 
+
+## Release Notes
+
+### 2.5.0
+
+* Added support for getting territory names in English and local alphabets. 
+
+* Added much improved unit test scripts to run `gprof`, `valgrind`, the CLang address sanitize
+and compare the output of the new library with and older version.
+
+### 2.4.1
+
+* Renamed `.h` files to `internal_*.h` unless they are relevant to the interface.
+
+* Turned territories, alphabets and error codes into enums.
+
+* Split off legacy stuff into `mapcode_legacy.h`. 
+
+* Added `convertUtf8ToUtf16`, `convertUtf16ToUtf8`, `recognizeAlphabetUtf8`, `recogniseAlphabetUtf16`.
 
 ### 2.4.0
 

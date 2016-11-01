@@ -3,11 +3,10 @@
 This directory contains a Mapcode encoding/decoding utility.
 To build the original Mapcode tool, execute:
 
-    gcc -O mapcode.cpp -lm -lpthread -o mapcode
-
-(Or if you need to make sure there are no warnings:)
-
-    gcc -Wall -O mapcode.cpp -lm -lpthread -o mapcode
+    cd ../mapcodelib
+    gcc -O -c mapcoder.c
+    cd ../utility
+    gcc -O mapcode.cpp -lm -o mapcode ../mapcodelib/mapcoder.o
 
 For help, simply execute:
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2015 Stichting Mapcode Foundation (http://www.mapcode.com)
+ * Copyright (C) 2014-2016 Stichting Mapcode Foundation (http://www.mapcode.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,42 +21,83 @@
 extern "C" {
 #endif
 
+#include "mapcode_territories.h"
 #include "mapcode_alphabets.h"
-#include "mapcode_territory_alphabets.h"
 
-#define mapcode_cversion "2.4.0"
 
-#define UWORD                               unsigned short int  // 2-byte unsigned integer.
-
-#define SUPPORT_FOREIGN_ALPHABETS           // Define to support additional alphabets.
-#define SUPPORT_HIGH_PRECISION              // Define to enable high-precision extension logic.
-
-#define MAX_NR_OF_MAPCODE_RESULTS           22          // Max. number of results ever returned by encoder (e.g. for 26.904899, 95.138515).
-#define MAX_PROPER_MAPCODE_LEN              11          // Max. number of characters in a proper mapcode (including the dot, excl. precision extension).
-#define MAX_PRECISION_DIGITS                8           // Max. number of extension characters (excluding the hyphen). Must be even.
-#define MAX_PRECISION_FACTOR                810000      // 30 to the power (MAX_PRECISION_DIGITS/2).
-#define MAX_ISOCODE_LEN                     7           // Max. number of characters of a valid territory code; although nothing longer than SIX characters is ever generated (RU-KAM), users can input SEVEN characters (RUS-KAM).
-#define MAX_CLEAN_MAPCODE_LEN               (MAX_PROPER_MAPCODE_LEN + 1 + MAX_PRECISION_DIGITS)  // Max. number of characters in a clean mapcode (excluding zero-terminator).
-#define MAX_MAPCODE_RESULT_LEN              (MAX_ISOCODE_LEN + 1 + MAX_CLEAN_MAPCODE_LEN + 1)    // Max. number of characters to store a single result (including zero-terminator).
+#define MAPCODE_C_VERSION          "2.5.0"
+#define UWORD                      unsigned short int  // 2-byte unsigned integer.
+#define MAX_NR_OF_MAPCODE_RESULTS  22          // Max. number of results ever returned by encoder (e.g. for 26.904899, 95.138515).
+#define MAX_PROPER_MAPCODE_LEN     11          // Max. number of characters in a proper mapcode (including the dot, excl. precision extension).
+#define MAX_PRECISION_DIGITS       8           // Max. number of extension characters (excluding the hyphen). Must be even.
+#define MAX_ISOCODE_LEN            7           // Max. number of characters of a valid ISO3166 territory code; although nothing longer than SIX characters is ever generated (RU-KAM), users can input SEVEN characters (RUS-KAM).
+#define MAX_TERRITORY_FULLNAME_LEN 79          // Max. number of characters to store the longest possible territory name (in any alphabet, excl. 0-terminator).
+#define MAX_CLEAN_MAPCODE_LEN      (MAX_PROPER_MAPCODE_LEN + 1 + MAX_PRECISION_DIGITS)  // Max. number of characters in a clean mapcode (excluding zero-terminator).
+#define MAX_MAPCODE_RESULT_LEN     (MAX_ISOCODE_LEN + 1 + MAX_CLEAN_MAPCODE_LEN + 1)    // Max. number of characters to store a single result (including zero-terminator).
 
 
 /**
  * The type Mapcodes hold a number of mapcodes, for example from an encoding call.
- * If a result contains a space, it splits the territory alphacode from the mapcode.
- * International mapcodes do not specify a territory alphacode, nor a space.
+ * If a result contains a space, that space seperates the territory ISO3166 code from the mapcode.
+ * International mapcodes never include a territory ISO3166 code, nor a space.
  */
 typedef struct {
     int count;                                                        // The number of mapcode results (length of array).
     char mapcode[MAX_NR_OF_MAPCODE_RESULTS][MAX_MAPCODE_RESULT_LEN];  // The mapcodes.
 } Mapcodes;
 
+
 typedef struct {
-    char territoryISO[MAX_ISOCODE_LEN + 1];            // The (trimmed and uppercased) candidate territory.
-    int territoryCode;                                 // The territory, as recognised and disambiguated, same as from getTerritoryCode().
-    char properMapcode[MAX_PROPER_MAPCODE_LEN + 1];    // The (trimmed and uppercased) proper mapcode (excluding territory and precision extension).
+    char territoryISO[MAX_ISOCODE_LEN + 1];            // The (trimmed and uppercased) candidate territory ISO3166 code.
+    enum Territory territoryCode;                      // The territory, as recognized and disambiguated from territoryISO.
+    char properMapcode[MAX_PROPER_MAPCODE_LEN + 1];    // The (romanised) mapcode excl. territory or extension.
     int indexOfDot;                                    // Position of dot in properMapcode (a value between 2 and 5).
-    char precisionExtension[MAX_PRECISION_DIGITS + 1]; // The (trimmed and uppercased) precision extension including hyphen; empty if precision 0.
+    char precisionExtension[MAX_PRECISION_DIGITS + 1]; // The (romanised) exyension (excluding the hyphen).
 } MapcodeElements;
+
+
+/**
+ * List of error return codes (negative except for ERR_OK = 0)
+ */
+enum MapcodeError {
+
+    // note: an incomplete mapcode could "become" complete by adding letters.
+
+    ERR_MAPCODE_INCOMPLETE = -999,   // not enough letters (yet) after dot
+
+    // format errors.
+
+    ERR_ALL_DIGIT_CODE = -299,       // mapcode consists only of digits
+    ERR_INVALID_MAPCODE_FORMAT,      // string not recognized as mapcode format
+    ERR_INVALID_CHARACTER,           // mapcode contains an invalid character
+    ERR_BAD_ARGUMENTS,               // an argument is invalid (e.g. NULL)
+    ERR_INVALID_ENDVOWELS,           // mapcodes ends in UE or UU
+    ERR_EXTENSION_INVALID_LENGTH,    // precision extension too long, or empty
+    ERR_EXTENSION_INVALID_CHARACTER, // bad precision extension character (e.g. Z)
+    ERR_UNEXPECTED_DOT,              // mapcode dot can not be in this position
+    ERR_DOT_MISSING,                 // mapcode dot not found
+    ERR_UNEXPECTED_HYPHEN,           // hyphen can not be in this position
+    ERR_INVALID_VOWEL,               // vowel in invalid location, or missing
+    ERR_BAD_TERRITORY_FORMAT,        // mapcode territory badly formatted
+    ERR_TRAILING_CHARACTERS,         // characters found trailing the mapcode
+
+    // parse errors.
+
+    ERR_UNKNOWN_TERRITORY = -199,    // mapcode territory not recognized
+
+    // other errors.
+
+    ERR_BAD_MAPCODE_LENGTH = -99,    // proper mapcode too short or too long
+    ERR_MISSING_TERRITORY,           // mapcode can not be decoded without territory
+    ERR_EXTENSION_UNDECODABLE,       // extension does not decode to valid coordinate
+    ERR_MAPCODE_UNDECODABLE,         // mapcode does not decode inside territory
+    ERR_BAD_COORDINATE,              // latitude or longitude is NAN or infinite
+
+    // all OK.
+
+    ERR_OK = 0,
+};
+
 
 /**
  * Encode a latitude, longitude pair (in degrees) to a set of Mapcodes.
@@ -65,10 +106,10 @@ typedef struct {
  *      mapcodes        - A pointer to a buffer to hold the mapcodes, allocated by the caller.
  *      lat             - Latitude, in degrees. Range: -90..90.
  *      lon             - Longitude, in degrees. Range: -180..180.
- *      territoryCode   - Territory code (obtained from getTerritoryCode), used as encoding context.
- *                        Pass 0 to get Mapcodes for all territories.
+ *      territory       - Territory (e.g. as from getTerritoryCode), used as encoding context.
+ *                        Pass TERRITORY_NONE or TERRITORY_UNKNOWN to get Mapcodes for all territories.
  *      extraDigits     - Number of extra "digits" to add to the generated mapcode. The preferred default is 0.
- *                        Other valid values are 1 and 2, which will add extra letters to the mapcodes to
+ *                        Other valid values are 1 to 8, which will add extra letters to the mapcodes to
  *                        make them represent the coordinate more accurately.
  *
  * Returns:
@@ -81,40 +122,9 @@ int encodeLatLonToMapcodes(
         Mapcodes *mapcodes,
         double latDeg,
         double lonDeg,
-        int territoryCode,
+        enum Territory territory,
         int extraDigits);
 
-/**
- * WARNING: This method is deprecated and should no longer be used, as it is not thread-safe. Use the version
- * specified above.
- *
- * Encode a latitude, longitude pair (in degrees) to a set of Mapcodes. Not thread-safe!
- *
- * Arguments:
- *      mapcodesAndTerritories - Results set of mapcodes and territories.
- *                               The caller must pass an array of at least 2 * MAX_NR_OF_MAPCODE_RESULTS
- *                               string points, which must NOT be allocated or de-allocated by the caller.
- *                               The resulting strings are statically allocated by the library and will be overwritten
- *                               by the next call to this method!
- *      lat                    - Latitude, in degrees. Range: -90..90.
- *      lon                    - Longitude, in degrees. Range: -180..180.
- *      territoryCode          - Territory code (obtained from getTerritoryCode), used as encoding context.
- *                               Pass 0 to get Mapcodes for all territories.
- *      extraDigits            - Number of extra "digits" to add to the generated mapcode. The preferred default is 0.
- *                               Other valid values are 1 and 2, which will add extra letters to the mapcodes to
- *                               make them represent the coordinate more accurately.
- *
- * Returns:
- *      Number of results stored in parameter results. Always >= 0 (0 if no encoding was possible or an error occurred).
- *      The results are stored as pairs (Mapcode, territory name) in:
- *          (results[0], results[1])...(results[(2 * N) - 2], results[(2 * N) - 1])
- */
-int encodeLatLonToMapcodes_Deprecated(     // Warning: this method is deprecated and not thread-safe.
-        char **mapcodesAndTerritories,
-        double latDeg,
-        double lonDeg,
-        int territoryCode,
-        int extraDigits);
 
 /**
  * Encode a latitude, longitude pair (in degrees) to a single Mapcode: the shortest possible for the given territory
@@ -127,171 +137,176 @@ int encodeLatLonToMapcodes_Deprecated(     // Warning: this method is deprecated
  *                        The caller should allocate at least MAX_MAPCODE_RESULT_LEN characters for the string.
  *      lat             - Latitude, in degrees. Range: -90..90.
  *      lon             - Longitude, in degrees. Range: -180..180.
- *      territoryCode   - Territory code (obtained from getTerritoryCode), used as encoding context.
+ *      territory       - Territory (e.g. as obtained from getTerritoryCode), used as encoding context.
+ *                        Pass TERRITORY_NONE or TERRITORY_UNKNOWN to get Mapcodes for all territories.
  *      extraDigits     - Number of extra "digits" to add to the generated mapcode. The preferred default is 0.
- *                        Other valid values are 1 and 2, which will add extra letters to the mapcodes to
+ *                        Other valid values are 1 to 8, which will add extra letters to the mapcodes to
  *                        make them represent the coordinate more accurately.
  *
  * Returns:
- *      0 if encoding failed, or >0 if it succeeded.
+ *      Number of results. <=0 if encoding failed, or 1 if it succeeded.
  */
 int encodeLatLonToSingleMapcode(
         char *mapcode,
         double latDeg,
         double lonDeg,
-        int territoryCode,
+        enum Territory territory,
         int extraDigits);
 
+
 /**
- * Decode a Mapcode to  a latitude, longitude pair (in degrees).
+ * Decode a utf8 or ascii Mapcode to  a latitude, longitude pair (in degrees).
  *
  * Arguments:
  *      lat             - Decoded latitude, in degrees. Range: -90..90.
  *      lon             - Decoded longitude, in degrees. Range: -180..180.
- *      mapcode         - Mapcode to decode.
- *      territoryCode   - Territory code (obtained from getTerritoryCode), used as decoding context.
- *                        Pass 0 if not available.
+ *      utf8string      - Mapcode to decode (ascii or utf8 string).
+ *      territory       - Territory (e.g. as obtained from getTerritoryCode), used as decoding context.
+ *                        Pass TERRITORY_NONE if not available.
+ *      mapcodeElements - If not NULL, filled with analysis of the string (unless an error was encountered).
  *
  * Returns:
- *      0 if encoding succeeded, nonzero in case of error.
+ *      ERR_OK if encoding succeeded.
  */
-int decodeMapcodeToLatLon(
+enum MapcodeError decodeMapcodeToLatLonUtf8(
         double *latDeg,
         double *lonDeg,
-        const char *mapcode,
-        int territoryCode);
+        const char *utf8string,
+        enum Territory territory,
+        MapcodeElements *mapcodeElements);
+
+
+/**
+ * Decode a utf16 Mapcode to  a latitude, longitude pair (in degrees).
+ *
+ * Arguments:
+ *      lat             - Decoded latitude, in degrees. Range: -90..90.
+ *      lon             - Decoded longitude, in degrees. Range: -180..180.
+ *      mapcodeElements - If not NULL, filled with analysis of the string (unless an error was encountered)
+ *      utf8string      - Mapcode to decode (ascii or utf8 string).
+ *      territory       - Territory (e.g. as obtained from getTerritoryCode), used as decoding context.
+ *                        Pass TERRITORY_NONE if not available.
+ *
+ * Returns:
+ *      ERR_OK if encoding succeeded.
+ */
+enum MapcodeError decodeMapcodeToLatLonUtf16(
+        double *latDeg,
+        double *lonDeg,
+        const UWORD *utf16string,
+        enum Territory territory,
+        MapcodeElements *mapcodeElements);
+
 
 /**
  * Checks if a string has the format of a Mapcode. (Note: The method is called compareXXX rather than hasXXX because
- * the return value '0' indicates the string has the Mapcode format, much like string comparison strcmp returns.)
+ * the return value ERR_OK indicates the string has the Mapcode format, much like string comparison strcmp returns.)
  *
  * Arguments:
- *      asciiString         - Mapcode string to check.
- *      includesTerritory   - If 0, no territory is includes in the string. If 1, territory information is
- *                            supposed to be available in the string as well.
+ *      utf8String/utf16String - Mapcode string to check, in UTF8 or UTF16 format.
+ *
  * Returns:
- *      0 if the string has a correct Mapcode format; <0 if the string does not have a Mapcode format.
- *      Special value COMPARE_MAPCODE_MISSING_CHARACTERS (-999) indicates the string could be a Mapcode, but it seems
+ *      ERR_OK if the string has a correct Mapcode format, another ERR_XXX value if the string does
+ *      not have a Mapcode format.
+ *      Special value ERR_MAPCODE_INCOMPLETE indicates the string could be a Mapcode, but it seems
  *      to lack some characters.
+ *      NOTE: a correct Mapcode format does not in itself guarantee the mapcode will decode to
+ *      a valid coordinate!
  */
-int compareWithMapcodeFormat(
-        const char *asciiString,
-        int includesTerritory);
+enum MapcodeError compareWithMapcodeFormatUtf8(const char *utf8String);
+
+enum MapcodeError compareWithMapcodeFormatUtf16(const UWORD *utf16String);
+
 
 /**
- * Parses a string into its mapcode components, separating the territory, the 'proper' mapcode (without the
- * territory and the precision extension) and the precision extension.
+ * Convert an ISO3166 territory code to a territory.
  *
  * Arguments:
- *      mapcodeFormat       - If not NULL, filled with analysis of the 'check' string if it was a correct mapcode.
- *                            Pass NULL to skip returning the additional analysis.
- *      asciiString         - Mapcode string to check.
- *      includesTerritory   - If 0, no territory is includes in the string. If non-0, territory information is
- *                            supposed to be available in the string as well. Pass non-0 when in doubt.
- *      territoryCode       - Territory code (obtained from getTerritoryCode), used as decoding context in case
- *                            the mapcode string does not contain a territory.
- *                            Pass 0 if not available.
- * Returns:
- *      Returns 0 if the string has a correct Mapcode format.
- *      Return <0 if the string does not have a Mapcode format.
- *      Special value COMPARE_MAPCODE_MISSING_CHARACTERS indicates the string could be a Mapcode, but it seems
- *      to lack some characters.
- *      If 0 is returned, the structure mapcodeFormat is correctly filled with (trimmed, uppercased) components
- *      id the passed pointer to mapcodeFormat was not NULL.
- */
-int parseMapcodeString(
-        MapcodeElements *mapcodeFormat,
-        const char *asciiString,
-        int containsTerritory,
-        int territoryCode);
-
-/**
- * Convert a territory name to a territory code.
- *
- * Arguments:
- *      territoryISO         - String starting with ISO code of territory (e.g. "USA" or "US-CA").
- *      parentTerritoryCode  - Parent territory code, or 0 if not available.
+ *      territoryISO         - String starting with ISO3166 code of territory (e.g. "USA" or "US-CA").
+ *      parentTerritoryCode  - Parent territory, or TERRITORY_NONE if not available.
  *
  * Returns:
- *      Territory code >0 if succeeded, or <0 if failed.
+ *      Territory (> _TERRITORY_MIN) if succeeded, or TERRITORY_NONE if failed.
  */
-int getTerritoryCode(
+enum Territory getTerritoryCode(
         const char *territoryISO,
-        int optionalTerritoryContext);
+        enum Territory optionalTerritoryContext);
+
 
 /**
- * Convert a territory code to a territory name.
+ * Convert a territory to a territory name.
  *
  * Arguments:
  *      territoryISO    - String to territory ISO code name result.
- *      territoryCode   - Territory code.
+ *      territory       - Territory to get the name of.
  *      userShortName   - Pass 0 for full name, 1 for short name (state codes may be ambiguous).
  *
  * Returns:
- *      Pointer to result. Empty if territoryCode illegal.
+ *      Pointer to result. String will be empty if territory illegal.
  */
 char *getTerritoryIsoName(
         char *territoryISO,
-        int territoryCode,
+        enum Territory territory,
         int useShortName);
 
-// the old, non-threadsafe routine which uses static storage, overwritten at each call:
-const char *convertTerritoryCodeToIsoName(
-        int territoryContext,
-        int useShortName);
 
 /**
- * Given a territory code, return the territory code itself it it was a country, or return its parent
- * country territory if it was a state.
+ * Given a territory, return the territory itself it it was a country, or return its parent
+ * territory if it was a subdivision (e.g. a state).
  *
  * Arguments:
- *      territoryCode   - Country or state territory code.
+ *      territory   - territory (either a country or a subdivision, e.g. a state).
  *
  * Returns:
- *      Territory code of the parent country (if the territoryCode indicated a state), or the territoryCode
- *      itself, if it was a country; <0 if the territoryCode was invalid.
+ *      Territory of the parent country (if the territory has one), or the territory itself.
+ *      TERRITORY_NONE if the territory was invalid.
  */
-int getCountryOrParentCountry(int territoryCode);
+enum Territory getCountryOrParentCountry(enum Territory territory);
+
 
 /**
- * Given a territory code, return its parent country territory.
+ * Given a territory, return its parent country.
  *
  * Arguments:
- *      territoryCode   - State territory code.
+ *      territory   - territory to get the parent of.
  *
  * Returns:
- *      Territory code of the parent country; <0 if the territoryCode was not a state or it was invalid.
+ *      Territory of the parent country.
+ *      TERRITORY_NONE if the territory was not a subdivision, or invalid.
  */
-int getParentCountryOf(int territoryCode);
+enum Territory getParentCountryOf(enum Territory territory);
+
 
 /**
- * Returns the distance in meters between two coordinates (latitude/longitude pairs)
- * CAVEAT: only works for coordinates that are within a few miles from each other.
+ * Returns the distance in meters between two coordinates (latitude/longitude pairs).
+ * Important: only accurate for coordinates within a few kilometers from each other.
  */
 double distanceInMeters(double latDeg1, double lonDeg1, double latDeg2, double lonDeg2);
 
+
 /**
- * How far away, at worst, can a decoded mapcode be from the original encoded coordinate?
- * (which can be 0 for all territories).
+ * Returns how far, at worst, a decoded mapcode can be from the original encoded coordinate.
  *
  * Arguments:
- *      extraDigits     - Number of extra "digits" in the mapcode. extra letters added to mapcodes
- *                        make them represent coordinates more accurately.
+ *      extraDigits     - Number of extra "digits" in the mapcode. Extra letters added to mapcodes
+ *                        make them represent coordinates more accurately. Must be >= 0.
  *
  * Returns:
  *      The worst-case distance in meters between a decoded mapcode and the encoded coordinate.
  */
 double maxErrorInMeters(int extraDigits);
 
+
 /**
- * Is coordinate near more than one territory border?
+ * Returns whether a coordinate is near more than one territory border.
  *
  * Arguments:
  *      lat             - Latitude, in degrees. Range: -90..90.
  *      lon             - Longitude, in degrees. Range: -180..180.
- *      territoryCode   - Territory code (obtained from getTerritoryCode).
+ *      territory       - Territory
  *
- * returns nonzero if coordinate is near more than one territory border
+ * Return value:
+ *      0 if coordinate is NOT near more than one territory border, non-0 otherwise.
  *
  * Note that for the mapcode system, the following should hold: IF a point p has a 
  * mapcode M, THEN decode(M) delivers a point q within maxErrorInMeters() of p.
@@ -300,101 +315,112 @@ double maxErrorInMeters(int extraDigits);
 int multipleBordersNearby(
         double latDeg,
         double lonDeg,
-        int territoryCode);
+        enum Territory territory);
+
 
 /**
- * Given a territory code, returns a structure defining which alphabets (in order of importance) are in common use in the territory
+ * Returns territory names in English or in the local language. There's always at least 1 alternative (with index 0).
  *
- * Arguments:
- *      territoryCode   - territory code.
+ *   Arguments:
+ *       territoryName - Target string, allocated by caller to be at least MAX_TERRITORY_NAME_LENGTH + 1 bytes.
+ *       territory     - Territory to get name for.
+ *       alternative   - Which name to get, must be >= 0 (0 = default, 1 = first alternative, 2 = second etc.).
  *
- * Returns:
- *      A pointer to a TerritoryAlphabets structure (or NULL if territoryCode is invalid).
+ *   Return value:
+ *       0 if the alternative does not exist (territoryName will be empty).
+ *       non-0 if the alternative exists (territoryName contains name).
  */
-const TerritoryAlphabets *getAlphabetsForTerritory(int territoryCode);
+int getFullTerritoryNameEnglish(
+        char *territoryName,
+        enum Territory territory,
+        int alternative);
+
 
 /**
- * Decode a string to Roman characters.
+ * Returns territory names in the local language. There are two variants of this call. One returns local
+ * territory names in a specified alphabet only. The other simply returns the local names, regardless
+ * of its alphabet. There is always at least 1 alternative, with index 0.
+ *
+ *   Arguments:
+ *       territoryName - Target string, allocated by caller to be at least MAX_TERRITORY_NAME_LENGTH + 1 bytes.
+ *       territory     - Territory to get name for.
+ *       alternative   - Which name to get, must be >= 0 (0 = default, 1 = first alternative, 2 = second etc.).
+ *       alphabet      - Alphabet to use for territoryName. Must be a valid alphabet value.
+ *
+ *   Return value:
+ *       0 if the alternative does not exist (territoryName will be empty).
+ *       non-0 if the alternative exists (territoryName contains name).
+ */
+int getFullTerritoryNameLocal(
+        char *territoryName,
+        enum Territory territory,
+        int alternative);
+
+int getFullTerritoryNameLocalInAlphabet(
+        char *territoryName,
+        enum Territory territory,
+        int alternative,
+        enum Alphabet alphabet);
+
+
+/**
+ * This struct contains the returned alphabest for getAlphabetsForTerritory. The 'count' specifies
+ * how many alphabets are listed in 'alphabet', range [1, MAX_ALPHABETS_PER_TERRITORY].
+ */
+#define MAX_ALPHABETS_PER_TERRITORY 3
+
+typedef struct {
+    int count;
+    enum Alphabet alphabet[MAX_ALPHABETS_PER_TERRITORY];
+} TerritoryAlphabets;
+
+
+/**
+ * Given a territory, returns a structure defining which alphabets (in order of importance)
+ * are in common use in the territory.
  *
  * Arguments:
- *      asciiString - Buffer to be filled with the ASCII string result.
- *      maxLength   - Size of asciiString buffer.
- *      utf16String - Unicode string to decode, allocated by caller.
+ *      territory   - Territory to get the common alphabets for.
  *
  * Returns:
- *      Pointer to same buffer as asciiString (allocated by caller), which holds the result.
+ *      A pointer to a TerritoryAlphabets structure, or NULL if the territory is invalid.
+ *      (The pointer is owned by the library and should not be dealloacted by the caller.)
  */
-char *convertToRoman(char *asciiString, int maxLength, const UWORD *utf16String);
+const TerritoryAlphabets *getAlphabetsForTerritory(enum Territory territory);
+
+
+/**
+ * Encode a string to Alphabet characters for a language.
+ *
+ * Arguments:
+ *      utf8String   - Buffer to be filled with the Unicode string result.
+ *                     Must have capacity for (3 * MAX_MAPCODE_RESULT_LEN + 1) characters.
+ *      asciiString  - ASCII string to encode (must be < MAX_MAPCODE_RESULT_LEN characters).
+ *      alphabet     - Alphabet to use.
+ *
+ * Returns:
+ *      Encode UTF8 string (pointer to utf8String buffer), allocated and deallocated by the caller.
+ */
+char *convertMapcodeToAlphabetUtf8(char *utf8String, const char *asciiString, enum Alphabet alphabet);
+
 
 /**
  * Encode a string to Alphabet characters for a language.
  *
  * Arguments:
  *      utf16String  - Buffer to be filled with the Unicode string result.
- *      asciiString  - ASCII string to encode.
- *      maxLength    - Size of utf16String buffer.
+ *                     Must have capacity for (MAX_MAPCODE_RESULT_LEN utf16 + 1) characters.
+ *      asciiString  - ASCII string to encode (must be < MAX_MAPCODE_RESULT_LEN characters).
  *      alphabet     - Alphabet to use.
  *
  * Returns:
- *      Encoded Unicode string, points at buffer from 'utf16String', allocated/deallocated by caller.
+ *      Encode UTF16 string (pointer to utf16String buffer), allocated and deallocated by the caller.
  */
-UWORD *convertToAlphabet(UWORD *utf16String, int maxLength, const char *asciiString, int alphabet);
+UWORD *convertMapcodeToAlphabetUtf16(UWORD *utf16String, const char *asciiString, enum Alphabet alphabet);
 
-
-/* DEPRECATED METHODS AND CONSTANT - WILL BE DROPPED IN FUTURE RELEASES. */
-
-/**
- * DEPRECATED ODL VARIANT, NOT THREAD-SAFE:
- * Uses a pre-allocated static buffer, overwritten by the next call
- * Returns converted string. allocated by the library. String must NOT be
- * de-allocated by the caller. It will be overwritten by a subsequent call to this method!
- */
-const char *decodeToRoman(const UWORD *utf16String);
-
-/**
- * DEPRECATED ODL VARIANT, NOT THREAD-SAFE:
- * Returns converted string. allocated by the library. String must NOT be
- * de-allocated by the caller. It will be overwritten by a subsequent call to this method!
- */
-const UWORD *encodeToAlphabet(const char *asciiString, int alphabet);
-
-
-/**
- * List of #defines to support legacy systems.
- */
-#define convertTerritoryIsoNameToCode getTerritoryCode
-#define coord2mc(results, lat, lon, territoryCode)  encodeLatLonToMapcodes_Deprecated(results, lat, lon,territoryCode, 0)
-#define coord2mc1(results, lat, lon, territoryCode) encodeLatLonToSingleMapcode(results, lat, lon, territoryCode, 0)
-#define mc2coord decodeMapcodeToLatLon
-#define lookslikemapcode compareWithMapcodeFormat
-#define text2tc getTerritoryCode
-#define tc2text convertTerritoryCodeToIsoName
-#define tccontext getCountryOrParentCountry
-#define tcparent getParentCountryOf
-#define decode_to_roman decodeToRoman
-#define encode_to_alphabet encodeToAlphabet
-#define MAX_MAPCODE_TERRITORY_CODE MAX_CCODE
-#define NR_BOUNDARY_RECS NR_RECS
-
-#define MAX_LANGUAGES                  MAPCODE_ALPHABETS_TOTAL
-#define MAPCODE_LANGUAGE_ROMAN         MAPCODE_ALPHABET_ROMAN
-#define MAPCODE_LANGUAGE_GREEK         MAPCODE_ALPHABET_GREEK
-#define MAPCODE_LANGUAGE_CYRILLIC      MAPCODE_ALPHABET_CYRILLIC
-#define MAPCODE_LANGUAGE_HEBREW        MAPCODE_ALPHABET_HEBREW
-#define MAPCODE_LANGUAGE_HINDI         MAPCODE_ALPHABET_DEVANAGARI
-#define MAPCODE_ALPHABET_HINDI         MAPCODE_ALPHABET_DEVANAGARI
-#define MAPCODE_LANGUAGE_MALAYALAM     MAPCODE_ALPHABET_MALAYALAM
-#define MAPCODE_LANGUAGE_GEORGIAN      MAPCODE_ALPHABET_GEORGIAN
-#define MAPCODE_LANGUAGE_KATAKANA      MAPCODE_ALPHABET_KATAKANA
-#define MAPCODE_LANGUAGE_THAI          MAPCODE_ALPHABET_THAI
-#define MAPCODE_LANGUAGE_LAO           MAPCODE_ALPHABET_LAO
-#define MAPCODE_LANGUAGE_ARMENIAN      MAPCODE_ALPHABET_ARMENIAN
-#define MAPCODE_LANGUAGE_BENGALI       MAPCODE_ALPHABET_BENGALI
-#define MAPCODE_LANGUAGE_GURMUKHI      MAPCODE_ALPHABET_GURMUKHI
-#define MAPCODE_LANGUAGE_TIBETAN       MAPCODE_ALPHABET_TIBETAN
-#define MAPCODE_LANGUAGE_ARABIC        MAPCODE_ALPHABET_ARABIC
 
 #ifdef __cplusplus
 }
 #endif
+
 #endif

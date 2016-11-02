@@ -58,17 +58,16 @@ set(SOURCE_FILES_MAPCODELIB
         mapcodelib/mapcoder.c
         mapcodelib/mapcoder.h)
 
-set(SOURCE_FILES_UNITTEST
-        unittest/decode_test.h
-        unittest/unittest.c)
+set(SOURCE_FILES_TEST
+        test/decode_test.h
+        test/unittest.c)
 
 set(SOURCE_FILES_UTILITY
         utility/mapcode.cpp)
 
 add_library(mapcodelib ${SOURCE_FILES_MAPCODELIB})
-target_include_directories(mapcodelib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_executable(unittest ${SOURCE_FILES_UNITTEST})
+add_executable(unittest ${SOURCE_FILES_TEST})
 target_link_libraries(unittest LINK_PUBLIC mapcodelib)
 
 add_executable(mapcode ${SOURCE_FILES_UTILITY})

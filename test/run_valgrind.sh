@@ -18,7 +18,7 @@ echo ""
 echo "Run valgrind with: -O0"
 cd ../mapcodelib
 gcc $OPTS -g -O0 -c mapcoder.c
-cd ../unittest
+cd ../test
 gcc $OPTS -g -O0 unittest.c -lm -lpthread -o unittest $LIB
 valgrind --leak-check=yes ./unittest
 echo "!! -------------------------------------------------------------"

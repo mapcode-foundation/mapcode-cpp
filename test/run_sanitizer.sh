@@ -21,7 +21,7 @@ echo ""
 echo "Run address sanitizer with: -O0"
 cd ../mapcodelib
 gcc $OPTS -O0 -DDEBUG -c mapcoder.c
-cd ../unittest
+cd ../test
 gcc $OPTS -O0 -DDEBUG unittest.c -lm -lpthread -fsanitize=address -o unittest $LIB
 ./unittest
 echo "!! -------------------------------------------------------------"
@@ -31,7 +31,7 @@ echo ""
 echo "Run address sanitizer with: -O2"
 cd ../mapcodelib
 gcc $OPTS -O2 -c mapcoder.c
-cd ../unittest
+cd ../test
 gcc $OPTS -O2 unittest.c -lm -lpthread -fsanitize=address -o unittest $LIB
 ./unittest
 echo "!! -------------------------------------------------------------"
@@ -41,7 +41,7 @@ echo ""
 echo "Run address sanitizer with: -O3"
 cd ../mapcodelib
 gcc $OPTS -O3 -c mapcoder.c
-cd ../unittest
+cd ../test
 gcc $OPTS -O3 unittest.c -lm -lpthread -fsanitize=address -o unittest $LIB
 ./unittest
 echo "!! -------------------------------------------------------------"

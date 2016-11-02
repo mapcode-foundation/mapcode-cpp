@@ -18,7 +18,7 @@ echo ""
 echo "Run gprof with: -O0"
 cd ../mapcodelib
 gcc $OPTS -g -O0 -c mapcoder.c -pg
-cd ../unittest
+cd ../test
 gcc $OPTS -g -O0 unittest.c -lm -lpthread -o unittest $LIB -pg
 ./unittest
 gprof ./unittest
@@ -28,7 +28,7 @@ echo ""
 echo "Run gprof with: -O3"
 cd ../mapcodelib
 gcc $OPTS -g -O3 -c mapcoder.c -pg
-cd ../unittest
+cd ../test
 gcc $OPTS -g -O3 unittest.c -lm -lpthread -o unittest $LIB -pg
 ./unittest
 gprof ./unittest

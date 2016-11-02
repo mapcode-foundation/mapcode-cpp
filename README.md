@@ -32,8 +32,8 @@ Documentation, including example snippets of C source code, can be found in
       mapcode_library_c.pdf         <-- PDF format.
       mapcode_library_c.doc         <-- Microsoft Word format.
 
-A unit test can be found in the unittest\ subdirectory.
-Compile and run unittest\unittest/c to see if the library performs as expected.
+A unit test can be found in the test\ subdirectory.
+Compile and run test/unittest.c to see if the library performs as expected.
 
 Also see www.mapcode.com for background and reference materials.
 

@@ -10,7 +10,7 @@ then
 fi
 
 echo "!! -------------------------------------------------------------"
-echo "Run gcov test coverage..."
+echo "Run gcov unittest.coverage..."
 date
 echo "!! -------------------------------------------------------------"
 
@@ -23,7 +23,7 @@ gcc $OPTS -O0 unittest.c -lm -lpthread -o unittest $LIB
 ./unittest
 cd ../mapcodelib
 gcov mapcoder.c
-cd ../unittest
+cd ../test
 gcov unittest.c
 echo "!! -------------------------------------------------------------"
 echo "!! Coverage reports in: *.gcov files"

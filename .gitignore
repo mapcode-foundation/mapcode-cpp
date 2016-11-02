@@ -6,6 +6,11 @@ unittest/*.gcno
 mapcodelib/*.gcov
 mapcodelib/*.gcda
 mapcodelib/*.gcno
+CMakeCache.txt
+CMakeFiles/**
+Makefile
+cmake_install.cmake
+*.a
 
 # -----------------------------------------------------------------------------
 # Compiled sources

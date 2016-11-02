@@ -28,7 +28,7 @@ cd ../mapcodelib
 gcc $OPTS -O3 -c mapcoder.c
 cd ../utility
 gcc $OPTS -O3 mapcode.cpp -lm -o mapcode ../mapcodelib/mapcoder.o
-cd ../unittest
+cd ../test
 
 TEST=`which $NEW`
 if [ "$TEST" = "" ]

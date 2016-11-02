@@ -11,6 +11,10 @@ CMakeFiles/**
 Makefile
 cmake_install.cmake
 *.a
+unittest
+mapcode
+unittest/unittest
+utility/mapcode
 
 # -----------------------------------------------------------------------------
 # Compiled sources
@@ -21,8 +25,6 @@ cmake_install.cmake
 *.exe
 *.o
 *.so
-unittest/unittest
-utility/mapcode
 
 # -----------------------------------------------------------------------------
 # Packages and archives

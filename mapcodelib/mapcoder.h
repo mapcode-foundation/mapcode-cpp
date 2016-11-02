@@ -47,8 +47,17 @@ typedef struct {
 } Mapcodes;
 
 
+/**
+ * The MapcodeElement structure is returned by decodeXXX and can be used to inspect or clean up the
+ * mapcode input. The field territoryISO contains the cleaned up territory code from the input, but
+ * the code may be abbreviated, or even missing (if it wasn't available in the input).
+ *
+ * If you want to get a full territory code, use:
+ * char isoName[MAX_ISOCODE_LEN + 1];
+ * getTerritoryIsoName(isoName, mapcodeElement.territoryCode, 0)
+ */
 typedef struct {
-    char territoryISO[MAX_ISOCODE_LEN + 1];            // The (trimmed and uppercased) candidate territory ISO3166 code.
+    char territoryISO[MAX_ISOCODE_LEN + 1];            // The (trimmed and uppercased) territory code, from the input.
     enum Territory territoryCode;                      // The territory, as recognized and disambiguated from territoryISO.
     char properMapcode[MAX_PROPER_MAPCODE_LEN + 1];    // The (romanised) mapcode excl. territory or extension.
     int indexOfDot;                                    // Position of dot in properMapcode (a value between 2 and 5).

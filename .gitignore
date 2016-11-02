@@ -1,5 +1,8 @@
 unittest/gmon.out
 unittest/_*.txt
+unittest/*.gcov
+unittest/*.gcda
+unittest/*.gcno
 
 # -----------------------------------------------------------------------------
 # Compiled sources

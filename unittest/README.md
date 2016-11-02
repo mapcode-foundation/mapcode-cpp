@@ -28,7 +28,7 @@ Or, add `-fsanitize=address` to run the address sanitizer:
     cd ../mapcodelib
     gcc -O -c mapcoder.c
     cd ../unittest
-    gcc -O unittest.c -lm -lpthread -fsanitize=address -o unittest 
+    gcc -O unittest.c -lm -lpthread -fsanitize=address -o unittest ../mapcodelib/mapcoder.o
 
 And add the environment variable `ASAN_OPTIONS` to your shell:
 

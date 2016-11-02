@@ -15,7 +15,7 @@ date
 echo "!! -------------------------------------------------------------"
 
 echo ""
-echo "Run with: -O0"
+echo "Run gprof with: -O0"
 cd ../mapcodelib
 gcc $OPTS -g -O0 -c mapcoder.c -pg
 cd ../unittest
@@ -25,7 +25,7 @@ gprof ./unittest
 echo "!! -------------------------------------------------------------"
 
 echo ""
-echo "Run with: -O3"
+echo "Run gprof with: -O3"
 cd ../mapcodelib
 gcc $OPTS -g -O3 -c mapcoder.c -pg
 cd ../unittest

@@ -15,7 +15,7 @@ date
 echo "!! -------------------------------------------------------------"
 
 echo ""
-echo "Run with: -O0"
+echo "Run valgrind with: -O0"
 cd ../mapcodelib
 gcc $OPTS -g -O0 -c mapcoder.c
 cd ../unittest

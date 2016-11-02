@@ -18,7 +18,7 @@ echo "!! -------------------------------------------------------------"
 
 # No optimize
 echo ""
-echo "Run with: -O0"
+echo "Run address sanitizer with: -O0"
 cd ../mapcodelib
 gcc $OPTS -O0 -DDEBUG -c mapcoder.c
 cd ../unittest
@@ -28,7 +28,7 @@ echo "!! -------------------------------------------------------------"
 
 # Optimize 2
 echo ""
-echo "Run with: -O2"
+echo "Run address sanitizer with: -O2"
 cd ../mapcodelib
 gcc $OPTS -O2 -c mapcoder.c
 cd ../unittest
@@ -38,7 +38,7 @@ echo "!! -------------------------------------------------------------"
 
 # Optimize 3
 echo ""
-echo "Run with: -O3"
+echo "Run address sanitizer with: -O3"
 cd ../mapcodelib
 gcc $OPTS -O3 -c mapcoder.c
 cd ../unittest

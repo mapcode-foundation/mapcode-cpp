@@ -2,7 +2,7 @@
 OPTS="-Wall -Werror -Wno-pointer-to-int-cast"
 
 NEW=../utility/mapcode
-OLD=$HOME/bin/mapcode-2.3.0
+OLD=$HOME/bin/mapcode-2.3.1
 NEWFILE=_new.txt
 OLDFILE=_old.txt
 
@@ -23,7 +23,7 @@ date
 echo "!! -------------------------------------------------------------"
 
 echo ""
-echo "Run with: -O3"
+echo "Run compare with: -O3"
 cd ../mapcodelib
 gcc $OPTS -O3 -c mapcoder.c
 cd ../utility

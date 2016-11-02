@@ -7,7 +7,7 @@ date
 echo "!! -------------------------------------------------------------"
 
 echo ""
-echo "Run with: -O0"
+echo "Run normal with: -O0"
 cd ../mapcodelib
 gcc $OPTS -O0 -DDEBUG -c mapcoder.c
 cd ../unittest
@@ -16,7 +16,7 @@ gcc $OPTS -O0 -DDEBUG unittest.c -lm -lpthread -o unittest ../mapcodelib/mapcode
 echo "!! -------------------------------------------------------------"
 
 echo ""
-echo "Run with: -O3"
+echo "Run normal with: -O3"
 cd ../mapcodelib
 gcc $OPTS -O3 -c mapcoder.c
 cd ../unittest

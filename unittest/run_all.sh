@@ -1,11 +1,12 @@
 #!/bin/sh
-echo "Run all tests..."
-date
-echo ""
-./run_normal.sh
-./run_sanitizer.sh
-./run_gprof.sh
-./run_valgrind.sh
-./run_compare.sh
-echo ""
-echo "Done"
+OUT=_report.txt
+echo "Run all tests..." | tee $OUT
+date | tee -a $OUT
+echo "" | tee -a $OUT
+./run_normal.sh | tee -a $OUT
+./run_sanitizer.sh | tee -a $OUT
+./run_gprof.sh | tee -a $OUT
+./run_valgrind.sh | tee -a $OUT
+./run_compare.sh | tee -a $OUT
+echo ""  | tee -a $OUT
+echo "Done" | tee -a $OUT

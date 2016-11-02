@@ -1,5 +1,4 @@
 #!/bin/sh
-REPORT=_report_sanitizer.txt
 OPTS="-Wall -Werror -Wno-pointer-to-int-cast"
 LIB="../mapcodelib/mapcoder.o"
 
@@ -12,40 +11,40 @@ then
     exit 1
 fi
 
-echo "!! -------------------------------------------------------------" | tee -a $REPORT
-echo "Run address sanitizer..." | tee $REPORT
-date | tee -a $REPORT
-echo "!! -------------------------------------------------------------" | tee -a $REPORT
+echo "!! -------------------------------------------------------------"
+echo "Run address sanitizer..."
+date
+echo "!! -------------------------------------------------------------"
 
 # No optimize
-echo "" | tee -a $REPORT
-echo "Run with: -O0" | tee -a $REPORT
+echo ""
+echo "Run with: -O0"
 cd ../mapcodelib
 gcc $OPTS -O0 -DDEBUG -c mapcoder.c
 cd ../unittest
 gcc $OPTS -O0 -DDEBUG unittest.c -lm -lpthread -fsanitize=address -o unittest $LIB
-./unittest | tee -a $REPORT
-echo "!! -------------------------------------------------------------" | tee -a $REPORT
+./unittest
+echo "!! -------------------------------------------------------------"
 
 # Optimize 2
-echo "" | tee -a $REPORT
-echo "Run with: -O2" | tee -a $REPORT
+echo ""
+echo "Run with: -O2"
 cd ../mapcodelib
 gcc $OPTS -O2 -c mapcoder.c
 cd ../unittest
 gcc $OPTS -O2 unittest.c -lm -lpthread -fsanitize=address -o unittest $LIB
-./unittest | tee -a $REPORT
-echo "!! -------------------------------------------------------------" | tee -a $REPORT
+./unittest
+echo "!! -------------------------------------------------------------"
 
 # Optimize 3
-echo "" | tee -a $REPORT
-echo "Run with: -O3" | tee -a $REPORT
+echo ""
+echo "Run with: -O3"
 cd ../mapcodelib
 gcc $OPTS -O3 -c mapcoder.c
 cd ../unittest
 gcc $OPTS -O3 unittest.c -lm -lpthread -fsanitize=address -o unittest $LIB
-./unittest | tee -a $REPORT
-echo "!! -------------------------------------------------------------" | tee -a $REPORT
+./unittest
+echo "!! -------------------------------------------------------------"
 
-echo "" | tee -a $REPORT
+echo ""
 echo "Report in: $REPORT"

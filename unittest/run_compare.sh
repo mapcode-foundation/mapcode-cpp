@@ -1,9 +1,10 @@
 #!/bin/sh
-REPORT=_report_compare.txt
 OPTS="-Wall -Werror -Wno-pointer-to-int-cast"
 
 NEW=../utility/mapcode
-OLD=$HOME/bin/mapcode-2.3.1
+OLD=$HOME/bin/mapcode-2.3.0
+NEWFILE=_new.txt
+OLDFILE=_old.txt
 
 OPTS1="--grid 1000000 8"
 OPTS2="--random 1000000 8 1234"
@@ -16,13 +17,13 @@ then
     exit 1
 fi
 
-echo "!! -------------------------------------------------------------" | tee -a $REPORT
-echo "Run compare with previous output..." | tee $REPORT
-date | tee -a $REPORT
-echo "!! -------------------------------------------------------------" | tee -a $REPORT
+echo "!! -------------------------------------------------------------"
+echo "Run compare with previous output..."
+date
+echo "!! -------------------------------------------------------------"
 
-echo "" | tee -a $REPORT
-echo "Run with: -O3" | tee -a $REPORT
+echo ""
+echo "Run with: -O3"
 cd ../mapcodelib
 gcc $OPTS -O3 -c mapcoder.c
 cd ../utility
@@ -37,51 +38,59 @@ then
 fi
 
 echo ""
-echo "Execute: $NEW $OPTS1" | tee -a $REPORT
-$NEW | grep version | tee -a $REPORT
-$NEW $OPTS1 > _new_1.txt | tee -a $REPORT
+echo "Execute: $NEW $OPTS1"
+$NEW | grep version
+$NEW $OPTS1 > $NEWFILE
 
 echo ""
-echo "Execute: $OLD $OPTS1" | tee -a $REPORT
-$OLD | grep version | tee -a $REPORT
-$OLD $OPTS1 > _old_1.txt | tee -a $REPORT
-diff _new_1.txt _old_1.txt | tee -a $REPORT
+echo "Execute: $OLD $OPTS1"
+$OLD | grep version
+$OLD $OPTS1 > $OLDFILE
+diff $NEWFILE $OLDFILE
 if [ $? -ne 0 ]
 then
-    echo "ERROR: Diffs found with: " $OPTS1 | tee -a $REPORT
+    echo "ERROR: Diffs found with:" $OPTS1
+    exit 1
+else
+    rm -f $NEWFILE $OLDFILE
 fi
 
 echo ""
-echo "Execute: $NEW $OPTS2" | tee -a $REPORT
-$NEW | grep version | tee -a $REPORT
-$NEW $OPTS2 > _new_2.txt | tee -a $REPORT
+echo "Execute: $NEW $OPTS2"
+$NEW | grep version
+$NEW $OPTS2 > $NEWFILE
 
 echo ""
-echo "Execute: $OLD $OPTS2" | tee -a $REPORT
-$OLD | grep version | tee -a $REPORT
-$OLD $OPTS2 > _old_2.txt | tee -a $REPORT
-diff _new_2.txt _old_2.txt | tee -a $REPORT
+echo "Execute: $OLD $OPTS2"
+$OLD | grep version
+$OLD $OPTS2 > $OLDFILE
+diff $NEWFILE $OLDFILE
 if [ $? -ne 0 ]
 then
-    echo "ERROR: Diffs found with: " $OPTS2 | tee -a $REPORT
+    echo "ERROR: Diffs found with:" $OPTS2
+    exit 1
+else
+    rm -f $NEWFILE $OLDFILE
 fi
 
 echo ""
-echo "Execute: $NEW $OPTS3" | tee -a $REPORT
-$NEW | grep version | tee -a $REPORT
-$NEW $OPTS3 > _new_3.txt | tee -a $REPORT
+echo "Execute: $NEW $OPTS3"
+$NEW | grep version
+$NEW $OPTS3 > $NEWFILE
 
 echo ""
-echo "Execute: $OLD $OPTS3" | tee -a $REPORT
-$OLD | grep version | tee -a $REPORT
-$OLD $OPTS3 > _old_3.txt | tee -a $REPORT
-diff _new_3.txt _old_3.txt | tee -a $REPORT
+echo "Execute: $OLD $OPTS3"
+$OLD | grep version
+$OLD $OPTS3 > $OLDFILE
+diff $NEWFILE $OLDFILE
 if [ $? -ne 0 ]
 then
-    echo "ERROR: Diffs found with: " $OPTS3 | tee -a $REPORT
+    echo "ERROR: Diffs found with:" $OPTS3
+    exit 1
+else
+    rm -f $NEWFILE $OLDFILE
 fi
+echo "!! -------------------------------------------------------------"
 
-echo "!! -------------------------------------------------------------" | tee -a $REPORT
-
-echo "" | tee -a $REPORT
+echo ""
 echo "Report in: $REPORT"

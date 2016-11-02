@@ -3,6 +3,9 @@ unittest/_*.txt
 unittest/*.gcov
 unittest/*.gcda
 unittest/*.gcno
+mapcodelib/*.gcov
+mapcodelib/*.gcda
+mapcodelib/*.gcno
 
 # -----------------------------------------------------------------------------
 # Compiled sources

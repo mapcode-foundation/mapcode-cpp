@@ -15,14 +15,14 @@ date
 echo "!! -------------------------------------------------------------"
 
 echo ""
-echo "Run gcov with: -DNO_POSIX_THREADS -O0"
+echo "Run gcov with: -O0"
 cd ../mapcodelib
 gcc $OPTS -O0 -c mapcoder.c
 cd ../unittest
-gcc $OPTS -DNO_POSIX_THREADS -O0 unittest.c -lm -o unittest $LIB
+gcc $OPTS -O0 unittest.c -lm -lpthread -o unittest $LIB
 ./unittest
 cd ../mapcodelib
-gcov unittest.c
+gcov mapcoder.c
 cd ../unittest
 gcov unittest.c
 echo "!! -------------------------------------------------------------"

@@ -1633,7 +1633,7 @@ static int testGetFullTerritoryNameInLocale(const char *locale, const char *expe
     if (strcmp(expectedName, gotName)) {
         char s[MAX_ISOCODE_LEN + 1];
         foundError();
-        printf("*** ERROR *** getFullTerritoryNameInLocaleEnglish error, expected name '%s', but got '%s' for territory %s, alternative %d\n",
+        printf("*** ERROR *** getFullTerritoryNameInLocale error, expected name '%s', but got '%s' for territory %s, alternative %d\n",
                expectedName, gotName, getTerritoryIsoName(s, territory, 0), alternative);
     }
     ++nrTests;
@@ -1732,18 +1732,25 @@ int testGetFullTerritoryName(void) {
     int i;
     char territoryName[2048]; // large so we can test overflow
     static const char *locales_to_test[] = { 
-        "DA", "DE", "EN", "FR", "NL", 
-        "LOCAL" 
-    };
+        "DA", "DE", "EN", "FR", "NL"};
 
-    nrTests += testGetFullTerritoryNameInLocale("??", "", TERRITORY_VAT, 0);
+    nrTests += testGetFullTerritoryNameInLocale(NULL, "Vatican", TERRITORY_VAT, 0);
+    nrTests += testGetFullTerritoryNameInLocale("", "Vatican", TERRITORY_VAT, 0);
+    nrTests += testGetFullTerritoryNameInLocale("E", "Vatican", TERRITORY_VAT, 0);
+    nrTests += testGetFullTerritoryNameInLocale("EN", "Vatican", TERRITORY_VAT, 0);
+    nrTests += testGetFullTerritoryNameInLocale("??", "Vatican", TERRITORY_VAT, 0);
 
-    for (i = 0; i < (int) (sizeof(locales_to_test) / sizeof(const char *)); i++) {
+    for (i = 0; i < (int) (sizeof(locales_to_test) / sizeof(locales_to_test[0])); i++) {
         const char *locale = locales_to_test[i];
         int nrInLocale = 0;
         nrTests += testGetFullTerritoryNameInLocale(locale, "", _TERRITORY_MIN, 0);
         nrTests += testGetFullTerritoryNameInLocale(locale, "", _TERRITORY_MAX, 0);
-        for (territory = _TERRITORY_MIN + 1; territory < _TERRITORY_MAX; ++territory) {
+//        for (territory = _TERRITORY_MIN + 1; territory < _TERRITORY_MAX; ++territory) {
+        for (territory = TERRITORY_NLD; territory < TERRITORY_EST; ++territory) {
+            char expectedName[MAX_TERRITORY_FULLNAME_LEN + 1];
+            getFullTerritoryNameInLocale(expectedName, territory, 0, 0);
+            nrTests += testGetFullTerritoryNameInLocale(locale, expectedName, territory, 0);
+            nrTests += testGetFullTerritoryNameInLocale("", expectedName, territory, 0);
             nrTests += testGetFullTerritoryNameInLocale(locale, "", territory, -1);
             nrTests += testGetFullTerritoryNameInLocale(locale, "", territory, 999);
             for (alternative = 0;; alternative++) {
@@ -1765,7 +1772,6 @@ int testGetFullTerritoryName(void) {
                 }
             }
         }
-        fprintf(stderr,"  %d names in locale %s\n", nrInLocale, locale); //TODO @@@
     }
 
 #ifdef MAPCODE_SUPPORT_LANGUAGE_LOCAL

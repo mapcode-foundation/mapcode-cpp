@@ -26,6 +26,10 @@
 #include "internal_territory_names_local.h"
 #include "internal_alphabet_recognizer.h"
 
+// We must have a default language
+#define MAPCODE_SUPPORT_LANGUAGE_EN
+#define DEFAULT_TERRITORY_FULL_NAME TERRITORY_FULL_NAME_EN
+
 #include "internal_territory_names_da.h"
 #include "internal_territory_names_de.h"
 #include "internal_territory_names_en.h"
@@ -105,6 +109,19 @@ static const double METERS_PER_DEGREE_LAT = EARTH_CIRCUMFERENCE_Y / 360.0;
 static const double METERS_PER_DEGREE_LON = EARTH_CIRCUMFERENCE_X / 360.0;
 
 static const int DEBUG_STOP_AT = -1; // to externally test-restrict internal encoding, do not use!
+
+typedef struct {
+    const char *locale;
+    const char **territoryFullNames;
+} LocaleRegistryItem;
+
+static const LocaleRegistryItem LOCALE_REGISTRY[] = {
+        {"DA", TERRITORY_FULL_NAME_DA},
+        {"DE", TERRITORY_FULL_NAME_DE},
+        {"EN", TERRITORY_FULL_NAME_EN},
+        {"FR", TERRITORY_FULL_NAME_FR},
+        {"NL", TERRITORY_FULL_NAME_NL}
+};
 
 // important information about the 8 parents
 static const char *PARENTS_3 = "USA,IND,CAN,AUS,MEX,BRA,RUS,CHN,";
@@ -3023,19 +3040,6 @@ const TerritoryAlphabets *getAlphabetsForTerritory(enum Territory territory) {
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-typedef struct {
-    const char* locale;
-    const char** territoryFullnames;
-} LocaleRegistryItem;
-
-static const LocaleRegistryItem LOCALE_REGISTRY[] = {
-        { "DA", TERRITORY_FULL_NAME_DA },
-        { "DE", TERRITORY_FULL_NAME_DE },
-        { "EN", TERRITORY_FULL_NAME_EN },
-        { "FR", TERRITORY_FULL_NAME_FR },
-        { "NL", TERRITORY_FULL_NAME_NL }
-};
-
 static int getFullTerritoryName_internal(
         char *territoryName,
         enum Territory territory,
@@ -3046,34 +3050,42 @@ static int getFullTerritoryName_internal(
     const char *s;
     const char *pipePtr;
     const char **namelist = NULL;
-    char localeUpper[3] = "";
 
     ASSERT(territoryName);
 
-    if ((!locale && (strlen(locale) < 2)) || alternative < 0 || territory <= _TERRITORY_MIN || territory >= _TERRITORY_MAX) {
+    if (alternative < 0 || territory <= _TERRITORY_MIN || territory >= _TERRITORY_MAX) {
         *territoryName = 0;
         return 0;
     }
-    localeUpper[0] = locale[0];
-    localeUpper[1] = locale[1];
-    localeUpper[2] = 0;
 
     if (locale == NULL) {
+
+        // Use local names if locale is null.
         namelist = TERRITORY_FULL_NAME_LOCAL;
+    } else if (strlen(locale) < 2) {
+
+        // Locale is invalid.
+        namelist = NULL;
     } else {
+
+        // Try and get correct list.
+        char localeUpper[3] = "";
         int i;
+        localeUpper[0] = locale[0];
+        localeUpper[1] = locale[1];
+        localeUpper[2] = 0;
         namelist = NULL;
         for (i = 0; i < (int) (sizeof(LOCALE_REGISTRY) / sizeof(LOCALE_REGISTRY[0])); ++i) {
-            if (strcmp(LOCALE_REGISTRY[i].locale, localeUpper)) {
-                namelist = LOCALE_REGISTRY[i].territoryFullnames;
+            if (!strcmp(LOCALE_REGISTRY[i].locale, localeUpper)) {
+                namelist = LOCALE_REGISTRY[i].territoryFullNames;
                 break;
             }
         }
     }
 
+    // Use English if locale is invalid.
     if (namelist == NULL || namelist[0] == NULL) {
-        *territoryName = 0;
-        return 0;
+        namelist = DEFAULT_TERRITORY_FULL_NAME;
     }
 
     s = namelist[INDEX_OF_TERRITORY(territory)];

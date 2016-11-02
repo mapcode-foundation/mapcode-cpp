@@ -62,7 +62,7 @@ decode Mapcodes.
 
 This produces the following help text:
 
-    MAPCODE (version 2.5.1)
+    MAPCODE (version 2.5.2)
     Copyright (C) 2014-2016 Stichting Mapcode Foundation
     
     Usage:
@@ -137,6 +137,10 @@ You may not require all of this data, so we've added some options for you to be 
 footprint, for example for embedded applications. 
 
 ## Release Notes
+
+### 2.5.2
+
+* Added locale support. 
 
 ### 2.5.1
 

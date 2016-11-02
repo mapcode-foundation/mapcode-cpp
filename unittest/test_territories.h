@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-// produced by fast_territories.cpp
-
+// *** GENERATED FILE (fast_territories.cpp), DO NOT CHANGE OR PRETTIFY ***
 #include "../mapcodelib/mapcode_territories.h"
 
 typedef struct {

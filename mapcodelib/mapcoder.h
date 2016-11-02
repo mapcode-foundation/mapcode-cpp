@@ -25,7 +25,7 @@ extern "C" {
 #include "mapcode_alphabets.h"
 
 
-#define MAPCODE_C_VERSION          "2.5.0"
+#define MAPCODE_C_VERSION          "2.5.1"
 #define UWORD                      unsigned short int  // 2-byte unsigned integer.
 #define MAX_NR_OF_MAPCODE_RESULTS  22          // Max. number of results ever returned by encoder (e.g. for 26.904899, 95.138515).
 #define MAX_PROPER_MAPCODE_LEN     11          // Max. number of characters in a proper mapcode (including the dot, excl. precision extension).

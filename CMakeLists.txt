@@ -48,7 +48,12 @@ set(SOURCE_FILES_MAPCODELIB
         mapcodelib/internal_alphabet_recognizer.h
         mapcodelib/internal_iso3166_data.h
         mapcodelib/internal_territory_alphabets.h
-        mapcodelib/internal_territory_names_english.h
+        mapcodelib/internal_territory_names_da.h
+        mapcodelib/internal_territory_names_de.h
+        mapcodelib/internal_territory_names_en.h
+        mapcodelib/internal_territory_names_fr.h
+        mapcodelib/internal_territory_names_hi.h
+        mapcodelib/internal_territory_names_nl.h
         mapcodelib/internal_territory_names_local.h
         mapcodelib/internal_territory_search.h
         mapcodelib/mapcode_alphabets.h
@@ -66,6 +71,7 @@ set(SOURCE_FILES_UTILITY
         utility/mapcode.cpp)
 
 add_library(mapcodelib ${SOURCE_FILES_MAPCODELIB})
+target_include_directories(mapcodelib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(unittest ${SOURCE_FILES_TEST})
 target_link_libraries(unittest LINK_PUBLIC mapcodelib)

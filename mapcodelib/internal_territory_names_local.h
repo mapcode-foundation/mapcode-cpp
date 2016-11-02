@@ -21,7 +21,8 @@ extern "C" {
 #endif
 
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
-static const char *TERRITORY_LOCAL_NAME_UTF8[] = {
+static const char *TERRITORY_FULL_NAME_LOCAL[] = {
+#ifdef MAPCODE_SUPPORT_LANGUAGE_LOCAL
         "Sancta Sedes|Holy See",
         "Monaco",
         "Gibraltar",
@@ -555,7 +556,10 @@ static const char *TERRITORY_LOCAL_NAME_UTF8[] = {
         "Île de Clipperton|Isla de la Pasión",
         "Antarctica",
         "Earth",
-        "?"};
+#else // MAPCODE_SUPPORT_LANGUAGE_LOCAL
+        NULL
+#endif // MAPCODE_SUPPORT_LANGUAGE_LOCAL
+};
 
 #ifdef __cplusplus
 }

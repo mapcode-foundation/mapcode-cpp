@@ -22,11 +22,16 @@
 #include "mapcoder.h"
 #include "internal_data.h"
 #include "internal_iso3166_data.h"
-#include "internal_territory_names_english.h"
 #include "internal_territory_alphabets.h"
 #include "internal_territory_names_local.h"
 #include "internal_alphabet_recognizer.h"
 
+#include "internal_territory_names_da.h"
+#include "internal_territory_names_de.h"
+#include "internal_territory_names_en.h"
+#include "internal_territory_names_fr.h"
+#include "internal_territory_names_nl.h"
+#include "internal_territory_names_local.h"
 
 #ifdef DEBUG
 
@@ -3018,26 +3023,59 @@ const TerritoryAlphabets *getAlphabetsForTerritory(enum Territory territory) {
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
+typedef struct {
+    const char* locale;
+    const char** territoryFullnames;
+} LocaleRegistryItem;
+
+static const LocaleRegistryItem LOCALE_REGISTRY[] = {
+        { "DA", TERRITORY_FULL_NAME_DA },
+        { "DE", TERRITORY_FULL_NAME_DE },
+        { "EN", TERRITORY_FULL_NAME_EN },
+        { "FR", TERRITORY_FULL_NAME_FR },
+        { "NL", TERRITORY_FULL_NAME_NL }
+};
 
 static int getFullTerritoryName_internal(
         char *territoryName,
         enum Territory territory,
         int alternative,
         int alphabet,
-        const char *namelist[]) {
+        const char *locale) {
 
     const char *s;
     const char *pipePtr;
+    const char **namelist = NULL;
+    char localeUpper[3] = "";
 
     ASSERT(territoryName);
-    if (!territoryName) {
-        return 0;
-    }
-    if (!namelist || alternative < 0 ||
-        territory <= _TERRITORY_MIN || territory >= _TERRITORY_MAX) {
+
+    if ((!locale && (strlen(locale) < 2)) || alternative < 0 || territory <= _TERRITORY_MIN || territory >= _TERRITORY_MAX) {
         *territoryName = 0;
         return 0;
     }
+    localeUpper[0] = locale[0];
+    localeUpper[1] = locale[1];
+    localeUpper[2] = 0;
+
+    if (locale == NULL) {
+        namelist = TERRITORY_FULL_NAME_LOCAL;
+    } else {
+        int i;
+        namelist = NULL;
+        for (i = 0; i < (int) (sizeof(LOCALE_REGISTRY) / sizeof(LOCALE_REGISTRY[0])); ++i) {
+            if (strcmp(LOCALE_REGISTRY[i].locale, localeUpper)) {
+                namelist = LOCALE_REGISTRY[i].territoryFullnames;
+                break;
+            }
+        }
+    }
+
+    if (namelist == NULL || namelist[0] == NULL) {
+        *territoryName = 0;
+        return 0;
+    }
+
     s = namelist[INDEX_OF_TERRITORY(territory)];
     for (;;) {
         pipePtr = strchr(s, '|');
@@ -3080,10 +3118,27 @@ static int getFullTerritoryName_internal(
 }
 
 
-int getFullTerritoryNameEnglish(char *territoryName, enum Territory territory, int alternative) {
-    return getFullTerritoryName_internal(territoryName, territory, alternative, -1, TERRITORY_FULL_NAME);
+int getFullTerritoryNameInLocaleInAlphabet(char *territoryName, enum Territory territory, int alternative,
+                                           const char *locale, enum Alphabet alphabet) {
+    return getFullTerritoryName_internal(territoryName, territory, alternative, alphabet, locale);
 }
 
+
+int getFullTerritoryNameInLocale(char *territoryName, enum Territory territory, int alternative,
+                                 const char *locale) {
+    return getFullTerritoryName_internal(territoryName, territory, alternative, -1, locale);
+}
+
+
+#ifdef MAPCODE_SUPPORT_LANGUAGE_EN // TODO @@@ move to legacy!
+
+int getFullTerritoryNameEnglish(char *territoryName, enum Territory territory, int alternative) {
+    return getFullTerritoryName_internal(territoryName, territory, alternative, -1, "en_US");
+}
+
+#endif
+
+#ifdef MAPCODE_SUPPORT_LANGUAGE_LOCAL
 
 int getFullTerritoryNameLocalInAlphabet(char *territoryName, enum Territory territory, int alternative,
                                         enum Alphabet alphabet) {
@@ -3095,13 +3150,12 @@ int getFullTerritoryNameLocalInAlphabet(char *territoryName, enum Territory terr
         *territoryName = 0;
         return 0;
     }
-    return getFullTerritoryName_internal(territoryName, territory, alternative, (int) alphabet,
-                                         TERRITORY_LOCAL_NAME_UTF8);
+    return getFullTerritoryName_internal(territoryName, territory, alternative, (int) alphabet, "local");
 }
 
 
 int getFullTerritoryNameLocal(char *territoryName, enum Territory territory, int alternative) {
-    return getFullTerritoryName_internal(territoryName, territory, alternative, -1, TERRITORY_LOCAL_NAME_UTF8);
+    return getFullTerritoryName_internal(territoryName, territory, alternative, -1, "local");
 }
 
-
+#endif

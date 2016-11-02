@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __INTERNAL_TERRITORY_NAMES_EN_H__
-#define __INTERNAL_TERRITORY_NAMES_EN_H__
+#ifndef __INTERNAL_TERRITORY_NAMES_ENGLISH_H__
+#define __INTERNAL_TERRITORY_NAMES_ENGLISH_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
-static const char *TERRITORY_FULL_NAME_EN[] = {
-#ifdef MAPCODE_SUPPORT_LANGUAGE_EN
+static const char *TERRITORY_FULL_NAME[] = {
         "Vatican|Holy See",
         "Monaco",
         "Gibraltar",
@@ -556,13 +555,10 @@ static const char *TERRITORY_FULL_NAME_EN[] = {
         "Clipperton Island",
         "Antarctica",
         "International|Worldwide|Earth",
-#else // MAPCODE_SUPPORT_LANGUAGE_EN
-        NULL
-#endif // MAPCODE_SUPPORT_LANGUAGE_EN
-};
+        "?"};
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // __INTERNAL_TERRITORY_NAMES_EN_H__
+#endif // __INTERNAL_TERRITORY_NAMES_ENGLISH_H__

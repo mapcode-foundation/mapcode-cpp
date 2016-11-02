@@ -68,7 +68,6 @@ void _TestAssert(int iCondition, const char *cstrFile, int iLine) {
 #define REC_TYPE(m)           ((TERRITORY_BOUNDARIES[m].flags >> 7) & 3)
 #define SMART_DIV(m)          (TERRITORY_BOUNDARIES[m].flags >> 16)
 #define HEADER_LETTER(m)      (ENCODE_CHARS[(TERRITORY_BOUNDARIES[m].flags >> 11) & 31])
-#define BOUNDARY_PTR(m)       (&TERRITORY_BOUNDARIES[m])
 
 #define TOKENSEP   0
 #define TOKENDOT   1
@@ -89,6 +88,12 @@ void _TestAssert(int iCondition, const char *cstrFile, int iLine) {
 // Circumference of Earth.
 #define EARTH_CIRCUMFERENCE_X (EARTH_RADIUS_X_METERS * 2 * MATH_PI)
 #define EARTH_CIRCUMFERENCE_Y (EARTH_RADIUS_Y_METERS * 2 * MATH_PI)
+
+#define MICROLAT_TO_FRACTIONS_FACTOR ((double) MAX_PRECISION_FACTOR)
+#define MICROLON_TO_FRACTIONS_FACTOR (4.0 * MAX_PRECISION_FACTOR)
+
+#define FLAG_UTF8_STRING      0 // interpret pointer a utf8 characters
+#define FLAG_UTF16_STRING     1 // interpret pointer a UWORD* to utf16 characters
 
 // Meters per degree latitude is fixed. For longitude: use factor * cos(midpoint of two degree latitudes).
 static const double METERS_PER_DEGREE_LAT = EARTH_CIRCUMFERENCE_Y / 360.0;
@@ -330,8 +335,7 @@ static TerritoryBoundary *getExtendedBoundaries(TerritoryBoundary *target, const
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-#define MICROLAT_TO_FRACTIONS_FACTOR ((double)MAX_PRECISION_FACTOR)
-#define MICROLON_TO_FRACTIONS_FACTOR (4.0 * MAX_PRECISION_FACTOR)
+
 typedef struct {
     // latitudes in "810 billionths", range [-729 E11 .. +720 E11), is well within (-2^47 ... +2^47)
     double fminy;
@@ -822,7 +826,7 @@ static const int NC[6] = {1, 31, 961, 29791, 923521, 28629151};
 // returns *result==0 in case of error
 static void encodeGrid(char *result, const EncodeRec *enc, const int m, const int extraDigits,
                        const char headerLetter) {
-    const TerritoryBoundary *b = BOUNDARY_PTR(m);
+    const TerritoryBoundary *b = TERRITORY_BOUNDARY(m);
     const int orgcodex = coDex(m);
     int codexm;
     ASSERT(result);
@@ -999,7 +1003,7 @@ static void encodeNameless(char *result, const EncodeRec *enc, const enum Territ
 
         SIDE = SMART_DIV(m);
 
-        b = BOUNDARY_PTR(m);
+        b = TERRITORY_BOUNDARY(m);
         orgSIDE = SIDE;
 
         {
@@ -1075,7 +1079,7 @@ static void encodeAutoHeader(char *result, const EncodeRec *enc, const int m, co
 
     i = firstindex;
     for (;;) {
-        b = BOUNDARY_PTR(i);
+        b = TERRITORY_BOUNDARY(i);
         // determine how many cells
         H = (b->maxy - b->miny + 89) / 90; // multiple of 10m
         xdiv = xDivider4(b->miny, b->maxy);
@@ -1137,7 +1141,7 @@ static void encoderEngine(const enum Territory ccode, const EncodeRec *enc, cons
     from = firstRec(ccode);
     upto = lastRec(ccode);
 
-    if (!fitsInsideBoundaries(&enc->coord32, BOUNDARY_PTR(upto))) {
+    if (!fitsInsideBoundaries(&enc->coord32, TERRITORY_BOUNDARY(upto))) {
         return;
     }
 
@@ -1151,7 +1155,7 @@ static void encoderEngine(const enum Territory ccode, const EncodeRec *enc, cons
 
         *result = 0;
         for (i = from; i <= upto; i++) {
-            if (fitsInsideBoundaries(&enc->coord32, BOUNDARY_PTR(i))) {
+            if (fitsInsideBoundaries(&enc->coord32, TERRITORY_BOUNDARY(i))) {
                 if (IS_NAMELESS(i)) {
                     encodeNameless(result, enc, ccode, extraDigits, i);
                 } else if (REC_TYPE(i) > 1) {
@@ -1478,7 +1482,7 @@ static enum MapcodeError decodeGrid(DecodeRec *dec, const int m, const int hasHe
 
 
             {
-                const TerritoryBoundary *b = BOUNDARY_PTR(m);
+                const TerritoryBoundary *b = TERRITORY_BOUNDARY(m);
                 const int ygridsize = (b->maxy - b->miny + divy - 1) / divy; // microdegrees per cell
                 const int xgridsize = (b->maxx - b->minx + divx - 1) / divx; // microdegrees per cell
 
@@ -1521,7 +1525,7 @@ static enum MapcodeError decodeGrid(DecodeRec *dec, const int m, const int hasHe
 
                         dec->coord32.lonMicroDeg = relx + (difx * dividerx);
                         dec->coord32.latMicroDeg = rely + (dify * dividery);
-                        if (!fitsInsideBoundaries(&dec->coord32, BOUNDARY_PTR(m))) {
+                        if (!fitsInsideBoundaries(&dec->coord32, TERRITORY_BOUNDARY(m))) {
                             return ERR_MAPCODE_UNDECODABLE; // type 2 "NLD Q000.000"
                         }
 
@@ -1637,7 +1641,7 @@ static enum MapcodeError decodeNameless(DecodeRec *dec, int m) {
 
         xSIDE = SIDE = SMART_DIV(m);
 
-        b = BOUNDARY_PTR(m);
+        b = TERRITORY_BOUNDARY(m);
 
         // decode
         {
@@ -1692,7 +1696,7 @@ static enum MapcodeError decodeAutoHeader(DecodeRec *dec, int m) {
     value *= (961 * 31);
 
     for (; coDex(m) == codexm && REC_TYPE(m) > 1; m++) {
-        const TerritoryBoundary *b = BOUNDARY_PTR(m);
+        const TerritoryBoundary *b = TERRITORY_BOUNDARY(m);
         // determine how many cells
         int H = (b->maxy - b->miny + 89) / 90; // multiple of 10m
         const int xdiv = xDivider4(b->miny, b->maxy);
@@ -2020,12 +2024,8 @@ static const int STATE_MACHINE[27][6] = {
 
 
 // Returns 0 if ok, negative in case of error (where -999 represents "may BECOME a valid mapcode if more characters are added)
-#define FLAG_UTF8_STRING      0 // interpret pointer a utf8 characters
-#define FLAG_UTF16_STRING     1 // interpret pointer a UWORD* to utf16 characters
-
-
 static enum MapcodeError parseMapcodeString(MapcodeElements *mapcodeElements, const char *string, int interpretAsUtf16,
-                                     enum Territory territory) {
+                                            enum Territory territory) {
     const UWORD *utf16 = (const UWORD *) string;
     int isAbjad = 0;
     const unsigned char *utf8 = (unsigned char *) string;
@@ -2168,7 +2168,8 @@ static enum MapcodeError parseMapcodeString(MapcodeElements *mapcodeElements, co
                 }
                 if (isAbjad) {
                     convertFromAbjad(mapcodeElements->properMapcode);
-                    mapcodeElements->indexOfDot = (int) (strchr(mapcodeElements->properMapcode, '.') - mapcodeElements->properMapcode);
+                    mapcodeElements->indexOfDot = (int) (strchr(mapcodeElements->properMapcode, '.') -
+                                                         mapcodeElements->properMapcode);
                 }
                 if (*mapcodeElements->territoryISO) {
                     mapcodeElements->territoryCode = getTerritoryCode(mapcodeElements->territoryISO, territory);
@@ -2270,7 +2271,7 @@ static enum MapcodeError decoderEngine(DecodeRec *dec, int parseFlags) {
                     err = decodeGrid(dec, i, 0);
 
                     // first of all, make sure the zone fits the country
-                    restrictZoneTo(&dec->zone, &dec->zone, BOUNDARY_PTR(upto));
+                    restrictZoneTo(&dec->zone, &dec->zone, TERRITORY_BOUNDARY(upto));
 
                     if ((err == ERR_OK) && IS_RESTRICTED(i)) {
                         int nrZoneOverlaps = 0;
@@ -2281,7 +2282,7 @@ static enum MapcodeError decoderEngine(DecodeRec *dec, int parseFlags) {
                         dec->coord32 = convertFractionsToCoord32(&dec->result);
                         for (j = i - 1; j >= from; j--) { // look in previous rects
                             if (!IS_RESTRICTED(j)) {
-                                if (fitsInsideBoundaries(&dec->coord32, BOUNDARY_PTR(j))) {
+                                if (fitsInsideBoundaries(&dec->coord32, TERRITORY_BOUNDARY(j))) {
                                     nrZoneOverlaps = 1;
                                     break;
                                 }
@@ -2294,13 +2295,13 @@ static enum MapcodeError decoderEngine(DecodeRec *dec, int parseFlags) {
                             for (j = from; j < i; j++) { // try all smaller rectangles j
                                 if (!IS_RESTRICTED(j)) {
                                     MapcodeZone z;
-                                    if (restrictZoneTo(&z, &dec->zone, BOUNDARY_PTR(j))) {
+                                    if (restrictZoneTo(&z, &dec->zone, TERRITORY_BOUNDARY(j))) {
                                         nrZoneOverlaps++;
                                         if (nrZoneOverlaps == 1) {
                                             // first fit! remember...
                                             zoneCopyFrom(&zfound, &z);
                                             ASSERT(j <= MAPCODE_BOUNDARY_MAX);
-                                            memcpy(&prevu, BOUNDARY_PTR(j), sizeof(TerritoryBoundary));
+                                            memcpy(&prevu, TERRITORY_BOUNDARY(j), sizeof(TerritoryBoundary));
                                         } else { // nrZoneOverlaps >= 2
                                             // more than one hit
                                             break; // give up
@@ -2338,7 +2339,7 @@ static enum MapcodeError decoderEngine(DecodeRec *dec, int parseFlags) {
     } // for
 
     if (!err) {
-        restrictZoneTo(&dec->zone, &dec->zone, BOUNDARY_PTR(lastRec(ccode)));
+        restrictZoneTo(&dec->zone, &dec->zone, TERRITORY_BOUNDARY(lastRec(ccode)));
 
         if (isEmpty(&dec->zone)) {
             err = ERR_MAPCODE_UNDECODABLE; // type 0 "BRA xx.xx"
@@ -2794,7 +2795,7 @@ int multipleBordersNearby(double latDeg, double lonDeg, enum Territory territory
             convertCoordsToMicrosAndFractions(&coord32, NULL, NULL, latDeg, lonDeg);
             for (m = upto; m >= from; m--) {
                 if (!IS_RESTRICTED(m)) {
-                    if (isNearBorderOf(&coord32, BOUNDARY_PTR(m))) {
+                    if (isNearBorderOf(&coord32, TERRITORY_BOUNDARY(m))) {
                         nrFound++;
                         if (nrFound > 1) {
                             return 1;
@@ -2924,8 +2925,9 @@ decodeMapcodeToLatLonUtf8(double *latDeg, double *lonDeg, const char *mapcode, e
 
 
 // PUBLIC - decode string into lat,lon; returns negative in case of error
-enum MapcodeError decodeMapcodeToLatLonUtf16(double *latDeg, double *lonDeg, const UWORD *mapcode, enum Territory territory,
-                                             MapcodeElements *mapcodeElements) {
+enum MapcodeError
+decodeMapcodeToLatLonUtf16(double *latDeg, double *lonDeg, const UWORD *mapcode, enum Territory territory,
+                           MapcodeElements *mapcodeElements) {
     if ((latDeg == NULL) || (lonDeg == NULL) || (mapcode == NULL)) {
         return ERR_BAD_ARGUMENTS;
     } else {
@@ -3093,7 +3095,8 @@ int getFullTerritoryNameLocalInAlphabet(char *territoryName, enum Territory terr
         *territoryName = 0;
         return 0;
     }
-    return getFullTerritoryName_internal(territoryName, territory, alternative, (int) alphabet, TERRITORY_LOCAL_NAME_UTF8);
+    return getFullTerritoryName_internal(territoryName, territory, alternative, (int) alphabet,
+                                         TERRITORY_LOCAL_NAME_UTF8);
 }
 
 

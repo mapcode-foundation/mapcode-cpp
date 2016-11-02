@@ -27,7 +27,7 @@ project(mapcode_cpp)
 # NO_FAST_ENCODE        - Drop fast encoding support - only for internal use.
 
 set(MAPCODE_OPTIONS "")
-set(MAPCODE_WARNING_OPTIONS "-Wall -Werror")
+set(MAPCODE_WARNING_OPTIONS "-Wall -Werror -Wextra -Wpedantic")
 set(MAPCODE_SANITIZER_COMPILER_OPTIONS "-fsanitize=address -fno-common -fno-optimize-sibling-calls -fno-omit-frame-pointer")
 set(MAPCODE_SANITIZER_LINKER_OPTIONS "-fsanitize=address")
 

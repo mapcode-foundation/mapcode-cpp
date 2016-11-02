@@ -102,304 +102,304 @@ static int testMapcodeFormats(void) {
         enum MapcodeError parseError;   // expected error
         enum MapcodeError decodeError;  // expected error when decoded
     } formattests[] = {
-            {"nld bc.xy-x1y",        ERR_OK, ERR_OK},
-            {"pan a1.2e-b2c",        ERR_OK, ERR_OK},
-            {"###################",  ERR_INVALID_CHARACTER},
-            {"...................",  ERR_UNEXPECTED_DOT},
-            {"1111111111111111.11",  ERR_INVALID_MAPCODE_FORMAT},
-            {"US-XXXXXXXXXXXXXXXX",  ERR_BAD_TERRITORY_FORMAT},
-            {"US-----------------",  ERR_UNEXPECTED_HYPHEN},
-            {"-------------------",  ERR_UNEXPECTED_HYPHEN},
+            {"nld bc.xy-x1y",        ERR_OK,                          ERR_OK},
+            {"pan a1.2e-b2c",        ERR_OK,                          ERR_OK},
+            {"###################",  ERR_INVALID_CHARACTER,           ERR_OK},
+            {"...................",  ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"1111111111111111.11",  ERR_INVALID_MAPCODE_FORMAT,      ERR_OK},
+            {"US-XXXXXXXXXXXXXXXX",  ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"US-----------------",  ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"-------------------",  ERR_UNEXPECTED_HYPHEN,           ERR_OK},
 
-            {"cck XX.XX",            ERR_OK, ERR_OK}, // nameless22
-            {"cze XX.XXX",           ERR_OK, ERR_OK}, // nameless23
-            {"NLD XXX.XX",           ERR_OK, ERR_OK}, // nameless32
-            {"VAT 5d.dd",            ERR_OK, ERR_OK}, // Grid22
-            {"NLD XX.XXX",           ERR_OK, ERR_OK}, // Grid23
-            {"bhr xxx.xx",           ERR_OK, ERR_OK}, // Grid32
-            {"FRA XXX.XXX",          ERR_OK, ERR_OK}, // Grid33
-            {"irl xx.xxxx",          ERR_OK, ERR_OK}, // Grid24
-            {"cub xxxx.xx",          ERR_OK, ERR_OK}, // Grid42
-            {"ben xxxx.xxx",         ERR_OK, ERR_OK}, // Grid34
-            {"USA xxxx.xxxx",        ERR_OK, ERR_OK}, // Grid44
-            {"US-AZ hhh.hh",         ERR_OK, ERR_OK}, // HGrid32
-            {"Bel hhh.hhh",          ERR_OK, ERR_OK}, // HGrid33
-            {"PAN hh.hhhh",          ERR_OK, ERR_OK}, // HGrid24
-            {"GRC hhhh.hh",          ERR_OK, ERR_OK}, // HGrid42
-            {"NZL hhhh.hhh",         ERR_OK, ERR_OK}, // HGrid43
-            {"KAZ hhh.hhhh",         ERR_OK, ERR_OK}, // HGrid34
-            {"RUS xxxx.xxxx",        ERR_OK, ERR_OK}, // HGrid44
-            {"CN-SH hhhh.hhhh",      ERR_OK, ERR_OK}, // HGrid44
-            {"VAT hhhhh.hhhh",       ERR_OK, ERR_OK}, // HGrid54
-            {"hhhhh.hhhh",           ERR_OK, ERR_OK}, // HGrid54
-            {"TUV hh.hhh",           ERR_OK, ERR_OK}, // AutoHeader23
-            {"LVA L88.ZVR",          ERR_OK, ERR_OK}, // AutoHeader33
-            {"WLF XLG.3GP",          ERR_OK, ERR_OK}, // HGrid33 R
-            {"VAT j0q3.27r",         ERR_OK, ERR_OK}, // HGrid43 R
-            {"PAK hhhh.hhhh",        ERR_OK, ERR_OK}, // HGrid44 R
+            {"cck XX.XX",            ERR_OK,                          ERR_OK}, // nameless22
+            {"cze XX.XXX",           ERR_OK,                          ERR_OK}, // nameless23
+            {"NLD XXX.XX",           ERR_OK,                          ERR_OK}, // nameless32
+            {"VAT 5d.dd",            ERR_OK,                          ERR_OK}, // Grid22
+            {"NLD XX.XXX",           ERR_OK,                          ERR_OK}, // Grid23
+            {"bhr xxx.xx",           ERR_OK,                          ERR_OK}, // Grid32
+            {"FRA XXX.XXX",          ERR_OK,                          ERR_OK}, // Grid33
+            {"irl xx.xxxx",          ERR_OK,                          ERR_OK}, // Grid24
+            {"cub xxxx.xx",          ERR_OK,                          ERR_OK}, // Grid42
+            {"ben xxxx.xxx",         ERR_OK,                          ERR_OK}, // Grid34
+            {"USA xxxx.xxxx",        ERR_OK,                          ERR_OK}, // Grid44
+            {"US-AZ hhh.hh",         ERR_OK,                          ERR_OK}, // HGrid32
+            {"Bel hhh.hhh",          ERR_OK,                          ERR_OK}, // HGrid33
+            {"PAN hh.hhhh",          ERR_OK,                          ERR_OK}, // HGrid24
+            {"GRC hhhh.hh",          ERR_OK,                          ERR_OK}, // HGrid42
+            {"NZL hhhh.hhh",         ERR_OK,                          ERR_OK}, // HGrid43
+            {"KAZ hhh.hhhh",         ERR_OK,                          ERR_OK}, // HGrid34
+            {"RUS xxxx.xxxx",        ERR_OK,                          ERR_OK}, // HGrid44
+            {"CN-SH hhhh.hhhh",      ERR_OK,                          ERR_OK}, // HGrid44
+            {"VAT hhhhh.hhhh",       ERR_OK,                          ERR_OK}, // HGrid54
+            {"hhhhh.hhhh",           ERR_OK,                          ERR_OK}, // HGrid54
+            {"TUV hh.hhh",           ERR_OK,                          ERR_OK}, // AutoHeader23
+            {"LVA L88.ZVR",          ERR_OK,                          ERR_OK}, // AutoHeader33
+            {"WLF XLG.3GP",          ERR_OK,                          ERR_OK}, // HGrid33 R
+            {"VAT j0q3.27r",         ERR_OK,                          ERR_OK}, // HGrid43 R
+            {"PAK hhhh.hhhh",        ERR_OK,                          ERR_OK}, // HGrid44 R
 
-            {"NLD 49.4V",            ERR_OK, ERR_OK},
-            {"NLX 49.4V",            ERR_UNKNOWN_TERRITORY},
-            {"49.4V",                ERR_OK, ERR_MISSING_TERRITORY},
-            {"BRA 49.4V",            ERR_OK, ERR_MAPCODE_UNDECODABLE}, // type 0
-            {"BRA XXXXX.XXX",        ERR_OK, ERR_MAPCODE_UNDECODABLE}, // type 0
-            {"NLD XXXX.XXXX",        ERR_OK, ERR_MAPCODE_UNDECODABLE}, // type 0
-            {"NLD ZZ.ZZ",            ERR_OK, ERR_MAPCODE_UNDECODABLE}, // type 1 nameless
-            {"NLD Q000.000",         ERR_OK, ERR_MAPCODE_UNDECODABLE}, // type 2 grid
-            {"NLD L222.222",         ERR_OK, ERR_MAPCODE_UNDECODABLE}, // type 3 restricted
-            {"usa A222.22AA",        ERR_OK, ERR_MAPCODE_UNDECODABLE}, // type 4 grid
-            {"atf hhh.hhh",          ERR_OK, ERR_MAPCODE_UNDECODABLE}, // type 5 autoh zone
-            {"ASM zz.zzh",           ERR_OK, ERR_MAPCODE_UNDECODABLE}, // type 6 autoh out
+            {"NLD 49.4V",            ERR_OK,                          ERR_OK},
+            {"NLX 49.4V",            ERR_UNKNOWN_TERRITORY,           ERR_OK},
+            {"49.4V",                ERR_OK,                          ERR_MISSING_TERRITORY},
+            {"BRA 49.4V",            ERR_OK,                          ERR_MAPCODE_UNDECODABLE}, // type 0
+            {"BRA XXXXX.XXX",        ERR_OK,                          ERR_MAPCODE_UNDECODABLE}, // type 0
+            {"NLD XXXX.XXXX",        ERR_OK,                          ERR_MAPCODE_UNDECODABLE}, // type 0
+            {"NLD ZZ.ZZ",            ERR_OK,                          ERR_MAPCODE_UNDECODABLE}, // type 1 nameless
+            {"NLD Q000.000",         ERR_OK,                          ERR_MAPCODE_UNDECODABLE}, // type 2 grid
+            {"NLD L222.222",         ERR_OK,                          ERR_MAPCODE_UNDECODABLE}, // type 3 restricted
+            {"usa A222.22AA",        ERR_OK,                          ERR_MAPCODE_UNDECODABLE}, // type 4 grid
+            {"atf hhh.hhh",          ERR_OK,                          ERR_MAPCODE_UNDECODABLE}, // type 5 autoh zone
+            {"ASM zz.zzh",           ERR_OK,                          ERR_MAPCODE_UNDECODABLE}, // type 6 autoh out
 
-            {"nld ZNZ.RZG-B",        ERR_OK, ERR_MAPCODE_UNDECODABLE}, // type 0
-            {"WLF 01.AE-09V",        ERR_OK, ERR_OK},
-            {"LVA LDV.ZVR-B  ",      ERR_OK, ERR_OK}, // AutoHeader
-            {"LVA LDV.ZVR-BY  ",     ERR_OK, ERR_EXTENSION_UNDECODABLE},
-            {"01.AE",                ERR_OK, ERR_MISSING_TERRITORY},
-            {"nld 01.AE",            ERR_OK, ERR_OK},
-            {"nld oi.AE",            ERR_OK, ERR_OK},
-            {"oi.oi",                ERR_ALL_DIGIT_CODE},
-            {"nld oi.OI-xxx",        ERR_ALL_DIGIT_CODE},
-            {"CUB 3467.UY",          ERR_OK, ERR_OK},
-            {"34.UY",                ERR_OK, ERR_MISSING_TERRITORY},
-            {"mx XX.XX",             ERR_OK, ERR_OK},
-            {"",                     ERR_DOT_MISSING},
-            {"ttat.tt    ",          ERR_INVALID_VOWEL},
-            {"ttat-tt tt.tt",        ERR_INVALID_VOWEL},
-            {"ttat tt.tt",           ERR_INVALID_VOWEL},
-            {"XXAX.XXXX",            ERR_INVALID_VOWEL},
-            {"2A22.2222",            ERR_INVALID_VOWEL},
-            {"22A2.2222",            ERR_INVALID_VOWEL},
-            {"MAP.CODE",             ERR_INVALID_VOWEL},
-            {"XAXX.XXXX",            ERR_INVALID_VOWEL},
-            {"XXXA.XXXX",            ERR_INVALID_VOWEL},
-            {"XXXAX.XXXX",           ERR_INVALID_VOWEL},
-            {"XXXXA.XXXX",           ERR_INVALID_VOWEL},
-            {"nld XXXX.XXXXA",       ERR_INVALID_VOWEL},
-            {"nld XXXX.ALA",         ERR_INVALID_VOWEL},
-            {"nld XXXX.LAXA",        ERR_INVALID_VOWEL},
-            {"nld XXXX.LLLLA",       ERR_INVALID_VOWEL},
-            {"nld XXXX.A2e",         ERR_INVALID_VOWEL},
-            {"nld XXXX.2e2e",        ERR_INVALID_VOWEL},
-            {"nld XXXX.2222u",       ERR_INVALID_VOWEL},
-            {"222A.2222",            ERR_INVALID_VOWEL},
-            {"222A2.2222",           ERR_INVALID_VOWEL},
-            {"ttt 2222A.2222",       ERR_INVALID_VOWEL},
-            {"2222.2AAA",            ERR_INVALID_VOWEL},
-            {"A222.2AAA",            ERR_INVALID_VOWEL},
-            {"usa 2222.22A2",        ERR_OK, ERR_OK},
-            {"usa 2222.22AA",        ERR_OK, ERR_OK},
-            {".123",                 ERR_UNEXPECTED_DOT},
-            {".xyz",                 ERR_UNEXPECTED_DOT},
-            {"x.xyz",                ERR_UNEXPECTED_DOT},
-            {"xxx.z-12",             ERR_UNEXPECTED_HYPHEN},
-            {"xx.xx.",               ERR_UNEXPECTED_DOT},
-            {"xxxx xx.xx",           ERR_BAD_TERRITORY_FORMAT},
-            {"xxxxx xx.xx",          ERR_BAD_TERRITORY_FORMAT},
-            {"123",                  ERR_DOT_MISSING},
-            {"xxx.",                 ERR_MAPCODE_INCOMPLETE},
-            {"xxx.z",                ERR_MAPCODE_INCOMPLETE},
-            {"NLD 49.4V-",           ERR_MAPCODE_INCOMPLETE},
-            {"NLD 49.4V",            ERR_OK, ERR_OK},
-            {"   NLD   49.4V  ",     ERR_OK, ERR_OK},
-            {"NLD 49.4V-1",          ERR_OK, ERR_OK},
-            {"NLD 49.4V-12",         ERR_OK, ERR_OK},
-            {"NLD 49.4V-123",        ERR_OK, ERR_OK},
-            {"NLD 49.4V-12345678",   ERR_OK, ERR_OK},
-            {"NLD 49.4V- ",          ERR_EXTENSION_INVALID_LENGTH},
-            {"NLD 49.4V-123456789",  ERR_EXTENSION_INVALID_LENGTH},
-            {"49.4V-xxxxxxxxxxxxxx", ERR_EXTENSION_INVALID_LENGTH},
-            {"DD.DD-        ",       ERR_EXTENSION_INVALID_LENGTH},
-            {"nld DD.DD-",           ERR_MAPCODE_INCOMPLETE},
-            {"TAM 49.4V",            ERR_OK, ERR_OK},
-            {"BRA 49.4V",            ERR_OK, ERR_MAPCODE_UNDECODABLE}, // type 0
-            {"CA 49.4V",             ERR_OK, ERR_OK},
-            {"N 49.4V",              ERR_BAD_TERRITORY_FORMAT},
-            {"XXXX ",                ERR_BAD_TERRITORY_FORMAT},
-            {"XXXXX ",               ERR_BAD_TERRITORY_FORMAT},
-            {"XXXX 49.4V",           ERR_BAD_TERRITORY_FORMAT},
-            {"XXXXX 49.4V",          ERR_BAD_TERRITORY_FORMAT},
-            {"-XX 49.4V",            ERR_UNEXPECTED_HYPHEN},
-            {"X-XX 49.4V",           ERR_BAD_TERRITORY_FORMAT},
-            {"XXXX-XX 49.4V",        ERR_BAD_TERRITORY_FORMAT},
-            {"XX-X 49.4V",           ERR_BAD_TERRITORY_FORMAT},
-            {"XX-XXXX 49.4V",        ERR_BAD_TERRITORY_FORMAT},
-            {"XX-XXXE 49.4V",        ERR_BAD_TERRITORY_FORMAT},
-            {"12.34",                ERR_ALL_DIGIT_CODE},
-            {"NLD 12.34",            ERR_ALL_DIGIT_CODE},
-            {"AAA 12.34",            ERR_ALL_DIGIT_CODE},
-            {"AAA 12.34-XXX",        ERR_ALL_DIGIT_CODE},
-            {"123 12.34-123",        ERR_ALL_DIGIT_CODE},
-            {"xx-xx 12.34",          ERR_ALL_DIGIT_CODE},
-            {"12-34 12.34",          ERR_ALL_DIGIT_CODE},
-            {"CN-34 12.3X",          ERR_OK, ERR_OK},
-            {"  TAM  XX.XX-XX  ",    ERR_OK, ERR_OK},
-            {"  TAM  XXX.XX-XX  ",   ERR_OK, ERR_OK},
-            {"  TAM  XX.XXX-XX  ",   ERR_OK, ERR_OK},
-            {"  TAM  XX.XXXX-XX  ",  ERR_OK, ERR_OK},
-            {"  TAM  XXX.XXX-XX  ",  ERR_OK, ERR_OK},
-            {"  gab  XXXX.XX-XX  ",  ERR_OK, ERR_OK},
-            {"  kAZ  XXX.XXXX-XX ",  ERR_OK, ERR_OK},
-            {"  IND  XXXX.XXX-XX ",  ERR_OK, ERR_OK},
-            {" USA  XXXX.XXXX-XX ",  ERR_OK, ERR_OK},
-            {" VAT XXXXX.XXXX-XX  ", ERR_OK, ERR_OK},
-            {" NLD XXXXX.XXXX-XX  ", ERR_OK, ERR_OK},
-            {" USA XXXXX.XXXX-XX  ", ERR_OK, ERR_OK},
-            {" XXXXX.XXXX-XX  ",     ERR_OK, ERR_OK},
-            {" usa  XXXXX.XXX-XX ",  ERR_OK, ERR_MAPCODE_UNDECODABLE}, // type 0
-            {" XXXXX.XXX-XX ",       ERR_OK, ERR_MISSING_TERRITORY},
-            {"xx-xx.x xx.xx",        ERR_UNEXPECTED_DOT},
-            {"xx-xx-x xx.xx",        ERR_UNEXPECTED_HYPHEN},
-            {"xx.xx-x-x",            ERR_UNEXPECTED_HYPHEN},
-            {"xx-xx xx-xx",          ERR_UNEXPECTED_HYPHEN},
-            {"xx-xx xx-xx.xx",       ERR_UNEXPECTED_HYPHEN},
-            {"xx.xx.xx",             ERR_UNEXPECTED_DOT},
-            {"xx-xx xx.xx.xx",       ERR_UNEXPECTED_DOT},
-            {"xx-xx xx.xx-xx-xx",    ERR_UNEXPECTED_HYPHEN},
-            {"xx-xx xx.xx x",        ERR_TRAILING_CHARACTERS},
-            {"xx-xx xx.xx-x x",      ERR_TRAILING_CHARACTERS},
-            {"xx-xx xx.xx-x -",      ERR_UNEXPECTED_HYPHEN},
-            {"xx-xx xx.xx-x .",      ERR_UNEXPECTED_DOT},
-            {"xx-xx xx.xx-x 2",      ERR_TRAILING_CHARACTERS},
-            {"xx-xx xx.x#x",         ERR_INVALID_CHARACTER},
-            {"xx# xx.xx",            ERR_INVALID_CHARACTER},
-            {"xx-xx #xx.xx",         ERR_INVALID_CHARACTER},
-            {"xx-xx xx.xx-xx#xx",    ERR_INVALID_CHARACTER},
-            {"xx-xx -xx.xx",         ERR_UNEXPECTED_HYPHEN},
-            {"xx-xx .xx.xx",         ERR_UNEXPECTED_DOT},
-            {".123",                 ERR_UNEXPECTED_DOT},
-            {"  .123",               ERR_UNEXPECTED_DOT},
-            {"",                     ERR_DOT_MISSING},
-            {"  ",                   ERR_DOT_MISSING},
-            {"-xx.xx",               ERR_UNEXPECTED_HYPHEN},
-            {"  - xx.xx",            ERR_UNEXPECTED_HYPHEN},
-            {"D xx.xx",              ERR_BAD_TERRITORY_FORMAT},
-            {"D.123",                ERR_UNEXPECTED_DOT},
-            {"D",                    ERR_DOT_MISSING},
-            {"D-xxxxx",              ERR_BAD_TERRITORY_FORMAT},
-            {"DD",                   ERR_DOT_MISSING},
-            {"DDDa.DDD",             ERR_INVALID_VOWEL},
-            {"DDD",                  ERR_DOT_MISSING},
-            {"DDDD xx.xx",           ERR_BAD_TERRITORY_FORMAT},
-            {"DDDDE.xxxx",           ERR_INVALID_VOWEL},
-            {"DDDD",                 ERR_DOT_MISSING},
-            {"DDDD-CA xx.xx",        ERR_BAD_TERRITORY_FORMAT},
-            {"DDDDD CA xx.xx",       ERR_BAD_TERRITORY_FORMAT},
-            {"DDDDDA   xx.xx",       ERR_INVALID_VOWEL},
-            {"DDDDD",                ERR_DOT_MISSING},
-            {"DDDDD-CA xx.xx",       ERR_BAD_TERRITORY_FORMAT},
-            {"DDDDD..xxxx",          ERR_UNEXPECTED_DOT},
-            {"DDDDD.",               ERR_MAPCODE_INCOMPLETE},
-            {"DDDDD.-xxxx.xx",       ERR_UNEXPECTED_HYPHEN},
-            {"DDD.L.LLL     ",       ERR_UNEXPECTED_DOT},
-            {"DDD.L",                ERR_MAPCODE_INCOMPLETE},
-            {"DDD.L-xxxxxxxx",       ERR_UNEXPECTED_HYPHEN},
-            {"DD.DD.CA",             ERR_UNEXPECTED_DOT},
-            {"DD.DDD.CA",            ERR_UNEXPECTED_DOT},
-            {"DD.DDDD.CA    ",       ERR_UNEXPECTED_DOT},
-            {"DD.DDDDA      ",       ERR_INVALID_VOWEL},
-            {"DD.DD-.       ",       ERR_UNEXPECTED_DOT},
-            {"DD.DD-",               ERR_MAPCODE_INCOMPLETE},
-            {"DD.DD--XXX",           ERR_UNEXPECTED_HYPHEN},
-            {"DD.DD-x.      ",       ERR_UNEXPECTED_DOT},
-            {"DD.DD-A",              ERR_EXTENSION_INVALID_CHARACTER},
-            {"DD.DD-xA",             ERR_EXTENSION_INVALID_CHARACTER},
-            {"DD.DD-xxxE",           ERR_EXTENSION_INVALID_CHARACTER},
-            {"DD.DD-xxxxxu",         ERR_EXTENSION_INVALID_CHARACTER},
-            {"DD.DD-x-xxx",          ERR_UNEXPECTED_HYPHEN},
-            {"ta.xx     ",           ERR_INVALID_VOWEL},
-            {"ta",                   ERR_DOT_MISSING},
-            {"DAD-        ",         ERR_BAD_TERRITORY_FORMAT},
-            {"DAD-.       ",         ERR_UNEXPECTED_DOT},
-            {"DAD-",                 ERR_BAD_TERRITORY_FORMAT},
-            {"DAD--XXX",             ERR_UNEXPECTED_HYPHEN},
-            {"DAD-X  xx.xx",         ERR_BAD_TERRITORY_FORMAT},
-            {"DAD-X.      ",         ERR_UNEXPECTED_DOT},
-            {"DAD-X",                ERR_BAD_TERRITORY_FORMAT},
-            {"DAD-X-XXX",            ERR_UNEXPECTED_HYPHEN},
-            {"DAD-XX.XX   ",         ERR_UNEXPECTED_DOT},
-            {"DAD-XX",               ERR_DOT_MISSING},
-            {"DAD-XX-XX",            ERR_UNEXPECTED_HYPHEN},
-            {"DAD-XXX.XX   ",        ERR_UNEXPECTED_DOT},
-            {"DAD-XXXX",             ERR_BAD_TERRITORY_FORMAT},
-            {"DAD-XXXA",             ERR_BAD_TERRITORY_FORMAT},
-            {"DAD-XXX",              ERR_DOT_MISSING},
-            {"DAD-XXX-XX",           ERR_UNEXPECTED_HYPHEN},
-            {"DAD-XX  .XX   ",       ERR_UNEXPECTED_DOT},
-            {"DAD-XX  ",             ERR_DOT_MISSING},
-            {"DAD-XX  -XX",          ERR_UNEXPECTED_HYPHEN},
-            {"DD-DD A      ",        ERR_DOT_MISSING},
-            {"DD-DD A.     ",        ERR_UNEXPECTED_DOT},
-            {"DD-DD AA.33  ",        ERR_INVALID_VOWEL},
-            {"DD-DD A",              ERR_DOT_MISSING},
-            {"DD-DD A-XX",           ERR_UNEXPECTED_HYPHEN},
-            {"DD-DD A3     ",        ERR_DOT_MISSING},
-            {"DD-DD A3A.XX ",        ERR_INVALID_VOWEL},
-            {"DD-DD A3",             ERR_DOT_MISSING},
-            {"DD-DD A3-XX",          ERR_UNEXPECTED_HYPHEN},
-            {"DD-DD A33    ",        ERR_DOT_MISSING},
-            {"DD-DD A33A.XX",        ERR_INVALID_VOWEL},
-            {"DD-DD A33",            ERR_DOT_MISSING},
-            {"DD-DD A33-XX",         ERR_UNEXPECTED_HYPHEN},
-            {"DD-DD xx.xx .",        ERR_UNEXPECTED_DOT},
-            {"DD-DD xx.xx x",        ERR_TRAILING_CHARACTERS},
-            {"DD-DD xx.xx a",        ERR_TRAILING_CHARACTERS},
-            {"DD-DD xx.xx -x",       ERR_UNEXPECTED_HYPHEN},
-            {"xx.xx .xx",            ERR_UNEXPECTED_DOT},
-            {"xx.xx x",              ERR_TRAILING_CHARACTERS},
-            {"xx.xx a",              ERR_TRAILING_CHARACTERS},
-            {"xx.xx -123",           ERR_UNEXPECTED_HYPHEN},
-            {" xx.xx-DD .",          ERR_UNEXPECTED_DOT},
-            {" xx.xx-DD x",          ERR_TRAILING_CHARACTERS},
-            {" xx.xx-DD a",          ERR_TRAILING_CHARACTERS},
-            {"xx.xx xxxxxxxxxxxx",   ERR_TRAILING_CHARACTERS},
-            {" xx.xx-DD -",          ERR_UNEXPECTED_HYPHEN},
-            {"tta.ttt    ",          ERR_INVALID_VOWEL},
-            {"ttaa.ttt   ",          ERR_INVALID_VOWEL},
-            {"tta",                  ERR_DOT_MISSING},
+            {"nld ZNZ.RZG-B",        ERR_OK,                          ERR_MAPCODE_UNDECODABLE}, // type 0
+            {"WLF 01.AE-09V",        ERR_OK,                          ERR_OK},
+            {"LVA LDV.ZVR-B  ",      ERR_OK,                          ERR_OK}, // AutoHeader
+            {"LVA LDV.ZVR-BY  ",     ERR_OK,                          ERR_EXTENSION_UNDECODABLE},
+            {"01.AE",                ERR_OK,                          ERR_MISSING_TERRITORY},
+            {"nld 01.AE",            ERR_OK,                          ERR_OK},
+            {"nld oi.AE",            ERR_OK,                          ERR_OK},
+            {"oi.oi",                ERR_ALL_DIGIT_CODE,              ERR_OK},
+            {"nld oi.OI-xxx",        ERR_ALL_DIGIT_CODE,              ERR_OK},
+            {"CUB 3467.UY",          ERR_OK,                          ERR_OK},
+            {"34.UY",                ERR_OK,                          ERR_MISSING_TERRITORY},
+            {"mx XX.XX",             ERR_OK,                          ERR_OK},
+            {"",                     ERR_DOT_MISSING,                 ERR_OK},
+            {"ttat.tt    ",          ERR_INVALID_VOWEL,               ERR_OK},
+            {"ttat-tt tt.tt",        ERR_INVALID_VOWEL,               ERR_OK},
+            {"ttat tt.tt",           ERR_INVALID_VOWEL,               ERR_OK},
+            {"XXAX.XXXX",            ERR_INVALID_VOWEL,               ERR_OK},
+            {"2A22.2222",            ERR_INVALID_VOWEL,               ERR_OK},
+            {"22A2.2222",            ERR_INVALID_VOWEL,               ERR_OK},
+            {"MAP.CODE",             ERR_INVALID_VOWEL,               ERR_OK},
+            {"XAXX.XXXX",            ERR_INVALID_VOWEL,               ERR_OK},
+            {"XXXA.XXXX",            ERR_INVALID_VOWEL,               ERR_OK},
+            {"XXXAX.XXXX",           ERR_INVALID_VOWEL,               ERR_OK},
+            {"XXXXA.XXXX",           ERR_INVALID_VOWEL,               ERR_OK},
+            {"nld XXXX.XXXXA",       ERR_INVALID_VOWEL,               ERR_OK},
+            {"nld XXXX.ALA",         ERR_INVALID_VOWEL,               ERR_OK},
+            {"nld XXXX.LAXA",        ERR_INVALID_VOWEL,               ERR_OK},
+            {"nld XXXX.LLLLA",       ERR_INVALID_VOWEL,               ERR_OK},
+            {"nld XXXX.A2e",         ERR_INVALID_VOWEL,               ERR_OK},
+            {"nld XXXX.2e2e",        ERR_INVALID_VOWEL,               ERR_OK},
+            {"nld XXXX.2222u",       ERR_INVALID_VOWEL,               ERR_OK},
+            {"222A.2222",            ERR_INVALID_VOWEL,               ERR_OK},
+            {"222A2.2222",           ERR_INVALID_VOWEL,               ERR_OK},
+            {"ttt 2222A.2222",       ERR_INVALID_VOWEL,               ERR_OK},
+            {"2222.2AAA",            ERR_INVALID_VOWEL,               ERR_OK},
+            {"A222.2AAA",            ERR_INVALID_VOWEL,               ERR_OK},
+            {"usa 2222.22A2",        ERR_OK,                          ERR_OK},
+            {"usa 2222.22AA",        ERR_OK,                          ERR_OK},
+            {".123",                 ERR_UNEXPECTED_DOT,              ERR_OK},
+            {".xyz",                 ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"x.xyz",                ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"xxx.z-12",             ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"xx.xx.",               ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"xxxx xx.xx",           ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"xxxxx xx.xx",          ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"123",                  ERR_DOT_MISSING,                 ERR_OK},
+            {"xxx.",                 ERR_MAPCODE_INCOMPLETE,          ERR_OK},
+            {"xxx.z",                ERR_MAPCODE_INCOMPLETE,          ERR_OK},
+            {"NLD 49.4V-",           ERR_MAPCODE_INCOMPLETE,          ERR_OK},
+            {"NLD 49.4V",            ERR_OK,                          ERR_OK},
+            {"   NLD   49.4V  ",     ERR_OK,                          ERR_OK},
+            {"NLD 49.4V-1",          ERR_OK,                          ERR_OK},
+            {"NLD 49.4V-12",         ERR_OK,                          ERR_OK},
+            {"NLD 49.4V-123",        ERR_OK,                          ERR_OK},
+            {"NLD 49.4V-12345678",   ERR_OK,                          ERR_OK},
+            {"NLD 49.4V- ",          ERR_EXTENSION_INVALID_LENGTH,    ERR_OK},
+            {"NLD 49.4V-123456789",  ERR_EXTENSION_INVALID_LENGTH,    ERR_OK},
+            {"49.4V-xxxxxxxxxxxxxx", ERR_EXTENSION_INVALID_LENGTH,    ERR_OK},
+            {"DD.DD-        ",       ERR_EXTENSION_INVALID_LENGTH,    ERR_OK},
+            {"nld DD.DD-",           ERR_MAPCODE_INCOMPLETE,          ERR_OK},
+            {"TAM 49.4V",            ERR_OK,                          ERR_OK},
+            {"BRA 49.4V",            ERR_OK,                          ERR_MAPCODE_UNDECODABLE}, // type 0
+            {"CA 49.4V",             ERR_OK,                          ERR_OK},
+            {"N 49.4V",              ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"XXXX ",                ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"XXXXX ",               ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"XXXX 49.4V",           ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"XXXXX 49.4V",          ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"-XX 49.4V",            ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"X-XX 49.4V",           ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"XXXX-XX 49.4V",        ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"XX-X 49.4V",           ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"XX-XXXX 49.4V",        ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"XX-XXXE 49.4V",        ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"12.34",                ERR_ALL_DIGIT_CODE,              ERR_OK},
+            {"NLD 12.34",            ERR_ALL_DIGIT_CODE,              ERR_OK},
+            {"AAA 12.34",            ERR_ALL_DIGIT_CODE,              ERR_OK},
+            {"AAA 12.34-XXX",        ERR_ALL_DIGIT_CODE,              ERR_OK},
+            {"123 12.34-123",        ERR_ALL_DIGIT_CODE,              ERR_OK},
+            {"xx-xx 12.34",          ERR_ALL_DIGIT_CODE,              ERR_OK},
+            {"12-34 12.34",          ERR_ALL_DIGIT_CODE,              ERR_OK},
+            {"CN-34 12.3X",          ERR_OK,                          ERR_OK},
+            {"  TAM  XX.XX-XX  ",    ERR_OK,                          ERR_OK},
+            {"  TAM  XXX.XX-XX  ",   ERR_OK,                          ERR_OK},
+            {"  TAM  XX.XXX-XX  ",   ERR_OK,                          ERR_OK},
+            {"  TAM  XX.XXXX-XX  ",  ERR_OK,                          ERR_OK},
+            {"  TAM  XXX.XXX-XX  ",  ERR_OK,                          ERR_OK},
+            {"  gab  XXXX.XX-XX  ",  ERR_OK,                          ERR_OK},
+            {"  kAZ  XXX.XXXX-XX ",  ERR_OK,                          ERR_OK},
+            {"  IND  XXXX.XXX-XX ",  ERR_OK,                          ERR_OK},
+            {" USA  XXXX.XXXX-XX ",  ERR_OK,                          ERR_OK},
+            {" VAT XXXXX.XXXX-XX  ", ERR_OK,                          ERR_OK},
+            {" NLD XXXXX.XXXX-XX  ", ERR_OK,                          ERR_OK},
+            {" USA XXXXX.XXXX-XX  ", ERR_OK,                          ERR_OK},
+            {" XXXXX.XXXX-XX  ",     ERR_OK,                          ERR_OK},
+            {" usa  XXXXX.XXX-XX ",  ERR_OK,                          ERR_MAPCODE_UNDECODABLE}, // type 0
+            {" XXXXX.XXX-XX ",       ERR_OK,                          ERR_MISSING_TERRITORY},
+            {"xx-xx.x xx.xx",        ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"xx-xx-x xx.xx",        ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"xx.xx-x-x",            ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"xx-xx xx-xx",          ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"xx-xx xx-xx.xx",       ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"xx.xx.xx",             ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"xx-xx xx.xx.xx",       ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"xx-xx xx.xx-xx-xx",    ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"xx-xx xx.xx x",        ERR_TRAILING_CHARACTERS,         ERR_OK},
+            {"xx-xx xx.xx-x x",      ERR_TRAILING_CHARACTERS,         ERR_OK},
+            {"xx-xx xx.xx-x -",      ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"xx-xx xx.xx-x .",      ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"xx-xx xx.xx-x 2",      ERR_TRAILING_CHARACTERS,         ERR_OK},
+            {"xx-xx xx.x#x",         ERR_INVALID_CHARACTER,           ERR_OK},
+            {"xx# xx.xx",            ERR_INVALID_CHARACTER,           ERR_OK},
+            {"xx-xx #xx.xx",         ERR_INVALID_CHARACTER,           ERR_OK},
+            {"xx-xx xx.xx-xx#xx",    ERR_INVALID_CHARACTER,           ERR_OK},
+            {"xx-xx -xx.xx",         ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"xx-xx .xx.xx",         ERR_UNEXPECTED_DOT,              ERR_OK},
+            {".123",                 ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"  .123",               ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"",                     ERR_DOT_MISSING,                 ERR_OK},
+            {"  ",                   ERR_DOT_MISSING,                 ERR_OK},
+            {"-xx.xx",               ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"  - xx.xx",            ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"D xx.xx",              ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"D.123",                ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"D",                    ERR_DOT_MISSING,                 ERR_OK},
+            {"D-xxxxx",              ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"DD",                   ERR_DOT_MISSING,                 ERR_OK},
+            {"DDDa.DDD",             ERR_INVALID_VOWEL,               ERR_OK},
+            {"DDD",                  ERR_DOT_MISSING,                 ERR_OK},
+            {"DDDD xx.xx",           ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"DDDDE.xxxx",           ERR_INVALID_VOWEL,               ERR_OK},
+            {"DDDD",                 ERR_DOT_MISSING,                 ERR_OK},
+            {"DDDD-CA xx.xx",        ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"DDDDD CA xx.xx",       ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"DDDDDA   xx.xx",       ERR_INVALID_VOWEL,               ERR_OK},
+            {"DDDDD",                ERR_DOT_MISSING,                 ERR_OK},
+            {"DDDDD-CA xx.xx",       ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"DDDDD..xxxx",          ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"DDDDD.",               ERR_MAPCODE_INCOMPLETE,          ERR_OK},
+            {"DDDDD.-xxxx.xx",       ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"DDD.L.LLL     ",       ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"DDD.L",                ERR_MAPCODE_INCOMPLETE,          ERR_OK},
+            {"DDD.L-xxxxxxxx",       ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"DD.DD.CA",             ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"DD.DDD.CA",            ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"DD.DDDD.CA    ",       ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"DD.DDDDA      ",       ERR_INVALID_VOWEL,               ERR_OK},
+            {"DD.DD-.       ",       ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"DD.DD-",               ERR_MAPCODE_INCOMPLETE,          ERR_OK},
+            {"DD.DD--XXX",           ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"DD.DD-x.      ",       ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"DD.DD-A",              ERR_EXTENSION_INVALID_CHARACTER, ERR_OK},
+            {"DD.DD-xA",             ERR_EXTENSION_INVALID_CHARACTER, ERR_OK},
+            {"DD.DD-xxxE",           ERR_EXTENSION_INVALID_CHARACTER, ERR_OK},
+            {"DD.DD-xxxxxu",         ERR_EXTENSION_INVALID_CHARACTER, ERR_OK},
+            {"DD.DD-x-xxx",          ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"ta.xx     ",           ERR_INVALID_VOWEL,               ERR_OK},
+            {"ta",                   ERR_DOT_MISSING,                 ERR_OK},
+            {"DAD-        ",         ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"DAD-.       ",         ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"DAD-",                 ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"DAD--XXX",             ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"DAD-X  xx.xx",         ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"DAD-X.      ",         ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"DAD-X",                ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"DAD-X-XXX",            ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"DAD-XX.XX   ",         ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"DAD-XX",               ERR_DOT_MISSING,                 ERR_OK},
+            {"DAD-XX-XX",            ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"DAD-XXX.XX   ",        ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"DAD-XXXX",             ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"DAD-XXXA",             ERR_BAD_TERRITORY_FORMAT,        ERR_OK},
+            {"DAD-XXX",              ERR_DOT_MISSING,                 ERR_OK},
+            {"DAD-XXX-XX",           ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"DAD-XX  .XX   ",       ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"DAD-XX  ",             ERR_DOT_MISSING,                 ERR_OK},
+            {"DAD-XX  -XX",          ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"DD-DD A      ",        ERR_DOT_MISSING,                 ERR_OK},
+            {"DD-DD A.     ",        ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"DD-DD AA.33  ",        ERR_INVALID_VOWEL,               ERR_OK},
+            {"DD-DD A",              ERR_DOT_MISSING,                 ERR_OK},
+            {"DD-DD A-XX",           ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"DD-DD A3     ",        ERR_DOT_MISSING,                 ERR_OK},
+            {"DD-DD A3A.XX ",        ERR_INVALID_VOWEL,               ERR_OK},
+            {"DD-DD A3",             ERR_DOT_MISSING,                 ERR_OK},
+            {"DD-DD A3-XX",          ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"DD-DD A33    ",        ERR_DOT_MISSING,                 ERR_OK},
+            {"DD-DD A33A.XX",        ERR_INVALID_VOWEL,               ERR_OK},
+            {"DD-DD A33",            ERR_DOT_MISSING,                 ERR_OK},
+            {"DD-DD A33-XX",         ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"DD-DD xx.xx .",        ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"DD-DD xx.xx x",        ERR_TRAILING_CHARACTERS,         ERR_OK},
+            {"DD-DD xx.xx a",        ERR_TRAILING_CHARACTERS,         ERR_OK},
+            {"DD-DD xx.xx -x",       ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"xx.xx .xx",            ERR_UNEXPECTED_DOT,              ERR_OK},
+            {"xx.xx x",              ERR_TRAILING_CHARACTERS,         ERR_OK},
+            {"xx.xx a",              ERR_TRAILING_CHARACTERS,         ERR_OK},
+            {"xx.xx -123",           ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {" xx.xx-DD .",          ERR_UNEXPECTED_DOT,              ERR_OK},
+            {" xx.xx-DD x",          ERR_TRAILING_CHARACTERS,         ERR_OK},
+            {" xx.xx-DD a",          ERR_TRAILING_CHARACTERS,         ERR_OK},
+            {"xx.xx xxxxxxxxxxxx",   ERR_TRAILING_CHARACTERS,         ERR_OK},
+            {" xx.xx-DD -",          ERR_UNEXPECTED_HYPHEN,           ERR_OK},
+            {"tta.ttt    ",          ERR_INVALID_VOWEL,               ERR_OK},
+            {"ttaa.ttt   ",          ERR_INVALID_VOWEL,               ERR_OK},
+            {"tta",                  ERR_DOT_MISSING,                 ERR_OK},
 
-            {"DDD. ",                ERR_INVALID_MAPCODE_FORMAT}, // 6/0 : white na dot
-            {"DDDDD. xxxx.xx",       ERR_INVALID_MAPCODE_FORMAT}, // 6/0 : white na dot
-            {"DDD.L         ",       ERR_INVALID_MAPCODE_FORMAT}, // 7.0 : postfix too short
-            {"DDDDDD   xx.xx",       ERR_INVALID_MAPCODE_FORMAT}, // 5/2 : 6char ter
-            {"DDDDDD.xxx",           ERR_INVALID_MAPCODE_FORMAT}, // 5/2 : 6char mc
+            {"DDD. ",                ERR_INVALID_MAPCODE_FORMAT,      ERR_OK}, // 6/0 : white na dot
+            {"DDDDD. xxxx.xx",       ERR_INVALID_MAPCODE_FORMAT,      ERR_OK}, // 6/0 : white na dot
+            {"DDD.L         ",       ERR_INVALID_MAPCODE_FORMAT,      ERR_OK}, // 7.0 : postfix too short
+            {"DDDDDD   xx.xx",       ERR_INVALID_MAPCODE_FORMAT,      ERR_OK}, // 5/2 : 6char ter
+            {"DDDDDD.xxx",           ERR_INVALID_MAPCODE_FORMAT,      ERR_OK}, // 5/2 : 6char mc
             // errors because there are too many letters after a postfix vowel
-            {"XXXX.AXXX",            ERR_INVALID_VOWEL},
-            {"nld XXXX.AXX",         ERR_INVALID_VOWEL},
-            {"nld XXXX.XAXX",        ERR_INVALID_VOWEL},
-            {"nld XXXX.AXXA",        ERR_INVALID_VOWEL},
-            {"2222.A22",             ERR_INVALID_VOWEL},
-            {"2222.A222",            ERR_INVALID_VOWEL},
-            {"2222.2A22",            ERR_INVALID_VOWEL},
+            {"XXXX.AXXX",            ERR_INVALID_VOWEL,               ERR_OK},
+            {"nld XXXX.AXX",         ERR_INVALID_VOWEL,               ERR_OK},
+            {"nld XXXX.XAXX",        ERR_INVALID_VOWEL,               ERR_OK},
+            {"nld XXXX.AXXA",        ERR_INVALID_VOWEL,               ERR_OK},
+            {"2222.A22",             ERR_INVALID_VOWEL,               ERR_OK},
+            {"2222.A222",            ERR_INVALID_VOWEL,               ERR_OK},
+            {"2222.2A22",            ERR_INVALID_VOWEL,               ERR_OK},
             // 5th letter
-            {"nld DD.DDDDD  ",       ERR_OK, ERR_MAPCODE_UNDECODABLE},
-            {"nld XXXX.XXXXX",       ERR_OK, ERR_MAPCODE_UNDECODABLE},
-            {" TAM  XX.XXXXX-XX ",   ERR_OK, ERR_MAPCODE_UNDECODABLE},
-            {" TAM  XXX.XXXXX-XX ",  ERR_OK, ERR_MAPCODE_UNDECODABLE},
-            {" TAM  XXXX.XXXXX-X ",  ERR_OK, ERR_MAPCODE_UNDECODABLE},
-            {" TAM XXXXX.XXXXX-X ",  ERR_OK, ERR_MAPCODE_UNDECODABLE},
+            {"nld DD.DDDDD  ",       ERR_OK,                          ERR_MAPCODE_UNDECODABLE},
+            {"nld XXXX.XXXXX",       ERR_OK,                          ERR_MAPCODE_UNDECODABLE},
+            {" TAM  XX.XXXXX-XX ",   ERR_OK,                          ERR_MAPCODE_UNDECODABLE},
+            {" TAM  XXX.XXXXX-XX ",  ERR_OK,                          ERR_MAPCODE_UNDECODABLE},
+            {" TAM  XXXX.XXXXX-X ",  ERR_OK,                          ERR_MAPCODE_UNDECODABLE},
+            {" TAM XXXXX.XXXXX-X ",  ERR_OK,                          ERR_MAPCODE_UNDECODABLE},
             // errors because the postfix has a 6th letter
-            {"DD.DDDDDD      ",      ERR_INVALID_MAPCODE_FORMAT},
-            {"nld XXXX.XXXXXX",      ERR_INVALID_MAPCODE_FORMAT},
-            {" TAM  XX.XXXXXX-XX ",  ERR_INVALID_MAPCODE_FORMAT},
-            {" TAM  XXX.XXXXXX-XX ", ERR_INVALID_MAPCODE_FORMAT},
-            {" TAM  XXXX.XXXXXX-X ", ERR_INVALID_MAPCODE_FORMAT},
-            {" TAM XXXXX.XXXXXX-X ", ERR_INVALID_MAPCODE_FORMAT},
+            {"DD.DDDDDD      ",      ERR_INVALID_MAPCODE_FORMAT,      ERR_OK},
+            {"nld XXXX.XXXXXX",      ERR_INVALID_MAPCODE_FORMAT,      ERR_OK},
+            {" TAM  XX.XXXXXX-XX ",  ERR_INVALID_MAPCODE_FORMAT,      ERR_OK},
+            {" TAM  XXX.XXXXXX-XX ", ERR_INVALID_MAPCODE_FORMAT,      ERR_OK},
+            {" TAM  XXXX.XXXXXX-X ", ERR_INVALID_MAPCODE_FORMAT,      ERR_OK},
+            {" TAM XXXXX.XXXXXX-X ", ERR_INVALID_MAPCODE_FORMAT,      ERR_OK},
 
             // Check tabs, spaces and control characters.
-            {"NLD 49.YV",            ERR_OK, ERR_OK},
-            {" NLD 49.YV",           ERR_OK, ERR_OK},
-            {"\tNLD 49.YV",          ERR_OK, ERR_OK},
-            {"NLD 49.YV ",           ERR_OK, ERR_OK},
-            {"NLD 49.YV\t",          ERR_OK, ERR_OK},
-            {"NLD  49.YV",           ERR_OK, ERR_OK},
-            {"NLD\t49.YV",           ERR_OK, ERR_OK},
-            {"NLD\n49.YV",           ERR_INVALID_CHARACTER},
-            {"NLD\r49.YV",           ERR_INVALID_CHARACTER},
-            {"NLD\v49.YV",           ERR_INVALID_CHARACTER},
-            {"NLD\b49.YV",           ERR_INVALID_CHARACTER},
-            {"NLD\a49.YV",           ERR_INVALID_CHARACTER},
-            {NULL,                   ERR_OK, ERR_OK}
+            {"NLD 49.YV",            ERR_OK,                          ERR_OK},
+            {" NLD 49.YV",           ERR_OK,                          ERR_OK},
+            {"\tNLD 49.YV",          ERR_OK,                          ERR_OK},
+            {"NLD 49.YV ",           ERR_OK,                          ERR_OK},
+            {"NLD 49.YV\t",          ERR_OK,                          ERR_OK},
+            {"NLD  49.YV",           ERR_OK,                          ERR_OK},
+            {"NLD\t49.YV",           ERR_OK,                          ERR_OK},
+            {"NLD\n49.YV",           ERR_INVALID_CHARACTER,           ERR_OK},
+            {"NLD\r49.YV",           ERR_INVALID_CHARACTER,           ERR_OK},
+            {"NLD\v49.YV",           ERR_INVALID_CHARACTER,           ERR_OK},
+            {"NLD\b49.YV",           ERR_INVALID_CHARACTER,           ERR_OK},
+            {"NLD\a49.YV",           ERR_INVALID_CHARACTER,           ERR_OK},
+            {NULL,                   ERR_OK,                          ERR_OK}
     };
 
     int shouldSucceed = 0; // count nr of calls that SHOULD be successful.
@@ -462,19 +462,19 @@ static int testAlphabetParser(void) {
         const char *userInput;
         const char *expected;
     } parseTests[] = {
-            {"nld bc.xy-x1y",   "NLD BC.XY-X1Y"},
-            {"nld Α0.12",       "NLD 00.E0"}, // A-encoded greek
-            {"DNK  РФ.ХХ",      "DNK PQ.XX"}, // greek
-            {"GRC HP.NO-1Х2ХХ", "GRC HP.NO-1X2XX"},
-            {"PRT 31.E2-b2c",   "PRT 31.E2-B2C"},
-            {"GBR  רר.56ר",     "GBR XX.XX"},// hebrew abjad
-            {"BEL  طظ.56ط ",    "BEL PQ.XP"}, // arab abjad
-            {"FRA  ヒフ.ラヲ",      "FRA PQ.XZ"},
-            {NULL, NULL}
+            {"nld bc.xy-x1y",   "NLD BC.XY-X1Y (1113;2)"},
+            {"nld Α0.12",       "NLD 00.E0 (1113;2)"},       // A-encoded greek
+            {"DNK  РФ.ХХ",      "DNK PQ.XX (1114;2)"},       // greek
+            {"GRC HP.NO-1Х2ХХ", "GRC HP.NO-1X2XX (1150;2)"},
+            {"PRT 31.E2-b2c",   "PRT 31.E2-B2C (1136;2)"},
+            {"GBR  רר.56ר",     "GBR XX.XX (1167;2)"},       // hebrew abjad
+            {"BEL  طظ.56ط ",    "BEL PQ.XP (1107;2)"},       // arab abjad
+            {"FRA  ヒフ.ラヲ",   "FRA PQ.XZ (1198;2)"},
+            {"CA XX.XX",        "CA XX.XX (1392;2)"},
     };
     int i;
-    for (i = 0; parseTests[i].userInput; i++) {
-        char romanized[MAX_MAPCODE_RESULT_LEN + 1];
+    for (i = 0; i < (int) (sizeof(parseTests) / sizeof(parseTests[0])); i++) {
+        char romanized1[MAX_MAPCODE_RESULT_LEN + 1];
         MapcodeElements mapcodeElements;
         enum MapcodeError parseError = myParseMapcodeString(&mapcodeElements, parseTests[i].userInput,
                                                             TERRITORY_UNKNOWN);
@@ -485,29 +485,37 @@ static int testAlphabetParser(void) {
                    parseTests[i].userInput, (int) parseError, parseTests[i].expected);
         } else {
             nrTests++;
-            sprintf(romanized, "%s %s%s%s",
+            sprintf(romanized1, "%s %s%s%s (%d;%d)",
                     mapcodeElements.territoryISO,
                     mapcodeElements.properMapcode,
                     *mapcodeElements.precisionExtension ? "-" : "",
-                    mapcodeElements.precisionExtension);
-            if (strcmp(romanized, parseTests[i].expected) != 0) {
+                    mapcodeElements.precisionExtension,
+                    mapcodeElements.territoryCode,
+                    mapcodeElements.indexOfDot);
+            if (strcmp(romanized1, parseTests[i].expected) != 0) {
                 foundError();
-                printf("*** ERROR *** myParseMapcodeString(\"%s\") = \"%s\", (expected %s)\n", parseTests[i].userInput,
-                       romanized, parseTests[i].expected);
+                printf("*** ERROR *** myParseMapcodeString(\"%s\") = \"%s\", (expected \"%s\")\n", parseTests[i].userInput,
+                       romanized1, parseTests[i].expected);
             } else {
                 double lat1, lon1, lat2, lon2;
+                char romanized2[MAX_MAPCODE_RESULT_LEN + 1];
+                sprintf(romanized2, "%s %s%s%s",
+                        mapcodeElements.territoryISO,
+                        mapcodeElements.properMapcode,
+                        *mapcodeElements.precisionExtension ? "-" : "",
+                        mapcodeElements.precisionExtension);
                 int err1 = decodeMapcodeToLatLonUtf8(&lat1, &lon1, parseTests[i].userInput, TERRITORY_UNKNOWN, NULL);
-                int err2 = decodeMapcodeToLatLonUtf8(&lat2, &lon2, romanized, TERRITORY_UNKNOWN, NULL);
+                int err2 = decodeMapcodeToLatLonUtf8(&lat2, &lon2, romanized2, TERRITORY_UNKNOWN, NULL);
                 ++nrTests;
                 if (err1 || err2) {
                     foundError();
                     printf("*** ERROR *** decoding \"%s\" returns %d, decoding \"%s\" returns %d\n",
-                           parseTests[i].userInput, err1, romanized, err2);
+                           parseTests[i].userInput, err1, romanized2, err2);
                 }
                 if (lat1 != lat2 || lon1 != lon2) {
                     foundError();
                     printf("*** ERROR *** decoding \"%s\" returns (%f,%f), decoding \"%s\" returns (%f,%f)\n",
-                           parseTests[i].userInput, lat1, lon1, romanized, lat2, lon2);
+                           parseTests[i].userInput, lat1, lon1, romanized2, lat2, lon2);
                 }
             }
         }
@@ -1088,7 +1096,7 @@ static int testDistances(void) {
     ++nrTests;
     testDistance(METERS_PER_DEGREE_LAT, distanceInMeters(0.0, 0.0, -1.0, 0.0));
 
-    for (i = 0; i < (sizeof(coordpairs) / sizeof(coordpairs[0])); i += 5) {
+    for (i = 0; i < (int) (sizeof(coordpairs) / sizeof(coordpairs[0])); i += 5) {
         const double distance = distanceInMeters(
                 coordpairs[i], coordpairs[i + 1],
                 coordpairs[i + 2], coordpairs[i + 3]);
@@ -1149,7 +1157,7 @@ static int testTerritoryInsides(void) {
                 {"MEX",    21.431788272457, -89.779820144176, 1}
         };
 
-        for (i = 0; i < (sizeof(TEST_DATA) / sizeof(TEST_DATA[0])); i++) {
+        for (i = 0; i < (int) (sizeof(TEST_DATA) / sizeof(TEST_DATA[0])); i++) {
             enum Territory territory = getTerritoryCode(TEST_DATA[i].territory, TERRITORY_NONE);
             ++nrTests;
             if (multipleBordersNearby(TEST_DATA[i].lat, TEST_DATA[i].lon, territory) != TEST_DATA[i].nearborders) {
@@ -1247,7 +1255,7 @@ static int testGetTerritoryCode(void) {
     s1[0] = 0;
     nrTests += testIncorrectGetTerritoryCode(s1);
 
-    for (i = 0; i < sizeof(largeString) - 1; ++i) {
+    for (i = 0; i < (int) sizeof(largeString) - 1; ++i) {
         largeString[i] = (char) ((i % 223) + 32);
     }
     largeString[sizeof(largeString) - 1] = 0;
@@ -1436,7 +1444,7 @@ static int testDecodeRobustness(void) {
     nrTests += testIncorrectDecode(s1, TERRITORY_NONE);
     nrTests += testIncorrectDecode(s1, tc);
 
-    for (i = 0; i < sizeof(largeString) - 1; ++i) {
+    for (i = 0; i < (int) sizeof(largeString) - 1; ++i) {
         largeString[i] = (char) ((i % 223) + 32);
     }
     largeString[sizeof(largeString) - 1] = 0;
@@ -1961,7 +1969,7 @@ static int testAlphabets(void) {
 
     printf("%d alphabets\n", _ALPHABET_MAX);
 
-    for (j = 0; j < (sizeof(TEST_PAIRS) / sizeof(TEST_PAIRS[0])); j += 2) {
+    for (j = 0; j < (int) (sizeof(TEST_PAIRS) / sizeof(TEST_PAIRS[0])); j += 2) {
         enum Alphabet i;
         for (i = _ALPHABET_MIN + 1; i < _ALPHABET_MAX; i++) {
             UWORD enc[MAX_MAPCODE_RESULT_LEN + 1];
@@ -2011,11 +2019,11 @@ static int testAlphabetRobustness(void) {
     UWORD *pu;
 
     s1[0] = 0;
-    for (i = 0; i < sizeof(largeString1) - 1; ++i) {
+    for (i = 0; i < (int) sizeof(largeString1) - 1; ++i) {
         largeString1[i] = (char) ((i % 223) + 32);
     }
     largeString1[sizeof(largeString1) - 1] = 0;
-    for (i = 0; i < sizeof(largeString2) - 1; ++i) {
+    for (i = 0; i < (int) sizeof(largeString2) - 1; ++i) {
         largeString2[i] = (char) ((i % 223) + 32);
     }
     largeString2[sizeof(largeString2) - 1] = 0;

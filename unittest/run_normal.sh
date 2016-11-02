@@ -1,5 +1,5 @@
 #!/bin/sh
-OPTS="-Wall -Werror -Wno-pointer-to-int-cast"
+OPTS="-Wall -Werror -Wextra -Wpedantic -Wno-pointer-to-int-cast"
 
 echo "!! -------------------------------------------------------------"
 echo "Run normal..."

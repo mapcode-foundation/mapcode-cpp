@@ -45,6 +45,22 @@ Compile and run as follows to use `gprof` to profile the library:
     cd ../unittest
     gcc -g -O0 unittest.c -lm -lpthread -o unittest ../mapcodelib/mapcoder.o -pg
 
+## Using `gcov` to Show Test Coverage
+
+Compile and run as follows to use `gcov` to show test coverage for the libray:
+
+    cd ../mapcodelib
+    gcc -fprofile-arcs -ftest-coverage -O0 -c mapcoder.c 
+    cd ../unittest
+    gcc  -fprofile-arcs -ftest-coverage -O0 unittest.c -lm -lpthread -o unittest ../mapcodelib/mapcoder.o -pg
+    ./unittest
+    cd ../mapcodelib
+    gcov mapcoder.c
+    cd ../unittest
+    gcov unittest.c
+
+The test coverage reports are the `*.gcov` text files.
+
 ## Using Microsoft Visual C++
 
 If you use **Microsoft Visual C++**, you may need to add the following defines to your preprocessor

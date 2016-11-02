@@ -288,7 +288,7 @@ static const signed char ALPHABET_OF[] = {
 #define ROMAN_VERSION_MAX_CHAR 0x3129
 static const char *ROMAN_VERSION_OF[] = {
     /* 0000 */ "\0                                !?#$%&'()*+,-./0123456789:;<=>?",
-    /* 0040 */ "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[?]^_`abcdefghijklmnopqrstuvwxyz{|}~?",
+    /* 0040 */ "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[?]^_`ABCDEFGHIJKLMNOPQRSTUVWXYZ{|}~?",
     /* 0080 */ NULL,
     /* 00c0 */ NULL,
     /* 0100 */ NULL,

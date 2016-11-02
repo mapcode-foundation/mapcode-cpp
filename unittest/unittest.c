@@ -50,9 +50,6 @@
 
 #include <pthread.h>
 
-static const double METERS_PER_DEGREE_LAT = 110946.252133;
-static const double METERS_PER_DEGREE_LON = 111319.490793;
-
 #define MAX_THREADS 16      // Optimal: not too much, approx. nr of cores * 2, better no more than 32.
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
@@ -1026,9 +1023,11 @@ static void testDistance(double d1, double d2) {
 
 
 static int testDistances(void) {
+    static const double METERS_PER_DEGREE_LAT = 110946.252133;
+    static const double METERS_PER_DEGREE_LON = 111319.490793;
     int nrTests = 0;
     int i;
-    const double coordpairs[] = {
+    static const double coordpairs[] = {
             // lat1, lon1, lat2, lon2, expected distance * 100000
             1, 1, 1, 1, 0,
             0, 0, 0, 1, 11131949079,
@@ -1380,6 +1379,7 @@ static int testCorrectDecode(char *mc, enum Territory tc) {
     double lon1;
     double lat2;
     double lon2;
+    UWORD utf16[MAX_CLEAN_MAPCODE_LEN + 1];
     int rc = decodeMapcodeToLatLonUtf8(&lat1, &lon1, mc, tc, NULL);
     if (rc < 0) {
         foundError();
@@ -1391,7 +1391,6 @@ static int testCorrectDecode(char *mc, enum Territory tc) {
         printf("*** ERROR *** decodeMapcodeToLatLonUtf8 returns '%d' (should be 0) for mapcode='%s'\n", rc, mc);
     }
 
-    UWORD utf16[MAX_CLEAN_MAPCODE_LEN + 1];
     convertMapcodeToAlphabetUtf16(utf16, mc, ALPHABET_ARABIC);
     rc = decodeMapcodeToLatLonUtf16(&lat2, &lon2, utf16, tc, NULL);
     if (rc < 0) {
@@ -1876,6 +1875,33 @@ static int testAlphabets(void) {
     int j;
     const char *str, *expect;
     static const char *TEST_PAIRS[] = {
+            "irl xx.xxxx", "IRL XX.XXXX",     // Grid24
+            "cck XX.XX", "CCK XX.XX",       // nameless22
+            "cze XX.XXX", "CZE XX.XXX",      // nameless23
+            "NLD XXX.XX", "NLD XXX.XX",      // nameless32
+            "VAT 5d.dd", "VAT 5D.DD",       // Grid22
+            "NLD XX.XXX", "NLD XX.XXX",      // Grid23
+            "bhr xxx.xx", "BHR XXX.XX",      // Grid32
+            "FRA XXX.XXX", "FRA XXX.XXX",     // Grid33
+            "irl xx.xxxx", "IRL XX.XXXX",     // Grid24
+            "cub xxxx.xx", "CUB XXXX.XX",     // Grid42
+            "ben xxxx.xxx", "BEN XXXX.XXX",    // Grid34
+            "USA xxxx.xxxx", "USA XXXX.XXXX",   // Grid44
+            "US-AZ hhh.hh", "US-AZ HHH.HH",    // HGrid32
+            "Bel hhh.hhh", "BEL HHH.HHH",     // HGrid33
+            "PAN hh.hhhh", "PAN HH.HHHH",     // HGrid24
+            "GRC hhhh.hh", "GRC HHHH.HH",     // HGrid42
+            "NZL hhhh.hhh", "NZL HHHH.HHH",    // HGrid43
+            "KAZ hhh.hhhh", "KAZ HHH.HHHH",    // HGrid34
+            "RUS xxxx.xxxx", "RUS XXXX.XXXX",   // HGrid44
+            "CN-SH hhhh.hhhh", "CN-SH HHHH.HHHH", // HGrid44
+            "VAT hhhhh.hhhh", "VAT HHHHH.HHHH",  // HGrid54
+            "hhhhh.hhhh", "HHHHH.HHHH",      // HGrid54
+            "TUV hh.hhh", "TUV HH.HHH",      // AutoHeader23
+            "LVA L88.ZVR", "LVA L88.ZVR",     // AutoHeader33
+            "WLF XLG.3GP", "WLF XLG.3GP",     // HGrid33 R
+            "VAT j0q3.27r", "VAT J0Q3.27R",    // HGrid43 R
+            "PAK hhhh.hhhh", "PAK HHHH.HHHH",   // HGrid44 R
             "xxx.xxxx", "XXX.XXXX",
             "nld XX.XX", "NLD XX.XX",
             ".123", "",
@@ -1944,6 +1970,20 @@ static int testAlphabets(void) {
             str = TEST_PAIRS[j];
             expect = TEST_PAIRS[j + 1];
             convertMapcodeToAlphabetUtf16(enc, str, i);
+            {
+                char utf8[3 * MAX_MAPCODE_RESULT_LEN + 1];
+                MapcodeElements mapcodeElements;
+                double lat1, lon1, lat2, lon2, lat3, lon3;
+                convertMapcodeToAlphabetUtf8(utf8, str, i);
+                decodeMapcodeToLatLonUtf16(&lat1, &lon1, enc, TERRITORY_FRA, &mapcodeElements);
+                decodeMapcodeToLatLonUtf8(&lat2, &lon2, utf8, TERRITORY_FRA, &mapcodeElements);
+                decodeMapcodeToLatLonUtf8(&lat3, &lon3, str, TERRITORY_FRA, &mapcodeElements);
+                ++nrTests;
+                if (lat1 != lat2 || lon1 != lon2 || lat1 != lat3 || lon1 != lon3) {
+                    foundError();
+                    printf("*** ERROR *** Difference in ascii/utf8/utf16 decoding %s\n", str);
+                }
+            }
             myConvertToRoman(dec, enc);
             ++nrTests;
             if (strcmp(dec, expect)) {

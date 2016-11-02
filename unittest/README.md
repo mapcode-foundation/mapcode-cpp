@@ -28,7 +28,7 @@ Or, add `-fsanitize=address` to run the address sanitizer:
     cd ../mapcodelib
     gcc -O -c mapcoder.c
     cd ../unittest
-    gcc -O unittest.c -lm -lpthread -fsanitize=address -o unittest 
+    gcc -O unittest.c -lm -lpthread -fsanitize=address -o unittest ../mapcodelib/mapcoder.o
 
 And add the environment variable `ASAN_OPTIONS` to your shell:
 
@@ -44,6 +44,22 @@ Compile and run as follows to use `gprof` to profile the library:
     gcc -g -O0 -c mapcoder.c -pg
     cd ../unittest
     gcc -g -O0 unittest.c -lm -lpthread -o unittest ../mapcodelib/mapcoder.o -pg
+
+## Using `gcov` to Show Test Coverage
+
+Compile and run as follows to use `gcov` to show test coverage for the libray:
+
+    cd ../mapcodelib
+    gcc -fprofile-arcs -ftest-coverage -O0 -c mapcoder.c 
+    cd ../unittest
+    gcc  -fprofile-arcs -ftest-coverage -O0 unittest.c -lm -lpthread -o unittest ../mapcodelib/mapcoder.o -pg
+    ./unittest
+    cd ../mapcodelib
+    gcov mapcoder.c
+    cd ../unittest
+    gcov unittest.c
+
+The test coverage reports are the `*.gcov` text files.
 
 ## Using Microsoft Visual C++
 

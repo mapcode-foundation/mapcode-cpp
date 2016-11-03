@@ -18,7 +18,7 @@ echo ""
 echo "Run gcov with: -O0"
 cd ../mapcodelib
 gcc $OPTS -O0 -c mapcoder.c
-cd ../unittest
+cd ../test
 gcc $OPTS -O0 unittest.c -lm -lpthread -o unittest $LIB
 ./unittest
 cd ../mapcodelib

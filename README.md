@@ -15,14 +15,13 @@ The directory 'mapcodelib' contains the files:
 
     mapcodelib/
       mapcoder.h                    <-- Header file with method prototypes and defines for caller.
-      mapcoder.c
-      basics.h
+      mapcoder.c                    <-- Implementation of mapcode routines.
+      internal_*.h                  <-- Internal implementataion details for library.
 
-      mapcode_fastencode.h          <-- include unless FAST_ENCODE is undefined 
-      mapcode_fastalpha.h           <-- needed only if FAST_ALPHA is defined
-    
-      mapcode_countrynames.h        <-- optional array with english territory names, including official names
-      mapcode_countrynames_short.h  <-- optional array with english territory names
+      mapcode_alphabets.h           <-- Enumeration of supported alphabets (or scripts).
+      mapcode_territories.h         <-- Enumeration of supported territories.
+      
+      mapcode_legacy.h              <-- Courtesy support for legacy calls, may be deprecated in future.
 
 Together these provide routine to encode/decode Mapcodes.
 
@@ -30,20 +29,20 @@ Documentation, including example snippets of C source code, can be found in
 
     docs/
       mapcode_library_c.pdf         <-- PDF format.
-      mapcode_library_c.doc         <-- Microsoft Word format.
+      mapcode_library_c.docx        <-- Microsoft Word format.
 
-A unit test can be found in the `test` subdirectory.
-Compile and run `unittest.c` to see if the library performs as expected.
-Check the `README.md` file in `test` to see how you can compile it/
+A unit test can be found in the `test` subdirectory. Compile and run `unittest.c` to see 
+if the library performs as expected:
 
-Also see www.mapcode.com for background and reference materials.
+    cd mapcodelib
+    gcc -O -c mapcoder.c
+    cd ../test
+    gcc -O unittest.c -lm -lpthread -o unittest ../mapcodelib/mapcoder.o
+    ./unittest
 
-Note: this version may be restricted to a particular area of the Earth!
-In that case, basics.h will state a version number of the for:
+Check the `README.md` in directory `test` for more information.
 
-    #define mapcode_cversion "1.2xxx"
-    
-where "xxx" states the geographical limitation.
+Also see http://www.mapcode.com for background and reference materials.
 
 
 ## A Real-Life Example, The 'mapcode' Codec Tool: `utility/`
@@ -53,8 +52,10 @@ of how to use the library.
 
 To build the original Mapcode tool, execute:
 
-    cd utility
-    gcc -O mapcode.cpp -o mapcode
+    cd mapcodelib
+    gcc -O -c mapcoder.c
+    cd ../utility
+    gcc -O mapcode.cpp -o mapcode ../mapcodelib/mapcoder.o
 
 For help, simply execute the binary file 'mapcode' without no arguments.
 This tool provides a rather extensive command-line interface to encode and
@@ -135,6 +136,23 @@ If you use **Microsoft Visual C++**, you may need to add the following compiler 
 The Mapcode C/C++ Library has includes a number of fixed data tables, which increase its footprint.
 You may not require all of this data, so we've added some options for you to be able to reduce its
 footprint, for example for embedded applications. 
+
+You can specify the define `MAPCODE_NO_SUPPORT_ALL_LANGUAGES` to disable support for territory names
+in all languages. 
+
+Note that English names are always supported and it's also always possible to get territory names
+in their locale language.
+   
+To add individual support support for other languages (of all territory names), use:
+    
+    -DMAPCODE_NO_SUPPORT_ALL_LANGUAGES   // If not defined, ALL languages are available.
+    -DMAPCODE_SUPPORT_LANGUAGE_DA        // Add individual languages.
+    -DMAPCODE_SUPPORT_LANGUAGE_DE        
+    -DMAPCODE_SUPPORT_LANGUAGE_FR
+    -DMAPCODE_SUPPORT_LANGUAGE_HI
+    -DMAPCODE_SUPPORT_LANGUAGE_NL
+
+The list of support languages may grow over time.
 
 ## Release Notes
 

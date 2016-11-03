@@ -3047,7 +3047,7 @@ getFullTerritoryName_internal(char *territoryName, enum Territory territory, int
 
     ASSERT(territoryName);
     ASSERT((_TERRITORY_MIN < territory) && (territory < _TERRITORY_MAX));
-    ASSERT((alphabet == _ALPHABET_MIN) || (_ALPHABET_MIN < alphabet) && (alphabet < _ALPHABET_MAX));
+    ASSERT((alphabet == _ALPHABET_MIN) || ((_ALPHABET_MIN < alphabet) && (alphabet < _ALPHABET_MAX)));
 
     // Defensive bail out if incorrect arguments.
     if (!territoryName || (alternative < 0) || (territory <= _TERRITORY_MIN) || (territory >= _TERRITORY_MAX)) {
@@ -3147,7 +3147,7 @@ int getFullTerritoryNameEnglish(char *territoryName, enum Territory territory, i
 int getFullTerritoryNameInLocaleUtf8(char *territoryName, enum Territory territory, int alternative,
                                      const char *locale) {
     ASSERT(territoryName);
-    ASSERT((_TERRITORY_MIN < territory) && (territory < _TERRITORY_MAX) || (territory == TERRITORY_UNKNOWN));
+    ASSERT(((_TERRITORY_MIN < territory) && (territory < _TERRITORY_MAX)) || (territory == TERRITORY_UNKNOWN));
     return getFullTerritoryName_internal(territoryName, territory, alternative, locale, _ALPHABET_MIN);
 }
 

@@ -1718,8 +1718,7 @@ int testGetFullTerritoryName(void) {
     for (i = 0; i < (int) (sizeof(locales_to_test) / sizeof(locales_to_test[0])); i++) {
         const char *locale = locales_to_test[i];
         int nrInLocale = 0;
-        for (territory = TERRITORY_NLD; territory < TERRITORY_NLD + 1; ++territory) {
-        // TODO for (territory = _TERRITORY_MIN + 1; territory < _TERRITORY_MAX; ++territory) {
+        for (territory = _TERRITORY_MIN + 1; territory < _TERRITORY_MAX; ++territory) {
             char expectedLocalName[MAX_TERRITORY_FULLNAME_UTF8_LEN + 1];
             getFullTerritoryNameInLocaleUtf8(expectedLocalName, territory, 0, 0);
 

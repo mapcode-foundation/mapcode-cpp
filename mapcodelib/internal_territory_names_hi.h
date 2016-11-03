@@ -23,6 +23,7 @@ extern "C" {
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
 
 static const char *TERRITORY_FULL_NAME_HI[] = {
+#ifdef MAPCODE_SUPPORT_LANGUAGE_HI
         /*     VAT */ "वेटिकन सिटी|पवित्र देखें",
         /*     MCO */ "मोनाको",
         /*     GIB */ "जिब्राल्टर",
@@ -556,6 +557,9 @@ static const char *TERRITORY_FULL_NAME_HI[] = {
         /*     CPT */ "क्लिपरटन द्वीप",
         /*     ATA */ "अंटार्कटिका",
         /*     AAA */ "अंतरराष्ट्रीय|अंतरराष्ट्रीय|पृथ्वी"
+#else // MAPCODE_SUPPORT_LANGUAGE_HI
+        NULL
+#endif // MAPCODE_SUPPORT_LANGUAGE_HI
 };
 
 #ifdef __cplusplus

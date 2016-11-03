@@ -409,7 +409,7 @@ static int testMapcodeFormats(void) {
 
     for (i = 0; formattests[i].input != NULL; ++i) {
         MapcodeElements mapcodeElements;
-        enum MapcodeError parseError = myParseMapcodeString(&mapcodeElements, formattests[i].input, 0);
+        enum MapcodeError parseError = myParseMapcodeString(&mapcodeElements, formattests[i].input, TERRITORY_UNKNOWN);
         enum MapcodeError formatError = compareWithMapcodeFormatUtf8(formattests[i].input);
         if (formattests[i].parseError == ERR_OK) {
             shouldSucceed++;
@@ -469,12 +469,12 @@ static int testAlphabetParser(void) {
             {"PRT 31.E2-b2c",   "PRT 31.E2-B2C (1136;2)"},
             {"GBR  רר.56ר",     "GBR XX.XX (1167;2)"},       // hebrew abjad
             {"BEL  طظ.56ط ",    "BEL PQ.XP (1107;2)"},       // arab abjad
-            {"FRA  ヒフ.ラヲ",   "FRA PQ.XZ (1198;2)"},
+            {"FRA  ヒフ.ラヲ",      "FRA PQ.XZ (1198;2)"},
             {"CA XX.XX",        "CA XX.XX (1392;2)"},
     };
     int i;
     for (i = 0; i < (int) (sizeof(parseTests) / sizeof(parseTests[0])); i++) {
-        char romanized1[MAX_MAPCODE_RESULT_LEN + 1];
+        char romanized1[MAX_MAPCODE_RESULT_ASCII_LEN + 1];
         MapcodeElements mapcodeElements;
         enum MapcodeError parseError = myParseMapcodeString(&mapcodeElements, parseTests[i].userInput,
                                                             TERRITORY_UNKNOWN);
@@ -494,12 +494,13 @@ static int testAlphabetParser(void) {
                     mapcodeElements.indexOfDot);
             if (strcmp(romanized1, parseTests[i].expected) != 0) {
                 foundError();
-                printf("*** ERROR *** myParseMapcodeString(\"%s\") = \"%s\", (expected \"%s\")\n", parseTests[i].userInput,
+                printf("*** ERROR *** myParseMapcodeString(\"%s\") = \"%s\", (expected \"%s\")\n",
+                       parseTests[i].userInput,
                        romanized1, parseTests[i].expected);
             } else {
                 int err1, err2;
                 double lat1, lon1, lat2, lon2;
-                char romanized2[MAX_MAPCODE_RESULT_LEN + 1];
+                char romanized2[MAX_MAPCODE_RESULT_ASCII_LEN + 1];
                 sprintf(romanized2, "%s %s%s%s",
                         mapcodeElements.territoryISO,
                         mapcodeElements.properMapcode,
@@ -554,7 +555,7 @@ static void printGeneratedMapcodes(const char *title, const Mapcodes *mapcodes) 
 // test encode x,y to M, decode M, re-encode back to M
 static int testEncodeAndDecode(const char *str, double y, double x, int localsolutions, int globalsolutions) {
     int nrTests = 0;
-    char clean[MAX_MAPCODE_RESULT_LEN + 1];
+    char clean[MAX_MAPCODE_RESULT_ASCII_LEN + 1];
     const char *p, *s;
     int found = 0;
     enum Territory tc = TERRITORY_NONE;
@@ -571,7 +572,7 @@ static int testEncodeAndDecode(const char *str, double y, double x, int localsol
 
     // if str: determine "precision", territory "tc", and a "clean" copy of str
     if (*str) {
-        char territory[MAX_ISOCODE_LEN + 1];
+        char territory[MAX_ISOCODE_ASCII_LEN + 1];
         // find first territory letter in s
         s = str;
         while (*s > 0 && *s <= 32) {
@@ -580,7 +581,7 @@ static int testEncodeAndDecode(const char *str, double y, double x, int localsol
         // parse territory, if any
         p = strchr(s, ' ');
         len = p ? (int) (p - s) : 0;
-        if (p && len <= MAX_ISOCODE_LEN) {
+        if (p && len <= MAX_ISOCODE_ASCII_LEN) {
             // copy and recognize territory
             memcpy(territory, s, (size_t) len);
             territory[len] = 0;
@@ -607,7 +608,7 @@ static int testEncodeAndDecode(const char *str, double y, double x, int localsol
             strcat(clean, " ");
             i++;
         }
-        if (len + i >= MAX_MAPCODE_RESULT_LEN) {
+        if (len + i >= MAX_MAPCODE_RESULT_ASCII_LEN) {
             len = 0;
         }
         memcpy(clean + i, s, (size_t) len);
@@ -833,10 +834,10 @@ static int testFailingDecodes(void) {
 static int testTerritory(const char *alphaCode, enum Territory territory,
                          int isAlias, int needsParent, enum Territory tcParent) {
     int nrTests = 0;
-    char nam[MAX_ISOCODE_LEN + 1];
+    char nam[MAX_ISOCODE_ASCII_LEN + 1];
     unsigned int i;
     for (i = 0; i <= strlen(alphaCode); i++) {
-        char alphacode[MAX_ISOCODE_LEN + 1];
+        char alphacode[MAX_ISOCODE_ASCII_LEN + 1];
         int tn;
         strcpy(alphacode, alphaCode);
         if (!needsParent && (i == 0)) {
@@ -1388,7 +1389,7 @@ static int testCorrectDecode(char *mc, enum Territory tc) {
     double lon1;
     double lat2;
     double lon2;
-    UWORD utf16[MAX_CLEAN_MAPCODE_LEN + 1];
+    UWORD utf16[MAX_CLEAN_MAPCODE_ASCII_LEN + 1];
     int rc = decodeMapcodeToLatLonUtf8(&lat1, &lon1, mc, tc, NULL);
     if (rc < 0) {
         foundError();
@@ -1570,19 +1571,17 @@ static int testTerritoriesCsv(void) {
                     e = strchr(s, 10);
                     if (e) {
                         *e = 0;
-#ifdef MAPCODE_SUPPORT_LANGUAGE_EN
                         {
                             int i, noMoreNames = 0;
                             for (i = 0; !noMoreNames; i++) {
-                                char territoryName[MAX_TERRITORY_FULLNAME_LEN + 1];
-                                noMoreNames = getFullTerritoryNameEnglish(territoryName, csvTerritoryCode, i);
+                                char territoryName[MAX_TERRITORY_FULLNAME_UTF8_LEN + 1];
+                                noMoreNames = getFullTerritoryNameInLocaleUtf8(territoryName, csvTerritoryCode, i, "en_US");
                                 if (!strstr(s, territoryName)) {
                                     foundError();
                                     printf("*** ERROR *** Name \"%s\" not found in \"%s\"\n", territoryName, s);
                                 }
                             }
                         }
-#endif // MAPCODE_SUPPORT_LANGUAGE_EN
                     }
                 }
             }
@@ -1610,7 +1609,7 @@ static int testSingleEncodes(void) {
     };
     int i;
     for (i = 0; test_single_encode[i].result != NULL; i++) {
-        char result[MAX_MAPCODE_RESULT_LEN + 1];
+        char result[MAX_MAPCODE_RESULT_ASCII_LEN + 1];
         encodeLatLonToSingleMapcode(result, test_single_encode[i].latDeg, test_single_encode[i].lonDeg,
                                     test_single_encode[i].territory, 4);
         if (strcmp(result, test_single_encode[i].result) != 0) {
@@ -1623,73 +1622,21 @@ static int testSingleEncodes(void) {
 }
 
 
-
-static int testGetFullTerritoryNameInLocale(const char *locale, const char *expectedName, enum Territory territory, int alternative) {
+static int testGetFullTerritoryNameLocal(const char *expectedName, enum Territory territory, int alternative) {
     int nrTests = 0;
     int expectedCode = (*expectedName ? 1 : 0);
-    char gotName[MAX_TERRITORY_FULLNAME_LEN + 1];
-    int gotCode = getFullTerritoryNameInLocale(gotName, territory, alternative, locale);
+    char gotName[MAX_TERRITORY_FULLNAME_UTF8_LEN + 1];
+    int gotCode = getFullTerritoryNameLocalUtf8(gotName, territory, alternative);
     ++nrTests;
-    if (strcmp(expectedName, gotName)) {
-        char s[MAX_ISOCODE_LEN + 1];
-        foundError();
-        printf("*** ERROR *** getFullTerritoryNameInLocale error, expected name '%s', but got '%s' for territory %s, alternative %d\n",
-               expectedName, gotName, getTerritoryIsoName(s, territory, 0), alternative);
-    }
-    ++nrTests;
-    if ((expectedCode && !gotCode) || (!expectedCode && gotCode)) {
-        char s[MAX_ISOCODE_LEN + 1];
-        foundError();
-        printf("*** ERROR *** getFullTerritoryNameInLocale error, expected return code %d, but got %d (%s) for territory %s, alternative %d\n",
-               expectedCode, gotCode, gotName, getTerritoryIsoName(s, territory, 0), alternative);
-    }
-    return nrTests;
-}
-
-
-#ifdef MAPCODE_SUPPORT_LANGUAGE_EN
-
-static int testGetFullTerritoryNameEnglish(int expectedCode, const char *expectedName, enum Territory territory,
-                                           int alternative) {
-    int nrTests = 0;
-    char gotName[MAX_TERRITORY_FULLNAME_LEN + 1];
-    int gotCode = getFullTerritoryNameEnglish(gotName, territory, alternative);
-    ++nrTests;
-    if (strcmp(expectedName, gotName)) {
-        char s[MAX_ISOCODE_LEN + 1];
-        foundError();
-        printf("*** ERROR *** getFullTerritoryNameEnglish error, expected name '%s', but got '%s' for territory %s, alternative %d\n",
-               expectedName, gotName, getTerritoryIsoName(s, territory, 0), alternative);
-    }
-    ++nrTests;
-    if ((expectedCode && !gotCode) || (!expectedCode && gotCode)) {
-        char s[MAX_ISOCODE_LEN + 1];
-        foundError();
-        printf("*** ERROR *** getFullTerritoryNameEnglish error, expected return code %d, but got %d (%s) for territory %s, alternative %d\n",
-               expectedCode, gotCode, gotName, getTerritoryIsoName(s, territory, 0), alternative);
-    }
-    return nrTests;
-}
-
-#endif // MAPCODE_SUPPORT_LANGUAGE_EN
-
-#ifdef MAPCODE_SUPPORT_LANGUAGE_LOCAL
-
-static int
-testGetFullTerritoryNameLocal(int expectedCode, const char *expectedName, enum Territory territory, int alternative) {
-    int nrTests = 0;
-    char gotName[MAX_TERRITORY_FULLNAME_LEN + 1];
-    int gotCode = getFullTerritoryNameLocal(gotName, territory, alternative);
-    ++nrTests;
-    if (strcmp(expectedName, gotName)) {
-        char s[MAX_ISOCODE_LEN + 1];
+    if (expectedCode && strcmp(expectedName, gotName)) {
+        char s[MAX_ISOCODE_ASCII_LEN + 1];
         foundError();
         printf("*** ERROR *** getFullTerritoryNameLocal error, expected name '%s', but got '%s' for territory %s, alternative %d\n",
                expectedName, gotName, getTerritoryIsoName(s, territory, 0), alternative);
     }
     ++nrTests;
     if ((expectedCode && !gotCode) || (!expectedCode && gotCode)) {
-        char s[MAX_ISOCODE_LEN + 1];
+        char s[MAX_ISOCODE_ASCII_LEN + 1];
         foundError();
         printf("*** ERROR *** getFullTerritoryNameLocal error, expected return code %d, but got %d (%s) for territory %s, alternative %d\n",
                expectedCode, gotCode, gotName, getTerritoryIsoName(s, territory, 0), alternative);
@@ -1697,23 +1644,48 @@ testGetFullTerritoryNameLocal(int expectedCode, const char *expectedName, enum T
     return nrTests;
 }
 
-static int testGetFullTerritoryNameLocalInAlphabet(
-        int expectedCode, const char *expectedName,
-        enum Territory territory,
-        int alternative, enum Alphabet alphabet) {
+
+static int testGetFullTerritoryNameInLocale(const char *expectedName,
+                                            enum Territory territory, int alternative,
+                                            const char *locale) {
     int nrTests = 0;
-    char gotName[MAX_TERRITORY_FULLNAME_LEN + 1];
-    int gotCode = getFullTerritoryNameLocalInAlphabet(gotName, territory, alternative, alphabet);
+    int expectedCode = (*expectedName ? 1 : 0);
+    char gotName[MAX_TERRITORY_FULLNAME_UTF8_LEN + 1];
+    int gotCode = getFullTerritoryNameInLocaleUtf8(gotName, territory, alternative, locale);
     ++nrTests;
-    if (strcmp(expectedName, gotName)) {
-        char s[MAX_ISOCODE_LEN + 1];
+    if (expectedCode && strcmp(expectedName, gotName)) {
+        char s[MAX_ISOCODE_ASCII_LEN + 1];
+        foundError();
+        printf("*** ERROR *** getFullTerritoryNameInLocale error, expected name '%s', but got '%s' for territory %s, alternative %d, locale %s\n",
+               expectedName, gotName, getTerritoryIsoName(s, territory, 0), alternative, locale ? locale : "NULL");
+    }
+    ++nrTests;
+    if ((expectedCode && !gotCode) || (!expectedCode && gotCode)) {
+        char s[MAX_ISOCODE_ASCII_LEN + 1];
+        foundError();
+        printf("*** ERROR *** getFullTerritoryNameInLocale error, expected return code %d, but got %d (%s) for territory %s, alternative %d, locale %s\n",
+               expectedCode, gotCode, gotName, getTerritoryIsoName(s, territory, 0), alternative, locale ? locale : "NULL");
+    }
+    return nrTests;
+}
+
+
+static int testGetFullTerritoryNameLocalInAlphabet(const char *expectedName, enum Territory territory,
+                                                   int alternative, enum Alphabet alphabet) {
+    int nrTests = 0;
+    int expectedCode = (*expectedName ? 1 : 0);
+    char gotName[MAX_TERRITORY_FULLNAME_UTF8_LEN + 1];
+    int gotCode = getFullTerritoryNameLocalInAlphabetUtf8(gotName, territory, alternative, alphabet);
+    ++nrTests;
+    if (expectedCode && strcmp(expectedName, gotName)) {
+        char s[MAX_ISOCODE_ASCII_LEN + 1];
         foundError();
         printf("*** ERROR *** getFullTerritoryNameLocalInAlphabet error, expected name '%s', but got '%s' for territory %s, alternative %d\n",
                expectedName, gotName, getTerritoryIsoName(s, territory, 0), alternative);
     }
     ++nrTests;
     if ((expectedCode && !gotCode) || (!expectedCode && gotCode)) {
-        char s[MAX_ISOCODE_LEN + 1];
+        char s[MAX_ISOCODE_ASCII_LEN + 1];
         foundError();
         printf("*** ERROR *** getFullTerritoryNameLocalInAlphabet error, expected return code %d, but got %d (%s) for territory %s, alternative %d\n",
                expectedCode, gotCode, gotName, getTerritoryIsoName(s, territory, 0), alternative);
@@ -1721,7 +1693,6 @@ static int testGetFullTerritoryNameLocalInAlphabet(
     return nrTests;
 }
 
-#endif // MAPCODE_SUPPORT_LANGUAGE_LOCAL
 
 int testGetFullTerritoryName(void) {
     int nrTests = 0;
@@ -1730,42 +1701,44 @@ int testGetFullTerritoryName(void) {
     int maxLength = 0;
     int alternative;
     int i;
-    char territoryName[2048]; // large so we can test overflow
-    static const char *locales_to_test[] = { 
-        "DA", "DE", "EN", "FR", "NL"};
+    const TerritoryAlphabets *territoryAlphabets;
+    char territoryName[MAX_TERRITORY_FULLNAME_UTF8_LEN + 2]; // large so we can test overflow
+    static const char *locales_to_test[] = {
+            "DA", "DE", "EN", "FR", "NL"};
 
-    nrTests += testGetFullTerritoryNameInLocale(NULL, "Vatican", TERRITORY_VAT, 0);
-    nrTests += testGetFullTerritoryNameInLocale("", "Vatican", TERRITORY_VAT, 0);
-    nrTests += testGetFullTerritoryNameInLocale("E", "Vatican", TERRITORY_VAT, 0);
-    nrTests += testGetFullTerritoryNameInLocale("EN", "Vatican", TERRITORY_VAT, 0);
-    nrTests += testGetFullTerritoryNameInLocale("??", "Vatican", TERRITORY_VAT, 0);
+    nrTests += testGetFullTerritoryNameInLocale("Sancta Sedes", TERRITORY_VAT, 0, NULL);    // Local name.
+    nrTests += testGetFullTerritoryNameInLocale("Vatican", TERRITORY_VAT, 0, "");           // Wrong locale -> fallback language.
+    nrTests += testGetFullTerritoryNameInLocale("Vatican", TERRITORY_VAT, 0, "E");
+    nrTests += testGetFullTerritoryNameInLocale("Vatican", TERRITORY_VAT, 0, "EN");
+    nrTests += testGetFullTerritoryNameInLocale("Vatican", TERRITORY_VAT, 0, "??");
+    nrTests += testGetFullTerritoryNameInLocale("Vatican", TERRITORY_VAT, 0, "-");
+    nrTests += testGetFullTerritoryNameInLocale("Vatican", TERRITORY_VAT, 0, "_");
+    nrTests += testGetFullTerritoryNameInLocale("Vatican", TERRITORY_VAT, 0, "_EN");
 
     for (i = 0; i < (int) (sizeof(locales_to_test) / sizeof(locales_to_test[0])); i++) {
         const char *locale = locales_to_test[i];
         int nrInLocale = 0;
-        nrTests += testGetFullTerritoryNameInLocale(locale, "", _TERRITORY_MIN, 0);
-        nrTests += testGetFullTerritoryNameInLocale(locale, "", _TERRITORY_MAX, 0);
-//        for (territory = _TERRITORY_MIN + 1; territory < _TERRITORY_MAX; ++territory) {
-        for (territory = TERRITORY_NLD; territory < TERRITORY_EST; ++territory) {
-            char expectedName[MAX_TERRITORY_FULLNAME_LEN + 1];
-            getFullTerritoryNameInLocale(expectedName, territory, 0, 0);
-            nrTests += testGetFullTerritoryNameInLocale(locale, expectedName, territory, 0);
-            nrTests += testGetFullTerritoryNameInLocale("", expectedName, territory, 0);
-            nrTests += testGetFullTerritoryNameInLocale(locale, "", territory, -1);
-            nrTests += testGetFullTerritoryNameInLocale(locale, "", territory, 999);
+        for (territory = TERRITORY_NLD; territory < TERRITORY_NLD + 1; ++territory) {
+        // TODO for (territory = _TERRITORY_MIN + 1; territory < _TERRITORY_MAX; ++territory) {
+            char expectedLocalName[MAX_TERRITORY_FULLNAME_UTF8_LEN + 1];
+            getFullTerritoryNameInLocaleUtf8(expectedLocalName, territory, 0, 0);
+
+            nrTests += testGetFullTerritoryNameInLocale(expectedLocalName, territory, 0, NULL);
+            nrTests += testGetFullTerritoryNameInLocale("", territory, -1, locale);
+            nrTests += testGetFullTerritoryNameInLocale("", territory, 999, locale);
             for (alternative = 0;; alternative++) {
                 int len;
-                if (!getFullTerritoryNameInLocale(territoryName, territory, alternative, locale)) {
+                if (!getFullTerritoryNameInLocaleUtf8(territoryName, territory, alternative, locale)) {
                     break;
                 }
                 ++nrInLocale;
-                ++nrNames;                
+                ++nrNames;
                 len = (int) strlen(territoryName);
                 nrTests++;
-                if (len < 1 || len > MAX_TERRITORY_FULLNAME_LEN) {
+                if (len < 1 || len > MAX_TERRITORY_FULLNAME_UTF8_LEN) {
                     foundError();
-                    printf("*** ERROR *** Bad territoryname %d, %d characters (limit is %d): %s\n", 
-                           (int) territory, len, MAX_TERRITORY_FULLNAME_LEN, territoryName);
+                    printf("*** ERROR *** Bad territoryname %d, %d characters (limit is %d): %s\n",
+                           (int) territory, len, MAX_TERRITORY_FULLNAME_UTF8_LEN, territoryName);
                 }
                 if (len > maxLength) {
                     maxLength = len;
@@ -1774,17 +1747,14 @@ int testGetFullTerritoryName(void) {
         }
     }
 
-#ifdef MAPCODE_SUPPORT_LANGUAGE_LOCAL
-
     // check that every territory has a local name in all the common alphabets
     for (territory = _TERRITORY_MIN + 1; territory < _TERRITORY_MAX; ++territory) {
-        const TerritoryAlphabets *territoryAlphabets = getAlphabetsForTerritory(territory);
-        int i;
+        territoryAlphabets = getAlphabetsForTerritory(territory);
         for (i = 0; i < territoryAlphabets->count; i++) {
             nrTests++;
-            if (!getFullTerritoryNameLocalInAlphabet(territoryName, territory, 0,
+            if (!getFullTerritoryNameLocalInAlphabetUtf8(territoryName, territory, 0,
                                                      territoryAlphabets->alphabet[i])) {
-                char s[MAX_ISOCODE_LEN + 1];
+                char s[MAX_ISOCODE_ASCII_LEN + 1];
                 foundError();
                 printf("*** ERROR *** getFullTerritoryNameLocal territory %s has NO name in common alphabet (%d)\n",
                        getTerritoryIsoName(s, territory, 0), territoryAlphabets->alphabet[0]);
@@ -1793,128 +1763,99 @@ int testGetFullTerritoryName(void) {
 
         // check that the x-th local name is in the x-th common alphabet
         nrTests++;
-        {
-            const TerritoryAlphabets *territoryAlphabets = getAlphabetsForTerritory(territory);
-            int i;
-            for (i = 0; i < territoryAlphabets->count; i++) {
-                char territoryName2[MAX_TERRITORY_FULLNAME_LEN + 1];
-                if (!getFullTerritoryNameLocalInAlphabet(territoryName, territory, 0,
-                                                         territoryAlphabets->alphabet[i])) {
-                    char s[MAX_ISOCODE_LEN + 1];
-                    foundError();
-                    printf("*** ERROR *** getFullTerritoryNameLocal territory %s has NO name in common alphabet (%d)\n",
-                           getTerritoryIsoName(s, territory, 0), territoryAlphabets->alphabet[0]);
-                }
-                if (!getFullTerritoryNameLocal(territoryName2, territory, i) ||
-                    strcmp(territoryName, territoryName2) != 0) {
-                    char s[MAX_ISOCODE_LEN + 1];
-                    foundError();
-                    printf("*** ERROR *** getFullTerritoryNameLocal %d-th (%s) name mismatches %d-th most common language for %s\n",
-                           i, territoryName, i, getTerritoryIsoName(s, territory, 0));
-                }
+        territoryAlphabets = getAlphabetsForTerritory(territory);
+        for (i = 0; i < territoryAlphabets->count; i++) {
+            char territoryNameLocal[MAX_TERRITORY_FULLNAME_UTF8_LEN + 1];
+            if (!getFullTerritoryNameLocalInAlphabetUtf8(territoryName, territory, 0, territoryAlphabets->alphabet[i])) {
+                char s[MAX_ISOCODE_ASCII_LEN + 1];
+                foundError();
+                printf("*** ERROR *** getFullTerritoryNameLocal Territory %s has NO name in common alphabet %d\n",
+                       getTerritoryIsoName(s, territory, 0), territoryAlphabets->alphabet[i]);
+            }
+            if (!getFullTerritoryNameLocalUtf8(territoryNameLocal, territory, i) ||
+                strcmp(territoryName, territoryNameLocal)) {
+                foundError();
+                printf("*** ERROR *** getFullTerritoryNameLocal Territory name %s (%d) does not match local name %s\n",
+                       territoryName, i, territoryNameLocal);
             }
         }
     }
-
-#endif // MAPCODE_SUPPORT_LANGUAGE_LOCAL
-
     printf("%d territory names, max length %d characters\n", nrNames, maxLength);
 
-#ifdef MAPCODE_SUPPORT_LANGUAGE_EN
-
-    nrTests += testGetFullTerritoryNameEnglish(1, "Netherlands", TERRITORY_NLD, 0);
-    nrTests += testGetFullTerritoryNameEnglish(1, "The Netherlands", TERRITORY_NLD, 1);
-    nrTests += testGetFullTerritoryNameEnglish(0, "", TERRITORY_NLD, 2);
-
-    nrTests += testGetFullTerritoryNameEnglish(1, "Russia", TERRITORY_RUS, 0);
-    nrTests += testGetFullTerritoryNameEnglish(1, "Russian Federation", TERRITORY_RUS, 1);
-    nrTests += testGetFullTerritoryNameEnglish(0, "", TERRITORY_RUS, 2);
-
-    nrTests += testGetFullTerritoryNameEnglish(1, "Kazakhstan", TERRITORY_KAZ, 0);
-    nrTests += testGetFullTerritoryNameEnglish(0, "", TERRITORY_KAZ, 1);
-
-    nrTests += testGetFullTerritoryNameEnglish(1, "Turkmenistan", TERRITORY_TKM, 0);
-    nrTests += testGetFullTerritoryNameEnglish(0, "", TERRITORY_TKM, 1);
-    nrTests += testGetFullTerritoryNameEnglish(0, "", TERRITORY_TKM, 2);
-    nrTests += testGetFullTerritoryNameEnglish(0, "", TERRITORY_TKM, 999);
-
-#endif
+    nrTests += testGetFullTerritoryNameInLocale("Netherlands", TERRITORY_NLD, 0, "en_US");
+    nrTests += testGetFullTerritoryNameInLocale("The Netherlands", TERRITORY_NLD, 1, "en_US");
+    nrTests += testGetFullTerritoryNameInLocale("", TERRITORY_NLD, 2, "en_US");
+    nrTests += testGetFullTerritoryNameInLocale("Russia", TERRITORY_RUS, 0, "en_US");
+    nrTests += testGetFullTerritoryNameInLocale("Russian Federation", TERRITORY_RUS, 1, "en_US");
+    nrTests += testGetFullTerritoryNameInLocale("", TERRITORY_RUS, 2, "en_US");
+    nrTests += testGetFullTerritoryNameInLocale("Kazakhstan", TERRITORY_KAZ, 0, "en_US");
+    nrTests += testGetFullTerritoryNameInLocale("", TERRITORY_KAZ, 1, "en_US");
+    nrTests += testGetFullTerritoryNameInLocale("Turkmenistan", TERRITORY_TKM, 0, "en_US");
+    nrTests += testGetFullTerritoryNameInLocale("", TERRITORY_TKM, 1, "en_US");
+    nrTests += testGetFullTerritoryNameInLocale("", TERRITORY_TKM, 2, "en_US");
+    nrTests += testGetFullTerritoryNameInLocale("", TERRITORY_TKM, 999, "en_US");
 
 #ifdef MAPCODE_SUPPORT_LANGUAGE_NL
-
-    nrTests += testGetFullTerritoryNameInLocale("nl", "Nederland", TERRITORY_NLD, 0);
-    nrTests += testGetFullTerritoryNameInLocale("nl", "", TERRITORY_NLD, 1);
-
-    nrTests += testGetFullTerritoryNameInLocale("nl", "Vaticaanstad", TERRITORY_VAT, 0);
-    nrTests += testGetFullTerritoryNameInLocale("nl", "Heilige Stoel", TERRITORY_VAT, 1);
-    nrTests += testGetFullTerritoryNameInLocale("nl", "", TERRITORY_VAT, 2);
-    nrTests += testGetFullTerritoryNameInLocale("nl", "", TERRITORY_VAT, 3);
-
+    nrTests += testGetFullTerritoryNameInLocale("Nederland", TERRITORY_NLD, 0, "nl");
+    nrTests += testGetFullTerritoryNameInLocale("", TERRITORY_NLD, 1, "nl");
+    nrTests += testGetFullTerritoryNameInLocale("Vaticaanstad", TERRITORY_VAT, 0, "nl");
+    nrTests += testGetFullTerritoryNameInLocale("Heilige Stoel", TERRITORY_VAT, 1, "nl");
+    nrTests += testGetFullTerritoryNameInLocale("", TERRITORY_VAT, 2, "nl");
+    nrTests += testGetFullTerritoryNameInLocale("", TERRITORY_VAT, 3, "nl");
+#else
+    nrTests += testGetFullTerritoryNameInLocale("Netherlands", TERRITORY_NLD, 0, "nl");
 #endif
 
 #ifdef MAPCODE_SUPPORT_LANGUAGE_FR
-
-    nrTests += testGetFullTerritoryNameInLocale("fr", "Pays-Bas", TERRITORY_NLD, 0);
-    nrTests += testGetFullTerritoryNameInLocale("fr", "", TERRITORY_NLD, 1);
-
-    nrTests += testGetFullTerritoryNameInLocale("fr", "Vatican", TERRITORY_VAT, 0);
-    nrTests += testGetFullTerritoryNameInLocale("fr", "Cit\xC3\xA9 du Vatican", TERRITORY_VAT, 1);
-    nrTests += testGetFullTerritoryNameInLocale("fr", "Saint-Si\xC3\xA8ge", TERRITORY_VAT, 2);
-    nrTests += testGetFullTerritoryNameInLocale("fr", "", TERRITORY_VAT, 3);
-
+    nrTests += testGetFullTerritoryNameInLocale("Pays-Bas", TERRITORY_NLD, 0, "fr");
+    nrTests += testGetFullTerritoryNameInLocale("", TERRITORY_NLD, 1, "fr");
+    nrTests += testGetFullTerritoryNameInLocale("Vatican", TERRITORY_VAT, 0, "fr");
+    nrTests += testGetFullTerritoryNameInLocale("Cit\xC3\xA9 du Vatican", TERRITORY_VAT, 1, "fr");
+    nrTests += testGetFullTerritoryNameInLocale("Saint-Si\xC3\xA8ge", TERRITORY_VAT, 2, "fr");
+    nrTests += testGetFullTerritoryNameInLocale("", TERRITORY_VAT, 3, "fr");
+#else
+    nrTests += testGetFullTerritoryNameInLocale("Netherlands", TERRITORY_NLD, 0, "fr");
 #endif
 
-#ifdef MAPCODE_SUPPORT_LANGUAGE_LOCAL
-
-    nrTests += testGetFullTerritoryNameLocal(1, "Nederland", TERRITORY_NLD, 0);
-    nrTests += testGetFullTerritoryNameLocal(0, "", TERRITORY_NLD, 1);
-
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(1, "Nederland", TERRITORY_NLD, 0, ALPHABET_ROMAN);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(0, "", TERRITORY_NLD, 1, ALPHABET_ROMAN);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(0, "", TERRITORY_NLD, 0, ALPHABET_GREEK);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(0, "", TERRITORY_NLD, 0, _ALPHABET_MIN);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(0, "", TERRITORY_NLD, 0, _ALPHABET_MAX);
-
-    nrTests += testGetFullTerritoryNameLocal(1, "Росси́я", TERRITORY_RUS, 0);
-    nrTests += testGetFullTerritoryNameLocal(0, "", TERRITORY_RUS, 1);
-
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(1, "Росси́я", TERRITORY_RUS, 0, ALPHABET_CYRILLIC);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(0, "", TERRITORY_RUS, 0, ALPHABET_ROMAN);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(0, "", TERRITORY_RUS, 0, ALPHABET_GREEK);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(0, "", TERRITORY_RUS, 0, _ALPHABET_MIN);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(0, "", TERRITORY_RUS, 0, _ALPHABET_MAX);
-
-    nrTests += testGetFullTerritoryNameLocal(1, "Қазақстан", TERRITORY_KAZ, 0);
-    nrTests += testGetFullTerritoryNameLocal(1, "Qazaqstan", TERRITORY_KAZ, 1);
-    nrTests += testGetFullTerritoryNameLocal(1, "Kazakhstan", TERRITORY_KAZ, 2);
-    nrTests += testGetFullTerritoryNameLocal(0, "", TERRITORY_KAZ, 3);
-
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(1, "Қазақстан", TERRITORY_KAZ, 0, ALPHABET_CYRILLIC);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(0, "", TERRITORY_KAZ, 1, ALPHABET_CYRILLIC);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(1, "Qazaqstan", TERRITORY_KAZ, 0, ALPHABET_ROMAN);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(1, "Kazakhstan", TERRITORY_KAZ, 1, ALPHABET_ROMAN);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(0, "", TERRITORY_KAZ, 2, ALPHABET_ROMAN);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(0, "", TERRITORY_KAZ, 0, ALPHABET_GREEK);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(0, "", TERRITORY_KAZ, 0, _ALPHABET_MIN);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(0, "", TERRITORY_KAZ, 0, _ALPHABET_MAX);
-
-    nrTests += testGetFullTerritoryNameLocal(1, "Түркменистан", TERRITORY_TKM, 0);
-    nrTests += testGetFullTerritoryNameLocal(1, "Türkmenistan", TERRITORY_TKM, 1);
-    nrTests += testGetFullTerritoryNameLocal(1, "تۆركمنيستآن", TERRITORY_TKM, 2);
-    nrTests += testGetFullTerritoryNameLocal(0, "", TERRITORY_TKM, 3);
-
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(1, "Türkmenistan", TERRITORY_TKM, 0, ALPHABET_ROMAN);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(0, "", TERRITORY_TKM, 1, ALPHABET_ROMAN);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(1, "Түркменистан", TERRITORY_TKM, 0, ALPHABET_CYRILLIC);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(0, "", TERRITORY_TKM, 1, ALPHABET_CYRILLIC);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(1, "تۆركمنيستآن", TERRITORY_TKM, 0, ALPHABET_ARABIC);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(0, "", TERRITORY_TKM, 1, ALPHABET_ARABIC);
-
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(0, "", TERRITORY_KAZ, 0, ALPHABET_GREEK);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(0, "", TERRITORY_KAZ, 0, _ALPHABET_MIN);
-    nrTests += testGetFullTerritoryNameLocalInAlphabet(0, "", TERRITORY_KAZ, 0, _ALPHABET_MAX);
-
-#endif // MAPCODE_SUPPORT_LANGUAGE_LOCAK
+    nrTests += testGetFullTerritoryNameLocal("Nederland", TERRITORY_NLD, 0);
+    nrTests += testGetFullTerritoryNameLocal("", TERRITORY_NLD, 1);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("Nederland", TERRITORY_NLD, 0, ALPHABET_ROMAN);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("", TERRITORY_NLD, 1, ALPHABET_ROMAN);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("", TERRITORY_NLD, 0, ALPHABET_GREEK);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("", TERRITORY_NLD, 0, _ALPHABET_MIN);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("", TERRITORY_NLD, 0, _ALPHABET_MAX);
+    nrTests += testGetFullTerritoryNameLocal("Росси́я", TERRITORY_RUS, 0);
+    nrTests += testGetFullTerritoryNameLocal("", TERRITORY_RUS, 1);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("Росси́я", TERRITORY_RUS, 0, ALPHABET_CYRILLIC);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("", TERRITORY_RUS, 0, ALPHABET_ROMAN);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("", TERRITORY_RUS, 0, ALPHABET_GREEK);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("", TERRITORY_RUS, 0, _ALPHABET_MIN);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("", TERRITORY_RUS, 0, _ALPHABET_MAX);
+    nrTests += testGetFullTerritoryNameLocal("Қазақстан", TERRITORY_KAZ, 0);
+    nrTests += testGetFullTerritoryNameLocal("Qazaqstan", TERRITORY_KAZ, 1);
+    nrTests += testGetFullTerritoryNameLocal("Kazakhstan", TERRITORY_KAZ, 2);
+    nrTests += testGetFullTerritoryNameLocal("", TERRITORY_KAZ, 3);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("Қазақстан", TERRITORY_KAZ, 0, ALPHABET_CYRILLIC);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("", TERRITORY_KAZ, 1, ALPHABET_CYRILLIC);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("Qazaqstan", TERRITORY_KAZ, 0, ALPHABET_ROMAN);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("Kazakhstan", TERRITORY_KAZ, 1, ALPHABET_ROMAN);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("", TERRITORY_KAZ, 2, ALPHABET_ROMAN);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("", TERRITORY_KAZ, 0, ALPHABET_GREEK);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("", TERRITORY_KAZ, 0, _ALPHABET_MIN);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("", TERRITORY_KAZ, 0, _ALPHABET_MAX);
+    nrTests += testGetFullTerritoryNameLocal("Түркменистан", TERRITORY_TKM, 0);
+    nrTests += testGetFullTerritoryNameLocal("Türkmenistan", TERRITORY_TKM, 1);
+    nrTests += testGetFullTerritoryNameLocal("تۆركمنيستآن", TERRITORY_TKM, 2);
+    nrTests += testGetFullTerritoryNameLocal("", TERRITORY_TKM, 3);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("Türkmenistan", TERRITORY_TKM, 0, ALPHABET_ROMAN);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("", TERRITORY_TKM, 1, ALPHABET_ROMAN);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("Түркменистан", TERRITORY_TKM, 0, ALPHABET_CYRILLIC);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("", TERRITORY_TKM, 1, ALPHABET_CYRILLIC);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("تۆركمنيستآن", TERRITORY_TKM, 0, ALPHABET_ARABIC);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("", TERRITORY_TKM, 1, ALPHABET_ARABIC);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("", TERRITORY_KAZ, 0, ALPHABET_GREEK);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("", TERRITORY_KAZ, 0, _ALPHABET_MIN);
+    nrTests += testGetFullTerritoryNameLocalInAlphabet("", TERRITORY_KAZ, 0, _ALPHABET_MAX);
 
     return nrTests;
 }
@@ -2029,14 +1970,14 @@ static int testAlphabets(void) {
     for (j = 0; j < (int) (sizeof(TEST_PAIRS) / sizeof(TEST_PAIRS[0])); j += 2) {
         enum Alphabet i;
         for (i = _ALPHABET_MIN + 1; i < _ALPHABET_MAX; i++) {
-            UWORD enc[MAX_MAPCODE_RESULT_LEN + 1];
-            char dec[MAX_MAPCODE_RESULT_LEN + 1];
+            UWORD enc[MAX_MAPCODE_RESULT_UTF16_LEN + 1];
+            char dec[MAX_MAPCODE_RESULT_ASCII_LEN + 1];
             // see if alphabets (re)convert as expected
             str = TEST_PAIRS[j];
             expect = TEST_PAIRS[j + 1];
             convertMapcodeToAlphabetUtf16(enc, str, i);
             {
-                char utf8[3 * MAX_MAPCODE_RESULT_LEN + 1];
+                char utf8[MAX_MAPCODE_RESULT_UTF8_LEN + 1];
                 MapcodeElements mapcodeElements;
                 double lat1, lon1, lat2, lon2, lat3, lon3;
                 convertMapcodeToAlphabetUtf8(utf8, str, i);

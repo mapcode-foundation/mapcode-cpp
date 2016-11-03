@@ -24,16 +24,33 @@ extern "C" {
 #include "mapcode_territories.h"
 #include "mapcode_alphabets.h"
 
+// English is always defined - this is the fallback language for any unknown language.
+#define MAPCODE_SUPPORT_LANGUAGE_EN
+#define DEFAULT_TERRITORY_FULL_NAME TERRITORY_FULL_NAME_EN
 
-#define MAPCODE_C_VERSION          "2.5.2"
-#define UWORD                      unsigned short int  // 2-byte unsigned integer.
-#define MAX_NR_OF_MAPCODE_RESULTS  22          // Max. number of results ever returned by encoder (e.g. for 26.904899, 95.138515).
-#define MAX_PROPER_MAPCODE_LEN     11          // Max. number of characters in a proper mapcode (including the dot, excl. precision extension).
-#define MAX_PRECISION_DIGITS       8           // Max. number of extension characters (excluding the hyphen). Must be even.
-#define MAX_ISOCODE_LEN            7           // Max. number of characters of a valid ISO3166 territory code; although nothing longer than SIX characters is ever generated (RU-KAM), users can input SEVEN characters (RUS-KAM).
-#define MAX_TERRITORY_FULLNAME_LEN 79          // Max. number of characters to store the longest possible territory name (in any alphabet, excl. 0-terminator).
-#define MAX_CLEAN_MAPCODE_LEN      (MAX_PROPER_MAPCODE_LEN + 1 + MAX_PRECISION_DIGITS)  // Max. number of characters in a clean mapcode (excluding zero-terminator).
-#define MAX_MAPCODE_RESULT_LEN     (MAX_ISOCODE_LEN + 1 + MAX_CLEAN_MAPCODE_LEN + 1)    // Max. number of characters to store a single result (including zero-terminator).
+#ifndef MAPCODE_NO_SUPPORT_ALL_LANGUAGES
+#define MAPCODE_SUPPORT_LANGUAGE_DA
+#define MAPCODE_SUPPORT_LANGUAGE_DE
+#define MAPCODE_SUPPORT_LANGUAGE_FR
+#define MAPCODE_SUPPORT_LANGUAGE_HI
+#define MAPCODE_SUPPORT_LANGUAGE_NL
+#endif
+
+#define MAPCODE_C_VERSION                   "2.5.2"
+#define UWORD                               unsigned short int  // 2-byte unsigned integer.
+
+#define MAX_NR_OF_MAPCODE_RESULTS           22                  // Max. number of results ever returned by encoder (e.g. for 26.904899, 95.138515).
+#define MAX_PRECISION_DIGITS                8                   // Max. number of extension characters (excluding the hyphen). Must be even.
+
+#define MAX_PROPER_MAPCODE_ASCII_LEN        11          // Max. chars in a proper mapcode (including the dot, excl. precision extension).
+#define MAX_ISOCODE_ASCII_LEN               7           // Max. chars in a valid ISO3166 territory code.
+#define MAX_CLEAN_MAPCODE_ASCII_LEN         (MAX_PROPER_MAPCODE_ASCII_LEN + 1 + MAX_PRECISION_DIGITS)       // Max. chars in a clean mapcode (excluding zero-terminator).
+#define MAX_MAPCODE_RESULT_ASCII_LEN        (MAX_ISOCODE_ASCII_LEN + 1 + MAX_CLEAN_MAPCODE_ASCII_LEN + 1)   // Max. chars to store a single result (including zero-terminator).
+#define MAX_TERRITORY_FULLNAME_ASCII_LEN    79  // Max. number of characters to store the longest possible territory name in ASCII/Roman.
+
+#define MAX_MAPCODE_RESULT_UTF8_LEN         (MAX_MAPCODE_RESULT_ASCII_LEN * 4)
+#define MAX_MAPCODE_RESULT_UTF16_LEN        (MAX_MAPCODE_RESULT_ASCII_LEN * 4)
+#define MAX_TERRITORY_FULLNAME_UTF8_LEN     (MAX_TERRITORY_FULLNAME_ASCII_LEN * 4)
 
 
 /**
@@ -42,8 +59,8 @@ extern "C" {
  * International mapcodes never include a territory ISO3166 code, nor a space.
  */
 typedef struct {
-    int count;                                                        // The number of mapcode results (length of array).
-    char mapcode[MAX_NR_OF_MAPCODE_RESULTS][MAX_MAPCODE_RESULT_LEN];  // The mapcodes.
+    int count;                                                              // The number of mapcode results (length of array).
+    char mapcode[MAX_NR_OF_MAPCODE_RESULTS][MAX_MAPCODE_RESULT_ASCII_LEN];   // The mapcodes.
 } Mapcodes;
 
 
@@ -53,15 +70,15 @@ typedef struct {
  * the code may be abbreviated, or even missing (if it wasn't available in the input).
  *
  * If you want to get a full territory code, use:
- * char isoName[MAX_ISOCODE_LEN + 1];
+ * char isoName[MAX_ISOCODE_ASCII_LEN + 1];
  * getTerritoryIsoName(isoName, mapcodeElement.territoryCode, 0)
  */
 typedef struct {
-    char territoryISO[MAX_ISOCODE_LEN + 1];            // The (trimmed and uppercased) territory code, from the input.
-    enum Territory territoryCode;                      // The territory, as recognized and disambiguated from territoryISO.
-    char properMapcode[MAX_PROPER_MAPCODE_LEN + 1];    // The (romanised) mapcode excl. territory or extension.
-    int indexOfDot;                                    // Position of dot in properMapcode (a value between 2 and 5).
-    char precisionExtension[MAX_PRECISION_DIGITS + 1]; // The (romanised) extension (excluding the hyphen).
+    char territoryISO[MAX_ISOCODE_ASCII_LEN + 1];           // The (trimmed and uppercased) territory code, from the input.
+    enum Territory territoryCode;                           // The territory, as recognized and disambiguated from territoryISO.
+    char properMapcode[MAX_PROPER_MAPCODE_ASCII_LEN + 1];   // The (romanised) mapcode excl. territory or extension.
+    int indexOfDot;                                         // Position of dot in properMapcode (a value between 2 and 5).
+    char precisionExtension[MAX_PRECISION_DIGITS + 1];      // The (romanised) extension (excluding the hyphen).
 } MapcodeElements;
 
 
@@ -143,7 +160,7 @@ int encodeLatLonToMapcodes(
  *      result          - Returned Mapcode. The caller must not allocate or de-allocated this string.
  *                        The resulting string MUST be allocated (and de-allocated) by the caller (contrary to
  *                        encodeLatLonToMapcodes!).
- *                        The caller should allocate at least MAX_MAPCODE_RESULT_LEN characters for the string.
+ *                        The caller should allocate at least MAX_MAPCODE_RESULT_ASCII_LEN characters for the string.
  *      lat             - Latitude, in degrees. Range: -90..90.
  *      lon             - Longitude, in degrees. Range: -180..180.
  *      territory       - Territory (e.g. as obtained from getTerritoryCode), used as encoding context.
@@ -327,13 +344,11 @@ int multipleBordersNearby(
         enum Territory territory);
 
 
-#ifdef MAPCODE_SUPPORT_LANGUAGE_EN // TODO @@@ Move to legacy.h
-
 /**
- * Returns territory names in English or in the local language. There's always at least 1 alternative (with index 0).
+ * Returns territory names in English. There's always at least 1 alternative (with index 0).
  *
  *   Arguments:
- *       territoryName - Target string, allocated by caller to be at least MAX_TERRITORY_NAME_LENGTH + 1 bytes.
+ *       territoryName - Target string, allocated by caller to be at least MAX_TERRITORY_FULLNAME_ASCII_LEN + 1 bytes.
  *       territory     - Territory to get name for.
  *       alternative   - Which name to get, must be >= 0 (0 = default, 1 = first alternative, 2 = second etc.).
  *
@@ -347,17 +362,13 @@ int getFullTerritoryNameEnglish(
         int alternative);
 
 
-#endif // MAPCODE_SUPPORT_LANGUAGE_EN
-
-#ifdef MAPCODE_SUPPORT_LANGUAGE_LOCAL
-
 /**
  * Returns territory names in the local language. There are two variants of this call. One returns local
  * territory names in a specified alphabet only. The other simply returns the local names, regardless
  * of its alphabet. There is always at least 1 alternative, with index 0.
  *
  *   Arguments:
- *       territoryName - Target string, allocated by caller to be at least MAX_TERRITORY_NAME_LENGTH + 1 bytes.
+ *       territoryName - Target string, allocated by caller to be at least MAX_TERRITORY_FULLNAME_UTF8_LEN + 1 bytes.
  *       territory     - Territory to get name for.
  *       alternative   - Which name to get, must be >= 0 (0 = default, 1 = first alternative, 2 = second etc.).
  *       alphabet      - Alphabet to use for territoryName. Must be a valid alphabet value.
@@ -366,18 +377,17 @@ int getFullTerritoryNameEnglish(
  *       0 if the alternative does not exist (territoryName will be empty).
  *       non-0 if the alternative exists (territoryName contains name).
  */
-int getFullTerritoryNameLocal(
+int getFullTerritoryNameLocalUtf8(
         char *territoryName,
         enum Territory territory,
         int alternative);
 
-int getFullTerritoryNameLocalInAlphabet(
+int getFullTerritoryNameLocalInAlphabetUtf8(
         char *territoryName,
         enum Territory territory,
         int alternative,
         enum Alphabet alphabet);
 
-#endif // MAPCODE_SUPPORT_LANGUAGE_LOCAL
 
 /**
  * Returns territory names in a specific locale. There are two variants of this call. One returns
@@ -385,7 +395,7 @@ int getFullTerritoryNameLocalInAlphabet(
  * of its alphabet. There is always at least 1 alternative, with index 0.
  *
  *   Arguments:
- *       territoryName - Target string, allocated by caller to be at least MAX_TERRITORY_NAME_LENGTH + 1 bytes.
+ *       territoryName - Target string, allocated by caller to be at least MAX_TERRITORY_FULLNAME_UTF8_LEN + 1 bytes.
  *       territory     - Territory to get name for.
  *       alternative   - Which name to get, must be >= 0 (0 = default, 1 = first alternative, 2 = second etc.).
  *       locale        - A locale (e.g. "en_US" for U.S. English); use NULL for local territory names.
@@ -395,18 +405,19 @@ int getFullTerritoryNameLocalInAlphabet(
  *       0 if the alternative does not exist (territoryName will be empty).
  *       non-0 if the alternative exists (territoryName contains name).
  */
-int getFullTerritoryNameInLocale(
+int getFullTerritoryNameInLocaleUtf8(
         char *territoryName,
         enum Territory territory,
         int alternative,
         const char *locale);
 
-int getFullTerritoryNameInLocaleInAlphabet(
+int getFullTerritoryNameInLocaleInAlphabetUtf8(
         char *territoryName,
         enum Territory territory,
         int alternative,
         const char *locale,
         enum Alphabet alphabet);
+
 
 /**
  * This struct contains the returned alphabest for getAlphabetsForTerritory. The 'count' specifies
@@ -439,8 +450,8 @@ const TerritoryAlphabets *getAlphabetsForTerritory(enum Territory territory);
  *
  * Arguments:
  *      utf8String   - Buffer to be filled with the Unicode string result.
- *                     Must have capacity for (3 * MAX_MAPCODE_RESULT_LEN + 1) characters.
- *      asciiString  - ASCII string to encode (must be < MAX_MAPCODE_RESULT_LEN characters).
+ *                     Must have capacity for MAX_MAPCODE_RESULT_UTF8_LEN + 1 characters.
+ *      asciiString  - ASCII string to encode (must be < MAX_MAPCODE_RESULT_ASCII_LEN characters).
  *      alphabet     - Alphabet to use.
  *
  * Returns:
@@ -454,8 +465,8 @@ char *convertMapcodeToAlphabetUtf8(char *utf8String, const char *asciiString, en
  *
  * Arguments:
  *      utf16String  - Buffer to be filled with the Unicode string result.
- *                     Must have capacity for (MAX_MAPCODE_RESULT_LEN utf16 + 1) characters.
- *      asciiString  - ASCII string to encode (must be < MAX_MAPCODE_RESULT_LEN characters).
+ *                     Must have capacity for MAX_MAPCODE_RESULT_UTF16_LEN characters.
+ *      asciiString  - ASCII string to encode (must be < MAX_MAPCODE_RESULT_ASCII_LEN characters).
  *      alphabet     - Alphabet to use.
  *
  * Returns:

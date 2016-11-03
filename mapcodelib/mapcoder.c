@@ -17,7 +17,7 @@
 #include <string.h> // strlen strcpy strcat memcpy memmove strstr strchr memcmp
 #include <stdlib.h> // atof
 #include <ctype.h>  // toupper
-#include <math.h>   // floor
+#include <math.h>   // floor fabs
 
 #include "mapcoder.h"
 #include "internal_data.h"
@@ -25,15 +25,11 @@
 #include "internal_territory_alphabets.h"
 #include "internal_territory_names_local.h"
 #include "internal_alphabet_recognizer.h"
-
-// We must have a default language
-#define MAPCODE_SUPPORT_LANGUAGE_EN
-#define DEFAULT_TERRITORY_FULL_NAME TERRITORY_FULL_NAME_EN
-
 #include "internal_territory_names_da.h"
 #include "internal_territory_names_de.h"
 #include "internal_territory_names_en.h"
 #include "internal_territory_names_fr.h"
+#include "internal_territory_names_hi.h"
 #include "internal_territory_names_nl.h"
 #include "internal_territory_names_local.h"
 
@@ -120,6 +116,7 @@ static const LocaleRegistryItem LOCALE_REGISTRY[] = {
         {"DE", TERRITORY_FULL_NAME_DE},
         {"EN", TERRITORY_FULL_NAME_EN},
         {"FR", TERRITORY_FULL_NAME_FR},
+        {"HI", TERRITORY_FULL_NAME_HI},
         {"NL", TERRITORY_FULL_NAME_NL}
 };
 
@@ -1450,10 +1447,10 @@ static enum MapcodeError decodeGrid(DecodeRec *dec, const int m, const int hasHe
     const char *input = (hasHeaderLetter ? dec->mapcode + 1 : dec->mapcode);
     const int codexlen = (int) (strlen(input) - 1);
     int prelen = (int) (strchr(input, '.') - input);
-    char result[MAX_PROPER_MAPCODE_LEN + 1];
+    char result[MAX_PROPER_MAPCODE_ASCII_LEN + 1];
     ASSERT(dec);
 
-    if (codexlen > MAX_PROPER_MAPCODE_LEN) {
+    if (codexlen > MAX_PROPER_MAPCODE_ASCII_LEN) {
         return ERR_BAD_MAPCODE_LENGTH;
     }
     if (prelen > 5) {
@@ -2163,8 +2160,8 @@ static enum MapcodeError parseMapcodeString(MapcodeElements *mapcodeElements, co
                 nondigits = vowels = 0;
                 if (mapcodeElements) {
                     int len = (int) (cleanPtr - mapcodeElements->properMapcode);
-                    ASSERT(len < MAX_ISOCODE_LEN);
-                    lengthCopy(mapcodeElements->territoryISO, mapcodeElements->properMapcode, len, MAX_ISOCODE_LEN + 1);
+                    ASSERT(len < MAX_ISOCODE_ASCII_LEN);
+                    lengthCopy(mapcodeElements->territoryISO, mapcodeElements->properMapcode, len, MAX_ISOCODE_ASCII_LEN + 1);
                     cleanPtr = mapcodeElements->properMapcode;
                 }
             } else { // add to extension
@@ -2657,7 +2654,7 @@ UWORD *convertToAlphabet(UWORD *utf16String, int maxLength, const char *asciiStr
     ASSERT(utf16String);
     ASSERT(asciiString);
     if (maxLength > 0) {
-        char targetAsciiString[MAX_MAPCODE_RESULT_LEN] = "";
+        char targetAsciiString[MAX_MAPCODE_RESULT_ASCII_LEN] = "";
 
         // skip leading spaces
         while (*asciiString > 0 && *asciiString <= 32) {
@@ -2684,7 +2681,7 @@ UWORD *convertToAlphabet(UWORD *utf16String, int maxLength, const char *asciiStr
 
         if (alphabet == ALPHABET_GREEK || alphabet == ALPHABET_HEBREW ||
             alphabet == ALPHABET_ARABIC || alphabet == ALPHABET_KOREAN) {
-            asciiString = convertToAbjad(targetAsciiString, asciiString, MAX_MAPCODE_RESULT_LEN);
+            asciiString = convertToAbjad(targetAsciiString, asciiString, MAX_MAPCODE_RESULT_ASCII_LEN);
         }
 
         // re-pack E/U-voweled mapcodes when necessary:
@@ -2693,7 +2690,7 @@ UWORD *convertToAlphabet(UWORD *utf16String, int maxLength, const char *asciiStr
                 strchr(asciiString, 'e') || strchr(asciiString, 'u')) {
                 // copy trimmed mapcode into temporary buffer targetAsciiString
                 int len = (int) strlen(asciiString);
-                if (len < MAX_MAPCODE_RESULT_LEN) {
+                if (len < MAX_MAPCODE_RESULT_ASCII_LEN) {
                     while (len > 0 && asciiString[len - 1] > 0 && asciiString[len - 1] <= 32) {
                         len--;
                     }
@@ -2741,15 +2738,15 @@ UWORD *convertMapcodeToAlphabetUtf16(UWORD *utf16String, const char *mapcodeStri
     ASSERT(mapcodeString);
     ASSERT(alphabet > _ALPHABET_MIN && alphabet < _ALPHABET_MAX);
     *utf16String = 0;
-    if (strlen(mapcodeString) < MAX_MAPCODE_RESULT_LEN) {
-        convertToAlphabet(utf16String, MAX_MAPCODE_RESULT_LEN, mapcodeString, alphabet);
+    if (strlen(mapcodeString) < MAX_MAPCODE_RESULT_ASCII_LEN) {
+        convertToAlphabet(utf16String, MAX_MAPCODE_RESULT_UTF16_LEN, mapcodeString, alphabet);
     }
     return utf16String;
 }
 
 
 char *convertMapcodeToAlphabetUtf8(char *utf8String, const char *mapcodeString, enum Alphabet alphabet) {
-    UWORD utf16[MAX_MAPCODE_RESULT_LEN];
+    UWORD utf16[MAX_MAPCODE_RESULT_UTF16_LEN + 1];
     return convertUtf16ToUtf8(utf8String, convertMapcodeToAlphabetUtf16(utf16, mapcodeString, alphabet));
 }
 
@@ -2841,7 +2838,7 @@ static int compareAlphaCode(const void *e1, const void *e2) {
 
 static enum Territory findMatch(const int parentNumber, const char *territoryISO) {
     // build an uppercase search term
-    char codeISO[MAX_ISOCODE_LEN + 1];
+    char codeISO[MAX_ISOCODE_ASCII_LEN + 1];
     const char *r = territoryISO;
     int len = 0;
     ASSERT(territoryISO);
@@ -2855,7 +2852,7 @@ static enum Territory findMatch(const int parentNumber, const char *territoryISO
         codeISO[2] = '-';
         len = 3;
     }
-    while ((len < MAX_ISOCODE_LEN) && (*r > 32)) {
+    while ((len < MAX_ISOCODE_ASCII_LEN) && (*r > 32)) {
         codeISO[len++] = *r++;
     }
     if (*r > 32) {
@@ -2913,9 +2910,9 @@ enum Territory getTerritoryCode(const char *territoryISO, enum Territory optiona
 
 
 // PUBLIC - decode string into lat,lon; returns negative in case of error
-enum MapcodeError
-decodeMapcodeToLatLonUtf8(double *latDeg, double *lonDeg, const char *mapcode, enum Territory territory,
-                          MapcodeElements *mapcodeElements) {
+enum MapcodeError decodeMapcodeToLatLonUtf8(double *latDeg, double *lonDeg,
+                                            const char *mapcode, enum Territory territory,
+                                            MapcodeElements *mapcodeElements) {
     if ((latDeg == NULL) || (lonDeg == NULL) || (mapcode == NULL)) {
         return ERR_BAD_ARGUMENTS;
     } else {
@@ -2947,9 +2944,9 @@ decodeMapcodeToLatLonUtf8(double *latDeg, double *lonDeg, const char *mapcode, e
 
 
 // PUBLIC - decode string into lat,lon; returns negative in case of error
-enum MapcodeError
-decodeMapcodeToLatLonUtf16(double *latDeg, double *lonDeg, const UWORD *mapcode, enum Territory territory,
-                           MapcodeElements *mapcodeElements) {
+enum MapcodeError decodeMapcodeToLatLonUtf16(double *latDeg, double *lonDeg,
+                                             const UWORD *mapcode, enum Territory territory,
+                                             MapcodeElements *mapcodeElements) {
     if ((latDeg == NULL) || (lonDeg == NULL) || (mapcode == NULL)) {
         return ERR_BAD_ARGUMENTS;
     } else {
@@ -3040,134 +3037,149 @@ const TerritoryAlphabets *getAlphabetsForTerritory(enum Territory territory) {
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-static int getFullTerritoryName_internal(
-        char *territoryName,
-        enum Territory territory,
-        int alternative,
-        int alphabet,
-        const char *locale) {
+static int
+getFullTerritoryName_internal(char *territoryName, enum Territory territory, int alternative, const char *locale,
+                              enum Alphabet alphabet) {
 
-    const char *s;
+    const char *territoryNamesPiped;
     const char *pipePtr;
-    const char **namelist = NULL;
+    const char **territoryNamesList = NULL;
 
     ASSERT(territoryName);
+    ASSERT((_TERRITORY_MIN < territory) && (territory < _TERRITORY_MAX));
+    ASSERT((alphabet == _ALPHABET_MIN) || (_ALPHABET_MIN < alphabet) && (alphabet < _ALPHABET_MAX));
 
-    if (alternative < 0 || territory <= _TERRITORY_MIN || territory >= _TERRITORY_MAX) {
-        *territoryName = 0;
+    // Defensive bail out if incorrect arguments.
+    if (!territoryName || (alternative < 0) || (territory <= _TERRITORY_MIN) || (territory >= _TERRITORY_MAX)) {
+        if (territoryName) {
+            *territoryName = 0;
+        }
         return 0;
     }
 
+    // Check locale.
     if (locale == NULL) {
 
         // Use local names if locale is null.
-        namelist = TERRITORY_FULL_NAME_LOCAL;
-    } else if (strlen(locale) < 2) {
-
-        // Locale is invalid.
-        namelist = NULL;
+        territoryNamesList = TERRITORY_FULL_NAME_LOCAL;
     } else {
 
         // Try and get correct list.
-        char localeUpper[3] = "";
         int i;
-        localeUpper[0] = locale[0];
-        localeUpper[1] = locale[1];
-        localeUpper[2] = 0;
-        namelist = NULL;
+        int upTo = (int) strlen(locale);
+        char localeUpper[4] = "";           // Default locale is empty (which implies 'fallback').
+        char *sep = strchr(locale, '_');    // Official separator is '_' (as in "en_US").
+        if (!sep) {
+            sep = strchr(locale, '-');      // But we also allow '-' (often used as well).
+        }
+        if (sep) {
+            upTo = (int) (sep - locale);
+        }
+        lengthCopy(localeUpper, locale, upTo, sizeof(localeUpper));
+        makeUppercase(localeUpper);
+
+        territoryNamesList = NULL;
         for (i = 0; i < (int) (sizeof(LOCALE_REGISTRY) / sizeof(LOCALE_REGISTRY[0])); ++i) {
             if (!strcmp(LOCALE_REGISTRY[i].locale, localeUpper)) {
-                namelist = LOCALE_REGISTRY[i].territoryFullNames;
+                territoryNamesList = LOCALE_REGISTRY[i].territoryFullNames;
                 break;
             }
         }
     }
 
-    // Use English if locale is invalid.
-    if (namelist == NULL || namelist[0] == NULL) {
-        namelist = DEFAULT_TERRITORY_FULL_NAME;
+    // Use English if locale is invalid (or was empty = fallback).
+    if (territoryNamesList == NULL || territoryNamesList[0] == NULL) {
+        territoryNamesList = DEFAULT_TERRITORY_FULL_NAME;
     }
 
-    s = namelist[INDEX_OF_TERRITORY(territory)];
+    *territoryName = 0;
+    territoryNamesPiped = territoryNamesList[INDEX_OF_TERRITORY(territory)];
     for (;;) {
-        pipePtr = strchr(s, '|');
+        pipePtr = strchr(territoryNamesPiped, '|');
 
-        if ((int) _ALPHABET_MIN < alphabet && alphabet < (int) _ALPHABET_MAX) {
+        if ((_ALPHABET_MIN < alphabet) && (alphabet < _ALPHABET_MAX)) {
+
+            // Alphabet was specified.
             if (pipePtr) {
-                lengthCopy(territoryName, s, (int) (pipePtr - s), MAX_TERRITORY_FULLNAME_LEN);
+                ASSERT((pipePtr - territoryNamesPiped) <= MAX_TERRITORY_FULLNAME_UTF8_LEN);
+                lengthCopy(territoryName, territoryNamesPiped, (int) (pipePtr - territoryNamesPiped),
+                           MAX_TERRITORY_FULLNAME_UTF8_LEN);
             } else {
-                ASSERT(strlen(s) <= MAX_TERRITORY_FULLNAME_LEN);
-                strcpy(territoryName, s);
+                ASSERT(strlen(territoryNamesPiped) <= MAX_TERRITORY_FULLNAME_UTF8_LEN);
+                strcpy(territoryName, territoryNamesPiped);
             }
-            if ((enum Alphabet) alphabet != recognizeAlphabetUtf8(territoryName)) { // filter out
+            if (alphabet != recognizeAlphabetUtf8(territoryName)) { // filter out
                 if (!pipePtr) { // this is the last string!
-                    *territoryName = 0;
                     return 0;
                 }
-                s = pipePtr + 1;
+                territoryNamesPiped = pipePtr + 1;
                 continue;
             }
         }
 
         if (!pipePtr) { // this is the last string!
-            if (alternative) { // not what we want?
-                *territoryName = 0;
+            if (alternative > 0) { // not what we want?
                 return 0;
             }
-            ASSERT(strlen(s) <= MAX_TERRITORY_FULLNAME_LEN);
-            strcpy(territoryName, s); // no bracket, return it all
+            ASSERT(strlen(territoryNamesPiped) <= MAX_TERRITORY_FULLNAME_UTF8_LEN);
+            strcpy(territoryName, territoryNamesPiped); // no bracket, return it all
             return 1;
         } else {
             if (!alternative) { // what we want?
                 break;
             }
             alternative--;
-            s = pipePtr + 1;
+            territoryNamesPiped = pipePtr + 1;
         }
     }
-    lengthCopy(territoryName, s, (int) (pipePtr - s), MAX_TERRITORY_FULLNAME_LEN);
+    lengthCopy(territoryName, territoryNamesPiped, (int) (pipePtr - territoryNamesPiped), MAX_TERRITORY_FULLNAME_UTF8_LEN);
     return 1;
 }
 
 
-int getFullTerritoryNameInLocaleInAlphabet(char *territoryName, enum Territory territory, int alternative,
-                                           const char *locale, enum Alphabet alphabet) {
-    return getFullTerritoryName_internal(territoryName, territory, alternative, alphabet, locale);
-}
-
-
-int getFullTerritoryNameInLocale(char *territoryName, enum Territory territory, int alternative,
-                                 const char *locale) {
-    return getFullTerritoryName_internal(territoryName, territory, alternative, -1, locale);
-}
-
-
-#ifdef MAPCODE_SUPPORT_LANGUAGE_EN // TODO @@@ move to legacy!
-
 int getFullTerritoryNameEnglish(char *territoryName, enum Territory territory, int alternative) {
-    return getFullTerritoryName_internal(territoryName, territory, alternative, -1, "en_US");
+    ASSERT(territoryName);
+    ASSERT((_TERRITORY_MIN < territory) && (territory < _TERRITORY_MAX));
+    return getFullTerritoryNameInLocaleUtf8(territoryName, territory, alternative, "en_US");
 }
 
-#endif
 
-#ifdef MAPCODE_SUPPORT_LANGUAGE_LOCAL
-
-int getFullTerritoryNameLocalInAlphabet(char *territoryName, enum Territory territory, int alternative,
-                                        enum Alphabet alphabet) {
+int getFullTerritoryNameInLocaleUtf8(char *territoryName, enum Territory territory, int alternative,
+                                     const char *locale) {
     ASSERT(territoryName);
-    if (!territoryName) {
-        return 0;
-    }
+    ASSERT((_TERRITORY_MIN < territory) && (territory < _TERRITORY_MAX) || (territory == TERRITORY_UNKNOWN));
+    return getFullTerritoryName_internal(territoryName, territory, alternative, locale, _ALPHABET_MIN);
+}
+
+
+int getFullTerritoryNameInLocaleInAlphabetUtf8(char *territoryName, enum Territory territory, int alternative,
+                                               const char *locale, enum Alphabet alphabet) {
+    ASSERT(territoryName);
+    ASSERT((_TERRITORY_MIN < territory) && (territory < _TERRITORY_MAX));
     if ((alphabet <= _ALPHABET_MIN) || (alphabet >= _ALPHABET_MAX)) {
         *territoryName = 0;
         return 0;
     }
-    return getFullTerritoryName_internal(territoryName, territory, alternative, (int) alphabet, "local");
+    return getFullTerritoryName_internal(territoryName, territory, alternative, locale, alphabet);
 }
 
 
-int getFullTerritoryNameLocal(char *territoryName, enum Territory territory, int alternative) {
-    return getFullTerritoryName_internal(territoryName, territory, alternative, -1, "local");
+int getFullTerritoryNameLocalUtf8(char *territoryName, enum Territory territory, int alternative) {
+    ASSERT(territoryName);
+    ASSERT((_TERRITORY_MIN < territory) && (territory < _TERRITORY_MAX));
+    return getFullTerritoryName_internal(territoryName, territory, alternative, NULL, _ALPHABET_MIN);
 }
 
-#endif
+
+int getFullTerritoryNameLocalInAlphabetUtf8(char *territoryName, enum Territory territory, int alternative,
+                                            enum Alphabet alphabet) {
+    ASSERT(territoryName);
+    ASSERT((_TERRITORY_MIN < territory) && (territory < _TERRITORY_MAX));
+    if ((alphabet <= _ALPHABET_MIN) || (alphabet >= _ALPHABET_MAX)) {
+        *territoryName = 0;
+        return 0;
+    }
+    return getFullTerritoryName_internal(territoryName, territory, alternative, NULL, alphabet);
+}
+
+

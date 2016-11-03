@@ -1,5 +1,5 @@
 #!/bin/sh
-OPTS="-Wall -Werror -Wextra -Wpedantic -Wno-pointer-to-int-cast -fprofile-arcs -ftest-coverage"
+OPTS="-Wall -Werror -Wextra -Wno-pointer-to-int-cast -fprofile-arcs -ftest-coverage"
 LIB="../mapcodelib/mapcoder.o"
 
 TEST=`which gcov`

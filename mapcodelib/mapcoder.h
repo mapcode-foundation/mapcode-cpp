@@ -29,10 +29,13 @@ extern "C" {
 #define DEFAULT_TERRITORY_FULL_NAME TERRITORY_FULL_NAME_EN
 
 #ifndef MAPCODE_NO_SUPPORT_ALL_LANGUAGES
+#define MAPCODE_SUPPORT_LANGUAGE_AX
 #define MAPCODE_SUPPORT_LANGUAGE_DA
 #define MAPCODE_SUPPORT_LANGUAGE_DE
+#define MAPCODE_SUPPORT_LANGUAGE_ES
 #define MAPCODE_SUPPORT_LANGUAGE_FR
 #define MAPCODE_SUPPORT_LANGUAGE_HI
+#define MAPCODE_SUPPORT_LANGUAGE_IT
 #define MAPCODE_SUPPORT_LANGUAGE_NL
 #endif
 
@@ -46,11 +49,10 @@ extern "C" {
 #define MAX_ISOCODE_ASCII_LEN               7           // Max. chars in a valid ISO3166 territory code.
 #define MAX_CLEAN_MAPCODE_ASCII_LEN         (MAX_PROPER_MAPCODE_ASCII_LEN + 1 + MAX_PRECISION_DIGITS)       // Max. chars in a clean mapcode (excluding zero-terminator).
 #define MAX_MAPCODE_RESULT_ASCII_LEN        (MAX_ISOCODE_ASCII_LEN + 1 + MAX_CLEAN_MAPCODE_ASCII_LEN + 1)   // Max. chars to store a single result (including zero-terminator).
-#define MAX_TERRITORY_FULLNAME_ASCII_LEN    79  // Max. number of characters to store the longest possible territory name in ASCII/Roman.
+#define MAX_TERRITORY_FULLNAME_UTF8_LEN     127 // Max. number of characters to store the longest possible territory name (in UTF8)
 
-#define MAX_MAPCODE_RESULT_UTF8_LEN         (MAX_MAPCODE_RESULT_ASCII_LEN * 4)
-#define MAX_MAPCODE_RESULT_UTF16_LEN        (MAX_MAPCODE_RESULT_ASCII_LEN * 4)
-#define MAX_TERRITORY_FULLNAME_UTF8_LEN     (MAX_TERRITORY_FULLNAME_ASCII_LEN * 4)
+#define MAX_MAPCODE_RESULT_UTF8_LEN         (MAX_MAPCODE_RESULT_ASCII_LEN * 3) // One mapcode character can become at most 3 UTF8characters.
+#define MAX_MAPCODE_RESULT_UTF16_LEN        (MAX_MAPCODE_RESULT_ASCII_LEN)     // Each mapcode character can become one UTF16 word.
 
 
 /**
@@ -465,7 +467,7 @@ char *convertMapcodeToAlphabetUtf8(char *utf8String, const char *asciiString, en
  *
  * Arguments:
  *      utf16String  - Buffer to be filled with the Unicode string result.
- *                     Must have capacity for MAX_MAPCODE_RESULT_UTF16_LEN characters.
+ *                     Must have capacity for MAX_MAPCODE_RESULT_UTF16_LEN 16-bit characters.
  *      asciiString  - ASCII string to encode (must be < MAX_MAPCODE_RESULT_ASCII_LEN characters).
  *      alphabet     - Alphabet to use.
  *

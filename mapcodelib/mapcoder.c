@@ -25,11 +25,14 @@
 #include "internal_territory_alphabets.h"
 #include "internal_territory_names_local.h"
 #include "internal_alphabet_recognizer.h"
+#include "internal_territory_names_ax.h"
 #include "internal_territory_names_da.h"
 #include "internal_territory_names_de.h"
 #include "internal_territory_names_en.h"
+#include "internal_territory_names_es.h"
 #include "internal_territory_names_fr.h"
 #include "internal_territory_names_hi.h"
+#include "internal_territory_names_it.h"
 #include "internal_territory_names_nl.h"
 #include "internal_territory_names_local.h"
 
@@ -112,11 +115,14 @@ typedef struct {
 } LocaleRegistryItem;
 
 static const LocaleRegistryItem LOCALE_REGISTRY[] = {
+        {"AR", TERRITORY_FULL_NAME_AX},
         {"DA", TERRITORY_FULL_NAME_DA},
         {"DE", TERRITORY_FULL_NAME_DE},
         {"EN", TERRITORY_FULL_NAME_EN},
+        {"ES", TERRITORY_FULL_NAME_ES},
         {"FR", TERRITORY_FULL_NAME_FR},
         {"HI", TERRITORY_FULL_NAME_HI},
+        {"IT", TERRITORY_FULL_NAME_IT},
         {"NL", TERRITORY_FULL_NAME_NL}
 };
 

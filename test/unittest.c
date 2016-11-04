@@ -1704,7 +1704,7 @@ int testGetFullTerritoryName(void) {
     const TerritoryAlphabets *territoryAlphabets;
     char territoryName[MAX_TERRITORY_FULLNAME_UTF8_LEN + 2]; // large so we can test overflow
     static const char *locales_to_test[] = {
-            "DA", "DE", "EN", "FR", "NL"};
+            "AR", "DA", "DE", "EN", "ES", "FR", "HI", "IT", "NL"};
 
     nrTests += testGetFullTerritoryNameInLocale("Sancta Sedes", TERRITORY_VAT, 0, NULL);    // Local name.
     nrTests += testGetFullTerritoryNameInLocale("Vatican", TERRITORY_VAT, 0, "");           // Wrong locale -> fallback language.

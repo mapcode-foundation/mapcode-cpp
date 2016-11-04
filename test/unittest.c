@@ -1465,6 +1465,16 @@ static int testEnvironment(void) {
     printf("sizeof(char)=%ld, sizeof(UWORD)=%ld, sizeof(int)=%ld, sizeof(long int)=%ld\n",
            sizeof(char), sizeof(UWORD), sizeof(int), sizeof(long int));
 
+    // Check signed/unsigned character.
+    char t = (char) (-1);
+    if ((int) t == -1) {
+        printf("char is signed\n");
+    } else {
+        printf("char is unsigned\n");
+        foundError();
+        printf("*** ERROR *** Compiled with 'unsigned char'; please recompile to use 'signed char' by default.\n");
+    }
+
     // Check size of UWORD.
     nrTests++;
     if (sizeOfWord != 2) {

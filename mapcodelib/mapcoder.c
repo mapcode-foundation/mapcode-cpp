@@ -25,15 +25,21 @@
 #include "internal_territory_alphabets.h"
 #include "internal_territory_names_local.h"
 #include "internal_alphabet_recognizer.h"
-#include "internal_territory_names_ax.h"
+#include "internal_territory_names_ar.h"
 #include "internal_territory_names_da.h"
 #include "internal_territory_names_de.h"
 #include "internal_territory_names_en.h"
 #include "internal_territory_names_es.h"
+#include "internal_territory_names_fi.h"
 #include "internal_territory_names_fr.h"
+#include "internal_territory_names_he.h"
 #include "internal_territory_names_hi.h"
+#include "internal_territory_names_hr.h"
 #include "internal_territory_names_it.h"
 #include "internal_territory_names_nl.h"
+#include "internal_territory_names_no.h"
+#include "internal_territory_names_pt.h"
+#include "internal_territory_names_se.h"
 #include "internal_territory_names_local.h"
 
 #ifdef DEBUG
@@ -115,15 +121,21 @@ typedef struct {
 } LocaleRegistryItem;
 
 static const LocaleRegistryItem LOCALE_REGISTRY[] = {
-        {"AR", TERRITORY_FULL_NAME_AX},
+        {"AR", TERRITORY_FULL_NAME_AR},
         {"DA", TERRITORY_FULL_NAME_DA},
         {"DE", TERRITORY_FULL_NAME_DE},
         {"EN", TERRITORY_FULL_NAME_EN},
         {"ES", TERRITORY_FULL_NAME_ES},
+        {"FI", TERRITORY_FULL_NAME_FI},
         {"FR", TERRITORY_FULL_NAME_FR},
+        {"HE", TERRITORY_FULL_NAME_HE},
         {"HI", TERRITORY_FULL_NAME_HI},
+        {"HR", TERRITORY_FULL_NAME_HR},
         {"IT", TERRITORY_FULL_NAME_IT},
-        {"NL", TERRITORY_FULL_NAME_NL}
+        {"NL", TERRITORY_FULL_NAME_NL},
+        {"NO", TERRITORY_FULL_NAME_NO},
+        {"PT", TERRITORY_FULL_NAME_PT},
+        {"SE", TERRITORY_FULL_NAME_SE}
 };
 
 // important information about the 8 parents
@@ -2097,7 +2109,7 @@ static enum MapcodeError parseMapcodeString(MapcodeElements *mapcodeElements, co
         } else if ((cx == ' ') || (cx == '\t')) {
             token = TOKENSEP;
         } else {
-            char c;
+            signed char c;
             if (cx >= 0xC0) { // utf8 character
                 unsigned char c2 = *utf8++;
                 int w = ((cx - 0xC0) << 6) + (c2 & 63);

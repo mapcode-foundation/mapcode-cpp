@@ -1462,18 +1462,8 @@ static int testEnvironment(void) {
     char *s = "1234567890";
     long distance = (strstr(s, "0") - s);
 
-    printf("sizeof(char)=%ld, sizeof(UWORD)=%ld, sizeof(int)=%ld, sizeof(long int)=%ld\n",
-           sizeof(char), sizeof(UWORD), sizeof(int), sizeof(long int));
-
-    // Check signed/unsigned character.
-    char t = (char) (-1);
-    if ((int) t == -1) {
-        printf("char is signed\n");
-    } else {
-        printf("char is unsigned\n");
-        foundError();
-        printf("*** ERROR *** Compiled with 'unsigned char'; please recompile to use 'signed char' by default.\n");
-    }
+    printf("sizeof(char)=%ld, sizeof(UWORD)=%ld, sizeof(int)=%ld, sizeof(long int)=%ld char=%s\n",
+           sizeof(char), sizeof(UWORD), sizeof(int), sizeof(long int), ((int) ((char) -1) == -1) ? "signed" : "unsigned");
 
     // Check size of UWORD.
     nrTests++;
@@ -1714,7 +1704,7 @@ int testGetFullTerritoryName(void) {
     const TerritoryAlphabets *territoryAlphabets;
     char territoryName[MAX_TERRITORY_FULLNAME_UTF8_LEN + 2]; // large so we can test overflow
     static const char *locales_to_test[] = {
-            "AR", "DA", "DE", "EN", "ES", "FR", "HI", "IT", "NL"};
+            "AR", "DA", "DE", "EN", "FI", "ES", "FR", "HE", "HI", "HR", "IT", "NL", "NO", "PT", "SE"};
 
     nrTests += testGetFullTerritoryNameInLocale("Sancta Sedes", TERRITORY_VAT, 0, NULL);    // Local name.
     nrTests += testGetFullTerritoryNameInLocale("Vatican", TERRITORY_VAT, 0, "");           // Wrong locale -> fallback language.

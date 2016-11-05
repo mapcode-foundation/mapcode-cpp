@@ -44,14 +44,6 @@ Check the `README.md` in directory `test` for more information.
 
 Also see http://www.mapcode.com for background and reference materials.
 
-## Compilers: Signed and Unsigned `char`
-
-The library expects the type `char` to be `signed char` by default. If your compiler
-uses `unsigned char` by default (such as for ARM or PowerPC), please add the correct
-compiler switch to change this behavior to `signed char`.
-
-The unit tests in `test` will test the correct settings of the compiler and will
-fail if you've compiled the library with incorrect settings.
 
 ## A Real-Life Example, The 'mapcode' Codec Tool: `utility/`
 

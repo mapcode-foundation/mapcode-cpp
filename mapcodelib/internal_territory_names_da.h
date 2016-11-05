@@ -234,7 +234,7 @@ static const char *TERRITORY_FULL_NAME_DA[] = {
         /*     MMR */ "Myanmar|Burma",
         /*     ZMB */ "Zambia",
         /*     CHL */ "Chile",
-        /*     TUR */ "Kalkun",
+        /*     TUR */ "Tyrkiet",
         /*     PAK */ "Pakistan",
         /*     MOZ */ "Mozambique",
         /*     NAM */ "Namibia",
@@ -556,7 +556,7 @@ static const char *TERRITORY_FULL_NAME_DA[] = {
         /*     UMI */ "United States Minor Outlying Islands",
         /*     CPT */ "Clipperton Island",
         /*     ATA */ "Antarctica",
-        /*     AAA */ "International|Worldwide|Terre"
+        /*     AAA */ "International|Verdenen|Jord"
 #else // MAPCODE_SUPPORT_LANGUAGE_DA
         NULL
 #endif // MAPCODE_SUPPORT_LANGUAGE_DA

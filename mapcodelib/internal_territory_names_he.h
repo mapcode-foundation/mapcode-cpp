@@ -23,7 +23,7 @@ extern "C" {
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
 
 static const char *TERRITORY_FULL_NAME_HE[] = {
-#ifdef MAPCODE_SUPPORT_LANGUAGE_HE
+#ifdef MAPCODE_SUPPORT_LANGUAGE_HE // Hebrew
         /*     VAT */ "הוותיקן|הכס הקדוש",
         /*     MCO */ "מונקו",
         /*     GIB */ "גיברלטר",
@@ -62,7 +62,7 @@ static const char *TERRITORY_FULL_NAME_HE[] = {
         /*     SHN */ "סנט הלנה, אסנשן וטריסטן דה קונה|טריסטן דה קונה",
         /*     MLT */ "מלטה",
         /*     GRD */ "גרנדה",
-        /*     VIR */ "איי הבתולה של ארה"ב|איי הבתולה, ארה"ב",
+        /*     VIR */ "איי הבתולה של ארצות הברית",
         /*     MYT */ "מיוט",
         /*     SJM */ "סבאלברד ויאן מאיין|יאן מאיין",
         /*     VCT */ "סנט וינסנט והגרנדינים|והגרנדינים",
@@ -434,7 +434,7 @@ static const char *TERRITORY_FULL_NAME_HE[] = {
         /*     IND */ "הוֹדוּ",
         /*     AUS */ "אוֹסטְרַלִיָה",
         /*     BRA */ "בְּרָזִיל",
-        /*     USA */ "ארה"ב|ארצות הברית של אמריקה|אמריקה",
+        /*     USA */ "אַרצוֹת הַבְּרִית",
         /*     MEX */ "מקסיקו",
         /*     MOW */ "מוסקבה",
         /*     SPE */ "סנט פטרסבורג",

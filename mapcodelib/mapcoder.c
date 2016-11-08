@@ -25,7 +25,11 @@
 #include "internal_territory_alphabets.h"
 #include "internal_territory_names_local.h"
 #include "internal_alphabet_recognizer.h"
+#include "internal_territory_names_af.h"
 #include "internal_territory_names_ar.h"
+#include "internal_territory_names_be.h"
+#include "internal_territory_names_cn.h"
+#include "internal_territory_names_cs.h"
 #include "internal_territory_names_da.h"
 #include "internal_territory_names_de.h"
 #include "internal_territory_names_en.h"
@@ -35,12 +39,19 @@
 #include "internal_territory_names_he.h"
 #include "internal_territory_names_hi.h"
 #include "internal_territory_names_hr.h"
+#include "internal_territory_names_id.h"
 #include "internal_territory_names_it.h"
+#include "internal_territory_names_ja.h"
+#include "internal_territory_names_ko.h"
 #include "internal_territory_names_nl.h"
 #include "internal_territory_names_no.h"
 #include "internal_territory_names_pt.h"
-#include "internal_territory_names_se.h"
-#include "internal_territory_names_local.h"
+#include "internal_territory_names_ru.h"
+#include "internal_territory_names_sv.h"
+#include "internal_territory_names_sw.h"
+#include "internal_territory_names_tr.h"
+#include "internal_territory_names_uk.h"
+
 
 #ifdef DEBUG
 
@@ -121,7 +132,11 @@ typedef struct {
 } LocaleRegistryItem;
 
 static const LocaleRegistryItem LOCALE_REGISTRY[] = {
+        {"AF", TERRITORY_FULL_NAME_AF},
         {"AR", TERRITORY_FULL_NAME_AR},
+        {"BE", TERRITORY_FULL_NAME_BE},
+        {"CN", TERRITORY_FULL_NAME_CN},
+        {"CS", TERRITORY_FULL_NAME_CS},
         {"DA", TERRITORY_FULL_NAME_DA},
         {"DE", TERRITORY_FULL_NAME_DE},
         {"EN", TERRITORY_FULL_NAME_EN},
@@ -131,11 +146,18 @@ static const LocaleRegistryItem LOCALE_REGISTRY[] = {
         {"HE", TERRITORY_FULL_NAME_HE},
         {"HI", TERRITORY_FULL_NAME_HI},
         {"HR", TERRITORY_FULL_NAME_HR},
+        {"ID", TERRITORY_FULL_NAME_ID},
         {"IT", TERRITORY_FULL_NAME_IT},
+        {"JA", TERRITORY_FULL_NAME_JA},
+        {"KO", TERRITORY_FULL_NAME_KO},
         {"NL", TERRITORY_FULL_NAME_NL},
         {"NO", TERRITORY_FULL_NAME_NO},
         {"PT", TERRITORY_FULL_NAME_PT},
-        {"SE", TERRITORY_FULL_NAME_SE}
+        {"RU", TERRITORY_FULL_NAME_RU},
+        {"SV", TERRITORY_FULL_NAME_SV},
+        {"SW", TERRITORY_FULL_NAME_SW},
+        {"TR", TERRITORY_FULL_NAME_TR},
+        {"UK", TERRITORY_FULL_NAME_UK}
 };
 
 // important information about the 8 parents
@@ -507,7 +529,7 @@ static int lastRec(const enum Territory ccode) {
 
 // returns parent of ccode (or TERRITORY_NONE)
 static enum Territory parentTerritoryOf(const enum Territory ccode) {
-    if (ccode == TERRITORY_NONE) {
+    if (ccode <= _TERRITORY_MIN) {
         return TERRITORY_NONE;
     }
     ASSERT((_TERRITORY_MIN < ccode) && (ccode < _TERRITORY_MAX));
@@ -614,9 +636,7 @@ static int getParentNumber(const char *s, const int len) {
     const char *p = ((len == 2) ? PARENTS_2 : PARENTS_3);
     const char *f;
     char country[4];
-    if (!s || s[0] == 0 || s[1] == 0 || len < 2 || len > 3) {
-        return (int) ERR_BAD_ARGUMENTS;
-    }
+    ASSERT(s[0] && s[1]);
     ASSERT((2 <= len) && (len <= 3));
     ASSERT(s && ((int) strlen(s) >= len));
     lengthCopy(country, s, len, 4);
@@ -2779,8 +2799,9 @@ char *convertMapcodeToAlphabetUtf8(char *utf8String, const char *mapcodeString, 
 // useShortNames: 0=full 1=short
 // returns empty string in case of error
 char *getTerritoryIsoName(char *territoryISO, enum Territory territory, int useShortName) {
-    ASSERT(territory);
-    if (territory == TERRITORY_NONE) {
+    ASSERT(territoryISO);
+    ASSERT(useShortName == 0 || useShortName == 1);
+    if (territory <= _TERRITORY_MIN || territory >= _TERRITORY_MAX) {
         *territoryISO = 0;
     } else {
         const char *alphaCode = ISO3166_ALPHA[INDEX_OF_TERRITORY(territory)];

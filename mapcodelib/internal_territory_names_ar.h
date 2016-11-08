@@ -23,7 +23,7 @@ extern "C" {
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
 
 static const char *TERRITORY_FULL_NAME_AR[] = {
-#ifdef MAPCODE_SUPPORT_LANGUAGE_AR
+#ifdef MAPCODE_SUPPORT_LANGUAGE_AR // Arabic
         /*     VAT */ "مدينة الفاتيكان|الكرسي الرسولي",
         /*     MCO */ "موناكو",
         /*     GIB */ "جبل طارق",

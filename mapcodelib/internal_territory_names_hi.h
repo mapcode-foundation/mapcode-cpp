@@ -23,7 +23,7 @@ extern "C" {
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
 
 static const char *TERRITORY_FULL_NAME_HI[] = {
-#ifdef MAPCODE_SUPPORT_LANGUAGE_HI
+#ifdef MAPCODE_SUPPORT_LANGUAGE_HI // Hindi
         /*     VAT */ "वेटिकन सिटी|पवित्र देखें",
         /*     MCO */ "मोनाको",
         /*     GIB */ "जिब्राल्टर",
@@ -340,7 +340,7 @@ static const char *TERRITORY_FULL_NAME_HI[] = {
         /*     VIC */ "विक्टोरिया",
         /*   AU-WA */ "पश्चिमी ऑस्ट्रेलिया",
         /*     QLD */ "क्वींसलैंड",
-        /*   BR-DF */ "डिस्ट्रिटो फ़ेडरल",
+        /*   BR-DF */ "डिस्ट्रिटो फेडरल",
         /*   BR-SE */ "सर्जिप",
         /*   BR-AL */ "अलगोआस",
         /*   BR-RJ */ "रियो डी जनेरियो",
@@ -553,7 +553,7 @@ static const char *TERRITORY_FULL_NAME_HI[] = {
         /*   CN-QH */ "किंघाई",
         /*   CN-XJ */ "झिंजियांग उईघुर",
         /*     CHN */ "चीन",
-        /*     UMI */ "संयुक्त राज्य अमेरिका के छोटे दूरस्थ द्वीपसमूह",
+        /*     UMI */ "यूएस माइनर आउटलाइंग द्वीपसमूह",
         /*     CPT */ "क्लिपरटन द्वीप",
         /*     ATA */ "अंटार्कटिका",
         /*     AAA */ "अंतरराष्ट्रीय|अंतरराष्ट्रीय|पृथ्वी"

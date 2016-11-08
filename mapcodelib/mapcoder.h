@@ -29,14 +29,32 @@ extern "C" {
 #define DEFAULT_TERRITORY_FULL_NAME TERRITORY_FULL_NAME_EN
 
 #ifndef MAPCODE_NO_SUPPORT_ALL_LANGUAGES
-#define MAPCODE_SUPPORT_LANGUAGE_AX
+#define MAPCODE_SUPPORT_LANGUAGE_AF
+#define MAPCODE_SUPPORT_LANGUAGE_AR
+#define MAPCODE_SUPPORT_LANGUAGE_BE
+#define MAPCODE_SUPPORT_LANGUAGE_CN
+#define MAPCODE_SUPPORT_LANGUAGE_CS
 #define MAPCODE_SUPPORT_LANGUAGE_DA
 #define MAPCODE_SUPPORT_LANGUAGE_DE
+#define MAPCODE_SUPPORT_LANGUAGE_EN
 #define MAPCODE_SUPPORT_LANGUAGE_ES
+#define MAPCODE_SUPPORT_LANGUAGE_FI
 #define MAPCODE_SUPPORT_LANGUAGE_FR
+#define MAPCODE_SUPPORT_LANGUAGE_HE
 #define MAPCODE_SUPPORT_LANGUAGE_HI
+#define MAPCODE_SUPPORT_LANGUAGE_HR
+#define MAPCODE_SUPPORT_LANGUAGE_ID
 #define MAPCODE_SUPPORT_LANGUAGE_IT
+#define MAPCODE_SUPPORT_LANGUAGE_JA
+#define MAPCODE_SUPPORT_LANGUAGE_KO
 #define MAPCODE_SUPPORT_LANGUAGE_NL
+#define MAPCODE_SUPPORT_LANGUAGE_NO
+#define MAPCODE_SUPPORT_LANGUAGE_PT
+#define MAPCODE_SUPPORT_LANGUAGE_RU
+#define MAPCODE_SUPPORT_LANGUAGE_SV
+#define MAPCODE_SUPPORT_LANGUAGE_SW
+#define MAPCODE_SUPPORT_LANGUAGE_TR
+#define MAPCODE_SUPPORT_LANGUAGE_UK
 #endif
 
 #define MAPCODE_C_VERSION                   "2.5.2"
@@ -49,7 +67,7 @@ extern "C" {
 #define MAX_ISOCODE_ASCII_LEN               7           // Max. chars in a valid ISO3166 territory code.
 #define MAX_CLEAN_MAPCODE_ASCII_LEN         (MAX_PROPER_MAPCODE_ASCII_LEN + 1 + MAX_PRECISION_DIGITS)       // Max. chars in a clean mapcode (excluding zero-terminator).
 #define MAX_MAPCODE_RESULT_ASCII_LEN        (MAX_ISOCODE_ASCII_LEN + 1 + MAX_CLEAN_MAPCODE_ASCII_LEN + 1)   // Max. chars to store a single result (including zero-terminator).
-#define MAX_TERRITORY_FULLNAME_UTF8_LEN     127 // Max. number of characters to store the longest possible territory name (in UTF8)
+#define MAX_TERRITORY_FULLNAME_UTF8_LEN     111 // Max. number of characters to store the longest possible territory name (in UTF8)
 
 #define MAX_MAPCODE_RESULT_UTF8_LEN         (MAX_MAPCODE_RESULT_ASCII_LEN * 3) // One mapcode character can become at most 3 UTF8characters.
 #define MAX_MAPCODE_RESULT_UTF16_LEN        (MAX_MAPCODE_RESULT_ASCII_LEN)     // Each mapcode character can become one UTF16 word.
@@ -76,7 +94,8 @@ typedef struct {
  * getTerritoryIsoName(isoName, mapcodeElement.territoryCode, 0)
  */
 typedef struct {
-    char territoryISO[MAX_ISOCODE_ASCII_LEN + 1];           // The (trimmed and uppercased) territory code, from the input.
+    char territoryISO[
+            MAX_ISOCODE_ASCII_LEN + 1];           // The (trimmed and uppercased) territory code, from the input.
     enum Territory territoryCode;                           // The territory, as recognized and disambiguated from territoryISO.
     char properMapcode[MAX_PROPER_MAPCODE_ASCII_LEN + 1];   // The (romanised) mapcode excl. territory or extension.
     int indexOfDot;                                         // Position of dot in properMapcode (a value between 2 and 5).

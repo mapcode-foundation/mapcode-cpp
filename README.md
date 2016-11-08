@@ -146,11 +146,32 @@ in their locale language.
 To add individual support support for other languages (of all territory names), use:
     
     -DMAPCODE_NO_SUPPORT_ALL_LANGUAGES   // If not defined, ALL languages are available.
-    -DMAPCODE_SUPPORT_LANGUAGE_DA        // Add individual languages.
-    -DMAPCODE_SUPPORT_LANGUAGE_DE        
+    -DMAPCODE_SUPPORT_LANGUAGE_AF        // Add the languages you need. The names are the
+    -DMAPCODE_SUPPORT_LANGUAGE_AR        // ISO 3166-2 character codes.
+    -DMAPCODE_SUPPORT_LANGUAGE_BE
+    -DMAPCODE_SUPPORT_LANGUAGE_CN
+    -DMAPCODE_SUPPORT_LANGUAGE_CS
+    -DMAPCODE_SUPPORT_LANGUAGE_DA
+    -DMAPCODE_SUPPORT_LANGUAGE_DE
+    -DMAPCODE_SUPPORT_LANGUAGE_EN
+    -DMAPCODE_SUPPORT_LANGUAGE_ES
+    -DMAPCODE_SUPPORT_LANGUAGE_FI
     -DMAPCODE_SUPPORT_LANGUAGE_FR
+    -DMAPCODE_SUPPORT_LANGUAGE_HE
     -DMAPCODE_SUPPORT_LANGUAGE_HI
+    -DMAPCODE_SUPPORT_LANGUAGE_HR
+    -DMAPCODE_SUPPORT_LANGUAGE_ID
+    -DMAPCODE_SUPPORT_LANGUAGE_IT
+    -DMAPCODE_SUPPORT_LANGUAGE_JA
+    -DMAPCODE_SUPPORT_LANGUAGE_KO
     -DMAPCODE_SUPPORT_LANGUAGE_NL
+    -DMAPCODE_SUPPORT_LANGUAGE_NO
+    -DMAPCODE_SUPPORT_LANGUAGE_PT
+    -DMAPCODE_SUPPORT_LANGUAGE_RU
+    -DMAPCODE_SUPPORT_LANGUAGE_SV
+    -DMAPCODE_SUPPORT_LANGUAGE_SW
+    -DMAPCODE_SUPPORT_LANGUAGE_TR
+    -DMAPCODE_SUPPORT_LANGUAGE_UK
 
 The list of support languages may grow over time.
 
@@ -158,7 +179,11 @@ The list of support languages may grow over time.
 
 ### 2.5.2
 
-* Added locale support. 
+* Added locale support.
+ 
+* Added many languages.
+
+* Hardened unit tests.
 
 ### 2.5.1
 

@@ -23,7 +23,7 @@ extern "C" {
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
 
 static const char *TERRITORY_FULL_NAME_NO[] = {
-#ifdef MAPCODE_SUPPORT_LANGUAGE_NO
+#ifdef MAPCODE_SUPPORT_LANGUAGE_NO // Norwegian
         /*     VAT */ "Vatikanstaten",
         /*     MCO */ "Monaco",
         /*     GIB */ "Gibraltar",
@@ -45,7 +45,7 @@ static const char *TERRITORY_FULL_NAME_NO[] = {
         /*     AIA */ "Anguilla",
         /*     MSR */ "Montserrat",
         /*     JEY */ "Jersey",
-        /*     CXR */ "?????",
+        /*     CXR */ "Christmasøya",
         /*     WLF */ "Wallis og Futuna|Futuna",
         /*     VGB */ "De britiske jomfruøyene|Virgin Islands, British",
         /*     LIE */ "Liechtenstein",

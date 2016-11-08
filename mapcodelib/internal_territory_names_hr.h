@@ -23,7 +23,7 @@ extern "C" {
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
 
 static const char *TERRITORY_FULL_NAME_HR[] = {
-#ifdef MAPCODE_SUPPORT_LANGUAGE_HR
+#ifdef MAPCODE_SUPPORT_LANGUAGE_HR // Croatian
         /*     VAT */ "Vatikan|Sveta Stolica",
         /*     MCO */ "Monaco",
         /*     GIB */ "Gibraltar",

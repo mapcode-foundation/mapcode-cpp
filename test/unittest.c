@@ -470,9 +470,31 @@ static int testAlphabetParser(void) {
             {"GBR  רר.56ר",     "GBR XX.XX (1167;2)"},       // hebrew abjad
             {"BEL  طظ.56ط ",    "BEL PQ.XP (1107;2)"},       // arab abjad
             {"FRA  ヒフ.ラヲ",      "FRA PQ.XZ (1198;2)"},
-            {"CA XX.XX",        "CA XX.XX (1392;2)"},
+            {"CA XX.XX",        "CA XX.XX (1392;2)"}
+    };
+    static const struct {
+        const char *input;
+        enum Alphabet alphabet;
+        const char *expected;
+    } convertTests[] = {
+            {"nld bc.XY-p2q", ALPHABET_ROMAN,       "nld BC.XY-P2Q"},
+            {"DNK PQ.XX",     ALPHABET_DEVANAGARI,  "DNK नप.सस"},
+            {"GBR XX.XX",     ALPHABET_HEBREW,      "GBR רר.56ר"},
+            {"BEL PQ.XP",     ALPHABET_ARABIC,      "BEL طظ.56ط"},
+            {"nld 00.E0",     ALPHABET_GREEK,       "nld \xCE\x91\x30.12"}    
     };
     int i;
+    for (i = 0; i < (int) (sizeof(convertTests) / sizeof(convertTests[0])); i++) {
+        char utf8[MAX_MAPCODE_RESULT_UTF8_LEN + 1];
+        convertMapcodeToAlphabetUtf8(utf8, convertTests[i].input, convertTests[i].alphabet);
+        nrTests++;
+        if (strcmp(utf8, convertTests[i].expected) != 0) {
+            foundError();
+            printf("*** ERROR *** convertMapcodeToAlphabetUtf8(\"%s\",%d) returned \"%s\", (expected %s)\n",
+                   convertTests[i].input, convertTests[i].alphabet, utf8, convertTests[i].expected);
+        }
+    }
+
     for (i = 0; i < (int) (sizeof(parseTests) / sizeof(parseTests[0])); i++) {
         char romanized1[MAX_MAPCODE_RESULT_ASCII_LEN + 1];
         MapcodeElements mapcodeElements;
@@ -874,6 +896,7 @@ static int testTerritory(const char *alphaCode, enum Territory territory,
 
 
 static int testTerritories() {
+    char nam[MAX_ISOCODE_ASCII_LEN + 1];
     int nrTests = 0;
     int nr = sizeof(TEST_TERRITORIES) / sizeof(TEST_TERRITORIES[0]);
     int i;
@@ -882,6 +905,28 @@ static int testTerritories() {
                                  TEST_TERRITORIES[i].isAlias,
                                  TEST_TERRITORIES[i].needsParent, TEST_TERRITORIES[i].parent);
     }
+    // test extremes
+    ++nrTests;
+    if (*getTerritoryIsoName(nam, TERRITORY_NONE, 0) || *getTerritoryIsoName(nam, TERRITORY_UNKNOWN, 0) ||
+        *getTerritoryIsoName(nam, _TERRITORY_MIN, 0) || *getTerritoryIsoName(nam, _TERRITORY_MAX, 0)) {
+        foundError();
+        printf("*** ERROR *** getTerritoryIsoName returned nonempty for bad arguments\n");
+    }
+    ++nrTests;
+    if (getTerritoryCode(NULL, TERRITORY_VAT) != TERRITORY_NONE) {
+        foundError();
+        printf("*** ERROR *** unexpected getTerritoryCode return for bad arguments\n");
+    }
+    // test some short values
+    ++nrTests;
+    if (strcmp(getTerritoryIsoName(nam, TERRITORY_US_CA, 1), "CA") ||
+        strcmp(getTerritoryIsoName(nam, TERRITORY_IN_DD, 1), "DD") ||
+        strcmp(getTerritoryIsoName(nam, TERRITORY_NLD,   1), "NLD") ||
+        strcmp(getTerritoryIsoName(nam, TERRITORY_USA,   1), "USA")) {
+        foundError();
+        printf("*** ERROR *** getTerritoryIsoName returned bad short versions\n");
+    }
+
     return nrTests;
 }
 
@@ -1056,6 +1101,13 @@ static int testDistances(void) {
             0.11, 0.22, 0.12, 0.2333, 185011466
     };
 
+    // check bad values    
+    ++nrTests;
+    if (maxErrorInMeters(99) != 0.0) {
+        foundError();
+        printf("*** ERROR *** maxErrorInMeters(99) = %f (expected 0.0)\n", maxErrorInMeters(99));
+    }
+    // check expected values    
     ++nrTests;
     testDistance(METERS_PER_DEGREE_LON * 1.5, distanceInMeters(0.0, 0.0, 0.0, 1.5));  // Check if #define is correct.
     ++nrTests;
@@ -1207,6 +1259,36 @@ static int testTerritoryCode(void) {
             {TERRITORY_US_AL, TERRITORY_US_CA, "AL"},
             {TERRITORY_NONE,  TERRITORY_NONE,  0}
     };
+
+    static const struct {
+        enum Territory input;
+        enum Territory output;
+    } ptcTestData[] = {
+            {TERRITORY_NONE,    TERRITORY_NONE},
+            {_TERRITORY_MIN,    TERRITORY_NONE},
+            {TERRITORY_VAT,     TERRITORY_NONE},
+            {TERRITORY_MX_DIF,  TERRITORY_MEX },
+            {TERRITORY_MX_CHH,  TERRITORY_MEX },
+            {TERRITORY_GRL,     TERRITORY_NONE},
+            {TERRITORY_IN_DD,   TERRITORY_IND },
+            {TERRITORY_AU_VIC,  TERRITORY_AUS },
+            {TERRITORY_BR_DF,   TERRITORY_BRA },
+            {TERRITORY_US_AL,   TERRITORY_USA },
+            {TERRITORY_CA_NU,   TERRITORY_CAN },
+            {TERRITORY_RU_LIP,  TERRITORY_RUS },
+            {TERRITORY_CN_HA ,  TERRITORY_CHN },
+            {TERRITORY_AAA,     TERRITORY_NONE},
+            {_TERRITORY_MAX,    TERRITORY_NONE},
+            {TERRITORY_UNKNOWN, TERRITORY_NONE}
+    };
+
+    for (i = 0; i < (int) (sizeof(ptcTestData) / sizeof(ptcTestData[0])); i++) {
+        enum Territory result = getParentCountryOf(ptcTestData[i].input);
+        if (result != ptcTestData[i].output) {
+            foundError();
+            printf("*** ERROR *** getParentCountryOf(%d) returned unexpected %d\n", ptcTestData[i].input, result);
+        }
+    }
 
     for (i = 0; tcTestData[i].inputstring != 0; i++) {
         enum Territory ccode = getTerritoryCode(tcTestData[i].inputstring, tcTestData[i].context);
@@ -1462,8 +1544,9 @@ static int testEnvironment(void) {
     char *s = "1234567890";
     long distance = (strstr(s, "0") - s);
 
+    int testSigned = (int) ((char) -1);
     printf("sizeof(char)=%ld, sizeof(UWORD)=%ld, sizeof(int)=%ld, sizeof(long int)=%ld char=%s\n",
-           sizeof(char), sizeof(UWORD), sizeof(int), sizeof(long int), ((int) ((char) -1) == -1) ? "signed" : "unsigned");
+           sizeof(char), sizeof(UWORD), sizeof(int), sizeof(long int), (testSigned == -1) ? "signed" : "unsigned");
 
     // Check size of UWORD.
     nrTests++;
@@ -1702,9 +1785,10 @@ int testGetFullTerritoryName(void) {
     int alternative;
     int i;
     const TerritoryAlphabets *territoryAlphabets;
-    char territoryName[MAX_TERRITORY_FULLNAME_UTF8_LEN + 2]; // large so we can test overflow
+    char territoryName[MAX_TERRITORY_FULLNAME_UTF8_LEN + 1024]; // large so we can test overflow
     static const char *locales_to_test[] = {
-            "AR", "DA", "DE", "EN", "FI", "ES", "FR", "HE", "HI", "HR", "IT", "NL", "NO", "PT", "SE"};
+            "AF", "AR", "BE", "CN", "CS", "DA", "DE", "EN", "FI", "ES", "FR", "HE", "HI", 
+            "HR", "ID", "IT", "JA", "KO", "NL", "NO", "PT", "RU", "SV", "SW", "TR", "UK"};
 
     nrTests += testGetFullTerritoryNameInLocale("Sancta Sedes", TERRITORY_VAT, 0, NULL);    // Local name.
     nrTests += testGetFullTerritoryNameInLocale("Vatican", TERRITORY_VAT, 0, "");           // Wrong locale -> fallback language.
@@ -1735,9 +1819,11 @@ int testGetFullTerritoryName(void) {
                 len = (int) strlen(territoryName);
                 nrTests++;
                 if (len < 1 || len > MAX_TERRITORY_FULLNAME_UTF8_LEN) {
+                    char s[MAX_ISOCODE_ASCII_LEN + 1];
                     foundError();
-                    printf("*** ERROR *** Bad territoryname %d, %d characters (limit is %d): %s\n",
-                           (int) territory, len, MAX_TERRITORY_FULLNAME_UTF8_LEN, territoryName);
+                    printf("*** ERROR *** Bad %s territoryname %s, %d characters (limit is %d): %s\n",
+                           locale, getTerritoryIsoName(s, territory, 0), len,
+                           MAX_TERRITORY_FULLNAME_UTF8_LEN, territoryName);
                 }
                 if (len > maxLength) {
                     maxLength = len;

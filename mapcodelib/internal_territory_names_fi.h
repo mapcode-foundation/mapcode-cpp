@@ -23,7 +23,7 @@ extern "C" {
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
 
 static const char *TERRITORY_FULL_NAME_FI[] = {
-#ifdef MAPCODE_SUPPORT_LANGUAGE_FI
+#ifdef MAPCODE_SUPPORT_LANGUAGE_FI // Finnish
         /*     VAT */ "Vatikaani|Pyhä istuin",
         /*     MCO */ "Monaco",
         /*     GIB */ "Gibraltar",

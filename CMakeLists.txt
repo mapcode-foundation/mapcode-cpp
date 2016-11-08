@@ -48,7 +48,11 @@ set(SOURCE_FILES_MAPCODELIB
         mapcodelib/internal_alphabet_recognizer.h
         mapcodelib/internal_iso3166_data.h
         mapcodelib/internal_territory_alphabets.h
+        mapcodelib/internal_territory_names_af.h
         mapcodelib/internal_territory_names_ar.h
+        mapcodelib/internal_territory_names_be.h
+        mapcodelib/internal_territory_names_cn.h
+        mapcodelib/internal_territory_names_cs.h
         mapcodelib/internal_territory_names_da.h
         mapcodelib/internal_territory_names_de.h
         mapcodelib/internal_territory_names_en.h
@@ -58,12 +62,19 @@ set(SOURCE_FILES_MAPCODELIB
         mapcodelib/internal_territory_names_he.h
         mapcodelib/internal_territory_names_hi.h
         mapcodelib/internal_territory_names_hr.h
+        mapcodelib/internal_territory_names_id.h
         mapcodelib/internal_territory_names_it.h
+        mapcodelib/internal_territory_names_ja.h
+        mapcodelib/internal_territory_names_ko.h
+        mapcodelib/internal_territory_names_local.h
         mapcodelib/internal_territory_names_nl.h
         mapcodelib/internal_territory_names_no.h
         mapcodelib/internal_territory_names_pt.h
-        mapcodelib/internal_territory_names_se.h
-        mapcodelib/internal_territory_names_local.h
+        mapcodelib/internal_territory_names_ru.h
+        mapcodelib/internal_territory_names_sv.h
+        mapcodelib/internal_territory_names_sw.h
+        mapcodelib/internal_territory_names_tr.h
+        mapcodelib/internal_territory_names_uk.h
         mapcodelib/internal_territory_search.h
         mapcodelib/mapcode_alphabets.h
         mapcodelib/mapcode_legacy.c

@@ -23,7 +23,7 @@ extern "C" {
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
 
 static const char *TERRITORY_FULL_NAME_FR[] = {
-#ifdef MAPCODE_SUPPORT_LANGUAGE_FR
+#ifdef MAPCODE_SUPPORT_LANGUAGE_FR // French
         /*     VAT */ "Vatican|Cité du Vatican|Saint-Siège",
         /*     MCO */ "Monaco",
         /*     GIB */ "Gibraltar",
@@ -222,7 +222,7 @@ static const char *TERRITORY_FULL_NAME_FR[] = {
         /*     THA */ "Thaïlande",
         /*     YEM */ "Yémen",
         /*     FRA */ "France",
-        /*     ALA */ "Åland, Îles",
+        /*     ALA */ "Åland Îles|Aaland",
         /*     KEN */ "Kenya",
         /*     BWA */ "Botswana",
         /*     MDG */ "Madagascar",

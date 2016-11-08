@@ -23,7 +23,7 @@ extern "C" {
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
 
 static const char *TERRITORY_FULL_NAME_PT[] = {
-#ifdef MAPCODE_SUPPORT_LANGUAGE_PT
+#ifdef MAPCODE_SUPPORT_LANGUAGE_PT // Portuguese
         /*     VAT */ "Vaticano|Cidade do Vaticano|Santa Sé",
         /*     MCO */ "Mónaco",
         /*     GIB */ "Gibraltar",

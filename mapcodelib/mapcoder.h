@@ -94,8 +94,7 @@ typedef struct {
  * getTerritoryIsoName(isoName, mapcodeElement.territoryCode, 0)
  */
 typedef struct {
-    char territoryISO[
-            MAX_ISOCODE_ASCII_LEN + 1];           // The (trimmed and uppercased) territory code, from the input.
+    char territoryISO[MAX_ISOCODE_ASCII_LEN + 1];           // The (trimmed and uppercased) territory code, from the input.
     enum Territory territoryCode;                           // The territory, as recognized and disambiguated from territoryISO.
     char properMapcode[MAX_PROPER_MAPCODE_ASCII_LEN + 1];   // The (romanised) mapcode excl. territory or extension.
     int indexOfDot;                                         // Position of dot in properMapcode (a value between 2 and 5).

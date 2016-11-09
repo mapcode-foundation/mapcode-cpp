@@ -152,7 +152,7 @@ To add individual support support for other languages (of all territory names), 
     -DMAPCODE_SUPPORT_LANGUAGE_CN
     -DMAPCODE_SUPPORT_LANGUAGE_CS
     -DMAPCODE_SUPPORT_LANGUAGE_DA
-    -DMAPCODE_SUPPORT_LANGUAGE_DE        
+    -DMAPCODE_SUPPORT_LANGUAGE_DE
     -DMAPCODE_SUPPORT_LANGUAGE_EN
     -DMAPCODE_SUPPORT_LANGUAGE_ES
     -DMAPCODE_SUPPORT_LANGUAGE_FI
@@ -166,6 +166,7 @@ To add individual support support for other languages (of all territory names), 
     -DMAPCODE_SUPPORT_LANGUAGE_KO
     -DMAPCODE_SUPPORT_LANGUAGE_NL
     -DMAPCODE_SUPPORT_LANGUAGE_NO
+    -DMAPCODE_SUPPORT_LANGUAGE_PL
     -DMAPCODE_SUPPORT_LANGUAGE_PT
     -DMAPCODE_SUPPORT_LANGUAGE_RU
     -DMAPCODE_SUPPORT_LANGUAGE_SV
@@ -179,8 +180,8 @@ The list of support languages may grow over time.
 
 ### 2.5.2
 
-* Added locale support. 
-
+* Added locale support.
+ 
 * Added many languages.
 
 * Hardened unit tests.

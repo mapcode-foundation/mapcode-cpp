@@ -45,6 +45,7 @@
 #include "internal_territory_names_ko.h"
 #include "internal_territory_names_nl.h"
 #include "internal_territory_names_no.h"
+#include "internal_territory_names_pl.h"
 #include "internal_territory_names_pt.h"
 #include "internal_territory_names_ru.h"
 #include "internal_territory_names_sv.h"
@@ -153,6 +154,7 @@ static const LocaleRegistryItem LOCALE_REGISTRY[] = {
         {"NL", TERRITORY_FULL_NAME_NL},
         {"NO", TERRITORY_FULL_NAME_NO},
         {"PT", TERRITORY_FULL_NAME_PT},
+        {"PL", TERRITORY_FULL_NAME_PL},
         {"RU", TERRITORY_FULL_NAME_RU},
         {"SV", TERRITORY_FULL_NAME_SV},
         {"SW", TERRITORY_FULL_NAME_SW},
@@ -529,10 +531,9 @@ static int lastRec(const enum Territory ccode) {
 
 // returns parent of ccode (or TERRITORY_NONE)
 static enum Territory parentTerritoryOf(const enum Territory ccode) {
-    if (ccode <= _TERRITORY_MIN) {
+    if (ccode <= _TERRITORY_MIN || ccode >= _TERRITORY_MAX) {
         return TERRITORY_NONE;
     }
-    ASSERT((_TERRITORY_MIN < ccode) && (ccode < _TERRITORY_MAX));
     return PARENT_NR[(int) PARENT_LETTER[INDEX_OF_TERRITORY(ccode)]];
 }
 

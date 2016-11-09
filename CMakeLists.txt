@@ -69,6 +69,7 @@ set(SOURCE_FILES_MAPCODELIB
         mapcodelib/internal_territory_names_local.h
         mapcodelib/internal_territory_names_nl.h
         mapcodelib/internal_territory_names_no.h
+        mapcodelib/internal_territory_names_pl.h
         mapcodelib/internal_territory_names_pt.h
         mapcodelib/internal_territory_names_ru.h
         mapcodelib/internal_territory_names_sv.h

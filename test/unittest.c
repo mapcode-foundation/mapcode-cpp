@@ -1523,6 +1523,7 @@ static int testDecodeRobustness(void) {
     nrTests += testCorrectDecode("MEX 49.4V", tc);
     nrTests += testCorrectDecode("NLD XX.XX", TERRITORY_NONE);
     nrTests += testCorrectDecode("MX XX.XX", TERRITORY_NONE);
+    nrTests += testCorrectDecode("AAA 40822.schol", TERRITORY_NONE);
 
     s1[0] = 0;
     nrTests += testIncorrectDecode(s1, TERRITORY_NONE);

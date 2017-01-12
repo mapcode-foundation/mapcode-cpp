@@ -178,6 +178,10 @@ The list of support languages may grow over time.
 
 ## Release Notes
 
+### 2.5.3
+
+* Added unit test for floating point error with code "40822.schol".
+
 ### 2.5.2
 
 * Added locale support.

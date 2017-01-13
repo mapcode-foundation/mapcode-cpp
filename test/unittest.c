@@ -363,6 +363,9 @@ static int testMapcodeFormats(void) {
             {"DDD.L         ",       ERR_INVALID_MAPCODE_FORMAT,      ERR_OK}, // 7.0 : postfix too short
             {"DDDDDD   xx.xx",       ERR_INVALID_MAPCODE_FORMAT,      ERR_OK}, // 5/2 : 6char ter
             {"DDDDDD.xxx",           ERR_INVALID_MAPCODE_FORMAT,      ERR_OK}, // 5/2 : 6char mc
+            {"XXXX.XXXXX",           ERR_OK,                          ERR_MISSING_TERRITORY},   // 4/5
+            {"XXXXX.XXXXX",          ERR_OK,                          ERR_MAPCODE_UNDECODABLE}, // 5/5
+
             // errors because there are too many letters after a postfix vowel
             {"XXXX.AXXX",            ERR_INVALID_VOWEL,               ERR_OK},
             {"nld XXXX.AXX",         ERR_INVALID_VOWEL,               ERR_OK},
@@ -374,10 +377,13 @@ static int testMapcodeFormats(void) {
             // 5th letter
             {"nld DD.DDDDD  ",       ERR_OK,                          ERR_MAPCODE_UNDECODABLE},
             {"nld XXXX.XXXXX",       ERR_OK,                          ERR_MAPCODE_UNDECODABLE},
-            {" TAM  XX.XXXXX-XX ",   ERR_OK,                          ERR_MAPCODE_UNDECODABLE},
-            {" TAM  XXX.XXXXX-XX ",  ERR_OK,                          ERR_MAPCODE_UNDECODABLE},
-            {" TAM  XXXX.XXXXX-X ",  ERR_OK,                          ERR_MAPCODE_UNDECODABLE},
-            {" TAM XXXXX.XXXXX-X ",  ERR_OK,                          ERR_MAPCODE_UNDECODABLE},
+            {"TAM XX.XXXXX-XX",      ERR_OK,                          ERR_MAPCODE_UNDECODABLE},
+            {"TAM XXX.XXXXX-XX",     ERR_OK,                          ERR_MAPCODE_UNDECODABLE},
+            {"TAM XXXX.XXXXX-X",     ERR_OK,                          ERR_MAPCODE_UNDECODABLE},
+            {"TAM XXXXX.XXXXX-X",    ERR_OK,                          ERR_MAPCODE_UNDECODABLE},
+            {"40822.schol",          ERR_OK,                          ERR_MAPCODE_UNDECODABLE},
+            {"AAA 40822.schol",      ERR_OK,                          ERR_MAPCODE_UNDECODABLE},
+
             // errors because the postfix has a 6th letter
             {"DD.DDDDDD      ",      ERR_INVALID_MAPCODE_FORMAT,      ERR_OK},
             {"nld XXXX.XXXXXX",      ERR_INVALID_MAPCODE_FORMAT,      ERR_OK},
@@ -477,11 +483,11 @@ static int testAlphabetParser(void) {
         enum Alphabet alphabet;
         const char *expected;
     } convertTests[] = {
-            {"nld bc.XY-p2q", ALPHABET_ROMAN,       "nld BC.XY-P2Q"},
-            {"DNK PQ.XX",     ALPHABET_DEVANAGARI,  "DNK नप.सस"},
-            {"GBR XX.XX",     ALPHABET_HEBREW,      "GBR רר.56ר"},
-            {"BEL PQ.XP",     ALPHABET_ARABIC,      "BEL طظ.56ط"},
-            {"nld 00.E0",     ALPHABET_GREEK,       "nld \xCE\x91\x30.12"}    
+            {"nld bc.XY-p2q", ALPHABET_ROMAN,      "nld BC.XY-P2Q"},
+            {"DNK PQ.XX",     ALPHABET_DEVANAGARI, "DNK नप.सस"},
+            {"GBR XX.XX",     ALPHABET_HEBREW,     "GBR רר.56ר"},
+            {"BEL PQ.XP",     ALPHABET_ARABIC,     "BEL طظ.56ط"},
+            {"nld 00.E0",     ALPHABET_GREEK,      "nld \xCE\x91\x30.12"}
     };
     int i;
     for (i = 0; i < (int) (sizeof(convertTests) / sizeof(convertTests[0])); i++) {
@@ -921,8 +927,8 @@ static int testTerritories() {
     ++nrTests;
     if (strcmp(getTerritoryIsoName(nam, TERRITORY_US_CA, 1), "CA") ||
         strcmp(getTerritoryIsoName(nam, TERRITORY_IN_DD, 1), "DD") ||
-        strcmp(getTerritoryIsoName(nam, TERRITORY_NLD,   1), "NLD") ||
-        strcmp(getTerritoryIsoName(nam, TERRITORY_USA,   1), "USA")) {
+        strcmp(getTerritoryIsoName(nam, TERRITORY_NLD, 1), "NLD") ||
+        strcmp(getTerritoryIsoName(nam, TERRITORY_USA, 1), "USA")) {
         foundError();
         printf("*** ERROR *** getTerritoryIsoName returned bad short versions\n");
     }
@@ -1267,16 +1273,16 @@ static int testTerritoryCode(void) {
             {TERRITORY_NONE,    TERRITORY_NONE},
             {_TERRITORY_MIN,    TERRITORY_NONE},
             {TERRITORY_VAT,     TERRITORY_NONE},
-            {TERRITORY_MX_DIF,  TERRITORY_MEX },
-            {TERRITORY_MX_CHH,  TERRITORY_MEX },
+            {TERRITORY_MX_DIF,  TERRITORY_MEX},
+            {TERRITORY_MX_CHH,  TERRITORY_MEX},
             {TERRITORY_GRL,     TERRITORY_NONE},
-            {TERRITORY_IN_DD,   TERRITORY_IND },
-            {TERRITORY_AU_VIC,  TERRITORY_AUS },
-            {TERRITORY_BR_DF,   TERRITORY_BRA },
-            {TERRITORY_US_AL,   TERRITORY_USA },
-            {TERRITORY_CA_NU,   TERRITORY_CAN },
-            {TERRITORY_RU_LIP,  TERRITORY_RUS },
-            {TERRITORY_CN_HA ,  TERRITORY_CHN },
+            {TERRITORY_IN_DD,   TERRITORY_IND},
+            {TERRITORY_AU_VIC,  TERRITORY_AUS},
+            {TERRITORY_BR_DF,   TERRITORY_BRA},
+            {TERRITORY_US_AL,   TERRITORY_USA},
+            {TERRITORY_CA_NU,   TERRITORY_CAN},
+            {TERRITORY_RU_LIP,  TERRITORY_RUS},
+            {TERRITORY_CN_HA,   TERRITORY_CHN},
             {TERRITORY_AAA,     TERRITORY_NONE},
             {_TERRITORY_MAX,    TERRITORY_NONE},
             {TERRITORY_UNKNOWN, TERRITORY_NONE}
@@ -1523,7 +1529,6 @@ static int testDecodeRobustness(void) {
     nrTests += testCorrectDecode("MEX 49.4V", tc);
     nrTests += testCorrectDecode("NLD XX.XX", TERRITORY_NONE);
     nrTests += testCorrectDecode("MX XX.XX", TERRITORY_NONE);
-    nrTests += testCorrectDecode("AAA 40822.schol", TERRITORY_NONE);
 
     s1[0] = 0;
     nrTests += testIncorrectDecode(s1, TERRITORY_NONE);
@@ -1788,7 +1793,7 @@ int testGetFullTerritoryName(void) {
     const TerritoryAlphabets *territoryAlphabets;
     char territoryName[MAX_TERRITORY_FULLNAME_UTF8_LEN + 1024]; // large so we can test overflow
     static const char *locales_to_test[] = {
-            "AF", "AR", "BE", "CN", "CS", "DA", "DE", "EN", "FI", "ES", "FR", "HE", "HI", 
+            "AF", "AR", "BE", "CN", "CS", "DA", "DE", "EN", "FI", "ES", "FR", "HE", "HI",
             "HR", "ID", "IT", "JA", "KO", "NL", "NO", "PL", "PT", "RU", "SV", "SW", "TR", "UK"};
 
     nrTests += testGetFullTerritoryNameInLocale("Sancta Sedes", TERRITORY_VAT, 0, NULL);    // Local name.
@@ -1839,7 +1844,7 @@ int testGetFullTerritoryName(void) {
         for (i = 0; i < territoryAlphabets->count; i++) {
             nrTests++;
             if (!getFullTerritoryNameLocalInAlphabetUtf8(territoryName, territory, 0,
-                                                     territoryAlphabets->alphabet[i])) {
+                                                         territoryAlphabets->alphabet[i])) {
                 char s[MAX_ISOCODE_ASCII_LEN + 1];
                 foundError();
                 printf("*** ERROR *** getFullTerritoryNameLocal territory %s has NO name in common alphabet (%d)\n",

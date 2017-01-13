@@ -909,6 +909,7 @@ static void encodeGrid(char *result, const EncodeRec *enc, const int m, const in
         const int postlen = codexm % 10;
 
         divy = SMART_DIV(m);
+        ASSERT(divy > 0);
         if (divy == 1) {
             divx = X_SIDE[prelen];
             divy = Y_SIDE[prelen];
@@ -1060,6 +1061,7 @@ static void encodeNameless(char *result, const EncodeRec *enc, const enum Territ
         }
 
         SIDE = SMART_DIV(m);
+        ASSERT(SIDE > 0);
 
         b = TERRITORY_BOUNDARY(m);
         orgSIDE = SIDE;
@@ -1509,6 +1511,7 @@ static enum MapcodeError decodeGrid(DecodeRec *dec, const int m, const int hasHe
         int divx, divy;
 
         divy = SMART_DIV(m);
+        ASSERT(divy > 0);
         if (divy == 1) {
             divx = X_SIDE[prelen];
             divy = Y_SIDE[prelen];
@@ -1697,7 +1700,9 @@ static enum MapcodeError decodeNameless(DecodeRec *dec, int m) {
 
         m = (F + X);
 
-        xSIDE = SIDE = SMART_DIV(m);
+        SIDE = SMART_DIV(m);
+        ASSERT(SIDE > 0);
+        xSIDE = SIDE;
 
         b = TERRITORY_BOUNDARY(m);
 
@@ -2296,7 +2301,10 @@ static enum MapcodeError decoderEngine(DecodeRec *dec, int parseFlags) {
         wasAllDigits = 1;
     }
 
-    if (codex == 54) {
+    if (codex > 54) {
+        ASSERT(codex == 55);
+        return ERR_MAPCODE_UNDECODABLE;
+    } else if (codex == 54) {
         // international mapcodes must be in international context
         ccode = TERRITORY_AAA;
     } else if (ccode < _TERRITORY_MIN) {
@@ -2312,7 +2320,8 @@ static enum MapcodeError decoderEngine(DecodeRec *dec, int parseFlags) {
     from = firstRec(ccode);
     upto = lastRec(ccode);
 
-    // try all ccode rectangles to decode s (pointing to first character of proper mapcode)
+    // try all ccode rectangles to decode s (pointing to first character of proper mapcode), assume not decodable
+    err = ERR_MAPCODE_UNDECODABLE;
     for (i = from; i <= upto; i++) {
         const int codexi = coDex(i);
         const int r = REC_TYPE(i);

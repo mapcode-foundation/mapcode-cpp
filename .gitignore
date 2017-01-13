@@ -15,6 +15,8 @@ unittest
 mapcode
 test/unittest
 utility/mapcode
+cmake-build-debug/
+*.cbp
 
 # -----------------------------------------------------------------------------
 # Compiled sources

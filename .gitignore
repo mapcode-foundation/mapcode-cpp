@@ -1,8 +1,8 @@
-unittest/gmon.out
-unittest/_*.txt
-unittest/*.gcov
-unittest/*.gcda
-unittest/*.gcno
+test/gmon.out
+test/_*.txt
+test/*.gcov
+test/*.gcda
+test/*.gcno
 mapcodelib/*.gcov
 mapcodelib/*.gcda
 mapcodelib/*.gcno
@@ -13,8 +13,10 @@ cmake_install.cmake
 *.a
 unittest
 mapcode
-unittest/unittest
+test/unittest
 utility/mapcode
+cmake-build-debug/
+*.cbp
 
 # -----------------------------------------------------------------------------
 # Compiled sources

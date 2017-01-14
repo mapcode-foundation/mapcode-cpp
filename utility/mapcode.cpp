@@ -527,7 +527,7 @@ int main(const int argc, const char **argv) {
         printf("ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separated)\n");
         for (int i = _TERRITORY_MIN + 1; i < _TERRITORY_MAX; ++i) {
             const enum Territory ccode = (enum Territory) i;
-            char territoryName[MAX_MAPCODE_RESULT_LEN];
+            char territoryName[MAX_MAPCODE_RESULT_ASCII_LEN];
             printf("%d,", INDEX_OF_TERRITORY(i));
 
             // Use internal knowledge of ALPHA_SEARCH to show aliases of territoryName.

@@ -21,6 +21,7 @@ extern "C" {
 #endif
 
 // *** GENERATED FILE (coords.cpp), DO NOT CHANGE OR PRETTIFY ***
+
 static const char *TERRITORY_FULL_NAME_EN[] = {
 #ifdef MAPCODE_SUPPORT_LANGUAGE_EN
         "Vatican|Holy See",

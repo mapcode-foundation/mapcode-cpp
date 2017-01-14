@@ -1,5 +1,5 @@
 #!/bin/sh
-OPTS="-Wall -Werror -Wextra -Wpedantic -Wno-pointer-to-int-cast -fprofile-arcs -ftest-coverage"
+OPTS="-Wall -Werror -Wextra -Wno-pointer-to-int-cast -fprofile-arcs -ftest-coverage"
 LIB="../mapcodelib/mapcoder.o"
 
 TEST=`which gcov`
@@ -18,7 +18,7 @@ echo ""
 echo "Run gcov with: -O0"
 cd ../mapcodelib
 gcc $OPTS -O0 -c mapcoder.c
-cd ../unittest
+cd ../test
 gcc $OPTS -O0 unittest.c -lm -lpthread -o unittest $LIB
 ./unittest
 cd ../mapcodelib

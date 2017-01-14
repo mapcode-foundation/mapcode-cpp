@@ -18,8 +18,7 @@
 #include <stdio.h>
 
 #include "mapcode_legacy.h"
-#include "mapcoder.h"
-#include "internal_alphabet_recognizer.h"
+
 
 /**
  * Include global legacy buffers. These are not thread-safe!

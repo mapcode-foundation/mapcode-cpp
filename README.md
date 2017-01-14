@@ -15,14 +15,13 @@ The directory 'mapcodelib' contains the files:
 
     mapcodelib/
       mapcoder.h                    <-- Header file with method prototypes and defines for caller.
-      mapcoder.c
-      basics.h
+      mapcoder.c                    <-- Implementation of mapcode routines.
+      internal_*.h                  <-- Internal implementataion details for library.
 
-      mapcode_fastencode.h          <-- include unless FAST_ENCODE is undefined 
-      mapcode_fastalpha.h           <-- needed only if FAST_ALPHA is defined
-    
-      mapcode_countrynames.h        <-- optional array with english territory names, including official names
-      mapcode_countrynames_short.h  <-- optional array with english territory names
+      mapcode_alphabets.h           <-- Enumeration of supported alphabets (or scripts).
+      mapcode_territories.h         <-- Enumeration of supported territories.
+      
+      mapcode_legacy.h              <-- Courtesy support for legacy calls, may be deprecated in future.
 
 Together these provide routine to encode/decode Mapcodes.
 
@@ -30,20 +29,20 @@ Documentation, including example snippets of C source code, can be found in
 
     docs/
       mapcode_library_c.pdf         <-- PDF format.
-      mapcode_library_c.doc         <-- Microsoft Word format.
+      mapcode_library_c.docx        <-- Microsoft Word format.
 
-A unit test can be found in the `test` subdirectory.
-Compile and run `unittest.c` to see if the library performs as expected.
-Check the `README.md` file in `test` to see how you can compile it/
+A unit test can be found in the `test` subdirectory. Compile and run `unittest.c` to see 
+if the library performs as expected:
 
-Also see www.mapcode.com for background and reference materials.
+    cd mapcodelib
+    gcc -O -c mapcoder.c
+    cd ../test
+    gcc -O unittest.c -lm -lpthread -o unittest ../mapcodelib/mapcoder.o
+    ./unittest
 
-Note: this version may be restricted to a particular area of the Earth!
-In that case, basics.h will state a version number of the for:
+Check the `README.md` in directory `test` for more information.
 
-    #define mapcode_cversion "1.2xxx"
-    
-where "xxx" states the geographical limitation.
+Also see http://www.mapcode.com for background and reference materials.
 
 
 ## A Real-Life Example, The 'mapcode' Codec Tool: `utility/`
@@ -53,8 +52,10 @@ of how to use the library.
 
 To build the original Mapcode tool, execute:
 
-    cd utility
-    gcc -O mapcode.cpp -o mapcode
+    cd mapcodelib
+    gcc -O -c mapcoder.c
+    cd ../utility
+    gcc -O mapcode.cpp -o mapcode ../mapcodelib/mapcoder.o
 
 For help, simply execute the binary file 'mapcode' without no arguments.
 This tool provides a rather extensive command-line interface to encode and
@@ -66,29 +67,29 @@ This produces the following help text:
     Copyright (C) 2014-2016 Stichting Mapcode Foundation
     
     Usage:
-        ./mapcode [-d| --decode] <default-territory> <mapcode> [<mapcode> ...]
+        mapcode [-d| --decode] <default-territory> <mapcode> [<mapcode> ...]
     
            Decode a mapcode to a lat/lon. The default territory code is used if
            the mapcode is a shorthand local code
     
-        ./mapcode [-e[0-8] | --encode[0-8]] <lat:-90..90> <lon:-180..180> [territory]>
+        mapcode [-e[0-8] | --encode[0-8]] <lat:-90..90> <lon:-180..180> [territory]>
     
            Encode a lat/lon to a mapcode. If the territory code is specified, the
            encoding will only succeeed if the lat/lon is located in the territory.
            You can specify the number of additional digits, 0, 1 or 2 (default 0)
            for high-precision mapcodes.
     
-        ./mapcode [-t | --territories]
+        mapcode [-t | --territories]
     
            Create a full set of territories in CSV format.
     
-        ./mapcode [-a | --alphabets]
+        mapcode [-a | --alphabets]
     
            Create a full set of alphabet tests in CSV format.
     
-        ./mapcode [-b[XYZ] | --boundaries[XYZ]] [<extraDigits>]
-        ./mapcode [-g[XYZ] | --grid[XYZ]]   <nrOfPoints> [<extraDigits>]
-        ./mapcode [-r[XYZ] | --random[XYZ]] <nrOfPoints> [<extraDigits>] [<seed>]
+        mapcode [-b[XYZ] | --boundaries[XYZ]] [<extraDigits>]
+        mapcode [-g[XYZ] | --grid[XYZ]]   <nrOfPoints> [<extraDigits>]
+        mapcode [-r[XYZ] | --random[XYZ]] <nrOfPoints> [<extraDigits>] [<seed>]
     
            Create a test set of lat/lon pairs based on the mapcode boundaries database
            as a fixed 3D grid or random uniformly distributed set of lat/lons with their
@@ -112,16 +113,16 @@ This produces the following help text:
            The (x, y, z) coordinates are primarily meant for visualization of the data set.
     
            Example:
-           ./mapcode -g    100 : produces a grid of 100 points as lat/lon pairs
-           ./mapcode -gXYZ 100 : produces a grid of 100 points as (x, y, z) sphere coordinates)
+           mapcode -g    100 : produces a grid of 100 points as lat/lon pairs
+           mapcode -gXYZ 100 : produces a grid of 100 points as (x, y, z) sphere coordinates)
     
            Notes on the use of stdout and stderr:
-           stdout: used for outputting 3D point data; stderr: used for statistics.
+           stdout: used for outputting 3D Point data; stderr: used for statistics.
            You can redirect stdout to a destination file, while stderr will show progress.
     
            The result code is 0 when no error occurred, 1 if an input error occurred and 2
            if an internal error occurred.
-
+       
 ## Compile Options for Microsoft Visual C++
 
 If you use **Microsoft Visual C++**, you may need to add the following compiler directives to your build:
@@ -136,11 +137,56 @@ The Mapcode C/C++ Library has includes a number of fixed data tables, which incr
 You may not require all of this data, so we've added some options for you to be able to reduce its
 footprint, for example for embedded applications. 
 
+You can specify the define `MAPCODE_NO_SUPPORT_ALL_LANGUAGES` to disable support for territory names
+in all languages. 
+
+Note that English names are always supported and it's also always possible to get territory names
+in their locale language.
+   
+To add individual support support for other languages (of all territory names), use:
+    
+    -DMAPCODE_NO_SUPPORT_ALL_LANGUAGES   // If not defined, ALL languages are available.
+    -DMAPCODE_SUPPORT_LANGUAGE_AF        // Add the languages you need. The names are the
+    -DMAPCODE_SUPPORT_LANGUAGE_AR        // ISO 3166-2 character codes.
+    -DMAPCODE_SUPPORT_LANGUAGE_BE
+    -DMAPCODE_SUPPORT_LANGUAGE_CN
+    -DMAPCODE_SUPPORT_LANGUAGE_CS
+    -DMAPCODE_SUPPORT_LANGUAGE_DA
+    -DMAPCODE_SUPPORT_LANGUAGE_DE
+    -DMAPCODE_SUPPORT_LANGUAGE_EN
+    -DMAPCODE_SUPPORT_LANGUAGE_ES
+    -DMAPCODE_SUPPORT_LANGUAGE_FI
+    -DMAPCODE_SUPPORT_LANGUAGE_FR
+    -DMAPCODE_SUPPORT_LANGUAGE_HE
+    -DMAPCODE_SUPPORT_LANGUAGE_HI
+    -DMAPCODE_SUPPORT_LANGUAGE_HR
+    -DMAPCODE_SUPPORT_LANGUAGE_ID
+    -DMAPCODE_SUPPORT_LANGUAGE_IT
+    -DMAPCODE_SUPPORT_LANGUAGE_JA
+    -DMAPCODE_SUPPORT_LANGUAGE_KO
+    -DMAPCODE_SUPPORT_LANGUAGE_NL
+    -DMAPCODE_SUPPORT_LANGUAGE_NO
+    -DMAPCODE_SUPPORT_LANGUAGE_PL
+    -DMAPCODE_SUPPORT_LANGUAGE_PT
+    -DMAPCODE_SUPPORT_LANGUAGE_RU
+    -DMAPCODE_SUPPORT_LANGUAGE_SV
+    -DMAPCODE_SUPPORT_LANGUAGE_SW
+    -DMAPCODE_SUPPORT_LANGUAGE_TR
+    -DMAPCODE_SUPPORT_LANGUAGE_UK
+
+The list of support languages may grow over time.
+
 ## Release Notes
 
 ### 2.5.2
 
-* Added locale support. 
+* Added unit test for floating point error with code "40822.schol".
+
+* Added locale support.
+ 
+* Added many languages.
+
+* Hardened unit tests.
 
 ### 2.5.1
 

@@ -27,7 +27,7 @@ project(mapcode_cpp)
 # NO_FAST_ENCODE        - Drop fast encoding support - only for internal use.
 
 set(MAPCODE_OPTIONS "")
-set(MAPCODE_WARNING_OPTIONS "-Wall -Werror")
+set(MAPCODE_WARNING_OPTIONS "-Wall -Werror -Wextra -Wpedantic")
 set(MAPCODE_SANITIZER_COMPILER_OPTIONS "-fsanitize=address -fno-common -fno-optimize-sibling-calls -fno-omit-frame-pointer")
 set(MAPCODE_SANITIZER_LINKER_OPTIONS "-fsanitize=address")
 
@@ -48,7 +48,12 @@ set(SOURCE_FILES_MAPCODELIB
         mapcodelib/internal_alphabet_recognizer.h
         mapcodelib/internal_iso3166_data.h
         mapcodelib/internal_territory_alphabets.h
-        mapcodelib/internal_territory_names_english.h
+        mapcodelib/internal_territory_names_da.h
+        mapcodelib/internal_territory_names_de.h
+        mapcodelib/internal_territory_names_en.h
+        mapcodelib/internal_territory_names_fr.h
+        mapcodelib/internal_territory_names_hi.h
+        mapcodelib/internal_territory_names_nl.h
         mapcodelib/internal_territory_names_local.h
         mapcodelib/internal_territory_search.h
         mapcodelib/mapcode_alphabets.h
@@ -58,9 +63,9 @@ set(SOURCE_FILES_MAPCODELIB
         mapcodelib/mapcoder.c
         mapcodelib/mapcoder.h)
 
-set(SOURCE_FILES_UNITTEST
-        unittest/decode_test.h
-        unittest/unittest.c)
+set(SOURCE_FILES_TEST
+        test/decode_test.h
+        test/unittest.c)
 
 set(SOURCE_FILES_UTILITY
         utility/mapcode.cpp)
@@ -68,7 +73,7 @@ set(SOURCE_FILES_UTILITY
 add_library(mapcodelib ${SOURCE_FILES_MAPCODELIB})
 target_include_directories(mapcodelib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_executable(unittest ${SOURCE_FILES_UNITTEST})
+add_executable(unittest ${SOURCE_FILES_TEST})
 target_link_libraries(unittest LINK_PUBLIC mapcodelib)
 
 add_executable(mapcode ${SOURCE_FILES_UTILITY})

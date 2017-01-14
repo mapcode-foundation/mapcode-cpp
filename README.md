@@ -32,8 +32,9 @@ Documentation, including example snippets of C source code, can be found in
       mapcode_library_c.pdf         <-- PDF format.
       mapcode_library_c.doc         <-- Microsoft Word format.
 
-A unit test can be found in the unittest\ subdirectory.
-Compile and run unittest\unittest/c to see if the library performs as expected.
+A unit test can be found in the `test` subdirectory.
+Compile and run `unittest.c` to see if the library performs as expected.
+Check the `README.md` file in `test` to see how you can compile it/
 
 Also see www.mapcode.com for background and reference materials.
 
@@ -61,7 +62,7 @@ decode Mapcodes.
 
 This produces the following help text:
 
-    MAPCODE (version 2.5.1)
+    MAPCODE (version 2.5.2)
     Copyright (C) 2014-2016 Stichting Mapcode Foundation
     
     Usage:
@@ -136,6 +137,10 @@ You may not require all of this data, so we've added some options for you to be 
 footprint, for example for embedded applications. 
 
 ## Release Notes
+
+### 2.5.2
+
+* Added locale support. 
 
 ### 2.5.1
 

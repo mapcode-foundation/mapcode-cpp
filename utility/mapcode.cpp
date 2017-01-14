@@ -45,7 +45,10 @@
 #include <ctype.h>
 #include <time.h>
 #include "../mapcodelib/mapcoder.h"
-#include "../mapcodelib/internal_territory_names_english.h"
+
+#define MAPCODE_SUPPORT_LANGUAGE_EN
+
+#include "../mapcodelib/internal_territory_names_en.h"
 #include "../mapcodelib/internal_data.h"
 #include "../mapcodelib/internal_iso3166_data.h"
 
@@ -558,7 +561,7 @@ int main(const int argc, const char **argv) {
             printf(",");
 
             // Use internal knowledge of TERRITORY_FULL_NAME to show aliases of full territory name.
-            char *names = strdup(TERRITORY_FULL_NAME[INDEX_OF_TERRITORY(ccode)]);
+            char *names = strdup(TERRITORY_FULL_NAME_EN[INDEX_OF_TERRITORY(ccode)]);
             char *s = names;
             while (s) {
                 if (s != names) {

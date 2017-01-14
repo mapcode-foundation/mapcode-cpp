@@ -57,7 +57,7 @@ enum Alphabet {
     ALPHABET_ODIA,
     ALPHABET_KANNADA,
     ALPHABET_GUJARATI,
-    _ALPHABET_MAX,
+    _ALPHABET_MAX
 };
 
 #ifdef __cplusplus

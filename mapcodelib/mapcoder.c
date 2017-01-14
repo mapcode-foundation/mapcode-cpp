@@ -22,11 +22,20 @@
 #include "mapcoder.h"
 #include "internal_data.h"
 #include "internal_iso3166_data.h"
-#include "internal_territory_names_english.h"
 #include "internal_territory_alphabets.h"
 #include "internal_territory_names_local.h"
 #include "internal_alphabet_recognizer.h"
 
+// We must have a default language
+#define MAPCODE_SUPPORT_LANGUAGE_EN
+#define DEFAULT_TERRITORY_FULL_NAME TERRITORY_FULL_NAME_EN
+
+#include "internal_territory_names_da.h"
+#include "internal_territory_names_de.h"
+#include "internal_territory_names_en.h"
+#include "internal_territory_names_fr.h"
+#include "internal_territory_names_nl.h"
+#include "internal_territory_names_local.h"
 
 #ifdef DEBUG
 
@@ -100,6 +109,19 @@ static const double METERS_PER_DEGREE_LAT = EARTH_CIRCUMFERENCE_Y / 360.0;
 static const double METERS_PER_DEGREE_LON = EARTH_CIRCUMFERENCE_X / 360.0;
 
 static const int DEBUG_STOP_AT = -1; // to externally test-restrict internal encoding, do not use!
+
+typedef struct {
+    const char *locale;
+    const char **territoryFullNames;
+} LocaleRegistryItem;
+
+static const LocaleRegistryItem LOCALE_REGISTRY[] = {
+        {"DA", TERRITORY_FULL_NAME_DA},
+        {"DE", TERRITORY_FULL_NAME_DE},
+        {"EN", TERRITORY_FULL_NAME_EN},
+        {"FR", TERRITORY_FULL_NAME_FR},
+        {"NL", TERRITORY_FULL_NAME_NL}
+};
 
 // important information about the 8 parents
 static const char *PARENTS_3 = "USA,IND,CAN,AUS,MEX,BRA,RUS,CHN,";
@@ -3018,26 +3040,54 @@ const TerritoryAlphabets *getAlphabetsForTerritory(enum Territory territory) {
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-
 static int getFullTerritoryName_internal(
         char *territoryName,
         enum Territory territory,
         int alternative,
         int alphabet,
-        const char *namelist[]) {
+        const char *locale) {
 
     const char *s;
     const char *pipePtr;
+    const char **namelist = NULL;
 
     ASSERT(territoryName);
-    if (!territoryName) {
-        return 0;
-    }
-    if (!namelist || alternative < 0 ||
-        territory <= _TERRITORY_MIN || territory >= _TERRITORY_MAX) {
+
+    if (alternative < 0 || territory <= _TERRITORY_MIN || territory >= _TERRITORY_MAX) {
         *territoryName = 0;
         return 0;
     }
+
+    if (locale == NULL) {
+
+        // Use local names if locale is null.
+        namelist = TERRITORY_FULL_NAME_LOCAL;
+    } else if (strlen(locale) < 2) {
+
+        // Locale is invalid.
+        namelist = NULL;
+    } else {
+
+        // Try and get correct list.
+        char localeUpper[3] = "";
+        int i;
+        localeUpper[0] = locale[0];
+        localeUpper[1] = locale[1];
+        localeUpper[2] = 0;
+        namelist = NULL;
+        for (i = 0; i < (int) (sizeof(LOCALE_REGISTRY) / sizeof(LOCALE_REGISTRY[0])); ++i) {
+            if (!strcmp(LOCALE_REGISTRY[i].locale, localeUpper)) {
+                namelist = LOCALE_REGISTRY[i].territoryFullNames;
+                break;
+            }
+        }
+    }
+
+    // Use English if locale is invalid.
+    if (namelist == NULL || namelist[0] == NULL) {
+        namelist = DEFAULT_TERRITORY_FULL_NAME;
+    }
+
     s = namelist[INDEX_OF_TERRITORY(territory)];
     for (;;) {
         pipePtr = strchr(s, '|');
@@ -3080,10 +3130,27 @@ static int getFullTerritoryName_internal(
 }
 
 
-int getFullTerritoryNameEnglish(char *territoryName, enum Territory territory, int alternative) {
-    return getFullTerritoryName_internal(territoryName, territory, alternative, -1, TERRITORY_FULL_NAME);
+int getFullTerritoryNameInLocaleInAlphabet(char *territoryName, enum Territory territory, int alternative,
+                                           const char *locale, enum Alphabet alphabet) {
+    return getFullTerritoryName_internal(territoryName, territory, alternative, alphabet, locale);
 }
 
+
+int getFullTerritoryNameInLocale(char *territoryName, enum Territory territory, int alternative,
+                                 const char *locale) {
+    return getFullTerritoryName_internal(territoryName, territory, alternative, -1, locale);
+}
+
+
+#ifdef MAPCODE_SUPPORT_LANGUAGE_EN // TODO @@@ move to legacy!
+
+int getFullTerritoryNameEnglish(char *territoryName, enum Territory territory, int alternative) {
+    return getFullTerritoryName_internal(territoryName, territory, alternative, -1, "en_US");
+}
+
+#endif
+
+#ifdef MAPCODE_SUPPORT_LANGUAGE_LOCAL
 
 int getFullTerritoryNameLocalInAlphabet(char *territoryName, enum Territory territory, int alternative,
                                         enum Alphabet alphabet) {
@@ -3095,13 +3162,12 @@ int getFullTerritoryNameLocalInAlphabet(char *territoryName, enum Territory terr
         *territoryName = 0;
         return 0;
     }
-    return getFullTerritoryName_internal(territoryName, territory, alternative, (int) alphabet,
-                                         TERRITORY_LOCAL_NAME_UTF8);
+    return getFullTerritoryName_internal(territoryName, territory, alternative, (int) alphabet, "local");
 }
 
 
 int getFullTerritoryNameLocal(char *territoryName, enum Territory territory, int alternative) {
-    return getFullTerritoryName_internal(territoryName, territory, alternative, -1, TERRITORY_LOCAL_NAME_UTF8);
+    return getFullTerritoryName_internal(territoryName, territory, alternative, -1, "local");
 }
 
-
+#endif

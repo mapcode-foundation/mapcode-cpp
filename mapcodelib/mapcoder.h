@@ -25,7 +25,7 @@ extern "C" {
 #include "mapcode_alphabets.h"
 
 
-#define MAPCODE_C_VERSION          "2.5.1"
+#define MAPCODE_C_VERSION          "2.5.2"
 #define UWORD                      unsigned short int  // 2-byte unsigned integer.
 #define MAX_NR_OF_MAPCODE_RESULTS  22          // Max. number of results ever returned by encoder (e.g. for 26.904899, 95.138515).
 #define MAX_PROPER_MAPCODE_LEN     11          // Max. number of characters in a proper mapcode (including the dot, excl. precision extension).
@@ -61,7 +61,7 @@ typedef struct {
     enum Territory territoryCode;                      // The territory, as recognized and disambiguated from territoryISO.
     char properMapcode[MAX_PROPER_MAPCODE_LEN + 1];    // The (romanised) mapcode excl. territory or extension.
     int indexOfDot;                                    // Position of dot in properMapcode (a value between 2 and 5).
-    char precisionExtension[MAX_PRECISION_DIGITS + 1]; // The (romanised) exyension (excluding the hyphen).
+    char precisionExtension[MAX_PRECISION_DIGITS + 1]; // The (romanised) extension (excluding the hyphen).
 } MapcodeElements;
 
 
@@ -104,7 +104,7 @@ enum MapcodeError {
 
     // all OK.
 
-    ERR_OK = 0,
+    ERR_OK = 0
 };
 
 
@@ -327,6 +327,8 @@ int multipleBordersNearby(
         enum Territory territory);
 
 
+#ifdef MAPCODE_SUPPORT_LANGUAGE_EN // TODO @@@ Move to legacy.h
+
 /**
  * Returns territory names in English or in the local language. There's always at least 1 alternative (with index 0).
  *
@@ -344,6 +346,10 @@ int getFullTerritoryNameEnglish(
         enum Territory territory,
         int alternative);
 
+
+#endif // MAPCODE_SUPPORT_LANGUAGE_EN
+
+#ifdef MAPCODE_SUPPORT_LANGUAGE_LOCAL
 
 /**
  * Returns territory names in the local language. There are two variants of this call. One returns local
@@ -371,6 +377,36 @@ int getFullTerritoryNameLocalInAlphabet(
         int alternative,
         enum Alphabet alphabet);
 
+#endif // MAPCODE_SUPPORT_LANGUAGE_LOCAL
+
+/**
+ * Returns territory names in a specific locale. There are two variants of this call. One returns
+ * territory names in a specified alphabet only. The other simply returns the local names, regardless
+ * of its alphabet. There is always at least 1 alternative, with index 0.
+ *
+ *   Arguments:
+ *       territoryName - Target string, allocated by caller to be at least MAX_TERRITORY_NAME_LENGTH + 1 bytes.
+ *       territory     - Territory to get name for.
+ *       alternative   - Which name to get, must be >= 0 (0 = default, 1 = first alternative, 2 = second etc.).
+ *       locale        - A locale (e.g. "en_US" for U.S. English); use NULL for local territory names.
+ *       alphabet      - Alphabet to use for territoryName. Must be a valid alphabet value.
+ *
+ *   Return value:
+ *       0 if the alternative does not exist (territoryName will be empty).
+ *       non-0 if the alternative exists (territoryName contains name).
+ */
+int getFullTerritoryNameInLocale(
+        char *territoryName,
+        enum Territory territory,
+        int alternative,
+        const char *locale);
+
+int getFullTerritoryNameInLocaleInAlphabet(
+        char *territoryName,
+        enum Territory territory,
+        int alternative,
+        const char *locale,
+        enum Alphabet alphabet);
 
 /**
  * This struct contains the returned alphabest for getAlphabetsForTerritory. The 'count' specifies

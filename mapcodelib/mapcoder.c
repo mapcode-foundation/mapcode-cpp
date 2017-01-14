@@ -2703,6 +2703,7 @@ UWORD *convertToAlphabet(UWORD *utf16String, int maxLength, const char *asciiStr
     ASSERT(asciiString);
     if (maxLength > 0) {
         char targetAsciiString[MAX_MAPCODE_RESULT_ASCII_LEN] = "";
+        char abjadString[MAX_MAPCODE_RESULT_ASCII_LEN] = "";
 
         // skip leading spaces
         while (*asciiString > 0 && *asciiString <= 32) {
@@ -2729,7 +2730,7 @@ UWORD *convertToAlphabet(UWORD *utf16String, int maxLength, const char *asciiStr
 
         if (alphabet == ALPHABET_GREEK || alphabet == ALPHABET_HEBREW ||
             alphabet == ALPHABET_ARABIC || alphabet == ALPHABET_KOREAN) {
-            asciiString = convertToAbjad(targetAsciiString, asciiString, MAX_MAPCODE_RESULT_ASCII_LEN);
+            asciiString = convertToAbjad(abjadString, asciiString, MAX_MAPCODE_RESULT_ASCII_LEN);
         }
 
         // re-pack E/U-voweled mapcodes when necessary:

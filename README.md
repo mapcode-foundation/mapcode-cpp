@@ -1,5 +1,6 @@
 ﻿# Mapcode Library for C/C++
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/d2e3d7a469484bfd8b801ce94d3f1737)](https://www.codacy.com/app/rijnb/mapcode-cpp?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mapcode-foundation/mapcode-cpp&amp;utm_campaign=Badge_Grade)
 [![License](http://img.shields.io/badge/license-APACHE2-blue.svg)]()
 
 **Copyright (C) 2014-2016 Stichting Mapcode Foundation (http://www.mapcode.com)**

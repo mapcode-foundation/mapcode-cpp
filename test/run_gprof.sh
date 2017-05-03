@@ -2,7 +2,7 @@
 OPTS="-Wall -Werror -Wextra -Wno-pointer-to-int-cast"
 LIB="../mapcodelib/mapcoder.o"
 
-TEST=`which gprof`
+TEST=$(which gprof)
 if [ "$TEST" = "" ]
 then
     echo "No gprof found on this machine - skipping script..."

@@ -447,7 +447,7 @@ int main(const int argc, const char **argv) {
                (strcmp(cmd, "--encode") == 0) || (strcmp(cmd, "--encode0") == 0) ||
                (strcmp(cmd, "--encode1") == 0) || (strcmp(cmd, "--encode2") == 0) ||
                (strcmp(cmd, "--encode3") == 0) || (strcmp(cmd, "--encode4") == 0) ||
-               (strcmp(cmd, "--encode5") == 0) || (strcmp(cmd, "--encode5") == 0) ||
+               (strcmp(cmd, "--encode5") == 0) || (strcmp(cmd, "--encode6") == 0) ||
                (strcmp(cmd, "--encode7") == 0) || (strcmp(cmd, "--encode8") == 0)) {
 
         // ------------------------------------------------------------------

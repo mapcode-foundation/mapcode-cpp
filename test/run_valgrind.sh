@@ -2,7 +2,7 @@
 OPTS="-Wall -Werror -Wextra -Wno-pointer-to-int-cast"
 LIB="../mapcodelib/mapcoder.o"
 
-TEST=`which valgrind`
+TEST=$(which valgrind)
 if [ "$TEST" = "" ]
 then
     echo "No valgrind found on this machine - skipping script..."

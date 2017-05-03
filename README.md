@@ -179,6 +179,10 @@ The list of support languages may grow over time.
 
 ## Release Notes
 
+### 2.5.3
+
+* Cleaned up code after running Codacy code reviews.
+
 ### 2.5.2
 
 * Added unit test for floating point error with code "40822.schol".

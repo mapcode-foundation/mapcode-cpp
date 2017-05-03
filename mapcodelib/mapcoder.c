@@ -1130,7 +1130,7 @@ static void encodeAutoHeader(char *result, const EncodeRec *enc, const int m, co
     const int codexm = coDex(m);
     ASSERT(result);
     ASSERT(enc);
-    ASSERT((0 <= m) && (m <= MAPCODE_BOUNDARY_MAX));
+    ASSERT((1 <= m) && (m <= MAPCODE_BOUNDARY_MAX));
     ASSERT((0 <= extraDigits) && (extraDigits <= MAX_PRECISION_DIGITS));
 
     while (REC_TYPE(firstindex - 1) > 1 && coDex(firstindex - 1) == codexm) {

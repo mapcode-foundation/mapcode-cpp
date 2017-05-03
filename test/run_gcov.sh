@@ -2,7 +2,7 @@
 OPTS="-Wall -Werror -Wextra -Wno-pointer-to-int-cast -fprofile-arcs -ftest-coverage"
 LIB="../mapcodelib/mapcoder.o"
 
-TEST=`which gcov`
+TEST=$(which gcov)
 if [ "$TEST" = "" ]
 then
     echo "No gcov found on this machine - skipping script..."

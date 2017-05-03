@@ -10,7 +10,7 @@ OPTS1="--grid 1000000 8"
 OPTS2="--random 1000000 8 1234"
 OPTS3="--random 1000000 8 11223344"
 
-TEST=`which $OLD`
+TEST=$(which $OLD)
 if [ "$TEST" = "" ]
 then
     echo "No $OLD found on this machine - skipping script..."
@@ -30,7 +30,7 @@ cd ../utility
 gcc $OPTS -O3 mapcode.cpp -lm -o mapcode ../mapcodelib/mapcoder.o
 cd ../test
 
-TEST=`which $NEW`
+TEST=$(which $NEW)
 if [ "$TEST" = "" ]
 then
     echo "No $NEW found on this machine - skipping script..."

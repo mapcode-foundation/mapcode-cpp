@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2016 Stichting Mapcode Foundation (http://www.mapcode.com)
+ * Copyright (C) 2014-2017 Stichting Mapcode Foundation (http://www.mapcode.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,7 +85,7 @@ static double lonLargestNrOfResults = 0.0;
  */
 static void usage(const char *appName) {
     printf("MAPCODE (version %s)\n", MAPCODE_C_VERSION);
-    printf("Copyright (C) 2014-2016 Stichting Mapcode Foundation\n");
+    printf("Copyright (C) 2014-2017 Stichting Mapcode Foundation\n");
     printf("\n");
 
     printf("Usage:\n");

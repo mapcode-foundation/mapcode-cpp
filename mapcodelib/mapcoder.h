@@ -80,7 +80,7 @@ extern "C" {
  * International mapcodes never include a territory ISO3166 code, nor a space.
  */
 typedef struct {
-    int count;                                                              // The number of mapcode results (length of array).
+    int count;                                                               // The number of mapcode results (length of array).
     char mapcode[MAX_NR_OF_MAPCODE_RESULTS][MAX_MAPCODE_RESULT_ASCII_LEN];   // The mapcodes.
 } Mapcodes;
 
@@ -179,8 +179,7 @@ int encodeLatLonToMapcodes(
  *
  * Arguments:
  *      result          - Returned Mapcode. The caller must not allocate or de-allocated this string.
- *                        The resulting string MUST be allocated (and de-allocated) by the caller (contrary to
- *                        encodeLatLonToMapcodes!).
+ *                        The resulting string MUST be allocated (and de-allocated) by the caller.
  *                        The caller should allocate at least MAX_MAPCODE_RESULT_ASCII_LEN characters for the string.
  *      lat             - Latitude, in degrees. Range: -90..90.
  *      lon             - Longitude, in degrees. Range: -180..180.
@@ -199,6 +198,38 @@ int encodeLatLonToSingleMapcode(
         double lonDeg,
         enum Territory territory,
         int extraDigits);
+
+
+/**
+ * Encode a latitude, longitude pair (in degrees) to a single Mapcode, selected from all Mapcodes.
+ * This method is offered for languages which have trouble supporting multi-dimensional arrays from C
+ * (like Swift).
+ *
+ * Arguments:
+ *      result          - Returned Mapcode. The caller must not allocate or de-allocated this string.
+ *                        The resulting string MUST be allocated (and de-allocated) by the caller.
+ *                        The caller should allocate at least MAX_MAPCODE_RESULT_ASCII_LEN characters for the string.
+ *      lat             - Latitude, in degrees. Range: -90..90.
+ *      lon             - Longitude, in degrees. Range: -180..180.
+ *      territory       - Territory (e.g. as obtained from getTerritoryCode), used as encoding context.
+ *                        Pass TERRITORY_NONE or TERRITORY_UNKNOWN to get Mapcodes for all territories.
+ *      extraDigits     - Number of extra "digits" to add to the generated mapcode. The preferred default is 0.
+ *                        Other valid values are 1 to 8, which will add extra letters to the mapcodes to
+ *                        make them represent the coordinate more accurately.
+ *      indexOfSelected - Index of selected mapcode. Must be in valid range for number of results.
+ *                        The index is base 0. To fetch all Mapcodes, pass 0 in a first call to retrieve the
+ *                        first Mapcode and the total number of results and iterate over the rest.
+ *
+ * Returns:
+ *      Total number of results available for selection. <=0 if encoding failed, or >0 if it succeeded.
+ */
+int encodeLatLonToSelectedMapcode(
+    char *mapcode,
+    double latDeg,
+    double lonDeg,
+    enum Territory territory,
+    int extraDigits,
+    int indexOfSelected);
 
 
 /**

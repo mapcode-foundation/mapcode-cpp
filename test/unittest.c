@@ -1711,6 +1711,56 @@ static int testSingleEncodes(void) {
 }
 
 
+static int testSelectedEncodes(void) {
+    int nrTests = 0;
+    char mapcode[MAX_MAPCODE_RESULT_ASCII_LEN];
+    double lat = 52.158993;
+    double lon = 4.492346;
+    int i = 0;
+    int total = 0;
+    do {
+        total = encodeLatLonToSelectedMapcode(mapcode, lat, lon, TERRITORY_NONE, 0, i);
+        if (total != 4) {
+            foundError();
+            printf("*** ERROR *** testSelectedEncodes, expected %d alternatives, but got %d", 4, total);
+        }
+        switch (i) {
+        case 0:
+            if (strcmp(mapcode, "NLD QJM.0G") != 0) {
+                foundError();
+                printf("*** ERROR *** testSelectedEncodes, expected '%s', but got '%s', alternative %d\n", "NLD QJM.0G", mapcode, i);
+            }
+            break;
+        case 1:
+            if (strcmp(mapcode, "NLD CZQ.15C") != 0) {
+                foundError();
+                printf("*** ERROR *** testSelectedEncodes, expected '%s', but got '%s', alternative %d\n", "NLD CZQ.15C", mapcode, i);
+            }
+            break;
+        case 2:
+            if (strcmp(mapcode, "NLD N39J.MZN") != 0) {
+                foundError();
+                printf("*** ERROR *** testSelectedEncodes, expected '%s', but got '%s', alternative %d\n", "NLD N39J.MZN", mapcode, i);
+            }
+            break;
+        case 3:
+            if (strcmp(mapcode, "VHVN4.TZ9S") != 0) {
+                foundError();
+                printf("*** ERROR *** testSelectedEncodes, expected '%s', but got '%s', alternative %d\n", "VHVN4.TZ9S", mapcode, i);
+            }
+            break;
+        default:
+            foundError();
+            printf("*** ERROR *** testSelectedEncodes, expected %d alternatives, but got %d", 4, i);
+            break;
+        }
+        ++i;
+    } while (i < total);
+    ++nrTests;
+    return nrTests;
+}
+
+
 static int testGetFullTerritoryNameLocal(const char *expectedName, enum Territory territory, int alternative) {
     int nrTests = 0;
     int expectedCode = (*expectedName ? 1 : 0);
@@ -2227,6 +2277,7 @@ int main(const int argc, const char **argv) {
 
     printf("-----------------------------------------------------------\nEncode/decode tests\n");
     nrTests += testSingleEncodes();
+    nrTests += testSelectedEncodes();
     nrTests += testEncodeDecode();
 
     printf("-----------------------------------------------------------\nRe-encode tests\n");

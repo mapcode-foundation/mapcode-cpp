@@ -179,6 +179,11 @@ The list of support languages may grow over time.
 
 ## Release Notes
 
+### 2.5.4
+
+* Added `encodeLatLonToSelectedMapcode` as a convenience for languages that use the
+C library, but have difficulties dealing with multi-dimensional arrays (like Swift).
+
 ### 2.5.3
 
 * Cleaned up code after running Codacy code reviews.

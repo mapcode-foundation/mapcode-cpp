@@ -177,9 +177,73 @@ To add individual support support for other languages (of all territory names), 
 
 The list of support languages may grow over time.
 
+## Using the C Library in an Xcode iOS Swift project
+
+You can use this C library in an iOS application, built with Swift in Xcode, fairly easily.
+All you need to do is:
+
+First, copy the directory `mapcodelib` to the source directory of your iOS application.
+
+Then, add a text file called `module.modulemap` in the directory `mapcodelib` to export all symbols
+from the C library to Swift (note that `#defines` are not exported):
+
+```
+module mapcodelib [system][extern_c]{
+    header "mapcode_alphabets.h"
+    header "mapcode_territories.h"
+    header "mapcoder.h"
+    export *
+}
+```
+
+Now, you can access the C library methods like this in a Swift project:
+
+```
+// Example of decoding a full mapcode to a lat/lon:
+let territory = getTerritoryCode(context, TERRITORY_NONE)
+var lat: Double = 0.0
+var lon: Double = 0.0
+let mapcodeError = decodeMapcodeToLatLonUtf8(&lat, &lon, fullMapcode, territory, nil)
+if mapcodeError == ERR_OK {
+    // Use the decoded lat and lon.
+} else {
+    // Something went wrong decoding the full mapcode string.
+}
+```
+Or encode a latitude, longitude pair to a set of Mapcodes like this:
+
+```
+let buffer = UnsafeMutablePointer<Int8>.allocate(capacity: Int(_MAX_MAPCODE_RESULT_ASCII_LEN))
+buffer.initialize(to: 0, count: Int(_MAX_MAPCODE_RESULT_ASCII_LEN))
+var total: Int32 = 0;
+var i: Int32 = 0
+repeat {
+    total = encodeLatLonToSelectedMapcode(buffer, lat, lon, TERRITORY_NONE, 0, i)
+    if (total > 0) {
+        let mapcode = String.init(cString: buffer);
+    }
+    i = i + 1
+} while (i < total)
+```
+
+Or get a territory name like this:
+
+```
+let buffer = UnsafeMutablePointer<CChar>.allocate(capacity: Int(MAX_TERRITORY_FULLNAME_UTF8_LEN + 1))
+buffer.initialize(to: 0, count: Int(_MAX_TERRITORY_FULLNAME_UTF8_LEN + 1))
+
+// Get alpha code.
+getTerritoryIsoName(buffer, TERRITORY_NLD, 0)
+let alphaCode = String.init(cString: buffer)
+
+// Get full name.
+getFullTerritoryNameEnglish(buffer, TERRITORY_NLD, 0)
+let fullName = String.init(cString: buffer)
+```
+
 ## Release Notes
 
-### 2.5.4
+### 2.5.4 - 2.5.5
 
 * Added `encodeLatLonToSelectedMapcode` as a convenience for languages that use the
 C library, but have difficulties dealing with multi-dimensional arrays (like Swift).

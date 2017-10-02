@@ -58,7 +58,7 @@ extern "C" {
 #define MAPCODE_SUPPORT_LANGUAGE_UK
 #endif
 
-#define MAPCODE_C_VERSION                   "2.5.3"
+#define MAPCODE_C_VERSION                   "2.5.5"
 #define UWORD                               unsigned short int  // 2-byte unsigned integer.
 
 #define MAX_NR_OF_MAPCODE_RESULTS           22                  // Max. number of results ever returned by encoder (e.g. for 26.904899, 95.138515).
@@ -73,6 +73,18 @@ extern "C" {
 #define MAX_MAPCODE_RESULT_UTF8_LEN         (MAX_MAPCODE_RESULT_ASCII_LEN * 3) // One mapcode character can become at most 3 UTF8characters.
 #define MAX_MAPCODE_RESULT_UTF16_LEN        (MAX_MAPCODE_RESULT_ASCII_LEN)     // Each mapcode character can become one UTF16 word.
 
+// The constants are also exported as variables, to allow other languages to use them.
+extern char* _MAPCODE_C_VERSION;
+extern int _MAX_NR_OF_MAPCODE_RESULTS;
+extern int _MAX_PRECISION_DIGITS;
+extern int _MAX_PROPER_MAPCODE_ASCII_LEN;
+extern int _MAX_ISOCODE_ASCII_LEN;
+extern int _MAX_CLEAN_MAPCODE_ASCII_LEN;
+extern int _MAX_MAPCODE_RESULT_ASCII_LEN;
+extern int _MAX_TERRITORY_FULLNAME_UTF8_LEN;
+extern int _MAX_MAPCODE_RESULT_UTF8_LEN;
+extern int _MAX_MAPCODE_RESULT_UTF16_LEN;
+extern int _MAX_ALPHABETS_PER_TERRITORY;
 
 /**
  * The type Mapcodes hold a number of mapcodes, for example from an encoding call.

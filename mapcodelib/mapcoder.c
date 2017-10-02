@@ -53,6 +53,18 @@
 #include "internal_territory_names_tr.h"
 #include "internal_territory_names_uk.h"
 
+// The constants are also exported as variables, to allow other languages to use them.
+char *_MAPCODE_C_VERSION                  = MAPCODE_C_VERSION;
+int _MAX_NR_OF_MAPCODE_RESULTS            = MAX_NR_OF_MAPCODE_RESULTS;
+int _MAX_PRECISION_DIGITS                 = MAX_PRECISION_DIGITS;
+int _MAX_PROPER_MAPCODE_ASCII_LEN         = MAX_PROPER_MAPCODE_ASCII_LEN;
+int _MAX_ISOCODE_ASCII_LEN                = MAX_ISOCODE_ASCII_LEN;
+int _MAX_CLEAN_MAPCODE_ASCII_LEN          = MAX_CLEAN_MAPCODE_ASCII_LEN;
+int _MAX_MAPCODE_RESULT_ASCII_LEN         = MAX_MAPCODE_RESULT_ASCII_LEN;
+int _MAX_TERRITORY_FULLNAME_UTF8_LEN      = MAX_TERRITORY_FULLNAME_UTF8_LEN;
+int _MAX_MAPCODE_RESULT_UTF8_LEN          = MAX_MAPCODE_RESULT_UTF8_LEN;
+int _MAX_MAPCODE_RESULT_UTF16_LEN         = MAX_MAPCODE_RESULT_UTF16_LEN;
+int _MAX_ALPHABETS_PER_TERRITORY          = MAX_ALPHABETS_PER_TERRITORY;
 
 #ifdef DEBUG
 

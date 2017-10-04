@@ -1,5 +1,5 @@
 #!/bin/sh
-OPTS="-Wall -Werror -Wextra -Wno-pointer-to-int-cast"
+OPTS="-Wall -Wextra -Wno-pointer-to-int-cast"
 LIB="../mapcodelib/mapcoder.o"
 
 TEST=$(which gprof)
@@ -33,6 +33,3 @@ gcc $OPTS -g -O3 unittest.c -lm -lpthread -o unittest $LIB -pg
 ./unittest
 gprof ./unittest
 echo "!! -------------------------------------------------------------"
-
-echo ""
-echo "Report in: $REPORT"

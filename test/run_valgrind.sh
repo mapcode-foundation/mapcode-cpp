@@ -1,5 +1,5 @@
 #!/bin/sh
-OPTS="-Wall -Werror -Wextra -Wno-pointer-to-int-cast"
+OPTS="-Wall -Wextra -Wno-pointer-to-int-cast"
 LIB="../mapcodelib/mapcoder.o"
 
 TEST=$(which valgrind)
@@ -22,6 +22,3 @@ cd ../test
 gcc $OPTS -g -O0 unittest.c -lm -lpthread -o unittest $LIB
 valgrind --leak-check=yes ./unittest
 echo "!! -------------------------------------------------------------"
-
-echo "" tee -a $REPORT
-echo "Report in: $REPORT"

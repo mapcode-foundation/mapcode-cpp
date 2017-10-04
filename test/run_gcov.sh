@@ -1,5 +1,5 @@
 #!/bin/sh
-OPTS="-Wall -Werror -Wextra -Wno-pointer-to-int-cast -fprofile-arcs -ftest-coverage"
+OPTS="-Wall -Wextra -Wno-pointer-to-int-cast -fprofile-arcs -ftest-coverage"
 LIB="../mapcodelib/mapcoder.o"
 
 TEST=$(which gcov)
@@ -29,5 +29,3 @@ echo "!! -------------------------------------------------------------"
 echo "!! Coverage reports in: *.gcov files"
 echo "!! -------------------------------------------------------------"
 
-echo ""
-echo "Report in: $REPORT"

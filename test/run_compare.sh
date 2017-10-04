@@ -1,8 +1,8 @@
 #!/bin/sh
-OPTS="-Wall -Werror -Wextra -Wno-pointer-to-int-cast"
+OPTS="-Wall -Wextra -Wno-pointer-to-int-cast"
 
-NEW=../utility/mapcode
-OLD=$HOME/bin/mapcode-2.3.1
+NEW=../mapcode-2.5.5
+OLD=../mapcode-2.5.2
 NEWFILE=_new.txt
 OLDFILE=_old.txt
 
@@ -91,6 +91,3 @@ else
     rm -f $NEWFILE $OLDFILE
 fi
 echo "!! -------------------------------------------------------------"
-
-echo ""
-echo "Report in: $REPORT"

@@ -1,5 +1,5 @@
 #!/bin/sh
-OPTS="-Wall -Werror -Wextra -Wno-pointer-to-int-cast"
+OPTS="-Wall -Wextra -Wno-pointer-to-int-cast"
 LIB="../mapcodelib/mapcoder.o"
 
 export ASAN_OPTIONS=debug=true:strict_string_checks=1:detect_stack_use_after_return=true:detect_invalid_pointer_pairs=99999:detect_container_overflow=true:detect_odr_violation=2:check_initialization_order=true:strict_init_order=true
@@ -45,6 +45,3 @@ cd ../test
 gcc $OPTS -O3 unittest.c -lm -lpthread -fsanitize=address -o unittest $LIB
 ./unittest
 echo "!! -------------------------------------------------------------"
-
-echo ""
-echo "Report in: $REPORT"

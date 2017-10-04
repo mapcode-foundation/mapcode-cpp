@@ -1,5 +1,5 @@
 #!/bin/sh
-OPTS="-Wall -Werror -Wextra -Wno-pointer-to-int-cast"
+OPTS="-Wall -Wextra -Wno-pointer-to-int-cast"
 
 echo "!! -------------------------------------------------------------"
 echo "Run normal..."
@@ -23,6 +23,3 @@ cd ../test
 gcc $OPTS -O3 unittest.c -lm -lpthread -o unittest ../mapcodelib/mapcoder.o
 ./unittest
 echo "!! -------------------------------------------------------------"
-
-echo ""
-echo "Report in: $REPORT"

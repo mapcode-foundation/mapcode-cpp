@@ -29,8 +29,8 @@ extern "C" {
 /**
  * List of #defines to support legacy systems.
  */
-#define decodeMapcodeToLatLon(latDeg, lonDeg, mapcode, territory) decodeUtf8MapcodeToLatLon(latDeg, lonDeg, NULL, mapcode, territory)
-#define compareWithMapcodeFormat(utf8, canContainTerritory)    compareUtf8WithMapcodeFormat(utf8)
+#define decodeMapcodeToLatLon(latDeg, lonDeg, mapcode, territory) decodeMapcodeToLatLonUtf(latDeg, lonDeg, mapcode, territory, NULL)
+#define compareWithMapcodeFormat(utf8, canContainTerritory)    compareWithMapcodeFormatUtf8(utf8)
 
 #define convertTerritoryIsoNameToCode           getTerritoryCode
 #define coord2mc(results, lat, lon, territory)  encodeLatLonToMapcodes_Deprecated(results, lat, lon,territory, 0)

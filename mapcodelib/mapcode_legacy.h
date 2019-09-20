@@ -29,7 +29,7 @@ extern "C" {
 /**
  * List of #defines to support legacy systems.
  */
-#define decodeMapcodeToLatLon(latDeg, lonDeg, mapcode, territory) decodeMapcodeToLatLonUtf(latDeg, lonDeg, mapcode, territory, NULL)
+#define decodeMapcodeToLatLon(latDeg, lonDeg, mapcode, territory) decodeMapcodeToLatLonUtf8(latDeg, lonDeg, mapcode, territory, NULL)
 #define compareWithMapcodeFormat(utf8, canContainTerritory)    compareWithMapcodeFormatUtf8(utf8)
 
 #define convertTerritoryIsoNameToCode           getTerritoryCode

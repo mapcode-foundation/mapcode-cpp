@@ -64,7 +64,7 @@ decode Mapcodes.
 
 This produces the following help text:
 
-    MAPCODE (version 2.5.2)
+    MAPCODE (version 2.5.5)
     Copyright (C) 2014-2017 Stichting Mapcode Foundation
     
     Usage:

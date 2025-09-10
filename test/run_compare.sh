@@ -15,9 +15,8 @@
 # limitations under the License.
 #
 
-OPTS="-Wall -Wextra -Wno-pointer-to-int-cast"
-
-NEW=../mapcode-2.5.5
+OPTS="$(cat ./no_warnings.env)"
+NEW=../mapcode-2.5.6
 OLD=../mapcode-2.5.2
 NEWFILE=_new.txt
 OLDFILE=_old.txt
@@ -26,10 +25,20 @@ OPTS1="--grid 1000000 8"
 OPTS2="--random 1000000 8 1234"
 OPTS3="--random 1000000 8 11223344"
 
+comparison_error() {
+    echo "If you want to run the comparison test script, please create symbolic links"
+    echo "to two version of the mapcode utility:"
+    echo "  $OLD"
+    echo "  $NEW"
+    echo "These must be placed in the root directory of this project."
+    exit
+}
+
 TEST=$(which $OLD)
 if [ "$TEST" = "" ]
 then
     echo "No $OLD found on this machine - skipping script..."
+    comparison_error
     exit 1
 fi
 
@@ -50,6 +59,7 @@ TEST=$(which $NEW)
 if [ "$TEST" = "" ]
 then
     echo "No $NEW found on this machine - skipping script..."
+    comparison_error
     exit 1
 fi
 

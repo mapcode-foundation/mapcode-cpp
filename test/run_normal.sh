@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-OPTS="-Wall -Wextra -Wno-pointer-to-int-cast"
+OPTS="$(cat ./no_warnings.env)"
 
 echo "!! -------------------------------------------------------------"
 echo "Run normal..."

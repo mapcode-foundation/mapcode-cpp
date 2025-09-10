@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-OPTS="-Wall -Wextra -Wno-pointer-to-int-cast -fprofile-arcs -ftest-coverage"
+OPTS="$(cat ./no_warnings.env) -fprofile-arcs -ftest-coverage"
 LIB="../mapcodelib/mapcoder.o"
 
 TEST=$(which gcov)

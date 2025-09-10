@@ -83,7 +83,7 @@ static double lonLargestNrOfResults = 0.0;
  */
 static void usage(const char* appName) {
     printf("MAPCODE (version %s)\n", MAPCODE_C_VERSION);
-    printf("Copyright (C) 2014-2017 Stichting Mapcode Foundation\n");
+    printf("Copyright (C) 2014-2025 Stichting Mapcode Foundation\n");
     printf("\n");
 
     printf("Usage:\n");

@@ -128,6 +128,19 @@ void _TestAssert(int iCondition, const char* cstrFile, int iLine) {
 #define MICROLAT_TO_FRACTIONS_FACTOR ((double) MAX_PRECISION_FACTOR)
 #define MICROLON_TO_FRACTIONS_FACTOR (4.0 * MAX_PRECISION_FACTOR)
 
+// Grid and encoding constants
+#define GRID_SIZE_31           31    // Base grid size for encoding
+#define GRID_SIZE_961          961   // 31 * 31 - large grid size
+#define GRID_SIZE_962          962   // 961 + 1
+#define GRID_SIZE_SQUARED      (961 * 961)  // Square of grid size
+#define MAX_NAMELESS_RECORDS   62    // Maximum number of nameless records
+#define Y_DIVIDER              90    // Standard Y coordinate divider
+#define SPECIAL_CODEX_21       21    // Special codex identifier
+#define SPECIAL_CODEX_22       22    // Special codex identifier
+#define SPECIAL_CODEX_13       13    // Special codex identifier
+#define SPECIAL_CODEX_14       14    // Special codex identifier
+#define GRID_MULTIPLIER_16     16    // Grid calculation multiplier
+
 #define FLAG_UTF8_STRING      0 // interpret pointer a utf8 characters
 #define FLAG_UTF16_STRING     1 // interpret pointer a UWORD* to utf16 characters
 
@@ -1054,6 +1067,44 @@ static void encodeGrid(char* result, const EncodeRec* enc, const int m, const in
 }
 
 
+/**
+ * Helper function to calculate storage offset for nameless encoding.
+ * Determines the storage offset based on the number of nameless records (A),
+ * the current record index (X), and the codex value (codexm).
+ * This complex calculation was extracted to improve readability of encodeNameless.
+ */
+static int calculateStorageOffset(int A, int X, int codexm) {
+    const int p = GRID_SIZE_31 / A;
+    const int r = GRID_SIZE_31 % A; // the first r items are p+1
+
+    if (codexm != SPECIAL_CODEX_21 && A <= GRID_SIZE_31) {
+        return (X * p + (X < r ? X : r)) * GRID_SIZE_SQUARED;
+    }
+    else if (codexm != SPECIAL_CODEX_21 && A < MAX_NAMELESS_RECORDS) {
+        if (X < (MAX_NAMELESS_RECORDS - A)) {
+            return X * GRID_SIZE_SQUARED;
+        }
+        else {
+            int storage_offset = (MAX_NAMELESS_RECORDS - A + ((X - MAX_NAMELESS_RECORDS + A) / 2)) * GRID_SIZE_SQUARED;
+            if ((X + A) & 1) {
+                storage_offset += (GRID_MULTIPLIER_16 * GRID_SIZE_961 * GRID_SIZE_31);
+            }
+            return storage_offset;
+        }
+    }
+    else {
+        const int BASEPOWER = (codexm == SPECIAL_CODEX_21) ? GRID_SIZE_SQUARED : GRID_SIZE_SQUARED * GRID_SIZE_31;
+        int BASEPOWERA = (BASEPOWER / A);
+        if (A == MAX_NAMELESS_RECORDS) {
+            BASEPOWERA++;
+        }
+        else {
+            BASEPOWERA = GRID_SIZE_961 * (BASEPOWERA / GRID_SIZE_961);
+        }
+        return X * BASEPOWERA;
+    }
+}
+
 // *result==0 in case of error
 static void encodeNameless(char* result, const EncodeRec* enc, const enum Territory ccode,
                            const int extraDigits, const int m) {
@@ -1067,44 +1118,15 @@ static void encodeNameless(char* result, const EncodeRec* enc, const enum Territ
     *result = 0;
 
     {
-        const int p = 31 / A;
-        const int r = 31 % A; // the first r items are p+1
         const int codexm = coDex(m);
         const int codexlen = (codexm / 10) + (codexm % 10);
         // determine side of square around centre
         int SIDE;
 
-        int storage_offset;
+        const int storage_offset = calculateStorageOffset(A, X, codexm);
         const TerritoryBoundary* b;
 
         int xSIDE, orgSIDE;
-
-        if (codexm != 21 && A <= 31) {
-            storage_offset = (X * p + (X < r ? X : r)) * (961 * 961);
-        }
-        else if (codexm != 21 && A < 62) {
-            if (X < (62 - A)) {
-                storage_offset = X * (961 * 961);
-            }
-            else {
-                storage_offset = (62 - A + ((X - 62 + A) / 2)) * (961 * 961);
-                if ((X + A) & 1) {
-                    storage_offset += (16 * 961 * 31);
-                }
-            }
-        }
-        else {
-            const int BASEPOWER = (codexm == 21) ? 961 * 961 : 961 * 961 * 31;
-            int BASEPOWERA = (BASEPOWER / A);
-            if (A == 62) {
-                BASEPOWERA++;
-            }
-            else {
-                BASEPOWERA = (961) * (BASEPOWERA / 961);
-            }
-
-            storage_offset = X * BASEPOWERA;
-        }
 
         SIDE = SMART_DIV(m);
         ASSERT(SIDE > 0);
@@ -1120,7 +1142,7 @@ static void encodeNameless(char* result, const EncodeRec* enc, const enum Territ
             const int dx = (4 * (enc->coord32.lonMicroDeg - b->minx) + xFracture) / dividerx4; // div with quarters
             const int extrax4 = (enc->coord32.lonMicroDeg - b->minx) * 4 - (dx * dividerx4); // mod with quarters
 
-            const int dividery = 90;
+            const int dividery = Y_DIVIDER;
             int dy = (b->maxy - enc->coord32.latMicroDeg) / dividery;
             int extray = (b->maxy - enc->coord32.latMicroDeg) % dividery;
 
@@ -1130,7 +1152,7 @@ static void encodeNameless(char* result, const EncodeRec* enc, const enum Territ
             }
 
             if (IS_SPECIAL_SHAPE(m)) {
-                SIDE = 1 + ((b->maxy - b->miny) / 90); // new side, based purely on y-distance
+                SIDE = 1 + ((b->maxy - b->miny) / Y_DIVIDER); // new side, based purely on y-distance
                 xSIDE = (orgSIDE * orgSIDE) / SIDE;
                 v += encodeSixWide(dx, SIDE - 1 - dy, xSIDE, SIDE);
             }
@@ -1141,7 +1163,7 @@ static void encodeNameless(char* result, const EncodeRec* enc, const enum Territ
             encodeBase31(result, v, codexlen + 1); // nameless
             {
                 int dotp = codexlen;
-                if (codexm == 13) {
+                if (codexm == SPECIAL_CODEX_13) {
                     dotp--;
                 }
                 memmove(result + dotp, result + dotp - 1, 4);
@@ -1149,7 +1171,7 @@ static void encodeNameless(char* result, const EncodeRec* enc, const enum Territ
             }
 
             if (!IS_SPECIAL_SHAPE(m)) {
-                if (codexm == 22 && A < 62 && orgSIDE == 961) {
+                if (codexm == SPECIAL_CODEX_22 && A < MAX_NAMELESS_RECORDS && orgSIDE == GRID_SIZE_961) {
                     const char t = result[codexlen - 2];
                     result[codexlen - 2] = result[codexlen];
                     result[codexlen] = t;
@@ -2416,7 +2438,12 @@ enum MapcodeError compareWithMapcodeFormatUtf16(const UWORD* Utf16String) {
 }
 
 
-// returns nonzero if error
+/**
+ * Main decoder engine that converts a mapcode string to coordinates.
+ * Handles territory context, validates format, and iterates through
+ * possible territory boundaries to find the correct decoding.
+ * Returns ERR_OK on success, or appropriate error code on failure.
+ */
 static enum MapcodeError decoderEngine(DecodeRec* dec, int parseFlags) {
     enum Territory ccode;
     enum MapcodeError err;
@@ -2428,9 +2455,10 @@ static enum MapcodeError decoderEngine(DecodeRec* dec, int parseFlags) {
     int wasAllDigits = 0;
     ASSERT(dec);
 
+    // Parse the mapcode string into its components (territory, proper mapcode, extension)
     err = parseMapcodeString(&dec->mapcodeElements, dec->orginput, parseFlags, dec->context);
     if (err) {
-        // clear all parsed fields in case of error
+        // Clear all parsed fields in case of error to ensure clean state
         dec->mapcodeElements.territoryISO[0] = 0;
         dec->mapcodeElements.properMapcode[0] = 0;
         dec->mapcodeElements.precisionExtension[0] = 0;

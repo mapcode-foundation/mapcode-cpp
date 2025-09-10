@@ -1,24 +1,22 @@
-/*
- * Copyright (C) 2014-2017 Stichting Mapcode Foundation (http://www.mapcode.com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Copyright (C) 2014-2025 Stichting Mapcode Foundation (http://www.mapcode.com)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 // *** GENERATED FILE (dividemaps.cpp), DO NOT CHANGE OR PRETTIFY ***
 // Generated for data version 2.3.0 using dividemaps.cpp
 typedef struct {
-    double latitude;        // 
-    double longitude;       // 
+    double latitude;        //
+    double longitude;       //
     int nrLocalMapcodes;  // 0 if no need to test
     int nrGlobalMapcodes; // 0 if no need to test
     const char *mapcode;    // expected mapcode, empty if no need to test
@@ -15881,4 +15879,3 @@ static const EncodeTestRecord ENCODE_TEST[] = {
         {40.917864,   79.9773185,     3, 6,  "CN-XJ 0123.XX"},
         {0,           0,              0, 0, NULL}
 };
-

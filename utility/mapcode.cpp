@@ -1,18 +1,16 @@
-/*
- * Copyright (C) 2014-2017 Stichting Mapcode Foundation (http://www.mapcode.com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Copyright (C) 2014-2025 Stichting Mapcode Foundation (http://www.mapcode.com)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 /**
  * This application uses the Mapcode C library to encode and decode Mapcodes.
@@ -83,7 +81,7 @@ static double lonLargestNrOfResults = 0.0;
  * The usage() method explains how this application can be used. It is called
  * whenever a incorrect amount or combination of parameters is entered.
  */
-static void usage(const char *appName) {
+static void usage(const char* appName) {
     printf("MAPCODE (version %s)\n", MAPCODE_C_VERSION);
     printf("Copyright (C) 2014-2017 Stichting Mapcode Foundation\n");
     printf("\n");
@@ -168,8 +166,7 @@ static double degToRad(double deg) {
  * (x, y, z) point on a sphere with a radius of 1.
  */
 static void unitToLatLonDeg(
-        const double unit1, const double unit2, double *latDeg, double *lonDeg) {
-
+    const double unit1, const double unit2, double* latDeg, double* lonDeg) {
     // Calculate uniformly distributed 3D Point on sphere (radius = 1.0):
     // http://mathproofs.blogspot.co.il/2005/04/uniform-random-distribution-on-sphere.html
     const double theta0 = (2.0 * PI) * unit1;
@@ -193,7 +190,7 @@ static void unitToLatLonDeg(
  * The method convertLatLonToXYZ() convertes a lat/lon pair to a (x, y, z) coordinate
  * on a sphere with radius 1.
  */
-static void convertLatLonToXYZ(double latDeg, double lonDeg, double *x, double *y, double *z) {
+static void convertLatLonToXYZ(double latDeg, double lonDeg, double* x, double* y, double* z) {
     double latRad = degToRad(latDeg);
     double lonRad = degToRad(lonDeg);
     *x = cos(latRad) * cos(lonRad);
@@ -205,7 +202,7 @@ static void convertLatLonToXYZ(double latDeg, double lonDeg, double *x, double *
 /**
  * This methods provides a self check for encoding lat/lon to Mapcode.
  */
-static void selfCheckLatLonToMapcode(const double lat, double lon, const char *mapcode, int extraDigits) {
+static void selfCheckLatLonToMapcode(const double lat, double lon, const char* mapcode, int extraDigits) {
     // TODO: Fix self check; read context.
     // int context = getTerritoryCode(territory, 0);
     enum Territory context = TERRITORY_NONE;
@@ -223,17 +220,16 @@ static void selfCheckLatLonToMapcode(const double lat, double lon, const char *m
     }
     int found = 0;
     for (int i = 0; !found && (i < nrResults); ++i) {
-
         /* Check if the territory and code were found in results. Note that the territory
          * may be a minimal code, like IN (which may indicate US-IN or RU-IN).
          */
-        const char *foundMapcode = mapcodes.mapcode[i];
+        const char* foundMapcode = mapcodes.mapcode[i];
         found = (strcmp(mapcode, foundMapcode) == 0);
     }
     if (!found) {
         fprintf(stderr, "error: encoding lat/lon to mapcode failure; "
-                        "mapcode '%s' decodes to lat=%.20g(%.20g), lon=%.20g(%.20g), "
-                        "which does not encode back to '%s'\n",
+                "mapcode '%s' decodes to lat=%.20g(%.20g), lon=%.20g(%.20g), "
+                "which does not encode back to '%s'\n",
                 mapcode, lat, limitLat, lon, limitLon, mapcode);
         if (selfCheckEnabled) {
             exit(INTERNAL_ERROR);
@@ -246,7 +242,7 @@ static void selfCheckLatLonToMapcode(const double lat, double lon, const char *m
 /**
  * This method provides a self-check for decoding a Mapcode to lat/lon.
  */
-static void selfCheckMapcodeToLatLon(const char *mapcode,
+static void selfCheckMapcodeToLatLon(const char* mapcode,
                                      const double lat, const double lon) {
     double foundLat;
     double foundLon;
@@ -269,8 +265,8 @@ static void selfCheckMapcodeToLatLon(const char *mapcode,
     }
     if ((deltaLat > DELTA) || (deltaLon > DELTA)) {
         fprintf(stderr, "error: decoding mapcode to lat/lon failure; "
-                        "lat=%.20g, lon=%.20g produces mapcode %s, "
-                        "which decodes to lat=%.20g (delta=%.20g), lon=%.20g (delta=%.20g)\n",
+                "lat=%.20g, lon=%.20g produces mapcode %s, "
+                "which decodes to lat=%.20g (delta=%.20g), lon=%.20g (delta=%.20g)\n",
                 lat, lon, mapcode, foundLat, deltaLat, foundLon, deltaLon);
         if (selfCheckEnabled) {
             exit(INTERNAL_ERROR);
@@ -280,7 +276,6 @@ static void selfCheckMapcodeToLatLon(const char *mapcode,
 }
 
 static void generateAndOutputMapcodes(double lat, double lon, int iShowError, int extraDigits, int useXYZ) {
-
     enum Territory context = TERRITORY_NONE;
 
     while (lon > 180.0) {
@@ -311,11 +306,12 @@ static void generateAndOutputMapcodes(double lat, double lon, int iShowError, in
         double z;
         convertLatLonToXYZ(lat, lon, &x, &y, &z);
         printf("%d %.20g %.20g %.20g %.20g %.20g\n", nrResults, lat, lon, x, y, z);
-    } else {
+    }
+    else {
         printf("%d %.20g %.20g\n", nrResults, lat, lon);
     }
     for (int j = 0; j < nrResults; ++j) {
-        const char *foundMapcode = mapcodes.mapcode[j];
+        const char* foundMapcode = mapcodes.mapcode[j];
 
         // Output result line.
         printf("%s\n", foundMapcode);
@@ -358,7 +354,7 @@ static void outputStatistics() {
     fprintf(stderr, "Total number of 3D points generated     = %d\n", totalNrOfPoints);
     fprintf(stderr, "Total number of mapcodes generated      = %d\n", totalNrOfResults);
     fprintf(stderr, "Average number of mapcodes per 3D Point = %.20g\n",
-            ((float) totalNrOfResults) / ((float) totalNrOfPoints));
+            ((float)totalNrOfResults) / ((float)totalNrOfPoints));
     fprintf(stderr, "Largest number of results for 1 mapcode = %d at (%.20g, %.20g)\n",
             largestNrOfResults, latLargestNrOfResults, lonLargestNrOfResults);
 }
@@ -369,7 +365,7 @@ static void outputStatistics() {
  */
 static void showProgress(int i) {
     fprintf(stderr, "[%d%%] Processed %d of %d regions (generated %d mapcodes)...\r",
-            (int) ((((float) i / ((float) totalNrOfPoints)) * 100.0) + 0.5),
+            (int)((((float)i / ((float)totalNrOfPoints)) * 100.0) + 0.5),
             i, totalNrOfPoints, totalNrOfResults);
 }
 
@@ -377,7 +373,7 @@ static void showProgress(int i) {
  * This is the main() method which is called from the command-line.
  * Return code 0 means success. Any other values means some sort of error occurred.
  */
-int main(const int argc, const char **argv) {
+int main(const int argc, const char** argv) {
     // Assume no extra digits (unless overridden later.
     int extraDigits = 0;
 
@@ -385,7 +381,7 @@ int main(const int argc, const char **argv) {
     int useXYZ = 0;
 
     // Provide usage message if no arguments specified.
-    const char *appName = argv[0];
+    const char* appName = argv[0];
     selfCheckEnabled = (strstr(appName, "debug") != 0);
     if (selfCheckEnabled) {
         fprintf(stderr, "(debug mode: self checking enabled)\n");
@@ -396,9 +392,8 @@ int main(const int argc, const char **argv) {
     }
 
     // First argument: command.
-    const char *cmd = argv[1];
+    const char* cmd = argv[1];
     if ((strcmp(cmd, "-d") == 0) || (strcmp(cmd, "--decode") == 0)) {
-
         // ------------------------------------------------------------------
         // Decode: [-d | --decode] <default-territory> <mapcode> [<mapcode> ...]
         // ------------------------------------------------------------------
@@ -408,7 +403,7 @@ int main(const int argc, const char **argv) {
             return NORMAL_ERROR;
         }
 
-        const char *defaultTerritory = argv[2];
+        const char* defaultTerritory = argv[2];
         double lat;
         double lon;
 
@@ -417,9 +412,8 @@ int main(const int argc, const char **argv) {
 
         // Decode every Mapcode.
         for (int i = 3; i < argc; ++i) {
-
             // Decode the Mapcode to a lat/lon.
-            const char *mapcode = argv[i];
+            const char* mapcode = argv[i];
             int err = decodeMapcodeToLatLonUtf8(&lat, &lon, mapcode, context, NULL);
             if (err != 0) {
                 fprintf(stderr, "error: cannot decode '%s %s'\n", defaultTerritory, mapcode);
@@ -431,25 +425,25 @@ int main(const int argc, const char **argv) {
 
             // Self-checking code to see if encoder produces this Mapcode for the lat/lon.
             if (selfCheckEnabled) {
-                const char *suffix = strstr(mapcode, "-");
+                const char* suffix = strstr(mapcode, "-");
                 extraDigits = 0;
                 if (suffix != 0) {
-                    extraDigits = (int) (strlen(suffix) - 1);
+                    extraDigits = (int)(strlen(suffix) - 1);
                 }
                 selfCheckLatLonToMapcode(lat, lon, mapcode, extraDigits);
             }
         }
-    } else if ((strcmp(cmd, "-e") == 0) || (strcmp(cmd, "-e0") == 0) ||
-               (strcmp(cmd, "-e1") == 0) || (strcmp(cmd, "-e2") == 0) ||
-               (strcmp(cmd, "-e3") == 0) || (strcmp(cmd, "-e4") == 0) ||
-               (strcmp(cmd, "-e5") == 0) || (strcmp(cmd, "-e6") == 0) ||
-               (strcmp(cmd, "-e7") == 0) || (strcmp(cmd, "-e8") == 0) ||
-               (strcmp(cmd, "--encode") == 0) || (strcmp(cmd, "--encode0") == 0) ||
-               (strcmp(cmd, "--encode1") == 0) || (strcmp(cmd, "--encode2") == 0) ||
-               (strcmp(cmd, "--encode3") == 0) || (strcmp(cmd, "--encode4") == 0) ||
-               (strcmp(cmd, "--encode5") == 0) || (strcmp(cmd, "--encode6") == 0) ||
-               (strcmp(cmd, "--encode7") == 0) || (strcmp(cmd, "--encode8") == 0)) {
-
+    }
+    else if ((strcmp(cmd, "-e") == 0) || (strcmp(cmd, "-e0") == 0) ||
+        (strcmp(cmd, "-e1") == 0) || (strcmp(cmd, "-e2") == 0) ||
+        (strcmp(cmd, "-e3") == 0) || (strcmp(cmd, "-e4") == 0) ||
+        (strcmp(cmd, "-e5") == 0) || (strcmp(cmd, "-e6") == 0) ||
+        (strcmp(cmd, "-e7") == 0) || (strcmp(cmd, "-e8") == 0) ||
+        (strcmp(cmd, "--encode") == 0) || (strcmp(cmd, "--encode0") == 0) ||
+        (strcmp(cmd, "--encode1") == 0) || (strcmp(cmd, "--encode2") == 0) ||
+        (strcmp(cmd, "--encode3") == 0) || (strcmp(cmd, "--encode4") == 0) ||
+        (strcmp(cmd, "--encode5") == 0) || (strcmp(cmd, "--encode6") == 0) ||
+        (strcmp(cmd, "--encode7") == 0) || (strcmp(cmd, "--encode8") == 0)) {
         // ------------------------------------------------------------------
         // Encode: [-e[0-8] | --encode[0-8]] <lat:-90..90> <lon:-180..180> [territory]>
         // ------------------------------------------------------------------
@@ -468,27 +462,35 @@ int main(const int argc, const char **argv) {
 
         if (strstr(cmd, "-e1") || strstr(cmd, "--encode1")) {
             extraDigits = 1;
-        } else if (strstr(cmd, "-e2") || strstr(cmd, "--encode2")) {
+        }
+        else if (strstr(cmd, "-e2") || strstr(cmd, "--encode2")) {
             extraDigits = 2;
-        } else if (strstr(cmd, "-e3") || strstr(cmd, "--encode3")) {
+        }
+        else if (strstr(cmd, "-e3") || strstr(cmd, "--encode3")) {
             extraDigits = 3;
-        } else if (strstr(cmd, "-e4") || strstr(cmd, "--encode4")) {
+        }
+        else if (strstr(cmd, "-e4") || strstr(cmd, "--encode4")) {
             extraDigits = 4;
-        } else if (strstr(cmd, "-e5") || strstr(cmd, "--encode5")) {
+        }
+        else if (strstr(cmd, "-e5") || strstr(cmd, "--encode5")) {
             extraDigits = 5;
-        } else if (strstr(cmd, "-e6") || strstr(cmd, "--encode6")) {
+        }
+        else if (strstr(cmd, "-e6") || strstr(cmd, "--encode6")) {
             extraDigits = 6;
-        } else if (strstr(cmd, "-e7") || strstr(cmd, "--encode7")) {
+        }
+        else if (strstr(cmd, "-e7") || strstr(cmd, "--encode7")) {
             extraDigits = 7;
-        } else if (strstr(cmd, "-e8") || strstr(cmd, "--encode8")) {
+        }
+        else if (strstr(cmd, "-e8") || strstr(cmd, "--encode8")) {
             extraDigits = 8;
-        } else {
+        }
+        else {
             extraDigits = 0;
         }
 
         // Get territory context.
         enum Territory context = TERRITORY_NONE;
-        const char *defaultTerritory = "AAA";
+        const char* defaultTerritory = "AAA";
         if (argc == 5) {
             context = getTerritoryCode(argv[4], TERRITORY_NONE);
             defaultTerritory = argv[4];
@@ -505,7 +507,7 @@ int main(const int argc, const char **argv) {
 
         // Output the Mapcode.
         for (int i = 0; i < nrResults; ++i) {
-            const char *foundMapcode = mapcodes.mapcode[i];
+            const char* foundMapcode = mapcodes.mapcode[i];
             printf("%s\n", foundMapcode);
 
             // Self-checking code to see if decoder produces the lat/lon for all of these Mapcodes.
@@ -513,9 +515,9 @@ int main(const int argc, const char **argv) {
                 selfCheckMapcodeToLatLon(foundMapcode, lat, lon);
             }
         }
-    } else if ((strcmp(cmd, "-t") == 0) ||
-               (strcmp(cmd, "--territories") == 0)) {
-
+    }
+    else if ((strcmp(cmd, "-t") == 0) ||
+        (strcmp(cmd, "--territories") == 0)) {
         // ------------------------------------------------------------------
         // Generate a test set based on the Mapcode territories
         // ------------------------------------------------------------------
@@ -526,7 +528,7 @@ int main(const int argc, const char **argv) {
         }
         printf("ccode,territorycodes(pipe-separated),alphabets(pipe-seperated),names(pipe-separated)\n");
         for (int i = _TERRITORY_MIN + 1; i < _TERRITORY_MAX; ++i) {
-            const enum Territory ccode = (enum Territory) i;
+            const enum Territory ccode = (enum Territory)i;
             char territoryName[MAX_MAPCODE_RESULT_ASCII_LEN];
             printf("%d,", INDEX_OF_TERRITORY(i));
 
@@ -537,7 +539,7 @@ int main(const int argc, const char **argv) {
                     char fullcode[16];
                     strcpy(fullcode, ALPHA_SEARCH[a].alphaCode);
                     if (fullcode[0] >= '0' && fullcode[0] <= '9') {
-                        static const char *parents2 = "US,IN,CA,AU,MX,BR,RU,CN,";
+                        static const char* parents2 = "US,IN,CA,AU,MX,BR,RU,CN,";
                         int p = (fullcode[0] - '0');
                         memcpy(fullcode, &parents2[p * 3 - 3], 2);
                         fullcode[2] = '-';
@@ -551,7 +553,7 @@ int main(const int argc, const char **argv) {
             printf(",");
 
             // Print alphabets.
-            const TerritoryAlphabets *territoryAlphabets = getAlphabetsForTerritory(ccode);
+            const TerritoryAlphabets* territoryAlphabets = getAlphabetsForTerritory(ccode);
             for (int j = 0; j < territoryAlphabets->count; j++) {
                 if (j > 0) {
                     printf("|");
@@ -561,13 +563,13 @@ int main(const int argc, const char **argv) {
             printf(",");
 
             // Use internal knowledge of TERRITORY_FULL_NAME to show aliases of full territory name.
-            char *names = strdup(TERRITORY_FULL_NAME_EN[INDEX_OF_TERRITORY(ccode)]);
-            char *s = names;
+            char* names = strdup(TERRITORY_FULL_NAME_EN[INDEX_OF_TERRITORY(ccode)]);
+            char* s = names;
             while (s) {
                 if (s != names) {
                     printf("|");
                 }
-                char *e = strstr(s, " (");
+                char* e = strstr(s, " (");
                 if (e) {
                     *e = 0;
                     if (e[-1] == ')') {
@@ -575,7 +577,8 @@ int main(const int argc, const char **argv) {
                     }
                     printf("%s", s);
                     s = e + 2;
-                } else {
+                }
+                else {
                     e = s + strlen(s);
                     if (e[-1] == ')') {
                         e[-1] = 0;
@@ -586,77 +589,77 @@ int main(const int argc, const char **argv) {
             }
             printf("\n");
         }
-    } else if ((strcmp(cmd, "-a") == 0) ||
-               (strcmp(cmd, "--alphabets") == 0)) {
-
+    }
+    else if ((strcmp(cmd, "-a") == 0) ||
+        (strcmp(cmd, "--alphabets") == 0)) {
         // ------------------------------------------------------------------
         // Generate a test set based on the Mapcode territories
         // ------------------------------------------------------------------
-        static const char *mapcodeForCSV[] = {
-                // all characters
-                "89.EU",
-                "00.0A",
-                "BCDF.GHJK",
-                "LMNP.QRST",
-                "VWXY.Z123",
-                "4567.890B",
-                // all forms
-                "pq.xy",
-                "pq.xyz",
-                "pqx.yz",
-                "pq.rxyz",
-                "pqr.xyz",
-                "pqrx.yz",
-                "pqr.sxyz",
-                "pqrs.xyz",
-                "pqrs.txyz",
-                "pqrst.vxyz",
-                // all adjad forms
-                "p1.xy",
-                "pq.2y",
-                "3q.x4",
-                "5q.6y",
-                "pq.1yz",
-                "pq1.yz",
-                "p2.x3z",
-                "p2x.3z",
-                "pq.1xy2",
-                "pq1.xy2",
-                "pq1x.y2",
-                "p3.rx4z",
-                "p3r.x4z",
-                "p3rx.4z",
-                "5q.r6y7",
-                "5qr.6y7",
-                "5qr6.y7",
-                "pq1.sx2z",
-                "pq1s.x2z",
-                "p3r.s4yz",
-                "p3rs.4yz",
-                "5qr.6xy7",
-                "5qr6.xy7",
-                "8q9.sx0z",
-                "8q9s.x0z",
-                "1qr2.tx3z",
-                "p4rs.5xy6",
-                "p7r8.t9y0",
-                "pq1st.2xy3",
-                "p4rs5.vx6z",
-                "7qr8t.v9yz",
-                "p1r2t.3x4z",
-                "5q6s7.v8y9",
-                // non-mapcode
-                "^0123456789!@#$^&*()/:;[]{}<>?|~%",
-                "abcdefghijklmnopqrstuvwxyz",
-                "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-                // special case for digit-like characters
-                "OI.xx",
-                "oi.xx",
-                "oi.xx-oooooooo",
-                "oi.xx-iiiiiiii",
-                "PQ.RS-01234567",
-                "PQ.RS-890",
-                NULL
+        static const char* mapcodeForCSV[] = {
+            // all characters
+            "89.EU",
+            "00.0A",
+            "BCDF.GHJK",
+            "LMNP.QRST",
+            "VWXY.Z123",
+            "4567.890B",
+            // all forms
+            "pq.xy",
+            "pq.xyz",
+            "pqx.yz",
+            "pq.rxyz",
+            "pqr.xyz",
+            "pqrx.yz",
+            "pqr.sxyz",
+            "pqrs.xyz",
+            "pqrs.txyz",
+            "pqrst.vxyz",
+            // all adjad forms
+            "p1.xy",
+            "pq.2y",
+            "3q.x4",
+            "5q.6y",
+            "pq.1yz",
+            "pq1.yz",
+            "p2.x3z",
+            "p2x.3z",
+            "pq.1xy2",
+            "pq1.xy2",
+            "pq1x.y2",
+            "p3.rx4z",
+            "p3r.x4z",
+            "p3rx.4z",
+            "5q.r6y7",
+            "5qr.6y7",
+            "5qr6.y7",
+            "pq1.sx2z",
+            "pq1s.x2z",
+            "p3r.s4yz",
+            "p3rs.4yz",
+            "5qr.6xy7",
+            "5qr6.xy7",
+            "8q9.sx0z",
+            "8q9s.x0z",
+            "1qr2.tx3z",
+            "p4rs.5xy6",
+            "p7r8.t9y0",
+            "pq1st.2xy3",
+            "p4rs5.vx6z",
+            "7qr8t.v9yz",
+            "p1r2t.3x4z",
+            "5q6s7.v8y9",
+            // non-mapcode
+            "^0123456789!@#$^&*()/:;[]{}<>?|~%",
+            "abcdefghijklmnopqrstuvwxyz",
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+            // special case for digit-like characters
+            "OI.xx",
+            "oi.xx",
+            "oi.xx-oooooooo",
+            "oi.xx-iiiiiiii",
+            "PQ.RS-01234567",
+            "PQ.RS-890",
+            NULL
         };
         if ((argc < 2) || (argc > 2)) {
             fprintf(stderr, "error: incorrect number of arguments\n\n");
@@ -666,7 +669,7 @@ int main(const int argc, const char **argv) {
 
         printf("alphabetNr,MapcodeInRoman,MapcodeInAlphabet\n");
         for (enum Alphabet alphabet = ALPHABET_ROMAN;
-             alphabet < _ALPHABET_MAX; alphabet = (enum Alphabet) (alphabet + 1)) {
+             alphabet < _ALPHABET_MAX; alphabet = (enum Alphabet)(alphabet + 1)) {
             int variant;
             for (variant = 0; variant <= 2; variant++) {
                 int m;
@@ -678,7 +681,7 @@ int main(const int argc, const char **argv) {
                     strcpy(mapcode, mapcodeForCSV[m]);
                     strcat(mapcode, (variant == 1) ? "-bc" : (variant == 2) ? "-DFGHJKLM" : "");
                     for (i = 0; mapcode[i]; ++i) {
-                        mapcode[i] = (char) toupper((int) mapcode[i]);
+                        mapcode[i] = (char)toupper((int)mapcode[i]);
                     }
                     // convert to alphabet, and back to roman
                     convertMapcodeToAlphabetUtf8(asciiString, mapcode, alphabet);
@@ -687,9 +690,9 @@ int main(const int argc, const char **argv) {
                 }
             }
         }
-    } else if ((strcmp(cmd, "-b") == 0) || (strcmp(cmd, "-bXYZ") == 0) ||
-               (strcmp(cmd, "--boundaries") == 0) || (strcmp(cmd, "--boundariesXYZ") == 0)) {
-
+    }
+    else if ((strcmp(cmd, "-b") == 0) || (strcmp(cmd, "-bXYZ") == 0) ||
+        (strcmp(cmd, "--boundaries") == 0) || (strcmp(cmd, "--boundariesXYZ") == 0)) {
         // ------------------------------------------------------------------
         // Generate a test set based on the Mapcode boundaries.
         // ------------------------------------------------------------------
@@ -717,11 +720,11 @@ int main(const int argc, const char **argv) {
             double lat;
             double lon;
 
-            const TerritoryBoundary *mm = TERRITORY_BOUNDARY(i);
-            minLon = ((double) mm->minx) / 1.0E6;
-            maxLon = ((double) mm->maxx) / 1.0E6;
-            minLat = ((double) mm->miny) / 1.0E6;
-            maxLat = ((double) mm->maxy) / 1.0E6;
+            const TerritoryBoundary* mm = TERRITORY_BOUNDARY(i);
+            minLon = ((double)mm->minx) / 1.0E6;
+            maxLon = ((double)mm->maxx) / 1.0E6;
+            minLat = ((double)mm->miny) / 1.0E6;
+            maxLat = ((double)mm->maxy) / 1.0E6;
 
             // Try center.
             lat = (maxLat - minLat) / 2.0;
@@ -752,11 +755,11 @@ int main(const int argc, const char **argv) {
             }
         }
         outputStatistics();
-    } else if ((strcmp(cmd, "-g") == 0) || (strcmp(cmd, "-gXYZ") == 0) ||
-               (strcmp(cmd, "--grid") == 0) || (strcmp(cmd, "--gridXYZ") == 0) ||
-               (strcmp(cmd, "-r") == 0) || (strcmp(cmd, "-rXYZ") == 0) ||
-               (strcmp(cmd, "--random") == 0) || (strcmp(cmd, "--randomXYZ") == 0)) {
-
+    }
+    else if ((strcmp(cmd, "-g") == 0) || (strcmp(cmd, "-gXYZ") == 0) ||
+        (strcmp(cmd, "--grid") == 0) || (strcmp(cmd, "--gridXYZ") == 0) ||
+        (strcmp(cmd, "-r") == 0) || (strcmp(cmd, "-rXYZ") == 0) ||
+        (strcmp(cmd, "--random") == 0) || (strcmp(cmd, "--randomXYZ") == 0)) {
         // ------------------------------------------------------------------
         // Generate grid test set:    [-g | --grid]   <nrOfPoints> [<extradigits>]
         // Generate uniform test set: [-r | --random] <nrOfPoints> [<seed>]
@@ -784,9 +787,10 @@ int main(const int argc, const char **argv) {
         if (random) {
             if (argc == 5) {
                 const int seed = atoi(argv[4]);
-                srand((unsigned int) seed);
-            } else {
-                srand((unsigned int) time(0));
+                srand((unsigned int)seed);
+            }
+            else {
+                srand((unsigned int)time(0));
             }
         }
         useXYZ = (strstr(cmd, "XYZ") != 0);
@@ -804,15 +808,17 @@ int main(const int argc, const char **argv) {
             double unit2;
 
             if (random) {
-                unit1 = ((double) rand()) / RAND_MAX;
-                unit2 = ((double) rand()) / RAND_MAX;
-            } else {
-                unit1 = ((double) gridX) / line;
-                unit2 = ((double) gridY) / line;
+                unit1 = ((double)rand()) / RAND_MAX;
+                unit2 = ((double)rand()) / RAND_MAX;
+            }
+            else {
+                unit1 = ((double)gridX) / line;
+                unit2 = ((double)gridY) / line;
 
                 if (gridX < line) {
                     ++gridX;
-                } else {
+                }
+                else {
                     gridX = 0;
                     ++gridY;
                 }
@@ -826,8 +832,8 @@ int main(const int argc, const char **argv) {
             }
         }
         outputStatistics();
-    } else {
-
+    }
+    else {
         // ------------------------------------------------------------------
         // Usage.
         // ------------------------------------------------------------------

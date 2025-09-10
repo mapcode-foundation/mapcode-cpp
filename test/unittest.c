@@ -1,18 +1,16 @@
-/*
- * Copyright (C) 2014-2017 Stichting Mapcode Foundation (http://www.mapcode.com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Copyright (C) 2014-2025 Stichting Mapcode Foundation (http://www.mapcode.com)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 /**
  * This application performs a number of tests on the Mapcode C library.
@@ -1107,13 +1105,13 @@ static int testDistances(void) {
             0.11, 0.22, 0.12, 0.2333, 185011466
     };
 
-    // check bad values    
+    // check bad values
     ++nrTests;
     if (maxErrorInMeters(99) != 0.0) {
         foundError();
         printf("*** ERROR *** maxErrorInMeters(99) = %f (expected 0.0)\n", maxErrorInMeters(99));
     }
-    // check expected values    
+    // check expected values
     ++nrTests;
     testDistance(METERS_PER_DEGREE_LON * 1.5, distanceInMeters(0.0, 0.0, 0.0, 1.5));  // Check if #define is correct.
     ++nrTests;

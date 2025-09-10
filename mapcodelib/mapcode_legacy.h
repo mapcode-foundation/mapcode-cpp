@@ -1,24 +1,23 @@
-/*
- * Copyright (C) 2014-2017 Stichting Mapcode Foundation (http://www.mapcode.com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Copyright (C) 2014-2025 Stichting Mapcode Foundation (http://www.mapcode.com)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #ifndef __MAPCODE_LEGACY_H__
 #define __MAPCODE_LEGACY_H__
 
 #ifdef __cplusplus
 extern "C" {
+
 #endif
 
 #include "mapcoder.h"
@@ -99,12 +98,12 @@ extern "C" {
  *      The results are stored as pairs (Mapcode, territory name) in:
  *          (results[0], results[1])...(results[(2 * N) - 2], results[(2 * N) - 1])
  */
-int encodeLatLonToMapcodes_Deprecated(     // Warning: this method is deprecated and not thread-safe.
-        char **mapcodesAndTerritories,
-        double latDeg,
-        double lonDeg,
-        enum Territory territory,
-        int extraDigits);
+int encodeLatLonToMapcodes_Deprecated( // Warning: this method is deprecated and not thread-safe.
+    char** mapcodesAndTerritories,
+    double latDeg,
+    double lonDeg,
+    enum Territory territory,
+    int extraDigits);
 
 
 /**
@@ -120,9 +119,9 @@ int encodeLatLonToMapcodes_Deprecated(     // Warning: this method is deprecated
  * Returns:
  *      Pointer to result. String will be empty if territory illegal.
  */
-const char *convertTerritoryCodeToIsoName_Deprecated(
-        enum Territory territory,
-        int useShortName);
+const char* convertTerritoryCodeToIsoName_Deprecated(
+    enum Territory territory,
+    int useShortName);
 
 
 /**
@@ -136,8 +135,7 @@ const char *convertTerritoryCodeToIsoName_Deprecated(
  * Returns:
  *      Pointer to same buffer as asciiString (allocated by caller), which holds the result.
  */
-char *convertToRoman(char *asciiString, int maxLength, const UWORD *utf16String);
-
+char* convertToRoman(char* asciiString, int maxLength, const UWORD* utf16String);
 
 
 /**
@@ -152,7 +150,7 @@ char *convertToRoman(char *asciiString, int maxLength, const UWORD *utf16String)
  * Returns:
  *      Encoded Unicode string, points at buffer from 'utf16String', allocated/deallocated by caller.
  */
-UWORD *convertToAlphabet(UWORD *utf16String, int maxLength, const char *asciiString, enum Alphabet alphabet);
+UWORD* convertToAlphabet(UWORD* utf16String, int maxLength, const char* asciiString, enum Alphabet alphabet);
 
 
 /**
@@ -164,7 +162,7 @@ UWORD *convertToAlphabet(UWORD *utf16String, int maxLength, const char *asciiStr
  * String must NOT be de-allocated by the caller.
  * It will be overwritten by a subsequent call to this method!
  */
-const char *decodeToRoman_Deprecated(const UWORD *utf16String);
+const char* decodeToRoman_Deprecated(const UWORD* utf16String);
 
 
 /**
@@ -175,7 +173,7 @@ const char *decodeToRoman_Deprecated(const UWORD *utf16String);
  * String must NOT be de-allocated by the caller.
  * It will be overwritten by a subsequent call to this method!
  */
-const UWORD *encodeToAlphabet_Deprecated(const char *asciiString, enum Alphabet alphabet);
+const UWORD* encodeToAlphabet_Deprecated(const char* asciiString, enum Alphabet alphabet);
 
 
 #ifdef __cplusplus

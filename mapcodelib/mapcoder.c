@@ -12,6 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/**
+ * @file mapcoder.c
+ * @brief Core implementation of the Mapcode encoding and decoding system
+ *
+ * This file contains the complete implementation of the Mapcode system, which provides
+ * a way to encode any location on Earth into a short alphanumeric code and decode
+ * it back to precise coordinates.
+ *
+ * Key functionality includes:
+ * - Encoding latitude/longitude coordinates to mapcode strings
+ * - Decoding mapcode strings back to coordinates
+ * - Territory-based encoding for shorter codes within specific regions
+ * - Support for high-precision encoding with extra digits
+ * - Multi-alphabet support for international usage
+ * - Territory name handling and lookup functions
+ *
+ * The encoding uses a sophisticated grid system that divides the Earth's surface
+ * into increasingly fine grids, with special handling for different territory
+ * shapes and boundary conditions.
+ *
+ * @author Stichting Mapcode Foundation
+ * @version See MAPCODE_C_VERSION constant
+ */
+
 #include <string.h> // strlen strcpy strcat memcpy memmove strstr strchr memcmp
 #include <stdlib.h> // atof
 #include <ctype.h>  // toupper
@@ -51,24 +75,42 @@
 #include "internal_territory_names_tr.h"
 #include "internal_territory_names_uk.h"
 
-// The constants are also exported as variables, to allow other languages to use them.
-char* _MAPCODE_C_VERSION = MAPCODE_C_VERSION;
-int _MAX_NR_OF_MAPCODE_RESULTS = MAX_NR_OF_MAPCODE_RESULTS;
-int _MAX_PRECISION_DIGITS = MAX_PRECISION_DIGITS;
-int _MAX_PROPER_MAPCODE_ASCII_LEN = MAX_PROPER_MAPCODE_ASCII_LEN;
-int _MAX_ISOCODE_ASCII_LEN = MAX_ISOCODE_ASCII_LEN;
-int _MAX_CLEAN_MAPCODE_ASCII_LEN = MAX_CLEAN_MAPCODE_ASCII_LEN;
-int _MAX_MAPCODE_RESULT_ASCII_LEN = MAX_MAPCODE_RESULT_ASCII_LEN;
-int _MAX_TERRITORY_FULLNAME_UTF8_LEN = MAX_TERRITORY_FULLNAME_UTF8_LEN;
-int _MAX_MAPCODE_RESULT_UTF8_LEN = MAX_MAPCODE_RESULT_UTF8_LEN;
-int _MAX_MAPCODE_RESULT_UTF16_LEN = MAX_MAPCODE_RESULT_UTF16_LEN;
-int _MAX_ALPHABETS_PER_TERRITORY = MAX_ALPHABETS_PER_TERRITORY;
+/**
+ * @section exported_constants Exported Constants
+ * The constants are also exported as variables to allow other languages to use them.
+ * This provides runtime access to compile-time constants for language bindings.
+ */
+char* _MAPCODE_C_VERSION = MAPCODE_C_VERSION;                           // Version string of the mapcode library
+int _MAX_NR_OF_MAPCODE_RESULTS = MAX_NR_OF_MAPCODE_RESULTS;             // Maximum number of mapcode results returned
+int _MAX_PRECISION_DIGITS = MAX_PRECISION_DIGITS;                       // Maximum extra precision digits supported
+int _MAX_PROPER_MAPCODE_ASCII_LEN = MAX_PROPER_MAPCODE_ASCII_LEN;       // Maximum length of a proper mapcode in ASCII
+int _MAX_ISOCODE_ASCII_LEN = MAX_ISOCODE_ASCII_LEN;                     // Maximum length of ISO territory code
+int _MAX_CLEAN_MAPCODE_ASCII_LEN = MAX_CLEAN_MAPCODE_ASCII_LEN;         // Maximum length of clean mapcode (no territory)
+int _MAX_MAPCODE_RESULT_ASCII_LEN = MAX_MAPCODE_RESULT_ASCII_LEN;       // Maximum length of complete result string
+int _MAX_TERRITORY_FULLNAME_UTF8_LEN = MAX_TERRITORY_FULLNAME_UTF8_LEN; // Maximum territory name length in UTF-8
+int _MAX_MAPCODE_RESULT_UTF8_LEN = MAX_MAPCODE_RESULT_UTF8_LEN;         // Maximum result length in UTF-8
+int _MAX_MAPCODE_RESULT_UTF16_LEN = MAX_MAPCODE_RESULT_UTF16_LEN;       // Maximum result length in UTF-16
+int _MAX_ALPHABETS_PER_TERRITORY = MAX_ALPHABETS_PER_TERRITORY;         // Maximum alphabets supported per territory
 
+/**
+ * @section debug_system Debug and Assertion System
+ * Debug mode provides runtime assertion checking to catch programming errors
+ * during development and testing.
+ */
 #ifdef DEBUG
 
 #include <stdio.h>
 
-
+/**
+ * @brief Debug assertion function that tracks and reports failed conditions
+ * @param iCondition The condition to test (should be true)
+ * @param cstrFile Source file where assertion occurred
+ * @param iLine Line number where assertion occurred
+ *
+ * This function provides detailed error reporting when assertions fail in debug mode.
+ * It keeps track of assertion failures and terminates the program after too many
+ * failures to prevent cascading errors.
+ */
 void _TestAssert(int iCondition, const char* cstrFile, int iLine) {
     static int nrAsserts = 0;
     if (!iCondition) {
@@ -81,9 +123,10 @@ void _TestAssert(int iCondition, const char* cstrFile, int iLine) {
     }
 }
 
-
+// In debug mode, assertions are active and report failures
 #define ASSERT(condition) _TestAssert((int) (condition), __FILE__, (int) __LINE__)
 #else
+// In release mode, assertions are compiled out for performance
 #define ASSERT(condition)
 #endif
 
@@ -98,120 +141,217 @@ void _TestAssert(int iCondition, const char* cstrFile, int iLine) {
 
 #endif
 
-#define IS_NAMELESS(m)        (TERRITORY_BOUNDARIES[m].flags & 64)
-#define IS_RESTRICTED(m)      (TERRITORY_BOUNDARIES[m].flags & 512)
-#define IS_SPECIAL_SHAPE(m)   (TERRITORY_BOUNDARIES[m].flags & 1024)
-#define REC_TYPE(m)           ((TERRITORY_BOUNDARIES[m].flags >> 7) & 3)
-#define SMART_DIV(m)          (TERRITORY_BOUNDARIES[m].flags >> 16)
-#define HEADER_LETTER(m)      (ENCODE_CHARS[(TERRITORY_BOUNDARIES[m].flags >> 11) & 31])
+/**
+ * @section territory_flag_macros Territory Boundary Flag Extraction Macros
+ * These macros extract specific information from the flags field of territory boundary records.
+ * Each territory has flags that encode various properties used during encoding/decoding.
+ */
+#define IS_NAMELESS(m)        (TERRITORY_BOUNDARIES[m].flags & 64)      // Territory uses nameless encoding (bit 6)
+#define IS_RESTRICTED(m)      (TERRITORY_BOUNDARIES[m].flags & 512)     // Territory has access restrictions (bit 9)
+#define IS_SPECIAL_SHAPE(m)   (TERRITORY_BOUNDARIES[m].flags & 1024)    // Territory has non-standard shape (bit 10)
+#define REC_TYPE(m)           ((TERRITORY_BOUNDARIES[m].flags >> 7) & 3) // Record type (bits 7-8): grid encoding method
+#define SMART_DIV(m)          (TERRITORY_BOUNDARIES[m].flags >> 16)     // Smart divider value (bits 16+): grid subdivision
+#define HEADER_LETTER(m)      (ENCODE_CHARS[(TERRITORY_BOUNDARIES[m].flags >> 11) & 31]) // Header letter for encoding (bits 11-15)
 
-#define TOKENSEP   0
-#define TOKENDOT   1
-#define TOKENCHR   2
-#define TOKENVOWEL 3
-#define TOKENZERO  4
-#define TOKENHYPH  5
+/**
+ * @section parsing_tokens Token Types for Mapcode Parsing
+ * These constants define different types of tokens encountered during mapcode parsing.
+ */
+#define TOKENSEP   0    // Separator character (space, hyphen, etc.)
+#define TOKENDOT   1    // Dot character '.'
+#define TOKENCHR   2    // Regular character (consonant or digit)
+#define TOKENVOWEL 3    // Vowel character (A, E, U)
+#define TOKENZERO  4    // Zero digit '0'
+#define TOKENHYPH  5    // Hyphen character '-'
 
-#define STATE_GO  31
+/**
+ * @section parsing_state Parsing State Constants
+ */
+#define STATE_GO  31    // Active parsing state identifier
 
-#define MATH_PI                 3.14159265358979323846
-#define MAX_PRECISION_FACTOR    810000      // 30 to the power (MAX_PRECISION_DIGITS/2).
+/**
+ * @section mathematical_constants Mathematical and Earth Constants
+ * Fundamental constants used in coordinate calculations and grid mathematics.
+ */
+#define MATH_PI                 3.14159265358979323846  // High-precision value of π
+#define MAX_PRECISION_FACTOR    810000      // 30^(MAX_PRECISION_DIGITS/2) - base precision factor
 
-// Radius of Earth.
-#define EARTH_RADIUS_X_METERS 6378137
-#define EARTH_RADIUS_Y_METERS 6356752
+// Earth's radius in meters (WGS84 ellipsoid approximation)
+#define EARTH_RADIUS_X_METERS 6378137       // Equatorial radius (semi-major axis)
+#define EARTH_RADIUS_Y_METERS 6356752       // Polar radius (semi-minor axis)
 
-// Circumference of Earth.
-#define EARTH_CIRCUMFERENCE_X (EARTH_RADIUS_X_METERS * 2 * MATH_PI)
-#define EARTH_CIRCUMFERENCE_Y (EARTH_RADIUS_Y_METERS * 2 * MATH_PI)
+// Earth's circumference in meters
+#define EARTH_CIRCUMFERENCE_X (EARTH_RADIUS_X_METERS * 2 * MATH_PI)  // Equatorial circumference
+#define EARTH_CIRCUMFERENCE_Y (EARTH_RADIUS_Y_METERS * 2 * MATH_PI)  // Meridional circumference
 
-#define MICROLAT_TO_FRACTIONS_FACTOR ((double) MAX_PRECISION_FACTOR)
-#define MICROLON_TO_FRACTIONS_FACTOR (4.0 * MAX_PRECISION_FACTOR)
+/**
+ * @section coordinate_conversion Coordinate Conversion Factors
+ * Factors for converting between different coordinate representations.
+ */
+#define MICROLAT_TO_FRACTIONS_FACTOR ((double) MAX_PRECISION_FACTOR)    // Convert latitude microdegrees to fractions
+#define MICROLON_TO_FRACTIONS_FACTOR (4.0 * MAX_PRECISION_FACTOR)       // Convert longitude microdegrees to fractions
 
-// Grid and encoding constants
-#define GRID_SIZE_31           31    // Base grid size for encoding
-#define GRID_SIZE_961          961   // 31 * 31 - large grid size
-#define GRID_SIZE_962          962   // 961 + 1
-#define GRID_SIZE_SQUARED      (961 * 961)  // Square of grid size
-#define MAX_NAMELESS_RECORDS   62    // Maximum number of nameless records
-#define Y_DIVIDER              90    // Standard Y coordinate divider
-#define SPECIAL_CODEX_21       21    // Special codex identifier
-#define SPECIAL_CODEX_22       22    // Special codex identifier
-#define SPECIAL_CODEX_13       13    // Special codex identifier
-#define SPECIAL_CODEX_14       14    // Special codex identifier
-#define GRID_MULTIPLIER_16     16    // Grid calculation multiplier
+/**
+ * @section grid_encoding_constants Grid and Encoding Constants
+ * These constants define the fundamental grid structure used in mapcode encoding.
+ * The mapcode system uses a base-31 grid system that recursively subdivides space.
+ */
+#define GRID_SIZE_31           31               // Base grid size: 31x31 grid cells (base-31 encoding)
+#define GRID_SIZE_961          961              // 31^2 = 961 - second level grid size
+#define GRID_SIZE_962          962              // 961 + 1 - used for boundary calculations
+#define GRID_SIZE_SQUARED      (961 * 961)     // 961^2 - third level grid size for fine precision
+#define MAX_NAMELESS_RECORDS   62               // Maximum nameless territory records in subdivision
+#define Y_DIVIDER              90               // Standard latitude divider for grid calculations
+#define SPECIAL_CODEX_21       21               // Special encoding method identifier (type 21)
+#define SPECIAL_CODEX_22       22               // Special encoding method identifier (type 22)
+#define SPECIAL_CODEX_13       13               // Special encoding method identifier (type 13)
+#define SPECIAL_CODEX_14       14               // Special encoding method identifier (type 14)
+#define GRID_MULTIPLIER_16     16               // Multiplier for grid offset calculations
 
-#define FLAG_UTF8_STRING      0 // interpret pointer a utf8 characters
-#define FLAG_UTF16_STRING     1 // interpret pointer a UWORD* to utf16 characters
+/**
+ * @section string_encoding_flags String Encoding Type Flags
+ * Flags to distinguish between different string encoding formats.
+ */
+#define FLAG_UTF8_STRING      0                 // Interpret string pointer as UTF-8 characters
+#define FLAG_UTF16_STRING     1                 // Interpret string pointer as UTF-16 characters
 
-// Meters per degree latitude is fixed. For longitude: use factor * cos(midpoint of two degree latitudes).
-static const double METERS_PER_DEGREE_LAT = EARTH_CIRCUMFERENCE_Y / 360.0;
-static const double METERS_PER_DEGREE_LON = EARTH_CIRCUMFERENCE_X / 360.0;
+/**
+ * @section distance_calculation Distance Calculation Constants
+ * Meters per degree latitude is constant globally. For longitude, the actual
+ * distance varies by latitude, so use factor * cos(midpoint_latitude).
+ */
+static const double METERS_PER_DEGREE_LAT = EARTH_CIRCUMFERENCE_Y / 360.0;  // ~111,319 meters per degree latitude
+static const double METERS_PER_DEGREE_LON = EARTH_CIRCUMFERENCE_X / 360.0;  // ~111,320 meters per degree longitude at equator
 
-static const int DEBUG_STOP_AT = -1; // to externally test-restrict internal encoding, do not use!
+/**
+ * @section debug_control Debug Control Variables
+ */
+static const int DEBUG_STOP_AT = -1; // Internal debug limit for encoding tests (do not use in production!)
 
+/**
+ * @section locale_support Locale and Language Support Structures
+ * These structures support multi-language territory names for international usage.
+ */
+
+/**
+ * @brief Registry item linking a locale identifier to territory name translations
+ * @param locale Two-character locale identifier (e.g., "EN", "FR", "DE")
+ * @param territoryFullNames Array of translated territory names for this locale
+ */
 typedef struct {
-    const char* locale;
-    const char** territoryFullNames;
+    const char* locale;                 // Language/locale identifier
+    const char** territoryFullNames;    // Array of territory names in this language
 } LocaleRegistryItem;
 
+/**
+ * @brief Registry of supported locales and their territory name translations
+ * This array maps two-character locale codes to arrays of translated territory names.
+ * Supports major world languages for international mapcode applications.
+ */
 static const LocaleRegistryItem LOCALE_REGISTRY[] = {
-    {"AF", TERRITORY_FULL_NAME_AF},
-    {"AR", TERRITORY_FULL_NAME_AR},
-    {"BE", TERRITORY_FULL_NAME_BE},
-    {"CN", TERRITORY_FULL_NAME_CN},
-    {"CS", TERRITORY_FULL_NAME_CS},
-    {"DA", TERRITORY_FULL_NAME_DA},
-    {"DE", TERRITORY_FULL_NAME_DE},
-    {"EN", TERRITORY_FULL_NAME_EN},
-    {"ES", TERRITORY_FULL_NAME_ES},
-    {"FI", TERRITORY_FULL_NAME_FI},
-    {"FR", TERRITORY_FULL_NAME_FR},
-    {"HE", TERRITORY_FULL_NAME_HE},
-    {"HI", TERRITORY_FULL_NAME_HI},
-    {"HR", TERRITORY_FULL_NAME_HR},
-    {"ID", TERRITORY_FULL_NAME_ID},
-    {"IT", TERRITORY_FULL_NAME_IT},
-    {"JA", TERRITORY_FULL_NAME_JA},
-    {"KO", TERRITORY_FULL_NAME_KO},
-    {"NL", TERRITORY_FULL_NAME_NL},
-    {"NO", TERRITORY_FULL_NAME_NO},
-    {"PT", TERRITORY_FULL_NAME_PT},
-    {"PL", TERRITORY_FULL_NAME_PL},
-    {"RU", TERRITORY_FULL_NAME_RU},
-    {"SV", TERRITORY_FULL_NAME_SV},
-    {"SW", TERRITORY_FULL_NAME_SW},
-    {"TR", TERRITORY_FULL_NAME_TR},
-    {"UK", TERRITORY_FULL_NAME_UK}
+    {"AF", TERRITORY_FULL_NAME_AF},     // Afrikaans
+    {"AR", TERRITORY_FULL_NAME_AR},     // Arabic
+    {"BE", TERRITORY_FULL_NAME_BE},     // Belarusian
+    {"CN", TERRITORY_FULL_NAME_CN},     // Chinese (Simplified)
+    {"CS", TERRITORY_FULL_NAME_CS},     // Czech
+    {"DA", TERRITORY_FULL_NAME_DA},     // Danish
+    {"DE", TERRITORY_FULL_NAME_DE},     // German
+    {"EN", TERRITORY_FULL_NAME_EN},     // English
+    {"ES", TERRITORY_FULL_NAME_ES},     // Spanish
+    {"FI", TERRITORY_FULL_NAME_FI},     // Finnish
+    {"FR", TERRITORY_FULL_NAME_FR},     // French
+    {"HE", TERRITORY_FULL_NAME_HE},     // Hebrew
+    {"HI", TERRITORY_FULL_NAME_HI},     // Hindi
+    {"HR", TERRITORY_FULL_NAME_HR},     // Croatian
+    {"ID", TERRITORY_FULL_NAME_ID},     // Indonesian
+    {"IT", TERRITORY_FULL_NAME_IT},     // Italian
+    {"JA", TERRITORY_FULL_NAME_JA},     // Japanese
+    {"KO", TERRITORY_FULL_NAME_KO},     // Korean
+    {"NL", TERRITORY_FULL_NAME_NL},     // Dutch
+    {"NO", TERRITORY_FULL_NAME_NO},     // Norwegian
+    {"PT", TERRITORY_FULL_NAME_PT},     // Portuguese
+    {"PL", TERRITORY_FULL_NAME_PL},     // Polish
+    {"RU", TERRITORY_FULL_NAME_RU},     // Russian
+    {"SV", TERRITORY_FULL_NAME_SV},     // Swedish
+    {"SW", TERRITORY_FULL_NAME_SW},     // Swahili
+    {"TR", TERRITORY_FULL_NAME_TR},     // Turkish
+    {"UK", TERRITORY_FULL_NAME_UK}      // Ukrainian
 };
 
-// important information about the 8 parents
+/**
+ * @section parent_territories Parent Territory Information
+ * The 8 major parent territories that contain subdivisions with shorter mapcodes.
+ * These large countries/regions are subdivided to allow shorter codes within them.
+ */
+
+/**
+ * @brief Three-letter ISO codes for parent territories
+ * Comma-separated string of 3-letter ISO codes for the 8 major parent territories
+ */
 static const char* PARENTS_3 = "USA,IND,CAN,AUS,MEX,BRA,RUS,CHN,";
+
+/**
+ * @brief Two-letter ISO codes for parent territories
+ * Comma-separated string of 2-letter ISO codes corresponding to PARENTS_3
+ */
 static const char* PARENTS_2 = "US,IN,CA,AU,MX,BR,RU,CN,";
+
+/**
+ * @brief Territory enumeration values for parent territories
+ * Array mapping parent territory numbers (1-8) to their Territory enum values.
+ * Index 0 is TERRITORY_NONE, indices 1-8 are the 8 parent territories.
+ */
 static const enum Territory PARENT_NR[9] = {
-    TERRITORY_NONE,
-    TERRITORY_USA,
-    TERRITORY_IND,
-    TERRITORY_CAN,
-    TERRITORY_AUS,
-    TERRITORY_MEX,
-    TERRITORY_BRA,
-    TERRITORY_RUS,
-    TERRITORY_CHN
+    TERRITORY_NONE,     // 0 - no parent
+    TERRITORY_USA,      // 1 - United States of America
+    TERRITORY_IND,      // 2 - India
+    TERRITORY_CAN,      // 3 - Canada
+    TERRITORY_AUS,      // 4 - Australia
+    TERRITORY_MEX,      // 5 - Mexico
+    TERRITORY_BRA,      // 6 - Brazil
+    TERRITORY_RUS,      // 7 - Russia
+    TERRITORY_CHN       // 8 - China
 };
 
-// base-31 alphabet, digits (0-9), consonants (10-30), vowels (31-33)
+/**
+ * @section base31_encoding Base-31 Encoding Character Set
+ * The mapcode system uses a base-31 alphabet for compact encoding.
+ * Character set is designed to avoid ambiguous characters and improve readability.
+ */
+
+/**
+ * @brief Base-31 encoding alphabet used for mapcode generation
+ *
+ * Character mapping:
+ * - Positions 0-9:   Digits '0'-'9'
+ * - Positions 10-30: Consonants 'B','C','D','F','G','H','J','K','L','M','N','P','Q','R','S','T','V','W','X','Y','Z'
+ * - Positions 31-33: Vowels 'A','E','U' (used for special purposes)
+ *
+ * Notable exclusions: 'I' and 'O' are excluded to avoid confusion with '1' and '0'
+ */
 static const char ENCODE_CHARS[34] = {
-    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-    'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M',
-    'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z',
-    'A', 'E', 'U'
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',           // Digits (0-9)
+    'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M',         // Consonants (10-19)
+    'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z',    // Consonants (20-30)
+    'A', 'E', 'U'                                              // Vowels (31-33)
 };
 
 
+/**
+ * @brief Convert ASCII character to base-31 value for mapcode decoding
+ * @param ch ASCII character to decode
+ * @return Base-31 value (0-30), or negative for special cases:
+ *         -1: illegal character
+ *         -2: vowel 'A' (position 31 in ENCODE_CHARS)
+ *         -3: vowel 'E' (position 32 in ENCODE_CHARS)
+ *         -4: vowel 'U' (position 33 in ENCODE_CHARS)
+ *
+ * Special handling: 'O'/'o' maps to '0', 'I'/'i' maps to '1' for user convenience.
+ * This allows users to type potentially confusing characters and still get correct results.
+ */
 static signed char decodeChar(const char ch) {
-    // base-31 value of ascii character (negative for illegal characters)
-    // special cases -2, -3, -4 for vowels; o and i interpreted as 0 and 1.
+    // Lookup table for base-31 value of ASCII character (negative for illegal characters)
+    // Special cases -2, -3, -4 for vowels; 'O' and 'I' interpreted as '0' and '1'.
     static const signed char decode_chars[256] = {
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 0
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, // 16
@@ -233,13 +373,25 @@ static signed char decodeChar(const char ch) {
     return decode_chars[(unsigned char)ch]; // ch can be negative, must be fit to range 0-255.
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////
-//
-//  distanceInMeters
-//
-///////////////////////////////////////////////////////////////////////////////////////////////
-
-// PUBLIC - returns distance (in meters) between two coordinates (in degrees)
+/**
+ * @brief Calculate the distance in meters between two coordinate points
+ * @param latDeg1 Latitude of first point in degrees (-90 to 90)
+ * @param lonDeg1 Longitude of first point in degrees (-180 to 180)
+ * @param latDeg2 Latitude of second point in degrees (-90 to 90)
+ * @param lonDeg2 Longitude of second point in degrees (-180 to 180)
+ * @return Distance between the two points in meters
+ *
+ * This function calculates the approximate distance between two points on Earth's surface
+ * using a simplified spherical model. The calculation:
+ * 1. Handles longitude wrapping around the 180°/-180° meridian
+ * 2. Uses cosine correction for longitude distance based on average latitude
+ * 3. Applies Pythagorean theorem to get final distance
+ *
+ * Note: This is an approximation suitable for mapcode purposes but not a precise
+ * geodetic distance calculation (which would require ellipsoid math).
+ *
+ * @public
+ */
 double distanceInMeters(double latDeg1, double lonDeg1, double latDeg2, double lonDeg2) {
     double dx;
     double dy;
@@ -263,27 +415,49 @@ double distanceInMeters(double latDeg1, double lonDeg1, double latDeg2, double l
     return sqrt(dx * dx + dy * dy);
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////
-//
-//  maxErrorInMeters
-//
-///////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * @section precision_error_calculation Precision Error Calculation
+ * The mapcode system supports high-precision encoding with additional digits.
+ * Each extra digit reduces the maximum possible error by approximately a factor of 5.
+ */
 
-// maximum error in meters for a certain nr of high-precision digits
+/**
+ * @brief Maximum error distances in meters for different precision levels
+ *
+ * This lookup table contains the maximum possible error (in meters) for each
+ * supported precision level. The values are empirically determined based on
+ * the mapcode grid system:
+ *
+ * Index 0: Base precision (no extra digits) - ~7.49m max error
+ * Index 1: 1 extra digit - ~1.39m max error
+ * Index 2: 2 extra digits - ~0.251m max error
+ * ... and so on up to MAX_PRECISION_DIGITS
+ *
+ * Each additional precision level reduces error by approximately 30^0.5 ≈ 5.48x
+ */
 static const double MAX_ERROR_IN_METERS[MAX_PRECISION_DIGITS + 1] = {
-    7.49,
-    1.39,
-    0.251,
-    0.0462,
-    0.00837,
-    0.00154,
-    0.000279,
-    0.0000514,
-    0.0000093
+    7.49,       // 0 extra digits - base precision
+    1.39,       // 1 extra digit
+    0.251,      // 2 extra digits
+    0.0462,     // 3 extra digits
+    0.00837,    // 4 extra digits
+    0.00154,    // 5 extra digits
+    0.000279,   // 6 extra digits
+    0.0000514,  // 7 extra digits
+    0.0000093   // 8 extra digits (maximum supported)
 };
 
-
-// PUBLIC - returns maximum error in meters for a certain nr of high-precision digits
+/**
+ * @brief Get the maximum possible error for a given precision level
+ * @param extraDigits Number of extra precision digits (0 to MAX_PRECISION_DIGITS)
+ * @return Maximum error in meters for this precision level, or 0.0 for invalid input
+ *
+ * This function returns the theoretical maximum error that can occur when encoding
+ * a coordinate at the specified precision level. The actual error is typically
+ * much smaller than this maximum value.
+ *
+ * @public
+ */
 double maxErrorInMeters(int extraDigits) {
     ASSERT(extraDigits >= 0);
     if ((extraDigits < 0) || (extraDigits > MAX_PRECISION_DIGITS)) {
@@ -292,36 +466,70 @@ double maxErrorInMeters(int extraDigits) {
     return MAX_ERROR_IN_METERS[extraDigits];
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////
-//
-//  Point / Point32
-//
-///////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * @section coordinate_structures Coordinate Representation Structures
+ * The mapcode system uses multiple coordinate representations for different purposes:
+ * - Point32: Integer microdegree coordinates (precise, efficient)
+ * - Point: Floating-point coordinates (flexible units depending on context)
+ */
 
+/**
+ * @brief Integer coordinate point in microdegrees
+ *
+ * This structure represents coordinates using 32-bit integers in microdegrees
+ * (millionths of a degree). This provides:
+ * - High precision without floating-point rounding errors
+ * - Efficient storage and comparison operations
+ * - Range: approximately ±2147 degrees (more than sufficient for Earth coordinates)
+ */
 typedef struct {
-    int latMicroDeg; // latitude in microdegrees
-    int lonMicroDeg; // longitude in microdegrees
+    int latMicroDeg;    // Latitude in microdegrees (±90,000,000 for ±90°)
+    int lonMicroDeg;    // Longitude in microdegrees (±180,000,000 for ±180°)
 } Point32;
 
+/**
+ * @brief Floating-point coordinate point with flexible units
+ *
+ * This structure uses double-precision floating-point numbers.
+ * The units depend on context:
+ * - Sometimes degrees (for user-facing coordinates)
+ * - Sometimes fractions (for internal grid calculations)
+ * - Sometimes other units (for intermediate calculations)
+ */
 typedef struct {
-    // Point
-    double lat; // latitude (units depend on situation)
-    double lon; // longitude (units depend on situation)
+    double lat;         // Latitude (units depend on usage context)
+    double lon;         // Longitude (units depend on usage context)
 } Point;
 
-
+/**
+ * @brief Convert fraction coordinates to 32-bit microdegree coordinates
+ * @param p Point containing coordinates in fraction units
+ * @return Point32 with coordinates converted to microdegrees
+ *
+ * This function converts from the internal fraction coordinate system
+ * to microdegree integers. The conversion factors (810000, 3240000) are
+ * derived from the mapcode grid mathematics.
+ */
 static Point32 convertFractionsToCoord32(const Point* p) {
     Point32 p32;
-    p32.latMicroDeg = (int)floor(p->lat / 810000);
-    p32.lonMicroDeg = (int)floor(p->lon / 3240000);
+    p32.latMicroDeg = (int)floor(p->lat / 810000);      // Convert latitude fractions to microdegrees
+    p32.lonMicroDeg = (int)floor(p->lon / 3240000);     // Convert longitude fractions to microdegrees
     return p32;
 }
 
-
+/**
+ * @brief Convert fraction coordinates to degree coordinates
+ * @param p Point containing coordinates in fraction units
+ * @return Point with coordinates converted to degrees
+ *
+ * This function converts from the internal fraction coordinate system
+ * to standard degree coordinates. The large divisors (810000 * 1000000,
+ * 3240000 * 1000000) scale from fractions to degrees.
+ */
 static Point convertFractionsToDegrees(const Point* p) {
     Point pd;
-    pd.lat = p->lat / (810000 * 1000000.0);
-    pd.lon = p->lon / (3240000 * 1000000.0);
+    pd.lat = p->lat / (810000 * 1000000.0);            // Convert latitude fractions to degrees
+    pd.lon = p->lon / (3240000 * 1000000.0);           // Convert longitude fractions to degrees
     return pd;
 }
 

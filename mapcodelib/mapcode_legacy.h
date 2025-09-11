@@ -80,9 +80,9 @@ extern "C" {
  * Encode a latitude, longitude pair (in degrees) to a set of Mapcodes. Not thread-safe!
  *
  * Arguments:
- *      mapcodesAndTerritories - Results set of mapcodes and territories.
+ *      mapcodesAndTerritories - Result set of mapcodes and territories.
  *                               The caller must pass an array of at least 2 * MAX_NR_OF_MAPCODE_RESULTS
- *                               string points, which must NOT be allocated or de-allocated by the caller.
+ *                               string pointers, which must NOT be allocated or de-allocated by the caller.
  *                               The resulting strings are statically allocated by the library and will be overwritten
  *                               by the next call to this method!
  *      lat                    - Latitude, in degrees. Range: -90..90.
@@ -94,8 +94,8 @@ extern "C" {
  *                               make them represent the coordinate more accurately.
  *
  * Returns:
- *      Number of results stored in parameter results. Always >= 0 (0 if no encoding was possible or an error occurred).
- *      The results are stored as pairs (Mapcode, territory name) in:
+ *      Number of results (N). Always >= 0 (0 if no encoding was possible or an error occurred).
+ *      The results are stored as pairs (Mapcode, territory name) in mapcodesAndTerritories:
  *          (results[0], results[1])...(results[(2 * N) - 2], results[(2 * N) - 1])
  */
 int encodeLatLonToMapcodes_Deprecated( // Warning: this method is deprecated and not thread-safe.
@@ -110,11 +110,11 @@ int encodeLatLonToMapcodes_Deprecated( // Warning: this method is deprecated and
  * DEPRECATED OLD VARIANT, NOT THREAD-SAFE:
  *
  * Convert a territory to a territory name.
- * Non-threadsafe routine which uses static storage, overwritten at each call.
+ * Non-thread-safe routine which uses static storage, overwritten at each call.
  *
  * Arguments:
  *      territory       - Territory to get the name of.
- *      userShortName   - Pass 0 for full name, 1 for short name (state codes may be ambiguous).
+ *      useShortName    - Pass 0 for full name, 1 for short name (state codes may be ambiguous).
  *
  * Returns:
  *      Pointer to result. String will be empty if territory illegal.
@@ -148,7 +148,7 @@ char* convertToRoman(char* asciiString, int maxLength, const UWORD* utf16String)
  *      alphabet     - Alphabet to use.
  *
  * Returns:
- *      Encoded Unicode string, points at buffer from 'utf16String', allocated/deallocated by caller.
+ *      Encoded Unicode string, points at buffer from 'utf16String', allocated and deallocated by the caller.
  */
 UWORD* convertToAlphabet(UWORD* utf16String, int maxLength, const char* asciiString, enum Alphabet alphabet);
 

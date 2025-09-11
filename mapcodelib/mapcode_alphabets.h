@@ -20,7 +20,7 @@ extern "C" {
 #endif
 
 /**
- * Mapcodes are suppored in a variety of alphabets, using UTF16. The following
+ * Mapcodes are supported in a variety of alphabets, using UTF-16. The following
  * enum specifies the alphabets (or scripts, as they are also called).
  * The 'default' alphabet is Roman, which is always supported. Other
  * alphabets may not be supported by every application that accepts

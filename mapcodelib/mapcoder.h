@@ -72,12 +72,12 @@ extern "C" {
 
 #define MAX_MAPCODE_RESULT_ASCII_LEN        (MAX_ISOCODE_ASCII_LEN + 1 + MAX_CLEAN_MAPCODE_ASCII_LEN + 1)   // Max. chars to store a single result (including zero-terminator).
 
-#define MAX_TERRITORY_FULLNAME_UTF8_LEN     111 // Max. number of characters to store the longest possible territory name (in UTF8)
+#define MAX_TERRITORY_FULLNAME_UTF8_LEN     111 // Max. number of characters to store the longest possible territory name (in UTF-8)
 
 
-#define MAX_MAPCODE_RESULT_UTF8_LEN         (MAX_MAPCODE_RESULT_ASCII_LEN * 3) // One mapcode character can become at most 3 UTF8characters.
+#define MAX_MAPCODE_RESULT_UTF8_LEN         (MAX_MAPCODE_RESULT_ASCII_LEN * 3) // One mapcode character can become at most 3 UTF-8 characters.
 
-#define MAX_MAPCODE_RESULT_UTF16_LEN        (MAX_MAPCODE_RESULT_ASCII_LEN)     // Each mapcode character can become one UTF16 word.
+#define MAX_MAPCODE_RESULT_UTF16_LEN        (MAX_MAPCODE_RESULT_ASCII_LEN)     // Each mapcode character can become one UTF-16 word.
 
 
 // The constants are also exported as variables, to allow other languages to use them.
@@ -94,8 +94,8 @@ extern int _MAX_MAPCODE_RESULT_UTF16_LEN;
 extern int _MAX_ALPHABETS_PER_TERRITORY;
 
 /**
- * The type Mapcodes hold a number of mapcodes, for example from an encoding call.
- * If a result contains a space, that space seperates the territory ISO3166 code from the mapcode.
+ * The type `Mapcodes` holds a number of Mapcodes, for example from an encoding call.
+ * If a result contains a space, that space separates the territory ISO3166 code from the mapcode.
  * International mapcodes never include a territory ISO3166 code, nor a space.
  */
 typedef struct {
@@ -105,13 +105,13 @@ typedef struct {
 
 
 /**
- * The MapcodeElement structure is returned by decodeXXX and can be used to inspect or clean up the
- * mapcode input. The field territoryISO contains the cleaned up territory code from the input, but
+ * The `MapcodeElements` structure is returned by decodeXXX and can be used to inspect or clean up the
+ * mapcode input. The field `territoryISO` contains the cleaned-up territory code from the input, but
  * the code may be abbreviated, or even missing (if it wasn't available in the input).
  *
  * If you want to get a full territory code, use:
- * char isoName[MAX_ISOCODE_ASCII_LEN + 1];
- * getTerritoryIsoName(isoName, mapcodeElement.territoryCode, 0)
+ *   char isoName[MAX_ISOCODE_ASCII_LEN + 1];
+ *   getTerritoryIsoName(isoName, mapcodeElements.territoryCode, 0);
  */
 typedef struct {
     char territoryISO[MAX_ISOCODE_ASCII_LEN + 1]; // The (trimmed and uppercased) territory code, from the input.
@@ -136,7 +136,7 @@ enum MapcodeError {
     ERR_INVALID_MAPCODE_FORMAT, // string not recognized as mapcode format
     ERR_INVALID_CHARACTER, // mapcode contains an invalid character
     ERR_BAD_ARGUMENTS, // an argument is invalid (e.g. NULL)
-    ERR_INVALID_ENDVOWELS, // mapcodes ends in UE or UU
+    ERR_INVALID_ENDVOWELS, // mapcode ends in UE or UU
     ERR_EXTENSION_INVALID_LENGTH, // precision extension too long, or empty
     ERR_EXTENSION_INVALID_CHARACTER, // bad precision extension character (e.g. Z)
     ERR_UNEXPECTED_DOT, // mapcode dot can not be in this position
@@ -156,7 +156,7 @@ enum MapcodeError {
     ERR_MISSING_TERRITORY, // mapcode can not be decoded without territory
     ERR_EXTENSION_UNDECODABLE, // extension does not decode to valid coordinate
     ERR_MAPCODE_UNDECODABLE, // mapcode does not decode inside territory
-    ERR_BAD_COORDINATE, // latitude or longitude is NAN or infinite
+    ERR_BAD_COORDINATE, // latitude or longitude is NaN or infinite
 
     // all OK.
 
@@ -178,9 +178,8 @@ enum MapcodeError {
  *                        make them represent the coordinate more accurately.
  *
  * Returns:
- *      Number of results stored in parameter results. Always >= 0 (0 if no encoding was possible or an error occurred).
- *      The results are stored as pairs (Mapcode, territory name) in:
- *          (results[0], results[1])...(results[(2 * N) - 2], results[(2 * N) - 1])
+ *      Number of results stored in `mapcodes->count`. Always >= 0 (0 if no encoding was possible or an error occurred).
+ *      Each resulting string is stored in `mapcodes->mapcode[i]` and may include a territory ISO3166 code followed by a space when applicable.
  */
 
 int encodeLatLonToMapcodes(
@@ -193,12 +192,11 @@ int encodeLatLonToMapcodes(
 
 /**
  * Encode a latitude, longitude pair (in degrees) to a single Mapcode: the shortest possible for the given territory
- * (which can be 0 for all territories).
+ * (pass TERRITORY_NONE or TERRITORY_UNKNOWN to consider all territories).
  *
  * Arguments:
- *      result          - Returned Mapcode. The caller must not allocate or de-allocated this string.
- *                        The resulting string MUST be allocated (and de-allocated) by the caller.
- *                        The caller should allocate at least MAX_MAPCODE_RESULT_ASCII_LEN characters for the string.
+ *      mapcode         - Output buffer for the resulting Mapcode. The caller must allocate this buffer
+ *                        with capacity of at least MAX_MAPCODE_RESULT_ASCII_LEN characters.
  *      lat             - Latitude, in degrees. Range: -90..90.
  *      lon             - Longitude, in degrees. Range: -180..180.
  *      territory       - Territory (e.g. as obtained from getTerritoryCode), used as encoding context.
@@ -224,9 +222,8 @@ int encodeLatLonToSingleMapcode(
  * (like Swift).
  *
  * Arguments:
- *      result          - Returned Mapcode. The caller must not allocate or de-allocated this string.
- *                        The resulting string MUST be allocated (and de-allocated) by the caller.
- *                        The caller should allocate at least MAX_MAPCODE_RESULT_ASCII_LEN characters for the string.
+ *      mapcode         - Output buffer for the resulting Mapcode. The caller must allocate this buffer
+ *                        with capacity of at least MAX_MAPCODE_RESULT_ASCII_LEN characters.
  *      lat             - Latitude, in degrees. Range: -90..90.
  *      lon             - Longitude, in degrees. Range: -180..180.
  *      territory       - Territory (e.g. as obtained from getTerritoryCode), used as encoding context.
@@ -251,7 +248,7 @@ int encodeLatLonToSelectedMapcode(
 
 
 /**
- * Decode a utf8 or ascii Mapcode to  a latitude, longitude pair (in degrees).
+ * Decode a UTF-8 or ASCII Mapcode to a latitude/longitude pair (in degrees).
  *
  * Arguments:
  *      lat             - Decoded latitude, in degrees. Range: -90..90.
@@ -262,7 +259,7 @@ int encodeLatLonToSelectedMapcode(
  *      mapcodeElements - If not NULL, filled with analysis of the string (unless an error was encountered).
  *
  * Returns:
- *      ERR_OK if encoding succeeded.
+ *      ERR_OK if decoding succeeded.
  */
 enum MapcodeError decodeMapcodeToLatLonUtf8(
     double* latDeg,
@@ -273,18 +270,18 @@ enum MapcodeError decodeMapcodeToLatLonUtf8(
 
 
 /**
- * Decode a utf16 Mapcode to  a latitude, longitude pair (in degrees).
+ * Decode a UTF-16 Mapcode to a latitude/longitude pair (in degrees).
  *
  * Arguments:
  *      lat             - Decoded latitude, in degrees. Range: -90..90.
  *      lon             - Decoded longitude, in degrees. Range: -180..180.
- *      mapcodeElements - If not NULL, filled with analysis of the string (unless an error was encountered)
- *      utf8string      - Mapcode to decode (ascii or utf8 string).
+ *      utf16string     - Mapcode to decode (UTF-16 string).
  *      territory       - Territory (e.g. as obtained from getTerritoryCode), used as decoding context.
  *                        Pass TERRITORY_NONE if not available.
+ *      mapcodeElements - If not NULL, filled with analysis of the string (unless an error was encountered).
  *
  * Returns:
- *      ERR_OK if encoding succeeded.
+ *      ERR_OK if decoding succeeded.
  */
 enum MapcodeError decodeMapcodeToLatLonUtf16(
     double* latDeg,
@@ -299,7 +296,7 @@ enum MapcodeError decodeMapcodeToLatLonUtf16(
  * the return value ERR_OK indicates the string has the Mapcode format, much like string comparison strcmp returns.)
  *
  * Arguments:
- *      utf8String/utf16String - Mapcode string to check, in UTF8 or UTF16 format.
+ *      utf8String/utf16String - Mapcode string to check, in UTF-8 or UTF-16 format.
  *
  * Returns:
  *      ERR_OK if the string has a correct Mapcode format, another ERR_XXX value if the string does
@@ -318,8 +315,8 @@ enum MapcodeError compareWithMapcodeFormatUtf16(const UWORD* utf16String);
  * Convert an ISO3166 territory code to a territory.
  *
  * Arguments:
- *      territoryISO         - String starting with ISO3166 code of territory (e.g. "USA" or "US-CA").
- *      parentTerritoryCode  - Parent territory, or TERRITORY_NONE if not available.
+ *      territoryISO               - String starting with ISO3166 code of territory (e.g. "USA" or "US-CA").
+ *      optionalTerritoryContext   - Parent territory, or TERRITORY_NONE if not available.
  *
  * Returns:
  *      Territory (> _TERRITORY_MIN) if succeeded, or TERRITORY_NONE if failed.
@@ -333,9 +330,9 @@ enum Territory getTerritoryCode(
  * Convert a territory to a territory name.
  *
  * Arguments:
- *      territoryISO    - String to territory ISO code name result.
+ *      territoryISO    - Output buffer for the territory ISO code name.
  *      territory       - Territory to get the name of.
- *      userShortName   - Pass 0 for full name, 1 for short name (state codes may be ambiguous).
+ *      useShortName    - Pass 0 for full name, 1 for short name (state codes may be ambiguous).
  *
  * Returns:
  *      Pointer to result. String will be empty if territory illegal.
@@ -347,8 +344,8 @@ char* getTerritoryIsoName(
 
 
 /**
- * Given a territory, return the territory itself it it was a country, or return its parent
- * territory if it was a subdivision (e.g. a state).
+ * Given a territory, return the territory itself if it is a country, or return its parent
+ * territory if it is a subdivision (e.g. a state).
  *
  * Arguments:
  *      territory   - territory (either a country or a subdivision, e.g. a state).
@@ -418,7 +415,7 @@ int multipleBordersNearby(
  * Returns territory names in English. There's always at least 1 alternative (with index 0).
  *
  *   Arguments:
- *       territoryName - Target string, allocated by caller to be at least MAX_TERRITORY_FULLNAME_ASCII_LEN + 1 bytes.
+ *       territoryName - Target string, allocated by caller to be at least MAX_TERRITORY_FULLNAME_UTF8_LEN + 1 bytes.
  *       territory     - Territory to get name for.
  *       alternative   - Which name to get, must be >= 0 (0 = default, 1 = first alternative, 2 = second etc.).
  *
@@ -490,7 +487,7 @@ int getFullTerritoryNameInLocaleInAlphabetUtf8(
 
 
 /**
- * This struct contains the returned alphabest for getAlphabetsForTerritory. The 'count' specifies
+ * This struct contains the returned alphabets for getAlphabetsForTerritory. The 'count' specifies
  * how many alphabets are listed in 'alphabet', range [1, MAX_ALPHABETS_PER_TERRITORY].
  */
 #define MAX_ALPHABETS_PER_TERRITORY 3
@@ -510,7 +507,7 @@ typedef struct {
  *
  * Returns:
  *      A pointer to a TerritoryAlphabets structure, or NULL if the territory is invalid.
- *      (The pointer is owned by the library and should not be dealloacted by the caller.)
+ *      (The pointer is owned by the library and should not be deallocated by the caller.)
  */
 const TerritoryAlphabets* getAlphabetsForTerritory(enum Territory territory);
 
@@ -525,7 +522,7 @@ const TerritoryAlphabets* getAlphabetsForTerritory(enum Territory territory);
  *      alphabet     - Alphabet to use.
  *
  * Returns:
- *      Encode UTF8 string (pointer to utf8String buffer), allocated and deallocated by the caller.
+ *      Encoded UTF-8 string (pointer to utf8String buffer), allocated and deallocated by the caller.
  */
 char* convertMapcodeToAlphabetUtf8(char* utf8String, const char* asciiString, enum Alphabet alphabet);
 
@@ -540,7 +537,7 @@ char* convertMapcodeToAlphabetUtf8(char* utf8String, const char* asciiString, en
  *      alphabet     - Alphabet to use.
  *
  * Returns:
- *      Encode UTF16 string (pointer to utf16String buffer), allocated and deallocated by the caller.
+ *      Encoded UTF-16 string (pointer to utf16String buffer), allocated and deallocated by the caller.
  */
 UWORD* convertMapcodeToAlphabetUtf16(UWORD* utf16String, const char* asciiString, enum Alphabet alphabet);
 

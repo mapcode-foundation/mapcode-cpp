@@ -192,3 +192,44 @@ Each commit ends with:
 - **Target:** ≥20% wall-time reduction on `time ./unittest` at `-O3` after commit #8.
 - **Stretch:** ≥30% wall-time reduction.
 - **Stop condition:** if Approach A alone delivers ≥30%, B is optional. If A+B underdeliver vs. 20%, re-evaluate before any further restructuring.
+
+## 8. Results
+
+Measurements taken on branch `feat/optimize`, `-O3` build, `time ./unittest`
+(best `user` of 3 back-to-back runs, multithreaded so user ≫ real).
+
+| Commit | Description | Best user time | Delta vs. baseline |
+|--------|-------------|---------------|--------------------|
+| f1cb736 | baseline | 114.13s | 0.0% |
+| 430bbba | A1 — cache flags per iteration | 112.21s | +1.7% |
+| b9b3f2c | A2 — reorder fitsInsideBoundaries (REVERTED) | 121.10s | −6.1% |
+| 5246c79 | revert A2 | ~112s | recovered |
+| 1b01b82 | A3 — length-tracked result assembly | 113.19s | +0.8% |
+| 753c337 | A4 — encodeBase31 single division (no gain) | 114.35s | noise |
+| — | A5 — repackIfAllDigits (already optimized, skipped) | — | — |
+| 554af29 | B3 — companion tables init (hot loops unchanged) | 109.99s | +3.6% |
+| 3416f87 | B4 — hot loops read from companion tables | 99.40s | +12.9% |
+| 2cdf52b | B5 — DEBUG sanity check | 99.73s | +12.6% |
+
+**Final cumulative speedup: ~12.6%** (best: 12.9% at B4 commit)
+
+**Binary size delta:** +2240 bytes (constraint: ≤ 100,000 bytes)
+
+**Success criteria check:**
+- ✅ All unit tests passing after every commit
+- ✅ Binary size growth ≤ 100 KB
+- ⚠️  ≥20% wall-time reduction — NOT achieved (12.6% achieved)
+- ❌ ≥30% stretch target — not achieved
+
+**Notes:**
+- A2 (longitude-first boundary check) caused a regression because `isInRange()` has
+  non-trivial overhead (handles longitude wrap-around) and displaced a cheaper
+  lat-min comparison to second position.
+- A4 (encodeBase31) showed no gain at -O3 because the compiler already performs
+  strength reduction on division by 31.
+- A5 was already implemented in the codebase (unconditional break in else branch).
+- The 12.6% improvement comes primarily from B4: replacing per-iteration mask/shift
+  operations on a 4-byte flags field with single byte loads from the precomputed
+  companion tables.
+- Further gains would require Approach C (loop restructuring) or SIMD, which were
+  out of scope for this branch.

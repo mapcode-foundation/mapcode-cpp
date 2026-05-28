@@ -101,7 +101,7 @@ Add to `mapcoder.c` at file scope (not exported):
 
 ```c
 // One byte per record. Initialized once via initCompanionTables().
-static unsigned char RECORD_CODEX[MAPCODE_BOUNDARY_MAX + 1];      // flags & 31
+static unsigned char RECORD_CODEX[MAPCODE_BOUNDARY_MAX + 1];      // = coDex(m): 10*(c/5)+(c%5+1), c = flags & 31
 static unsigned char RECORD_REC_TYPE[MAPCODE_BOUNDARY_MAX + 1];   // (flags >> 7) & 3
 static unsigned char RECORD_KIND[MAPCODE_BOUNDARY_MAX + 1];       // bit0=nameless, bit1=restricted,
                                                                   // bit2=specialShape, bit3=hasHeaderLetter

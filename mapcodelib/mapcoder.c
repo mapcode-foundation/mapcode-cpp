@@ -1096,9 +1096,11 @@ static void encodeBase31(char* result, int value, int nrchars) {
     ASSERT(nrchars >= 0);
     result[nrchars] = 0; // zero-terminate!
     while (nrchars > 0) {
+        const int q = value / 31;
+        const int r = value - q * 31;
         nrchars--;
-        result[nrchars] = ENCODE_CHARS[value % 31];
-        value /= 31;
+        result[nrchars] = ENCODE_CHARS[r];
+        value = q;
     }
 }
 

@@ -602,9 +602,9 @@ static int isInRange(int lonMicroDeg, const int minLonMicroDeg, const int maxLon
 static int fitsInsideBoundaries(const Point32* coord32, const TerritoryBoundary* b) {
     ASSERT(coord32);
     ASSERT(b);
-    return (b->miny <= coord32->latMicroDeg &&
-        coord32->latMicroDeg < b->maxy &&
-        isInRange(coord32->lonMicroDeg, b->minx, b->maxx));
+    return (isInRange(coord32->lonMicroDeg, b->minx, b->maxx) &&
+        b->miny <= coord32->latMicroDeg &&
+        coord32->latMicroDeg < b->maxy);
 }
 
 

@@ -896,16 +896,10 @@ static int isSubdivision(const enum Territory ccode) {
 // find first territory rectangle of the same type as m
 static int firstNamelessRecord(const int m, const int firstcode) {
     int i = m;
-    const int codexm = coDex(m);
+    const int codexm = (int) RECORD_CODEX[m];
     ASSERT((0 <= m) && (m <= MAPCODE_BOUNDARY_MAX));
     ASSERT((0 <= firstcode) && (firstcode <= MAPCODE_BOUNDARY_MAX));
-    while (i >= firstcode) {
-        const int flags = TERRITORY_BOUNDARIES[i].flags;
-        const int c = flags & 31;
-        const int codexi = 10 * (c / 5) + ((c % 5) + 1);
-        if (codexi != codexm || !(flags & 64)) {
-            break;
-        }
+    while (i >= firstcode && (int) RECORD_CODEX[i] == codexm && (RECORD_KIND[i] & KIND_BIT_NAMELESS)) {
         i--;
     }
     return (i + 1);
@@ -915,16 +909,11 @@ static int firstNamelessRecord(const int m, const int firstcode) {
 // count all territory rectangles of the same type as m
 static int countNamelessRecords(const int m, const int firstcode) {
     const int first = firstNamelessRecord(m, firstcode);
-    const int codexm = coDex(m);
+    const int codexm = (int) RECORD_CODEX[m];
     int last = m;
     ASSERT((0 <= m) && (m <= MAPCODE_BOUNDARY_MAX));
     ASSERT((0 <= firstcode) && (firstcode <= MAPCODE_BOUNDARY_MAX));
-    while (1) {
-        const int c = TERRITORY_BOUNDARIES[last].flags & 31;
-        const int codexLast = 10 * (c / 5) + ((c % 5) + 1);
-        if (codexLast != codexm) {
-            break;
-        }
+    while ((int) RECORD_CODEX[last] == codexm) {
         last++;
     }
     ASSERT((0 <= last) && (last <= MAPCODE_BOUNDARY_MAX));
@@ -1574,14 +1563,12 @@ static void encoderEngine(const enum Territory ccode, const EncodeRec* enc, cons
         *result = 0;
         for (i = from; i <= upto; i++) {
             if (fitsInsideBoundaries(&enc->coord32, TERRITORY_BOUNDARY(i))) {
-                const int flags         = TERRITORY_BOUNDARIES[i].flags;
-                const int isNameless    = (flags & 64);
-                const int recType       = (flags >> 7) & 3;
-                const int isRestricted  = (flags & 512);
-                if (isNameless) {
+                const unsigned char kind     = RECORD_KIND[i];
+                const unsigned char recTypeI = RECORD_REC_TYPE[i];
+                if (kind & KIND_BIT_NAMELESS) {
                     encodeNameless(result, enc, ccode, extraDigits, i);
                 }
-                else if (recType > 1) {
+                else if (recTypeI > 1) {
                     encodeAutoHeader(result, enc, i, extraDigits);
                 }
                 else if ((i == upto) && isSubdivision(ccode)) {
@@ -1593,11 +1580,9 @@ static void encoderEngine(const enum Territory ccode, const EncodeRec* enc, cons
                 else // must be grid
                 {
                     // skip IS_RESTRICTED records unless there already is a result
-                    if (result_counter || !isRestricted) {
-                        const int c = flags & 31;
-                        const int codexLocal = 10 * (c / 5) + ((c % 5) + 1);
-                        if (codexLocal < 54) {
-                            const char headerletter = (char)((recType == 1) ? ENCODE_CHARS[(flags >> 11) & 31] : 0);
+                    if (result_counter || !(kind & KIND_BIT_RESTRICTED)) {
+                        if (RECORD_CODEX[i] < 54) {
+                            const char headerletter = (char)((recTypeI == 1) ? RECORD_HEADER_LETTER[i] : 0);
                             encodeGrid(result, enc, i, extraDigits, headerletter);
                         }
                     }
@@ -2808,12 +2793,11 @@ static enum MapcodeError decoderEngine(DecodeRec* dec, int parseFlags) {
     // try all ccode rectangles to decode s (pointing to first character of proper mapcode), assume not decodable
     err = ERR_MAPCODE_UNDECODABLE;
     for (i = from; i <= upto; i++) {
-        const int flags = TERRITORY_BOUNDARIES[i].flags;
-        const int c = flags & 31;
-        const int codexi = 10 * (c / 5) + ((c % 5) + 1);
-        const int r = (flags >> 7) & 3;
+        const unsigned char kind   = RECORD_KIND[i];
+        const int codexi           = (int) RECORD_CODEX[i];
+        const int r                = (int) RECORD_REC_TYPE[i];
         if (r == 0) {
-            if (flags & 64) {  // IS_NAMELESS
+            if (kind & KIND_BIT_NAMELESS) {
                 if (((codexi == 21) && (codex == 22)) ||
                     ((codexi == 22) && (codex == 32)) ||
                     ((codexi == 13) && (codex == 23))) {
@@ -2828,7 +2812,7 @@ static enum MapcodeError decoderEngine(DecodeRec* dec, int parseFlags) {
                     // first of all, make sure the zone fits the country
                     restrictZoneTo(&dec->zone, &dec->zone, TERRITORY_BOUNDARY(upto));
 
-                    if ((err == ERR_OK) && (flags & 512)) {  // IS_RESTRICTED
+                    if ((err == ERR_OK) && (kind & KIND_BIT_RESTRICTED)) {
                         int nrZoneOverlaps = 0;
                         int j;
 
@@ -2837,7 +2821,7 @@ static enum MapcodeError decoderEngine(DecodeRec* dec, int parseFlags) {
                         dec->coord32 = convertFractionsToCoord32(&dec->result);
                         for (j = i - 1; j >= from; j--) {
                             // look in previous rects
-                            if (!IS_RESTRICTED(j)) {
+                            if (!(RECORD_KIND[j] & KIND_BIT_RESTRICTED)) {
                                 if (fitsInsideBoundaries(&dec->coord32, TERRITORY_BOUNDARY(j))) {
                                     nrZoneOverlaps = 1;
                                     break;
@@ -2850,7 +2834,7 @@ static enum MapcodeError decoderEngine(DecodeRec* dec, int parseFlags) {
                             TerritoryBoundary prevu;
                             for (j = from; j < i; j++) {
                                 // try all smaller rectangles j
-                                if (!IS_RESTRICTED(j)) {
+                                if (!(RECORD_KIND[j] & KIND_BIT_RESTRICTED)) {
                                     MapcodeZone z;
                                     if (restrictZoneTo(&z, &dec->zone, TERRITORY_BOUNDARY(j))) {
                                         nrZoneOverlaps++;
@@ -2886,7 +2870,7 @@ static enum MapcodeError decoderEngine(DecodeRec* dec, int parseFlags) {
             }
         }
         else if (r == 1) {
-            if (codex == codexi + 10 && ENCODE_CHARS[(flags >> 11) & 31] == *s) {
+            if (codex == codexi + 10 && (unsigned char) *s == RECORD_HEADER_LETTER[i]) {
                 err = decodeGrid(dec, i, 1);
                 break;
             }

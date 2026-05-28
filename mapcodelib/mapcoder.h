@@ -58,7 +58,7 @@ extern "C" {
 #define MAPCODE_SUPPORT_LANGUAGE_UK
 #endif
 
-#define MAPCODE_C_VERSION                   "2.5.6"
+#define MAPCODE_C_VERSION                   "2.5.7"
 #define UWORD                               uint16_t            // 2-byte unsigned integer.
 
 #define MAX_NR_OF_MAPCODE_RESULTS           22                  // Max. number of results ever returned by encoder (e.g. for 26.904899, 95.138515).

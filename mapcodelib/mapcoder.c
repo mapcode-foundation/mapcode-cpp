@@ -1542,8 +1542,12 @@ static void encoderEngine(const enum Territory ccode, const EncodeRec* enc, cons
                             }
                             else {
                                 getTerritoryIsoName(s, ccodeFinal, 0);
-                                strcat(s, " ");
-                                strcat(s, result);
+                                {
+                                    size_t isoLen = strlen(s);
+                                    size_t resultLen = strlen(result);
+                                    s[isoLen] = ' ';
+                                    memcpy(s + isoLen + 1, result, resultLen + 1);  /* +1 includes NUL */
+                                }
                             }
                         }
                         if (requiredEncoder == i) {

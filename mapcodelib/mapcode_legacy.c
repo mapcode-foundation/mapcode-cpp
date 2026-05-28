@@ -23,7 +23,7 @@
  */
 static Mapcodes GLOBAL_RESULT;
 static char GLOBAL_MAKEISO_BUFFER[2 * (MAX_ISOCODE_LEN + 1)];
-static char* GLOBAL_MAKEISO_PTR;
+static char* GLOBAL_MAKEISO_PTR = GLOBAL_MAKEISO_BUFFER + (MAX_ISOCODE_LEN + 1);
 
 
 int encodeLatLonToMapcodes_Deprecated(
@@ -97,12 +97,12 @@ char* convertToRoman(char* asciiBuffer, int maxLength, const UWORD* unicodeBuffe
     }
     if (!err) {
         char romanized[MAX_MAPCODE_RESULT_LEN];
-        sprintf(romanized, "%s%s%s%s%s",
-                mapcodeElements.territoryISO,
-                *mapcodeElements.territoryISO ? " " : "",
-                mapcodeElements.properMapcode,
-                *mapcodeElements.precisionExtension ? "-" : "",
-                mapcodeElements.precisionExtension);
+        snprintf(romanized, sizeof(romanized), "%s%s%s%s%s",
+                 mapcodeElements.territoryISO,
+                 *mapcodeElements.territoryISO ? " " : "",
+                 mapcodeElements.properMapcode,
+                 *mapcodeElements.precisionExtension ? "-" : "",
+                 mapcodeElements.precisionExtension);
         if ((int)strlen(romanized) < maxLength) {
             strcpy(asciiBuffer, romanized);
         }

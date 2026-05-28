@@ -20,6 +20,7 @@ extern "C" {
 
 #endif
 
+#include <stdint.h>
 #include "mapcode_territories.h"
 #include "mapcode_alphabets.h"
 
@@ -58,7 +59,7 @@ extern "C" {
 #endif
 
 #define MAPCODE_C_VERSION                   "2.5.6"
-#define UWORD                               unsigned short int  // 2-byte unsigned integer.
+#define UWORD                               uint16_t            // 2-byte unsigned integer.
 
 #define MAX_NR_OF_MAPCODE_RESULTS           22                  // Max. number of results ever returned by encoder (e.g. for 26.904899, 95.138515).
 

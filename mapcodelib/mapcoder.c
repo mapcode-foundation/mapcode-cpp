@@ -534,17 +534,11 @@ static Point convertFractionsToDegrees(const Point* p) {
 }
 
 
-static const unsigned char DOUBLE_NAN[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F}; // NAN (Not a Number)
-static const unsigned char DOUBLE_INF[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x7F}; // +Infinity
-static const unsigned char DOUBLE_MIN_INF[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0xFF}; // -Infinity
-
 static enum MapcodeError
 convertCoordsToMicrosAndFractions(Point32* coord32, int* fracLat, int* fracLon, double latDeg, double lonDeg) {
     double frac;
     ASSERT(coord32);
-    if (memcmp(&lonDeg, DOUBLE_NAN, 8) == 0 || memcmp(&lonDeg, DOUBLE_INF, 8) == 0 ||
-        memcmp(&lonDeg, DOUBLE_MIN_INF, 8) == 0 ||
-        memcmp(&latDeg, DOUBLE_NAN, 8) == 0) {
+    if (isnan(lonDeg) || isinf(lonDeg) || isnan(latDeg) || isinf(latDeg)) {
         return ERR_BAD_COORDINATE;
     }
     if (latDeg < -90) {
@@ -1081,7 +1075,6 @@ static void encodeExtension(char* result, const int extrax4, const int extray, c
             valy -= factory * gy; // for next iteration
         }
         *s = 0; // terminate the result
-        ASSERT((int) strlen(s) == extraDigits);
     }
 }
 
@@ -1487,7 +1480,7 @@ static void encoderEngine(const enum Territory ccode, const EncodeRec* enc, cons
     ///////////////////////////////////////////////////////////
     {
         int i;
-        char result[128];
+        char result[MAX_MAPCODE_RESULT_ASCII_LEN];
         int result_counter = 0;
 
         *result = 0;
@@ -1736,7 +1729,7 @@ static int decodeBase31(const char* code) {
 static void decodeTriple(const char* result, int* difx, int* dify) {
     // decode the first character
     const int c1 = decodeChar(*result++);
-    ASSERT(result);
+    ASSERT(result - 1);
     ASSERT(difx);
     ASSERT(dify);
     if (c1 < 24) {
@@ -2125,7 +2118,10 @@ static unsigned char getRomanVersionOf(UWORD w) {
 static void convertFromAbjad(char* s) {
     int len, dot, form, c;
     char* postfix = strchr(s, '-');
-    dot = (int)(strchr(s, '.') - s);
+    {
+        const char* dotptr = strchr(s, '.');
+        dot = dotptr ? (int)(dotptr - s) : -1;
+    }
     if (dot < 2 || dot > 5) {
         return;
     }
@@ -3020,7 +3016,10 @@ static char* convertToAbjad(char* targetAsciiString, const char* sourceAsciiStri
     unpackIfAllDigits(targetAsciiString);
 
     len = (int)strlen(targetAsciiString);
-    dot = (int)(strchr(targetAsciiString, '.') - targetAsciiString);
+    {
+        const char* dotptr = strchr(targetAsciiString, '.');
+        dot = dotptr ? (int)(dotptr - targetAsciiString) : -1;
+    }
 
     form = dot * 10 + (len - dot - 1);
 
@@ -3297,6 +3296,7 @@ UWORD* convertToAlphabet(UWORD* utf16String, int maxLength, const char* asciiStr
  * Convert a zero-terminated UTF16 to a UTF8 string
  */
 char* convertUtf16ToUtf8(char* utf8, const UWORD* utf16) {
+    char* start = utf8;
     ASSERT(utf16);
     ASSERT(utf8);
     while (*utf16) {
@@ -3315,7 +3315,7 @@ char* convertUtf16ToUtf8(char* utf8, const UWORD* utf16) {
         }
     }
     *utf8 = 0;
-    return utf8;
+    return start;
 }
 
 // Caller must make sure utf8String can hold at least MAX_MAPCODE_RESULT_LEN characters (including 0-terminator).
@@ -3585,9 +3585,6 @@ encodeLatLonToSingleMapcode(char* mapcode, double latDeg, double lonDeg, enum Te
     if (extraDigits > MAX_PRECISION_DIGITS) {
         extraDigits = MAX_PRECISION_DIGITS;
     }
-    if (territory <= TERRITORY_UNKNOWN) {
-        return 0;
-    }
     ret = encodeLatLonToMapcodes_internal(&rlocal, latDeg, lonDeg, territory, 1, DEBUG_STOP_AT, extraDigits);
     *mapcode = 0;
     if (ret <= 0) {
@@ -3608,7 +3605,7 @@ encodeLatLonToSelectedMapcode(char* mapcode, double latDeg, double lonDeg, enum 
     int nrOfResults = 0;
     nrOfResults = encodeLatLonToMapcodes(&mapcodes, latDeg, lonDeg, territory, extraDigits);
     ASSERT(nrOfResults == mapcodes.count);
-    if ((nrOfResults <= 0) || (indexOfSelected < 0) || (indexOfSelected > nrOfResults)) {
+    if ((nrOfResults <= 0) || (indexOfSelected < 0) || (indexOfSelected >= nrOfResults)) {
         return 0;
     }
     strcpy(mapcode, mapcodes.mapcode[indexOfSelected]);

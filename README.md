@@ -3,7 +3,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/d2e3d7a469484bfd8b801ce94d3f1737)](https://www.codacy.com/app/rijnb/mapcode-cpp?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=mapcode-foundation/mapcode-cpp&amp;utm_campaign=Badge_Grade)
 [![License](http://img.shields.io/badge/license-APACHE2-blue.svg)]()
 
-**Copyright (C) 2014-2025 Stichting Mapcode Foundation (http://www.mapcode.com)**
+**Copyright (C) 2014-2026 Stichting Mapcode Foundation (http://www.mapcode.com)**
 
 
 **Online documentation: http://mapcode-foundation.github.io/mapcode-cpp/**

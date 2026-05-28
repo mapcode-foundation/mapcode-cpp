@@ -408,6 +408,20 @@ static void initCompanionTables(void) {
         TERRITORY_FIRST_NAMELESS[t] = first;
         TERRITORY_NAMELESS_COUNT[t] = count;
     }
+#ifdef DEBUG
+    for (m = 0; m <= MAPCODE_BOUNDARY_MAX; m++) {
+        const int flagsDbg = TERRITORY_BOUNDARIES[m].flags;
+        const int cDbg = flagsDbg & 31;
+        const int codex_valDbg = 10 * (cDbg / 5) + ((cDbg % 5) + 1);
+        ASSERT(RECORD_CODEX[m] == (unsigned char) codex_valDbg);
+        ASSERT(RECORD_REC_TYPE[m] == (unsigned char) ((flagsDbg >> 7) & 3));
+        ASSERT(((RECORD_KIND[m] & KIND_BIT_NAMELESS) != 0) == ((flagsDbg & 64) != 0));
+        ASSERT(((RECORD_KIND[m] & KIND_BIT_RESTRICTED) != 0) == ((flagsDbg & 512) != 0));
+        ASSERT(((RECORD_KIND[m] & KIND_BIT_SPECIAL_SHAPE) != 0) == ((flagsDbg & 1024) != 0));
+        ASSERT(RECORD_HEADER_LETTER[m] == (unsigned char) ENCODE_CHARS[(flagsDbg >> 11) & 31]);
+        ASSERT(RECORD_SMART_DIV[m] == (unsigned short) ((unsigned int) flagsDbg >> 16));
+    }
+#endif
     companion_initialized = 1;
 }
 

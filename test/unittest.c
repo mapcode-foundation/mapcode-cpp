@@ -2222,6 +2222,78 @@ static int testAlphabetPerTerritory(void) {
 }
 
 
+static int testBugFixes(void) {
+    int nrTests = 0;
+
+    // Issue 1: lat=+Inf or lat=-Inf must return ERR_BAD_COORDINATE (0 results), same as lon=Inf
+    {
+        Mapcodes mapcodes;
+        double pos_inf = 1.0 / 0.0;
+        double neg_inf = -1.0 / 0.0;
+        int n;
+
+        n = encodeLatLonToMapcodes(&mapcodes, pos_inf, 0.0, TERRITORY_NONE, 0);
+        ++nrTests;
+        if (n != 0) {
+            foundError();
+            printf("*** ERROR *** encodeLatLonToMapcodes(lat=+Inf) should return 0, got %d\n", n);
+        }
+
+        n = encodeLatLonToMapcodes(&mapcodes, neg_inf, 0.0, TERRITORY_NONE, 0);
+        ++nrTests;
+        if (n != 0) {
+            foundError();
+            printf("*** ERROR *** encodeLatLonToMapcodes(lat=-Inf) should return 0, got %d\n", n);
+        }
+    }
+
+    // Issue 2: indexOfSelected == nrOfResults is out-of-bounds and must return 0
+    {
+        char mapcode[MAX_MAPCODE_RESULT_ASCII_LEN];
+        // lat=52.158993, lon=4.492346 yields 4 results (verified in testSelectedEncodes)
+        int n = encodeLatLonToSelectedMapcode(mapcode, 52.158993, 4.492346, TERRITORY_NONE, 0, 4);
+        ++nrTests;
+        if (n != 0) {
+            foundError();
+            printf("*** ERROR *** encodeLatLonToSelectedMapcode with indexOfSelected==nrOfResults should return 0, got %d\n", n);
+        }
+    }
+
+    // Issue 7: encodeLatLonToSingleMapcode must accept TERRITORY_NONE and TERRITORY_UNKNOWN
+    {
+        char mapcode[MAX_MAPCODE_RESULT_ASCII_LEN];
+        int n;
+
+        n = encodeLatLonToSingleMapcode(mapcode, 52.3, 4.9, TERRITORY_UNKNOWN, 0);
+        ++nrTests;
+        if (n <= 0) {
+            foundError();
+            printf("*** ERROR *** encodeLatLonToSingleMapcode(TERRITORY_UNKNOWN) should succeed, got %d\n", n);
+        }
+
+        n = encodeLatLonToSingleMapcode(mapcode, 52.3, 4.9, TERRITORY_NONE, 0);
+        ++nrTests;
+        if (n <= 0) {
+            foundError();
+            printf("*** ERROR *** encodeLatLonToSingleMapcode(TERRITORY_NONE) should succeed, got %d\n", n);
+        }
+    }
+
+    // Issue 9: convertMapcodeToAlphabetUtf8 must return the start of the output buffer
+    {
+        char utf8[MAX_MAPCODE_RESULT_UTF8_LEN + 1];
+        char *result = convertMapcodeToAlphabetUtf8(utf8, "NLD 49.4V", ALPHABET_ROMAN);
+        ++nrTests;
+        if (result != utf8) {
+            foundError();
+            printf("*** ERROR *** convertMapcodeToAlphabetUtf8 must return start of buffer, got wrong pointer\n");
+        }
+    }
+
+    return nrTests;
+}
+
+
 int main(const int argc, const char **argv) {
     int nrTests = 0;
 
@@ -2280,6 +2352,9 @@ int main(const int argc, const char **argv) {
 
     printf("-----------------------------------------------------------\nRe-encode tests\n");
     nrTests += testReEncode();
+
+    printf("-----------------------------------------------------------\nBug-fix regression tests\n");
+    nrTests += testBugFixes();
 
     printf("-----------------------------------------------------------\n");
     printf("Done.\nExecuted %d tests, found %d errors\n", nrTests, nrErrors);

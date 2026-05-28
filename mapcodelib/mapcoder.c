@@ -150,7 +150,7 @@ void _TestAssert(int iCondition, const char* cstrFile, int iLine) {
 #define IS_RESTRICTED(m)      (TERRITORY_BOUNDARIES[m].flags & 512)     // Territory has access restrictions (bit 9)
 #define IS_SPECIAL_SHAPE(m)   (TERRITORY_BOUNDARIES[m].flags & 1024)    // Territory has non-standard shape (bit 10)
 #define REC_TYPE(m)           ((TERRITORY_BOUNDARIES[m].flags >> 7) & 3) // Record type (bits 7-8): grid encoding method
-#define SMART_DIV(m)          (TERRITORY_BOUNDARIES[m].flags >> 16)     // Smart divider value (bits 16+): grid subdivision
+#define SMART_DIV(m)          ((int)((unsigned int)(TERRITORY_BOUNDARIES[m].flags) >> 16))  // Smart divider value (bits 16+): grid subdivision
 #define HEADER_LETTER(m)      (ENCODE_CHARS[(TERRITORY_BOUNDARIES[m].flags >> 11) & 31]) // Header letter for encoding (bits 11-15)
 
 /**
@@ -335,6 +335,81 @@ static const char ENCODE_CHARS[34] = {
     'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z',    // Consonants (20-30)
     'A', 'E', 'U'                                              // Vowels (31-33)
 };
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+//
+//  PRECOMPUTED COMPANION TABLES
+//
+//  Derived once from TERRITORY_BOUNDARIES.flags; queried in hot encode/decode loops
+//  to avoid repeated bit-masking on the same record per iteration.
+//
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+#define KIND_BIT_NAMELESS       0x01u
+#define KIND_BIT_RESTRICTED     0x02u
+#define KIND_BIT_SPECIAL_SHAPE  0x04u
+
+static unsigned char RECORD_CODEX[MAPCODE_BOUNDARY_MAX + 1];
+static unsigned char RECORD_REC_TYPE[MAPCODE_BOUNDARY_MAX + 1];
+static unsigned char RECORD_KIND[MAPCODE_BOUNDARY_MAX + 1];
+static unsigned char RECORD_HEADER_LETTER[MAPCODE_BOUNDARY_MAX + 1];
+static unsigned short RECORD_SMART_DIV[MAPCODE_BOUNDARY_MAX + 1];
+
+#define TERRITORY_TABLE_SIZE (_TERRITORY_MAX - _TERRITORY_MIN)
+static int TERRITORY_FIRST_NAMELESS[TERRITORY_TABLE_SIZE];
+static int TERRITORY_NAMELESS_COUNT[TERRITORY_TABLE_SIZE];
+
+/* Not thread-safe for concurrent first call. Duplicate concurrent init writes
+   identical values so results are logically correct, but callers must ensure
+   the library is initialized before spawning threads, or initialize once
+   explicitly on the main thread. */
+static int companion_initialized = 0;
+
+static void initCompanionTables(void) {
+    int m;
+    int t;
+    if (companion_initialized) {
+        return;
+    }
+    for (m = 0; m <= MAPCODE_BOUNDARY_MAX; m++) {
+        const int flags = TERRITORY_BOUNDARIES[m].flags;
+        const int c = flags & 31;
+        const int codex_val = 10 * (c / 5) + ((c % 5) + 1);
+        const int rec_type = (flags >> 7) & 3;
+        unsigned char kind = 0;
+        if (flags & 64)   { kind |= KIND_BIT_NAMELESS; }
+        if (flags & 512)  { kind |= KIND_BIT_RESTRICTED; }
+        if (flags & 1024) { kind |= KIND_BIT_SPECIAL_SHAPE; }
+        RECORD_CODEX[m]         = (unsigned char) codex_val;
+        RECORD_REC_TYPE[m]      = (unsigned char) rec_type;
+        RECORD_KIND[m]          = kind;
+        RECORD_HEADER_LETTER[m] = (unsigned char) ENCODE_CHARS[(flags >> 11) & 31];
+        RECORD_SMART_DIV[m]     = (unsigned short) ((unsigned int) flags >> 16);
+    }
+    for (t = 0; t < TERRITORY_TABLE_SIZE; t++) {
+        TERRITORY_FIRST_NAMELESS[t] = -1;
+        TERRITORY_NAMELESS_COUNT[t] = 0;
+    }
+    for (t = 0; t < TERRITORY_TABLE_SIZE - 1; t++) {
+        const int from = DATA_START[t];
+        const int upto_excl = DATA_START[t + 1];
+        int i;
+        int first = -1;
+        int count = 0;
+        for (i = from; i < upto_excl; i++) {
+            if (RECORD_KIND[i] & KIND_BIT_NAMELESS) {
+                if (first < 0) {
+                    first = i;
+                }
+                count++;
+            }
+        }
+        TERRITORY_FIRST_NAMELESS[t] = first;
+        TERRITORY_NAMELESS_COUNT[t] = count;
+    }
+    companion_initialized = 1;
+}
 
 
 /**
@@ -1578,6 +1653,7 @@ static int encodeLatLonToMapcodes_internal(Mapcodes* mapcodes,
     enc.mapcodes->count = 0;
     ASSERT(mapcodes);
     ASSERT((0 <= extraDigits) && (extraDigits <= MAX_PRECISION_DIGITS));
+    initCompanionTables();
 
     if (convertCoordsToMicrosAndFractions(&enc.coord32, &enc.fraclat, &enc.fraclon, lat, lon) < 0) {
         return 0;
@@ -2681,6 +2757,7 @@ static enum MapcodeError decoderEngine(DecodeRec* dec, int parseFlags) {
     char* s;
     int wasAllDigits = 0;
     ASSERT(dec);
+    initCompanionTables();
 
     // Parse the mapcode string into its components (territory, proper mapcode, extension)
     err = parseMapcodeString(&dec->mapcodeElements, dec->orginput, parseFlags, dec->context);
